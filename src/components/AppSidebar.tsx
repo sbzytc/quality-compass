@@ -13,37 +13,42 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface NavItem {
-  label: string;
+  labelKey: string;
   icon: React.ElementType;
   path: string;
   badge?: number;
 }
 
 const mainNavItems: NavItem[] = [
-  { label: 'Dashboard', icon: LayoutDashboard, path: '/' },
-  { label: 'Branches', icon: Building2, path: '/branches' },
-  { label: 'Evaluations', icon: ClipboardCheck, path: '/evaluations' },
-  { label: 'Findings', icon: AlertTriangle, path: '/findings', badge: 3 },
+  { labelKey: 'nav.dashboard', icon: LayoutDashboard, path: '/' },
+  { labelKey: 'nav.branches', icon: Building2, path: '/branches' },
+  { labelKey: 'nav.evaluations', icon: ClipboardCheck, path: '/evaluations' },
+  { labelKey: 'nav.findings', icon: AlertTriangle, path: '/findings', badge: 3 },
 ];
 
 const settingsNavItems: NavItem[] = [
-  { label: 'Users', icon: Users, path: '/users' },
-  { label: 'Templates', icon: FileText, path: '/templates' },
-  { label: 'Settings', icon: Settings, path: '/settings' },
+  { labelKey: 'nav.users', icon: Users, path: '/users' },
+  { labelKey: 'nav.templates', icon: FileText, path: '/templates' },
+  { labelKey: 'nav.settings', icon: Settings, path: '/settings' },
 ];
 
 export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const { t, direction } = useLanguage();
 
   return (
     <motion.aside
       initial={false}
       animate={{ width: collapsed ? 72 : 256 }}
       transition={{ duration: 0.2, ease: 'easeInOut' }}
-      className="h-screen bg-sidebar text-sidebar-foreground flex flex-col border-r border-sidebar-border"
+      className={cn(
+        "h-screen bg-sidebar text-sidebar-foreground flex flex-col border-sidebar-border",
+        direction === 'rtl' ? 'border-l' : 'border-r'
+      )}
     >
       {/* Logo */}
       <div className="h-16 flex items-center px-4 border-b border-sidebar-border">
@@ -60,7 +65,9 @@ export function AppSidebar() {
                 className="overflow-hidden whitespace-nowrap"
               >
                 <span className="font-bold text-lg">SQCS</span>
-                <p className="text-xs text-sidebar-foreground/60">Quality System</p>
+                <p className="text-xs text-sidebar-foreground/60">
+                  {direction === 'rtl' ? 'نظام الجودة' : 'Quality System'}
+                </p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -83,7 +90,7 @@ export function AppSidebar() {
         <div className="space-y-1">
           {!collapsed && (
             <p className="text-xs font-medium text-sidebar-foreground/50 px-3 py-2 uppercase tracking-wider">
-              Settings
+              {t('nav.settings')}
             </p>
           )}
           {settingsNavItems.map((item) => (
@@ -108,7 +115,7 @@ export function AppSidebar() {
           ) : (
             <>
               <ChevronLeft className="w-5 h-5" />
-              <span className="text-sm">Collapse</span>
+              <span className="text-sm">{direction === 'rtl' ? 'طي' : 'Collapse'}</span>
             </>
           )}
         </button>
@@ -127,6 +134,7 @@ function SidebarNavItem({
   isActive: boolean;
 }) {
   const Icon = item.icon;
+  const { t } = useLanguage();
   
   return (
     <Link
@@ -141,7 +149,7 @@ function SidebarNavItem({
       <Icon className="w-5 h-5 flex-shrink-0" />
       {!collapsed && (
         <span className="text-sm font-medium overflow-hidden whitespace-nowrap flex-1">
-          {item.label}
+          {t(item.labelKey)}
         </span>
       )}
       {!collapsed && item.badge && (
