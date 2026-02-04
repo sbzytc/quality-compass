@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
@@ -126,8 +126,10 @@ function SidebarNavItem({
   collapsed: boolean;
   isActive: boolean;
 }) {
+  const Icon = item.icon;
+  
   return (
-    <NavLink
+    <Link
       to={item.path}
       className={cn(
         'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
@@ -136,28 +138,17 @@ function SidebarNavItem({
           : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground'
       )}
     >
-      <item.icon className="w-5 h-5 flex-shrink-0" />
-      <AnimatePresence>
-        {!collapsed && (
-          <motion.span
-            initial={{ opacity: 0, width: 0 }}
-            animate={{ opacity: 1, width: 'auto' }}
-            exit={{ opacity: 0, width: 0 }}
-            className="text-sm font-medium overflow-hidden whitespace-nowrap flex-1"
-          >
-            {item.label}
-          </motion.span>
-        )}
-      </AnimatePresence>
-      {!collapsed && item.badge && (
-        <motion.span
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="px-2 py-0.5 text-xs font-medium bg-score-critical text-white rounded-full"
-        >
-          {item.badge}
-        </motion.span>
+      <Icon className="w-5 h-5 flex-shrink-0" />
+      {!collapsed && (
+        <span className="text-sm font-medium overflow-hidden whitespace-nowrap flex-1">
+          {item.label}
+        </span>
       )}
-    </NavLink>
+      {!collapsed && item.badge && (
+        <span className="px-2 py-0.5 text-xs font-medium bg-score-critical text-white rounded-full">
+          {item.badge}
+        </span>
+      )}
+    </Link>
   );
 }
