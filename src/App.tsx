@@ -8,6 +8,7 @@ import ExecutiveDashboard from "@/pages/ExecutiveDashboard";
 import BranchesList from "@/pages/BranchesList";
 import BranchDetail from "@/pages/BranchDetail";
 import EvaluationForm from "@/pages/EvaluationForm";
+import TemplatesPage from "@/pages/TemplatesPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,7 +27,7 @@ const App = () => (
             <Route path="/evaluations" element={<EvaluationForm />} />
             <Route path="/findings" element={<ExecutiveDashboard />} />
             <Route path="/users" element={<ExecutiveDashboard />} />
-            <Route path="/templates" element={<ExecutiveDashboard />} />
+            <Route path="/templates" element={<TemplatesPage />} />
             <Route path="/settings" element={<ExecutiveDashboard />} />
           </Route>
           <Route path="*" element={<NotFound />} />
