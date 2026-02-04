@@ -9,6 +9,7 @@ import BranchesList from "@/pages/BranchesList";
 import BranchDetail from "@/pages/BranchDetail";
 import EvaluationForm from "@/pages/EvaluationForm";
 import TemplatesPage from "@/pages/TemplatesPage";
+import UsersPage from "@/pages/UsersPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,7 +27,7 @@ const App = () => (
             <Route path="/branches/:branchId" element={<BranchDetail />} />
             <Route path="/evaluations" element={<EvaluationForm />} />
             <Route path="/findings" element={<ExecutiveDashboard />} />
-            <Route path="/users" element={<ExecutiveDashboard />} />
+            <Route path="/users" element={<UsersPage />} />
             <Route path="/templates" element={<TemplatesPage />} />
             <Route path="/settings" element={<ExecutiveDashboard />} />
           </Route>
