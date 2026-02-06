@@ -123,13 +123,7 @@ export default function EvaluationForm() {
       // Check for evaluations of this branch today
       const { data, error } = await supabase
         .from('evaluations')
-        .select(`
-          id,
-          assessor_id,
-          created_at,
-          status,
-          profiles!evaluations_assessor_id_fkey(full_name)
-        `)
+        .select('id, assessor_id, created_at, status')
         .eq('branch_id', branchId)
         .gte('created_at', startOfDay)
         .lt('created_at', endOfDay)
@@ -143,10 +137,23 @@ export default function EvaluationForm() {
       
       if (data && data.length > 0) {
         const evaluation = data[0];
+        
+        // Fetch assessor name separately from profiles table
+        let assessorName = 'Unknown';
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('user_id', evaluation.assessor_id)
+          .single();
+        
+        if (profileData) {
+          assessorName = profileData.full_name;
+        }
+        
         setExistingEvaluation({
           id: evaluation.id,
           assessor_id: evaluation.assessor_id,
-          assessor_name: (evaluation.profiles as any)?.full_name || 'Unknown',
+          assessor_name: assessorName,
           created_at: evaluation.created_at,
           status: evaluation.status,
         });
