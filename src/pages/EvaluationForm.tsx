@@ -11,55 +11,60 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useGoBack } from '@/hooks/useGoBack';
 import { useBranches } from '@/hooks/useBranches';
 
-// Mock evaluation template
+// Mock evaluation template with Arabic translations
 const evaluationTemplate = {
   name: 'Restaurant Evaluation v1.0',
+  nameAr: 'تقييم المطعم الإصدار 1.0',
   categories: [
     {
       id: 'cat-1',
       name: 'Building Condition',
+      nameAr: 'حالة المبنى',
       weight: 10,
       criteria: [
-        { id: 'c1-1', name: 'Exterior signage visible and clean', maxScore: 5, weight: 1, isCritical: false },
-        { id: 'c1-2', name: 'Parking area maintained', maxScore: 5, weight: 1, isCritical: false },
-        { id: 'c1-3', name: 'Entrance doors functional', maxScore: 5, weight: 1, isCritical: false },
-        { id: 'c1-4', name: 'Windows clean and undamaged', maxScore: 5, weight: 1, isCritical: false },
+        { id: 'c1-1', name: 'Exterior signage visible and clean', nameAr: 'اللافتات الخارجية مرئية ونظيفة', maxScore: 5, weight: 1, isCritical: false },
+        { id: 'c1-2', name: 'Parking area maintained', nameAr: 'صيانة منطقة وقوف السيارات', maxScore: 5, weight: 1, isCritical: false },
+        { id: 'c1-3', name: 'Entrance doors functional', nameAr: 'أبواب المدخل تعمل بشكل جيد', maxScore: 5, weight: 1, isCritical: false },
+        { id: 'c1-4', name: 'Windows clean and undamaged', nameAr: 'النوافذ نظيفة وغير متضررة', maxScore: 5, weight: 1, isCritical: false },
       ],
     },
     {
       id: 'cat-2',
       name: 'Customer Area',
+      nameAr: 'منطقة العملاء',
       weight: 15,
       criteria: [
-        { id: 'c2-1', name: 'Floor cleanliness', maxScore: 5, weight: 1, isCritical: false },
-        { id: 'c2-2', name: 'Tables and chairs clean', maxScore: 5, weight: 1, isCritical: false },
-        { id: 'c2-3', name: 'Lighting adequate', maxScore: 5, weight: 1, isCritical: false },
-        { id: 'c2-4', name: 'Temperature comfortable', maxScore: 5, weight: 1, isCritical: false },
-        { id: 'c2-5', name: 'Restrooms clean and stocked', maxScore: 5, weight: 2, isCritical: true },
+        { id: 'c2-1', name: 'Floor cleanliness', nameAr: 'نظافة الأرضية', maxScore: 5, weight: 1, isCritical: false },
+        { id: 'c2-2', name: 'Tables and chairs clean', nameAr: 'نظافة الطاولات والكراسي', maxScore: 5, weight: 1, isCritical: false },
+        { id: 'c2-3', name: 'Lighting adequate', nameAr: 'الإضاءة كافية', maxScore: 5, weight: 1, isCritical: false },
+        { id: 'c2-4', name: 'Temperature comfortable', nameAr: 'درجة الحرارة مريحة', maxScore: 5, weight: 1, isCritical: false },
+        { id: 'c2-5', name: 'Restrooms clean and stocked', nameAr: 'دورات المياه نظيفة ومجهزة', maxScore: 5, weight: 2, isCritical: true },
       ],
     },
     {
       id: 'cat-3',
       name: 'Food Quality',
+      nameAr: 'جودة الطعام',
       weight: 25,
       criteria: [
-        { id: 'c3-1', name: 'Food temperature (hot items ≥63°C)', maxScore: 5, weight: 2, isCritical: true },
-        { id: 'c3-2', name: 'Food temperature (cold items ≤5°C)', maxScore: 5, weight: 2, isCritical: true },
-        { id: 'c3-3', name: 'Food presentation', maxScore: 5, weight: 1, isCritical: false },
-        { id: 'c3-4', name: 'Portion consistency', maxScore: 5, weight: 1, isCritical: false },
-        { id: 'c3-5', name: 'Taste and quality', maxScore: 5, weight: 2, isCritical: false },
+        { id: 'c3-1', name: 'Food temperature (hot items ≥63°C)', nameAr: 'درجة حرارة الطعام (الأصناف الساخنة ≥63 درجة)', maxScore: 5, weight: 2, isCritical: true },
+        { id: 'c3-2', name: 'Food temperature (cold items ≤5°C)', nameAr: 'درجة حرارة الطعام (الأصناف الباردة ≤5 درجة)', maxScore: 5, weight: 2, isCritical: true },
+        { id: 'c3-3', name: 'Food presentation', nameAr: 'طريقة تقديم الطعام', maxScore: 5, weight: 1, isCritical: false },
+        { id: 'c3-4', name: 'Portion consistency', nameAr: 'ثبات حجم الحصص', maxScore: 5, weight: 1, isCritical: false },
+        { id: 'c3-5', name: 'Taste and quality', nameAr: 'المذاق والجودة', maxScore: 5, weight: 2, isCritical: false },
       ],
     },
     {
       id: 'cat-4',
       name: 'Kitchen & Back Area',
+      nameAr: 'المطبخ والمنطقة الخلفية',
       weight: 20,
       criteria: [
-        { id: 'c4-1', name: 'Equipment cleanliness', maxScore: 5, weight: 1, isCritical: false },
-        { id: 'c4-2', name: 'Food storage organization', maxScore: 5, weight: 1, isCritical: false },
-        { id: 'c4-3', name: 'Pest control measures', maxScore: 5, weight: 2, isCritical: true },
-        { id: 'c4-4', name: 'Waste management', maxScore: 5, weight: 1, isCritical: false },
-        { id: 'c4-5', name: 'Staff hygiene practices', maxScore: 5, weight: 2, isCritical: true },
+        { id: 'c4-1', name: 'Equipment cleanliness', nameAr: 'نظافة المعدات', maxScore: 5, weight: 1, isCritical: false },
+        { id: 'c4-2', name: 'Food storage organization', nameAr: 'تنظيم تخزين الطعام', maxScore: 5, weight: 1, isCritical: false },
+        { id: 'c4-3', name: 'Pest control measures', nameAr: 'إجراءات مكافحة الآفات', maxScore: 5, weight: 2, isCritical: true },
+        { id: 'c4-4', name: 'Waste management', nameAr: 'إدارة النفايات', maxScore: 5, weight: 1, isCritical: false },
+        { id: 'c4-5', name: 'Staff hygiene practices', nameAr: 'ممارسات النظافة الشخصية للموظفين', maxScore: 5, weight: 2, isCritical: true },
       ],
     },
   ],
@@ -207,21 +212,21 @@ export default function EvaluationForm() {
               
               {selectedBranch && (
                 <p className="text-sm text-muted-foreground mt-2">
-                  {direction === 'rtl' ? 'القالب:' : 'Template:'} {evaluationTemplate.name}
+                  {direction === 'rtl' ? 'القالب:' : 'Template:'} {direction === 'rtl' ? evaluationTemplate.nameAr : evaluationTemplate.name}
                 </p>
               )}
             </div>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <p className="text-sm text-muted-foreground">Progress</p>
+              <p className="text-sm text-muted-foreground">{direction === 'rtl' ? 'التقدم' : 'Progress'}</p>
               <p className="text-2xl font-bold text-foreground">
                 {progress.scored}/{progress.total}
               </p>
             </div>
             <Button className="gap-2" disabled={!selectedBranch}>
               <Save className="w-4 h-4" />
-              Submit
+              {direction === 'rtl' ? 'إرسال' : 'Submit'}
             </Button>
           </div>
         </div>
@@ -277,11 +282,13 @@ export default function EvaluationForm() {
                     ) : (
                       <ChevronRight className="w-5 h-5 text-muted-foreground" />
                     )}
-                    <div className="text-left">
-                      <h3 className="font-semibold text-foreground">{category.name}</h3>
+                    <div className={cn("text-start", direction === 'rtl' && 'text-right')}>
+                      <h3 className="font-semibold text-foreground">
+                        {direction === 'rtl' ? category.nameAr : category.name}
+                      </h3>
                       <p className="text-sm text-muted-foreground">
-                        {catProgress.scored}/{catProgress.total} criteria scored •{' '}
-                        Weight: {category.weight}%
+                        {catProgress.scored}/{catProgress.total} {direction === 'rtl' ? 'معيار تم تقييمه' : 'criteria scored'} •{' '}
+                        {direction === 'rtl' ? 'الوزن:' : 'Weight:'} {category.weight}%
                       </p>
                     </div>
                   </div>
@@ -313,18 +320,18 @@ export default function EvaluationForm() {
                         <div key={criterion.id} className="p-4">
                           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div className="flex-1">
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <span className="font-medium text-foreground">
-                                  {criterion.name}
+                                  {direction === 'rtl' ? criterion.nameAr : criterion.name}
                                 </span>
                                 {criterion.isCritical && (
                                   <span className="px-2 py-0.5 text-xs font-medium bg-score-critical/10 text-score-critical rounded-full">
-                                    Critical
+                                    {direction === 'rtl' ? 'حرج' : 'Critical'}
                                   </span>
                                 )}
                               </div>
                               <p className="text-sm text-muted-foreground mt-1">
-                                Max score: {criterion.maxScore} • Weight: {criterion.weight}x
+                                {direction === 'rtl' ? 'أقصى درجة:' : 'Max score:'} {criterion.maxScore} • {direction === 'rtl' ? 'الوزن:' : 'Weight:'} {criterion.weight}x
                               </p>
                             </div>
 
@@ -377,7 +384,7 @@ export default function EvaluationForm() {
                               className="mt-4"
                             >
                               <Textarea
-                                placeholder="Add notes about this criterion..."
+                                placeholder={direction === 'rtl' ? 'أضف ملاحظات حول هذا المعيار...' : 'Add notes about this criterion...'}
                                 value={scores[criterion.id]?.notes || ''}
                                 onChange={(e) => setNotes(criterion.id, e.target.value)}
                                 className="min-h-[80px]"
@@ -394,8 +401,9 @@ export default function EvaluationForm() {
                             >
                               <AlertTriangle className="w-4 h-4 flex-shrink-0" />
                               <p className="text-sm">
-                                This is a critical criterion. A low score will cap the overall
-                                rating.
+                                {direction === 'rtl' 
+                                  ? 'هذا معيار حرج. الدرجة المنخفضة ستحد من التقييم العام.'
+                                  : 'This is a critical criterion. A low score will cap the overall rating.'}
                               </p>
                             </motion.div>
                           )}
