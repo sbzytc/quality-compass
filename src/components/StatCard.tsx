@@ -12,6 +12,7 @@ interface StatCardProps {
     isPositive: boolean;
   };
   variant?: 'default' | 'excellent' | 'good' | 'average' | 'weak' | 'critical';
+  onClick?: () => void;
   className?: string;
 }
 
@@ -49,6 +50,7 @@ export function StatCard({
   icon: Icon,
   trend,
   variant = 'default',
+  onClick,
   className,
 }: StatCardProps) {
   const styles = variantStyles[variant];
@@ -57,11 +59,14 @@ export function StatCard({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -2 }}
+      whileHover={{ y: -2, scale: onClick ? 1.02 : 1 }}
+      whileTap={onClick ? { scale: 0.98 } : undefined}
       transition={{ duration: 0.3 }}
+      onClick={onClick}
       className={cn(
         'bg-card rounded-xl border border-border p-6 shadow-sm hover:shadow-md transition-shadow',
         styles.border,
+        onClick && 'cursor-pointer',
         className
       )}
     >
