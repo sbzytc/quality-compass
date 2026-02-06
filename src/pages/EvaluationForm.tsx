@@ -133,7 +133,20 @@ export default function EvaluationForm() {
     
     // Clear validation errors and proceed with submission
     setValidationErrors([]);
-    toast.success(direction === 'rtl' ? 'تم إرسال التقييم بنجاح' : 'Evaluation submitted successfully');
+    
+    // Show success message
+    toast.success(
+      direction === 'rtl' 
+        ? 'تم إرسال التقييم بنجاح! يمكنك البدء بتقييم جديد.'
+        : 'Evaluation submitted successfully! You can start a new evaluation.',
+      { duration: 4000 }
+    );
+    
+    // Reset form to empty state
+    setSelectedBranchId('');
+    setScores({});
+    setExpandedCategories(['cat-1']);
+    setCurrentNotes(null);
   };
 
   // Clear validation error when a score is set
