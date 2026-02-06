@@ -10,6 +10,11 @@ import {
   FileText,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  Briefcase,
+  UserCircle,
+  Wrench,
+  ClipboardList,
 } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,10 +25,18 @@ interface NavItem {
   icon: React.ElementType;
   path: string;
   badge?: number;
+  children?: NavItem[];
 }
 
+const dashboardSubItems: NavItem[] = [
+  { labelKey: 'nav.dashboard.ceo', icon: Briefcase, path: '/dashboard/ceo' },
+  { labelKey: 'nav.dashboard.branchManager', icon: UserCircle, path: '/dashboard/branch-manager' },
+  { labelKey: 'nav.dashboard.operations', icon: Wrench, path: '/dashboard/operations' },
+  { labelKey: 'nav.dashboard.auditor', icon: ClipboardList, path: '/dashboard/auditor' },
+];
+
 const mainNavItems: NavItem[] = [
-  { labelKey: 'nav.dashboard', icon: LayoutDashboard, path: '/' },
+  { labelKey: 'nav.dashboard', icon: LayoutDashboard, path: '/dashboard', children: dashboardSubItems },
   { labelKey: 'nav.branches', icon: Building2, path: '/branches' },
   { labelKey: 'nav.evaluations', icon: ClipboardCheck, path: '/evaluations' },
   { labelKey: 'nav.findings', icon: AlertTriangle, path: '/findings', badge: 3 },
@@ -37,8 +50,17 @@ const settingsNavItems: NavItem[] = [
 
 export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
+  const [expandedItems, setExpandedItems] = useState<string[]>(['/dashboard']);
   const location = useLocation();
   const { t, direction } = useLanguage();
+
+  const toggleExpanded = (path: string) => {
+    setExpandedItems(prev => 
+      prev.includes(path) 
+        ? prev.filter(p => p !== path)
+        : [...prev, path]
+    );
+  };
 
   return (
     <motion.aside
@@ -82,7 +104,10 @@ export function AppSidebar() {
               key={item.path}
               item={item}
               collapsed={collapsed}
-              isActive={location.pathname === item.path}
+              isActive={location.pathname === item.path || location.pathname.startsWith(item.path + '/')}
+              isExpanded={expandedItems.includes(item.path)}
+              onToggle={() => toggleExpanded(item.path)}
+              currentPath={location.pathname}
             />
           ))}
         </div>
@@ -99,6 +124,9 @@ export function AppSidebar() {
               item={item}
               collapsed={collapsed}
               isActive={location.pathname === item.path}
+              isExpanded={false}
+              onToggle={() => {}}
+              currentPath={location.pathname}
             />
           ))}
         </div>
@@ -128,17 +156,80 @@ function SidebarNavItem({
   item,
   collapsed,
   isActive,
+  isExpanded,
+  onToggle,
+  currentPath,
 }: {
   item: NavItem;
   collapsed: boolean;
   isActive: boolean;
+  isExpanded: boolean;
+  onToggle: () => void;
+  currentPath: string;
 }) {
   const Icon = item.icon;
   const { t } = useLanguage();
+  const hasChildren = item.children && item.children.length > 0;
+  
+  if (hasChildren && !collapsed) {
+    return (
+      <div>
+        <button
+          onClick={onToggle}
+          className={cn(
+            'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
+            isActive
+              ? 'bg-sidebar-accent text-sidebar-foreground'
+              : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground'
+          )}
+        >
+          <Icon className="w-5 h-5 flex-shrink-0" />
+          <span className="text-sm font-medium overflow-hidden whitespace-nowrap flex-1 text-start">
+            {t(item.labelKey)}
+          </span>
+          <ChevronDown className={cn(
+            "w-4 h-4 transition-transform duration-200",
+            isExpanded && "rotate-180"
+          )} />
+        </button>
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <div className="mt-1 ms-4 ps-3 border-s border-sidebar-border space-y-1">
+                {item.children!.map((child) => (
+                  <Link
+                    key={child.path}
+                    to={child.path}
+                    className={cn(
+                      'flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 text-sm',
+                      currentPath === child.path
+                        ? 'bg-sidebar-primary text-sidebar-primary-foreground'
+                        : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground'
+                    )}
+                  >
+                    <child.icon className="w-4 h-4 flex-shrink-0" />
+                    <span className="overflow-hidden whitespace-nowrap">
+                      {t(child.labelKey)}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  }
   
   return (
     <Link
-      to={item.path}
+      to={hasChildren ? item.children![0].path : item.path}
       className={cn(
         'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
         isActive

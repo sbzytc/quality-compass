@@ -2,10 +2,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { MainLayout } from "@/layouts/MainLayout";
-import ExecutiveDashboard from "@/pages/ExecutiveDashboard";
+import CEODashboard from "@/pages/dashboards/CEODashboard";
+import BranchManagerDashboard from "@/pages/dashboards/BranchManagerDashboard";
+import OperationsDashboard from "@/pages/dashboards/OperationsDashboard";
+import AuditorDashboard from "@/pages/dashboards/AuditorDashboard";
 import BranchesList from "@/pages/BranchesList";
 import BranchDetail from "@/pages/BranchDetail";
 import EvaluationForm from "@/pages/EvaluationForm";
@@ -25,11 +28,15 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route element={<MainLayout />}>
-              <Route path="/" element={<ExecutiveDashboard />} />
+              <Route path="/" element={<Navigate to="/dashboard/ceo" replace />} />
+              <Route path="/dashboard/ceo" element={<CEODashboard />} />
+              <Route path="/dashboard/branch-manager" element={<BranchManagerDashboard />} />
+              <Route path="/dashboard/operations" element={<OperationsDashboard />} />
+              <Route path="/dashboard/auditor" element={<AuditorDashboard />} />
               <Route path="/branches" element={<BranchesList />} />
               <Route path="/branches/:branchId" element={<BranchDetail />} />
               <Route path="/evaluations" element={<EvaluationForm />} />
-              <Route path="/findings" element={<ExecutiveDashboard />} />
+              <Route path="/findings" element={<CEODashboard />} />
               <Route path="/users" element={<UsersPage />} />
               <Route path="/templates" element={<TemplatesPage />} />
               <Route path="/settings" element={<SettingsPage />} />
