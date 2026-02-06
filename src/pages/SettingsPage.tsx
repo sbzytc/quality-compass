@@ -6,10 +6,12 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useGoBack } from '@/hooks/useGoBack';
 import { toast } from 'sonner';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
+  const goBack = useGoBack('/dashboard/ceo');
   const { language, setLanguage, t } = useLanguage();
 
   const handleLanguageChange = (lang: 'en' | 'ar') => {
@@ -24,7 +26,7 @@ export default function SettingsPage() {
         <Button
           variant="outline"
           size="icon"
-          onClick={() => navigate(-1)}
+          onClick={goBack}
           className="mt-1"
         >
           <ArrowLeft className="w-4 h-4" />

@@ -6,10 +6,12 @@ import { QualityCircle } from '@/components/QualityCircle';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useBranches, useBranchStats } from '@/hooks/useBranches';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useGoBack } from '@/hooks/useGoBack';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ScoreAnalysisPage() {
   const navigate = useNavigate();
+  const goBack = useGoBack('/dashboard/ceo');
   const { t, language, direction } = useLanguage();
   const { data: branches, isLoading: branchesLoading } = useBranches();
   const { data: stats, isLoading: statsLoading } = useBranchStats();
@@ -33,7 +35,7 @@ export default function ScoreAnalysisPage() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate(-1)}
+          onClick={goBack}
           className="shrink-0"
         >
           <ArrowLeft className="w-5 h-5" />

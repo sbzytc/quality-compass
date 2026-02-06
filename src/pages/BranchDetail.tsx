@@ -12,11 +12,13 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useGoBack } from '@/hooks/useGoBack';
 import { getScoreLevel, ScoreLevel } from '@/types';
 
 export default function BranchDetail() {
   const { branchId } = useParams();
   const navigate = useNavigate();
+  const goBack = useGoBack('/branches');
   const { t, language, direction } = useLanguage();
 
   // Fetch branch data

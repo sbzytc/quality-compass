@@ -9,11 +9,13 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useBranches } from '@/hooks/useBranches';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useGoBack } from '@/hooks/useGoBack';
 import { format } from 'date-fns';
 import { ScoreLevel } from '@/types';
 
 export default function BranchesList() {
   const navigate = useNavigate();
+  const goBack = useGoBack('/dashboard/ceo');
   const { t, language, direction } = useLanguage();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<ScoreLevel | 'all'>('all');
@@ -45,7 +47,7 @@ export default function BranchesList() {
         <Button
           variant="outline"
           size="icon"
-          onClick={() => navigate(-1)}
+          onClick={goBack}
           className="mt-1"
         >
           <ArrowLeft className="w-4 h-4" />
