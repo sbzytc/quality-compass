@@ -89,6 +89,19 @@ export function useInviteUser() {
   });
 }
 
+export function useResendInvitation() {
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      const response = await supabase.functions.invoke('resend-invitation', {
+        body: { userId },
+      });
+
+      if (response.error) throw response.error;
+      return response.data;
+    },
+  });
+}
+
 export function useResetPassword() {
   return useMutation({
     mutationFn: async (userId: string) => {
