@@ -268,26 +268,6 @@ export default function EvaluationForm() {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            {/* Progress indicator */}
-            <div className="text-end">
-              <p className="text-sm text-muted-foreground">{direction === 'rtl' ? 'التقدم' : 'Progress'}</p>
-              <p className={cn(
-                "text-2xl font-bold",
-                progress.scored === progress.total ? "text-score-excellent" : "text-foreground"
-              )}>
-                {progress.scored}/{progress.total}
-              </p>
-            </div>
-            <Button 
-              className="gap-2" 
-              disabled={!selectedBranch}
-              onClick={handleSubmit}
-            >
-              <Save className="w-4 h-4" />
-              {direction === 'rtl' ? 'إرسال' : 'Submit'}
-            </Button>
-          </div>
         </div>
 
         {/* Progress bar */}
@@ -487,6 +467,49 @@ export default function EvaluationForm() {
               </motion.div>
             );
           })}
+        </div>
+      )}
+
+      {/* Sticky Footer with Progress and Submit */}
+      {selectedBranch && (
+        <div className="sticky bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border p-4 -mx-6 mt-6">
+          <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
+            {/* Progress bar */}
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm text-muted-foreground">
+                  {direction === 'rtl' ? 'التقدم' : 'Progress'}
+                </p>
+                <p className={cn(
+                  "text-xl font-bold",
+                  progress.scored === progress.total ? "text-score-excellent" : "text-foreground"
+                )}>
+                  {progress.scored}/{progress.total}
+                </p>
+              </div>
+              <div className="h-2 bg-muted rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(progress.scored / progress.total) * 100}%` }}
+                  className={cn(
+                    "h-full rounded-full transition-colors",
+                    progress.scored === progress.total ? "bg-score-excellent" : "bg-primary"
+                  )}
+                />
+              </div>
+            </div>
+            
+            {/* Submit Button */}
+            <Button 
+              size="lg"
+              className="gap-2 min-w-[140px]" 
+              disabled={!selectedBranch}
+              onClick={handleSubmit}
+            >
+              <Save className="w-5 h-5" />
+              {direction === 'rtl' ? 'إرسال' : 'Submit'}
+            </Button>
+          </div>
         </div>
       )}
     </div>
