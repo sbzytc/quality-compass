@@ -19,6 +19,13 @@ export default function CEODashboard() {
 
   const isLoading = branchesLoading || statsLoading;
 
+  // Calculate overall score across all branches
+  const overallScore = stats?.averageScore || 0;
+  const overallStatus = overallScore >= 90 ? 'excellent' : 
+                        overallScore >= 75 ? 'good' : 
+                        overallScore >= 60 ? 'average' : 
+                        overallScore >= 40 ? 'weak' : 'critical';
+
   // Calculate score distribution
   const scoreDistribution = {
     excellent: branches?.filter(b => b.status === 'excellent').length || 0,
@@ -44,13 +51,24 @@ export default function CEODashboard() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">{t('dashboard.ceo.title')}</h1>
-          <p className="text-muted-foreground mt-1">
-            {t('dashboard.ceo.subtitle')}
-          </p>
+      {/* Header with Overall Score Circle */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div className="flex items-center gap-6">
+          {/* Large Overall Score Circle */}
+          {!isLoading && (
+            <QualityCircle
+              score={overallScore}
+              status={overallStatus as any}
+              size="xl"
+              showLabel
+            />
+          )}
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">{t('dashboard.ceo.title')}</h1>
+            <p className="text-muted-foreground mt-1">
+              {t('dashboard.ceo.subtitle')}
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Clock className="w-4 h-4" />
@@ -58,7 +76,7 @@ export default function CEODashboard() {
         </div>
       </div>
 
-      {/* Summary Stats */}
+      {/* Summary Stats - Now Clickable */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {isLoading ? (
           <>
@@ -73,6 +91,7 @@ export default function CEODashboard() {
               value={stats?.totalBranches || 0}
               subtitle={t('dashboard.activeLocations')}
               icon={Building2}
+              onClick={() => navigate('/branches')}
             />
             <StatCard
               title={t('dashboard.averageScore')}
@@ -80,6 +99,7 @@ export default function CEODashboard() {
               subtitle={t('dashboard.acrossAllBranches')}
               icon={TrendingUp}
               variant={stats?.averageScore && stats.averageScore >= 80 ? 'good' : 'average'}
+              onClick={() => navigate('/branches')}
             />
             <StatCard
               title={t('dashboard.openFindings')}
@@ -87,6 +107,7 @@ export default function CEODashboard() {
               subtitle={t('dashboard.requireAttention')}
               icon={AlertTriangle}
               variant={stats?.openFindings && stats.openFindings > 0 ? 'average' : 'excellent'}
+              onClick={() => navigate('/findings')}
             />
             <StatCard
               title={t('dashboard.overdueActions')}
@@ -94,6 +115,7 @@ export default function CEODashboard() {
               subtitle={t('dashboard.pastDueDate')}
               icon={CheckCircle2}
               variant={stats?.overdueActions && stats.overdueActions > 0 ? 'critical' : 'excellent'}
+              onClick={() => navigate('/findings')}
             />
           </>
         )}
