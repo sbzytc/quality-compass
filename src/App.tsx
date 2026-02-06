@@ -18,6 +18,7 @@ import EvaluationForm from "@/pages/EvaluationForm";
 import TemplatesPage from "@/pages/TemplatesPage";
 import UsersPage from "@/pages/UsersPage";
 import SettingsPage from "@/pages/SettingsPage";
+import ScoreAnalysisPage from "@/pages/ScoreAnalysisPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -83,6 +84,13 @@ const AppRoutes = () => (
       <Route path="/branches/:branchId" element={
         <ProtectedRoute allowedRoles={['admin', 'executive', 'branch_manager']}>
           <BranchDetail />
+        </ProtectedRoute>
+      } />
+      
+      {/* Score Analysis - Admin and Executive */}
+      <Route path="/score-analysis" element={
+        <ProtectedRoute allowedRoles={['admin', 'executive']}>
+          <ScoreAnalysisPage />
         </ProtectedRoute>
       } />
       
