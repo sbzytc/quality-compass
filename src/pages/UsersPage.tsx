@@ -11,11 +11,13 @@ import {
   Key,
   UserX,
   UserCheck,
+  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
   TableBody,
@@ -48,81 +50,26 @@ import {
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { 
+  useUsers, 
+  useUserStats, 
+  useInviteUser, 
+  useResetPassword,
+  useUpdateUserStatus,
+  useUpdateUserRole,
+  UserWithRole
+} from '@/hooks/useUsers';
+import { AppRole } from '@/contexts/AuthContext';
 
-type Role = 'admin' | 'executive' | 'branch_manager' | 'assessor';
-
-interface User {
-  id: string;
-  user_id: string;
-  full_name: string;
-  email: string;
-  phone?: string;
-  role: Role;
-  branch_name?: string;
-  is_active: boolean;
-  created_at: string;
-}
-
-// Mock data for demonstration
-const mockUsers: User[] = [
-  {
-    id: '1',
-    user_id: 'u1',
-    full_name: 'Ahmed Al-Rashid',
-    email: 'ahmed@company.com',
-    phone: '+966 50 123 4567',
-    role: 'admin',
-    is_active: true,
-    created_at: '2026-01-01',
-  },
-  {
-    id: '2',
-    user_id: 'u2',
-    full_name: 'Fatima Hassan',
-    email: 'fatima@company.com',
-    phone: '+966 55 987 6543',
-    role: 'executive',
-    is_active: true,
-    created_at: '2026-01-05',
-  },
-  {
-    id: '3',
-    user_id: 'u3',
-    full_name: 'Mohammed Saleh',
-    email: 'mohammed@company.com',
-    role: 'branch_manager',
-    branch_name: 'Downtown Central',
-    is_active: true,
-    created_at: '2026-01-10',
-  },
-  {
-    id: '4',
-    user_id: 'u4',
-    full_name: 'Sara Abdullah',
-    email: 'sara@company.com',
-    role: 'assessor',
-    is_active: true,
-    created_at: '2026-01-15',
-  },
-  {
-    id: '5',
-    user_id: 'u5',
-    full_name: 'Khalid Omar',
-    email: 'khalid@company.com',
-    role: 'assessor',
-    is_active: false,
-    created_at: '2025-12-20',
-  },
-];
-
-const roleLabels: Record<Role, string> = {
-  admin: 'Admin',
-  executive: 'Executive',
-  branch_manager: 'Branch Manager',
-  assessor: 'Assessor',
+const roleLabels: Record<AppRole, { en: string; ar: string }> = {
+  admin: { en: 'Admin', ar: 'مدير النظام' },
+  executive: { en: 'Executive', ar: 'تنفيذي' },
+  branch_manager: { en: 'Branch Manager', ar: 'مدير الفرع' },
+  assessor: { en: 'Assessor', ar: 'مقيّم' },
 };
 
-const roleColors: Record<Role, string> = {
+const roleColors: Record<AppRole, string> = {
   admin: 'bg-purple-500/10 text-purple-500 border-purple-500/30',
   executive: 'bg-blue-500/10 text-blue-500 border-blue-500/30',
   branch_manager: 'bg-amber-500/10 text-amber-500 border-amber-500/30',
@@ -130,54 +77,111 @@ const roleColors: Record<Role, string> = {
 };
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<User[]>(mockUsers);
+  const { t, language } = useLanguage();
+  const { data: users, isLoading } = useUsers();
+  const stats = useUserStats();
+  const inviteUser = useInviteUser();
+  const resetPassword = useResetPassword();
+  const updateStatus = useUpdateUserStatus();
+  const updateRole = useUpdateUserRole();
+
   const [searchQuery, setSearchQuery] = useState('');
-  const [roleFilter, setRoleFilter] = useState<Role | 'all'>('all');
+  const [roleFilter, setRoleFilter] = useState<AppRole | 'all'>('all');
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [isResetPasswordDialogOpen, setIsResetPasswordDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserWithRole | null>(null);
   const [inviteForm, setInviteForm] = useState({
     email: '',
     fullName: '',
-    role: 'assessor' as Role,
+    role: 'assessor' as AppRole,
   });
 
-  const filteredUsers = users.filter((user) => {
+  const filteredUsers = (users || []).filter((user) => {
     const matchesSearch =
       user.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
+    const matchesRole = roleFilter === 'all' || user.roles.includes(roleFilter);
     return matchesSearch && matchesRole;
   });
 
-  const handleInviteUser = () => {
-    // In production, this would call the edge function
-    toast.success(`Invitation sent to ${inviteForm.email}`);
-    setIsInviteDialogOpen(false);
-    setInviteForm({ email: '', fullName: '', role: 'assessor' });
+  const getPrimaryRole = (user: UserWithRole): AppRole => {
+    if (user.roles.includes('admin')) return 'admin';
+    if (user.roles.includes('executive')) return 'executive';
+    if (user.roles.includes('branch_manager')) return 'branch_manager';
+    return 'assessor';
   };
 
-  const handleResetPassword = () => {
-    if (selectedUser) {
-      // In production, this would call the edge function
-      toast.success(`Password reset email sent to ${selectedUser.email}`);
-      setIsResetPasswordDialogOpen(false);
-      setSelectedUser(null);
+  const handleInviteUser = async () => {
+    try {
+      await inviteUser.mutateAsync({
+        email: inviteForm.email,
+        fullName: inviteForm.fullName,
+        role: inviteForm.role,
+      });
+      toast.success(
+        language === 'ar' 
+          ? `تم إرسال الدعوة إلى ${inviteForm.email}`
+          : `Invitation sent to ${inviteForm.email}`
+      );
+      setIsInviteDialogOpen(false);
+      setInviteForm({ email: '', fullName: '', role: 'assessor' });
+    } catch (error) {
+      toast.error(
+        language === 'ar'
+          ? 'فشل إرسال الدعوة'
+          : 'Failed to send invitation'
+      );
     }
   };
 
-  const handleToggleActive = (user: User) => {
-    setUsers((prev) =>
-      prev.map((u) => (u.id === user.id ? { ...u, is_active: !u.is_active } : u))
-    );
-    toast.success(`User ${user.is_active ? 'deactivated' : 'activated'}`);
+  const handleResetPassword = async () => {
+    if (!selectedUser) return;
+    try {
+      await resetPassword.mutateAsync(selectedUser.user_id);
+      toast.success(
+        language === 'ar'
+          ? `تم إرسال رابط إعادة تعيين كلمة المرور إلى ${selectedUser.email}`
+          : `Password reset email sent to ${selectedUser.email}`
+      );
+      setIsResetPasswordDialogOpen(false);
+      setSelectedUser(null);
+    } catch (error) {
+      toast.error(
+        language === 'ar'
+          ? 'فشل إرسال رابط إعادة تعيين كلمة المرور'
+          : 'Failed to send password reset email'
+      );
+    }
   };
 
-  const handleChangeRole = (user: User, newRole: Role) => {
-    setUsers((prev) =>
-      prev.map((u) => (u.id === user.id ? { ...u, role: newRole } : u))
-    );
-    toast.success(`Role updated to ${roleLabels[newRole]}`);
+  const handleToggleActive = async (user: UserWithRole) => {
+    try {
+      await updateStatus.mutateAsync({ userId: user.user_id, isActive: !user.is_active });
+      toast.success(
+        language === 'ar'
+          ? user.is_active ? 'تم تعطيل المستخدم' : 'تم تفعيل المستخدم'
+          : user.is_active ? 'User deactivated' : 'User activated'
+      );
+    } catch (error) {
+      toast.error(language === 'ar' ? 'فشل تحديث الحالة' : 'Failed to update status');
+    }
+  };
+
+  const handleChangeRole = async (user: UserWithRole, newRole: AppRole) => {
+    try {
+      await updateRole.mutateAsync({ userId: user.user_id, newRole });
+      toast.success(
+        language === 'ar'
+          ? `تم تحديث الدور إلى ${roleLabels[newRole].ar}`
+          : `Role updated to ${roleLabels[newRole].en}`
+      );
+    } catch (error) {
+      toast.error(language === 'ar' ? 'فشل تحديث الدور' : 'Failed to update role');
+    }
+  };
+
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
   return (
@@ -185,24 +189,22 @@ export default function UsersPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">User Management</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage users, roles, and access permissions
-          </p>
+          <h1 className="text-3xl font-bold text-foreground">{t('users.title')}</h1>
+          <p className="text-muted-foreground mt-1">{t('users.subtitle')}</p>
         </div>
         <Button onClick={() => setIsInviteDialogOpen(true)} className="gap-2">
           <Plus className="w-4 h-4" />
-          Invite User
+          {t('users.invite')}
         </Button>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total Users', value: users.length, icon: Users },
-          { label: 'Admins', value: users.filter((u) => u.role === 'admin').length, icon: Shield },
-          { label: 'Active', value: users.filter((u) => u.is_active).length, icon: UserCheck },
-          { label: 'Inactive', value: users.filter((u) => !u.is_active).length, icon: UserX },
+          { label: language === 'ar' ? 'إجمالي المستخدمين' : 'Total Users', value: stats.total, icon: Users },
+          { label: language === 'ar' ? 'المديرين' : 'Admins', value: stats.admins, icon: Shield },
+          { label: language === 'ar' ? 'نشط' : 'Active', value: stats.active, icon: UserCheck },
+          { label: language === 'ar' ? 'غير نشط' : 'Inactive', value: stats.inactive, icon: UserX },
         ].map((stat) => (
           <motion.div
             key={stat.label}
@@ -226,24 +228,24 @@ export default function UsersPage() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Search users..."
+            placeholder={t('users.search')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
+            className="ps-9"
           />
         </div>
-        <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v as Role | 'all')}>
+        <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v as AppRole | 'all')}>
           <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="Filter by role" />
+            <SelectValue placeholder={language === 'ar' ? 'تصفية حسب الدور' : 'Filter by role'} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Roles</SelectItem>
-            <SelectItem value="admin">Admin</SelectItem>
-            <SelectItem value="executive">Executive</SelectItem>
-            <SelectItem value="branch_manager">Branch Manager</SelectItem>
-            <SelectItem value="assessor">Assessor</SelectItem>
+            <SelectItem value="all">{language === 'ar' ? 'جميع الأدوار' : 'All Roles'}</SelectItem>
+            <SelectItem value="admin">{roleLabels.admin[language]}</SelectItem>
+            <SelectItem value="executive">{roleLabels.executive[language]}</SelectItem>
+            <SelectItem value="branch_manager">{roleLabels.branch_manager[language]}</SelectItem>
+            <SelectItem value="assessor">{roleLabels.assessor[language]}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -254,176 +256,192 @@ export default function UsersPage() {
         animate={{ opacity: 1 }}
         className="bg-card rounded-xl border border-border overflow-hidden"
       >
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>User</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead className="hidden md:table-cell">Branch</TableHead>
-              <TableHead className="hidden sm:table-cell">Status</TableHead>
-              <TableHead className="w-[50px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredUsers.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-9 w-9">
-                      <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                        {user.full_name
-                          .split(' ')
-                          .map((n) => n[0])
-                          .join('')}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-medium text-foreground">{user.full_name}</p>
-                      <p className="text-sm text-muted-foreground">{user.email}</p>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline" className={roleColors[user.role]}>
-                    {roleLabels[user.role]}
-                  </Badge>
-                </TableCell>
-                <TableCell className="hidden md:table-cell">
-                  {user.branch_name ? (
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <Building className="w-3 h-3" />
-                      {user.branch_name}
-                    </div>
-                  ) : (
-                    <span className="text-muted-foreground">—</span>
-                  )}
-                </TableCell>
-                <TableCell className="hidden sm:table-cell">
-                  <Badge
-                    variant="outline"
-                    className={
-                      user.is_active
-                        ? 'bg-score-excellent/10 text-score-excellent border-score-excellent/30'
-                        : 'bg-muted text-muted-foreground border-border'
-                    }
-                  >
-                    {user.is_active ? 'Active' : 'Inactive'}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreHorizontal className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setSelectedUser(user);
-                          setIsResetPasswordDialogOpen(true);
-                        }}
-                      >
-                        <Key className="w-4 h-4 mr-2" />
-                        Reset Password
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Mail className="w-4 h-4 mr-2" />
-                        Resend Invitation
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => handleChangeRole(user, 'admin')}>
-                        <Shield className="w-4 h-4 mr-2" />
-                        Make Admin
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleChangeRole(user, 'assessor')}>
-                        <Users className="w-4 h-4 mr-2" />
-                        Make Assessor
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={() => handleToggleActive(user)}
-                        className={user.is_active ? 'text-destructive' : ''}
-                      >
-                        {user.is_active ? (
-                          <>
-                            <UserX className="w-4 h-4 mr-2" />
-                            Deactivate User
-                          </>
-                        ) : (
-                          <>
-                            <UserCheck className="w-4 h-4 mr-2" />
-                            Activate User
-                          </>
-                        )}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
+        {isLoading ? (
+          <div className="p-6 space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <Skeleton key={i} className="h-16" />
             ))}
-          </TableBody>
-        </Table>
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{language === 'ar' ? 'المستخدم' : 'User'}</TableHead>
+                <TableHead>{language === 'ar' ? 'الدور' : 'Role'}</TableHead>
+                <TableHead className="hidden sm:table-cell">{t('common.status')}</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredUsers.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                    {t('common.noData')}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredUsers.map((user) => {
+                  const primaryRole = getPrimaryRole(user);
+                  return (
+                    <TableRow key={user.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-9 w-9">
+                            <AvatarImage src={user.avatar_url || undefined} />
+                            <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                              {getInitials(user.full_name)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium text-foreground">{user.full_name}</p>
+                            <p className="text-sm text-muted-foreground">{user.email}</p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={roleColors[primaryRole]}>
+                          {roleLabels[primaryRole][language]}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        <Badge
+                          variant="outline"
+                          className={
+                            user.is_active
+                              ? 'bg-score-excellent/10 text-score-excellent border-score-excellent/30'
+                              : 'bg-muted text-muted-foreground border-border'
+                          }
+                        >
+                          {user.is_active 
+                            ? (language === 'ar' ? 'نشط' : 'Active')
+                            : (language === 'ar' ? 'غير نشط' : 'Inactive')
+                          }
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreHorizontal className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSelectedUser(user);
+                                setIsResetPasswordDialogOpen(true);
+                              }}
+                            >
+                              <Key className="w-4 h-4 me-2" />
+                              {t('users.resetPassword')}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => handleChangeRole(user, 'admin')}>
+                              <Shield className="w-4 h-4 me-2" />
+                              {language === 'ar' ? 'جعله مدير' : 'Make Admin'}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleChangeRole(user, 'executive')}>
+                              <Users className="w-4 h-4 me-2" />
+                              {language === 'ar' ? 'جعله تنفيذي' : 'Make Executive'}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleChangeRole(user, 'branch_manager')}>
+                              <Building className="w-4 h-4 me-2" />
+                              {language === 'ar' ? 'جعله مدير فرع' : 'Make Branch Manager'}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleChangeRole(user, 'assessor')}>
+                              <Users className="w-4 h-4 me-2" />
+                              {language === 'ar' ? 'جعله مقيّم' : 'Make Assessor'}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => handleToggleActive(user)}
+                              className={user.is_active ? 'text-destructive' : ''}
+                            >
+                              {user.is_active ? (
+                                <>
+                                  <UserX className="w-4 h-4 me-2" />
+                                  {t('users.deactivate')}
+                                </>
+                              ) : (
+                                <>
+                                  <UserCheck className="w-4 h-4 me-2" />
+                                  {t('users.activate')}
+                                </>
+                              )}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        )}
       </motion.div>
 
       {/* Invite User Dialog */}
       <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Invite New User</DialogTitle>
+            <DialogTitle>{language === 'ar' ? 'دعوة مستخدم جديد' : 'Invite New User'}</DialogTitle>
             <DialogDescription>
-              Send an invitation email to add a new user to the system.
+              {language === 'ar' 
+                ? 'سيتم إرسال بريد إلكتروني للدعوة مع كلمة مرور مؤقتة'
+                : 'Send an invitation email with a temporary password'
+              }
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="fullName">Full Name</Label>
+              <Label htmlFor="fullName">{language === 'ar' ? 'الاسم الكامل' : 'Full Name'}</Label>
               <Input
                 id="fullName"
-                placeholder="Enter full name"
+                placeholder={language === 'ar' ? 'أدخل الاسم الكامل' : 'Enter full name'}
                 value={inviteForm.fullName}
-                onChange={(e) =>
-                  setInviteForm((prev) => ({ ...prev, fullName: e.target.value }))
-                }
+                onChange={(e) => setInviteForm((prev) => ({ ...prev, fullName: e.target.value }))}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
+              <Label htmlFor="email">{language === 'ar' ? 'البريد الإلكتروني' : 'Email Address'}</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="Enter email address"
+                placeholder={language === 'ar' ? 'أدخل البريد الإلكتروني' : 'Enter email address'}
                 value={inviteForm.email}
-                onChange={(e) =>
-                  setInviteForm((prev) => ({ ...prev, email: e.target.value }))
-                }
+                onChange={(e) => setInviteForm((prev) => ({ ...prev, email: e.target.value }))}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
+              <Label htmlFor="role">{language === 'ar' ? 'الدور' : 'Role'}</Label>
               <Select
                 value={inviteForm.role}
-                onValueChange={(v) => setInviteForm((prev) => ({ ...prev, role: v as Role }))}
+                onValueChange={(v) => setInviteForm((prev) => ({ ...prev, role: v as AppRole }))}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="executive">Executive</SelectItem>
-                  <SelectItem value="branch_manager">Branch Manager</SelectItem>
-                  <SelectItem value="assessor">Assessor</SelectItem>
+                  <SelectItem value="admin">{roleLabels.admin[language]}</SelectItem>
+                  <SelectItem value="executive">{roleLabels.executive[language]}</SelectItem>
+                  <SelectItem value="branch_manager">{roleLabels.branch_manager[language]}</SelectItem>
+                  <SelectItem value="assessor">{roleLabels.assessor[language]}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsInviteDialogOpen(false)}>
-              Cancel
+              {t('common.cancel')}
             </Button>
-            <Button onClick={handleInviteUser} disabled={!inviteForm.email || !inviteForm.fullName}>
-              <Mail className="w-4 h-4 mr-2" />
-              Send Invitation
+            <Button 
+              onClick={handleInviteUser} 
+              disabled={!inviteForm.email || !inviteForm.fullName || inviteUser.isPending}
+            >
+              {inviteUser.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
+              <Mail className="w-4 h-4 me-2" />
+              {language === 'ar' ? 'إرسال الدعوة' : 'Send Invitation'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -433,20 +451,21 @@ export default function UsersPage() {
       <Dialog open={isResetPasswordDialogOpen} onOpenChange={setIsResetPasswordDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reset Password</DialogTitle>
+            <DialogTitle>{t('users.resetPassword')}</DialogTitle>
             <DialogDescription>
-              This will generate a new temporary password and send it to the user's email.
+              {language === 'ar'
+                ? 'سيتم إنشاء كلمة مرور مؤقتة جديدة وإرسالها إلى بريد المستخدم'
+                : 'This will generate a new temporary password and send it to the user\'s email'
+              }
             </DialogDescription>
           </DialogHeader>
           {selectedUser && (
             <div className="py-4">
               <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
                 <Avatar>
+                  <AvatarImage src={selectedUser.avatar_url || undefined} />
                   <AvatarFallback className="bg-primary/10 text-primary">
-                    {selectedUser.full_name
-                      .split(' ')
-                      .map((n) => n[0])
-                      .join('')}
+                    {getInitials(selectedUser.full_name)}
                   </AvatarFallback>
                 </Avatar>
                 <div>
@@ -458,11 +477,12 @@ export default function UsersPage() {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsResetPasswordDialogOpen(false)}>
-              Cancel
+              {t('common.cancel')}
             </Button>
-            <Button onClick={handleResetPassword}>
-              <Key className="w-4 h-4 mr-2" />
-              Reset Password
+            <Button onClick={handleResetPassword} disabled={resetPassword.isPending}>
+              {resetPassword.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
+              <Key className="w-4 h-4 me-2" />
+              {t('users.resetPassword')}
             </Button>
           </DialogFooter>
         </DialogContent>

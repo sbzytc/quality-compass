@@ -14,6 +14,359 @@ export type Database = {
   }
   public: {
     Tables: {
+      branches: {
+        Row: {
+          address: string | null
+          city: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          manager_id: string | null
+          name: string
+          name_ar: string | null
+          region_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          manager_id?: string | null
+          name: string
+          name_ar?: string | null
+          region_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          manager_id?: string | null
+          name?: string
+          name_ar?: string | null
+          region_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "branches_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      corrective_actions: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          description: string
+          due_date: string | null
+          evidence: string[] | null
+          id: string
+          non_conformity_id: string
+          owner_id: string | null
+          priority: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          description: string
+          due_date?: string | null
+          evidence?: string[] | null
+          id?: string
+          non_conformity_id: string
+          owner_id?: string | null
+          priority?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string
+          due_date?: string | null
+          evidence?: string[] | null
+          id?: string
+          non_conformity_id?: string
+          owner_id?: string | null
+          priority?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "corrective_actions_non_conformity_id_fkey"
+            columns: ["non_conformity_id"]
+            isOneToOne: false
+            referencedRelation: "non_conformities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evaluation_category_scores: {
+        Row: {
+          category_id: string
+          created_at: string
+          evaluation_id: string
+          id: string
+          max_score: number
+          percentage: number
+          score: number
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          evaluation_id: string
+          id?: string
+          max_score: number
+          percentage?: number
+          score?: number
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          evaluation_id?: string
+          id?: string
+          max_score?: number
+          percentage?: number
+          score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluation_category_scores_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "template_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evaluation_category_scores_evaluation_id_fkey"
+            columns: ["evaluation_id"]
+            isOneToOne: false
+            referencedRelation: "evaluations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evaluation_criterion_scores: {
+        Row: {
+          attachments: string[] | null
+          created_at: string
+          criterion_id: string
+          evaluation_id: string
+          id: string
+          notes: string | null
+          score: number
+        }
+        Insert: {
+          attachments?: string[] | null
+          created_at?: string
+          criterion_id: string
+          evaluation_id: string
+          id?: string
+          notes?: string | null
+          score?: number
+        }
+        Update: {
+          attachments?: string[] | null
+          created_at?: string
+          criterion_id?: string
+          evaluation_id?: string
+          id?: string
+          notes?: string | null
+          score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluation_criterion_scores_criterion_id_fkey"
+            columns: ["criterion_id"]
+            isOneToOne: false
+            referencedRelation: "template_criteria"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evaluation_criterion_scores_evaluation_id_fkey"
+            columns: ["evaluation_id"]
+            isOneToOne: false
+            referencedRelation: "evaluations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evaluation_templates: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          name_ar: string | null
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          name_ar?: string | null
+          updated_at?: string
+          version?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          name_ar?: string | null
+          updated_at?: string
+          version?: string
+        }
+        Relationships: []
+      }
+      evaluations: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          assessor_id: string
+          branch_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          overall_percentage: number | null
+          overall_score: number | null
+          status: string
+          submitted_at: string | null
+          template_id: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          assessor_id: string
+          branch_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          overall_percentage?: number | null
+          overall_score?: number | null
+          status?: string
+          submitted_at?: string | null
+          template_id: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          assessor_id?: string
+          branch_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          overall_percentage?: number | null
+          overall_score?: number | null
+          status?: string
+          submitted_at?: string | null
+          template_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluations_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evaluations_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "evaluation_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      non_conformities: {
+        Row: {
+          assessor_notes: string | null
+          attachments: string[] | null
+          branch_id: string
+          created_at: string
+          criterion_id: string
+          evaluation_id: string
+          id: string
+          max_score: number
+          resolved_at: string | null
+          resolved_by: string | null
+          score: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assessor_notes?: string | null
+          attachments?: string[] | null
+          branch_id: string
+          created_at?: string
+          criterion_id: string
+          evaluation_id: string
+          id?: string
+          max_score: number
+          resolved_at?: string | null
+          resolved_by?: string | null
+          score: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assessor_notes?: string | null
+          attachments?: string[] | null
+          branch_id?: string
+          created_at?: string
+          criterion_id?: string
+          evaluation_id?: string
+          id?: string
+          max_score?: number
+          resolved_at?: string | null
+          resolved_by?: string | null
+          score?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "non_conformities_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "non_conformities_criterion_id_fkey"
+            columns: ["criterion_id"]
+            isOneToOne: false
+            referencedRelation: "template_criteria"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "non_conformities_evaluation_id_fkey"
+            columns: ["evaluation_id"]
+            isOneToOne: false
+            referencedRelation: "evaluations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -55,6 +408,115 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      regions: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          name_ar: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          name_ar?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          name_ar?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      template_categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          name_ar: string | null
+          sort_order: number
+          template_id: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          name_ar?: string | null
+          sort_order?: number
+          template_id: string
+          weight?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          name_ar?: string | null
+          sort_order?: number
+          template_id?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "template_categories_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "evaluation_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      template_criteria: {
+        Row: {
+          category_id: string
+          created_at: string
+          description: string | null
+          id: string
+          is_critical: boolean
+          max_score: number
+          name: string
+          name_ar: string | null
+          sort_order: number
+          weight: number
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_critical?: boolean
+          max_score?: number
+          name: string
+          name_ar?: string | null
+          sort_order?: number
+          weight?: number
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_critical?: boolean
+          max_score?: number
+          name?: string
+          name_ar?: string | null
+          sort_order?: number
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "template_criteria_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "template_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
