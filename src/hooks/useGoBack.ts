@@ -1,32 +1,23 @@
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useCallback, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useCallback } from 'react';
 
 /**
  * Custom hook for safe back navigation.
- * Falls back to a default route if there's no in-app history to go back to.
+ * Falls back to a default route if there's no history to go back to.
  */
 export function useGoBack(fallbackPath: string = '/') {
   const navigate = useNavigate();
-  const location = useLocation();
-  const isFirstPage = useRef(true);
-  const locationKey = useRef(location.key);
-
-  // Track if user has navigated within the app
-  useEffect(() => {
-    if (location.key !== locationKey.current) {
-      isFirstPage.current = false;
-      locationKey.current = location.key;
-    }
-  }, [location.key]);
 
   const goBack = useCallback(() => {
-    // If we're on the first page in the app session, use fallback
-    if (isFirstPage.current || location.key === 'default') {
-      navigate(fallbackPath, { replace: true });
-    } else {
+    // Check if we have meaningful history (more than initial page load)
+    // window.history.state?.idx > 0 means we navigated within the app
+    const historyIdx = window.history.state?.idx;
+    if (historyIdx !== undefined && historyIdx > 0) {
       navigate(-1);
+    } else {
+      navigate(fallbackPath, { replace: true });
     }
-  }, [navigate, fallbackPath, location.key]);
+  }, [navigate, fallbackPath]);
 
   return goBack;
 }
