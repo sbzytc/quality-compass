@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FileText, Plus, CheckCircle2, ChevronRight, AlertTriangle } from 'lucide-react';
+import { FileText, Plus, CheckCircle2, ChevronRight, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -20,6 +21,7 @@ import { useTemplates, useTemplateWithDetails, useTemplateStats, Template } from
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function TemplatesPage() {
+  const navigate = useNavigate();
   const { t, language } = useLanguage();
   const { data: templates, isLoading } = useTemplates();
   const { data: templateStats } = useTemplateStats();
@@ -40,11 +42,21 @@ export default function TemplatesPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header with Back Button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">{t('templates.title')}</h1>
-          <p className="text-muted-foreground mt-1">{t('templates.subtitle')}</p>
+        <div className="flex items-start gap-4">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => navigate(-1)}
+            className="mt-1"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">{t('templates.title')}</h1>
+            <p className="text-muted-foreground mt-1">{t('templates.subtitle')}</p>
+          </div>
         </div>
         <Button className="gap-2">
           <Plus className="w-4 h-4" />

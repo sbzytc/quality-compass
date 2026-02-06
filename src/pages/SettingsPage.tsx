@@ -1,5 +1,6 @@
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Globe, Moon, Sun, Bell, Mail, Smartphone } from 'lucide-react';
+import { Globe, Moon, Sun, Bell, Mail, Smartphone, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -8,6 +9,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
 
 export default function SettingsPage() {
+  const navigate = useNavigate();
   const { language, setLanguage, t } = useLanguage();
 
   const handleLanguageChange = (lang: 'en' | 'ar') => {
@@ -17,10 +19,20 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">{t('settings.title')}</h1>
-        <p className="text-muted-foreground mt-1">{t('settings.subtitle')}</p>
+      {/* Header with Back Button */}
+      <div className="flex items-start gap-4">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => navigate(-1)}
+          className="mt-1"
+        >
+          <ArrowLeft className="w-4 h-4" />
+        </Button>
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">{t('settings.title')}</h1>
+          <p className="text-muted-foreground mt-1">{t('settings.subtitle')}</p>
+        </div>
       </div>
 
       <div className="grid gap-6">
