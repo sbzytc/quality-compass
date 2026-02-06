@@ -53,6 +53,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useGoBack } from '@/hooks/useGoBack';
 import { 
   useUsers, 
   useUserStats, 
@@ -80,6 +81,7 @@ const roleColors: Record<AppRole, string> = {
 
 export default function UsersPage() {
   const navigate = useNavigate();
+  const goBack = useGoBack('/dashboard/ceo');
   const { t, language } = useLanguage();
   const { data: users, isLoading } = useUsers();
   const stats = useUserStats();
@@ -195,7 +197,7 @@ export default function UsersPage() {
           <Button
             variant="outline"
             size="icon"
-            onClick={() => navigate(-1)}
+            onClick={goBack}
             className="mt-1"
           >
             <ArrowLeft className="w-4 h-4" />

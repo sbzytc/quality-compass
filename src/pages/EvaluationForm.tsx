@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { getScoreLevel, ScoreLevel } from '@/types';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useGoBack } from '@/hooks/useGoBack';
 
 // Mock evaluation template
 const evaluationTemplate = {
@@ -70,6 +71,7 @@ interface Score {
 
 export default function EvaluationForm() {
   const navigate = useNavigate();
+  const goBack = useGoBack('/dashboard/auditor');
   const { t, direction } = useLanguage();
   const [selectedBranch] = useState({ id: '1', name: 'Downtown Central', city: 'Riyadh' });
   const [expandedCategories, setExpandedCategories] = useState<string[]>(['cat-1']);
@@ -157,7 +159,7 @@ export default function EvaluationForm() {
             <Button
               variant="outline"
               size="icon"
-              onClick={() => navigate(-1)}
+              onClick={goBack}
               className="mt-1"
             >
               <ArrowLeft className="w-4 h-4" />

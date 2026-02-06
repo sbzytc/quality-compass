@@ -19,9 +19,11 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useTemplates, useTemplateWithDetails, useTemplateStats, Template } from '@/hooks/useTemplates';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useGoBack } from '@/hooks/useGoBack';
 
 export default function TemplatesPage() {
   const navigate = useNavigate();
+  const goBack = useGoBack('/dashboard/ceo');
   const { t, language } = useLanguage();
   const { data: templates, isLoading } = useTemplates();
   const { data: templateStats } = useTemplateStats();
@@ -48,7 +50,7 @@ export default function TemplatesPage() {
           <Button
             variant="outline"
             size="icon"
-            onClick={() => navigate(-1)}
+            onClick={goBack}
             className="mt-1"
           >
             <ArrowLeft className="w-4 h-4" />

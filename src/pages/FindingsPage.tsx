@@ -6,12 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useFindings, useFindingStats } from '@/hooks/useFindings';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useGoBack } from '@/hooks/useGoBack';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 
 export default function FindingsPage() {
   const navigate = useNavigate();
+  const goBack = useGoBack('/dashboard/ceo');
   const { language, direction } = useLanguage();
   const [activeTab, setActiveTab] = useState<string>('all');
   
@@ -72,7 +74,7 @@ export default function FindingsPage() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate(-1)}
+          onClick={goBack}
           className="shrink-0"
         >
           <ArrowLeft className="w-5 h-5" />
