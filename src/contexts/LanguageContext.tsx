@@ -155,6 +155,17 @@ const translations: Record<Language, Record<string, string>> = {
     'status.inProgress': 'In Progress',
     'status.pending': 'Pending',
     
+    // Auth
+    'auth.signIn': 'Sign In',
+    'auth.signOut': 'Sign Out',
+    'auth.email': 'Email',
+    'auth.password': 'Password',
+    'auth.emailPlaceholder': 'Enter your email',
+    'auth.passwordPlaceholder': 'Enter your password',
+    'auth.loginTitle': 'Sign in to your account',
+    'auth.loginSuccess': 'Login successful!',
+    'auth.loginError': 'Login failed. Please check your credentials.',
+    
     // Common
     'common.save': 'Save',
     'common.cancel': 'Cancel',
@@ -319,6 +330,17 @@ const translations: Record<Language, Record<string, string>> = {
     'status.completed': 'مكتمل',
     'status.inProgress': 'قيد التنفيذ',
     'status.pending': 'معلق',
+    
+    // Auth
+    'auth.signIn': 'تسجيل الدخول',
+    'auth.signOut': 'تسجيل الخروج',
+    'auth.email': 'البريد الإلكتروني',
+    'auth.password': 'كلمة المرور',
+    'auth.emailPlaceholder': 'أدخل بريدك الإلكتروني',
+    'auth.passwordPlaceholder': 'أدخل كلمة المرور',
+    'auth.loginTitle': 'تسجيل الدخول إلى حسابك',
+    'auth.loginSuccess': 'تم تسجيل الدخول بنجاح!',
+    'auth.loginError': 'خطأ في تسجيل الدخول. يرجى التحقق من بياناتك.',
     
     // Common
     'common.save': 'حفظ',
