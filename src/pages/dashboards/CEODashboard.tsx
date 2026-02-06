@@ -6,6 +6,7 @@ import { StatCard } from '@/components/StatCard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useBranches, useBranchStats } from '@/hooks/useBranches';
 import { useRegions } from '@/hooks/useBranches';
+import { useFindingStats } from '@/hooks/useFindings';
 import { format } from 'date-fns';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -15,9 +16,15 @@ export default function CEODashboard() {
   const { t, direction, language } = useLanguage();
   const { data: branches, isLoading: branchesLoading } = useBranches();
   const { data: stats, isLoading: statsLoading } = useBranchStats();
+  const { data: findingStats, isLoading: findingStatsLoading } = useFindingStats();
   const { data: regions } = useRegions();
 
-  const isLoading = branchesLoading || statsLoading;
+  const isLoading = branchesLoading || statsLoading || findingStatsLoading;
+
+  // Build findings summary subtitle
+  const findingsSummary = language === 'ar'
+    ? `${findingStats?.open || 0} مفتوح، ${findingStats?.inProgress || 0} قيد المعالجة`
+    : `${findingStats?.open || 0} open, ${findingStats?.inProgress || 0} in progress`;
 
   // Calculate overall score across all branches
   const overallScore = stats?.averageScore || 0;
@@ -102,11 +109,11 @@ export default function CEODashboard() {
               onClick={() => navigate('/score-analysis')}
             />
             <StatCard
-              title={t('dashboard.openFindings')}
-              value={stats?.openFindings || 0}
-              subtitle={t('dashboard.requireAttention')}
+              title={language === 'ar' ? 'الملاحظات' : 'Findings'}
+              value={findingStats?.total || 0}
+              subtitle={findingsSummary}
               icon={AlertTriangle}
-              variant={stats?.openFindings && stats.openFindings > 0 ? 'average' : 'excellent'}
+              variant={findingStats?.open && findingStats.open > 0 ? 'average' : 'excellent'}
               onClick={() => navigate('/findings')}
             />
             <StatCard
