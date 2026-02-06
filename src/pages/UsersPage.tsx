@@ -14,6 +14,7 @@ import {
   UserCheck,
   Loader2,
   ArrowLeft,
+  Send,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -59,6 +60,7 @@ import {
   useUserStats, 
   useInviteUser, 
   useResetPassword,
+  useResendInvitation,
   useUpdateUserStatus,
   useUpdateUserRole,
   UserWithRole
@@ -87,6 +89,7 @@ export default function UsersPage() {
   const stats = useUserStats();
   const inviteUser = useInviteUser();
   const resetPassword = useResetPassword();
+  const resendInvitation = useResendInvitation();
   const updateStatus = useUpdateUserStatus();
   const updateRole = useUpdateUserRole();
 
@@ -155,6 +158,23 @@ export default function UsersPage() {
         language === 'ar'
           ? 'فشل إرسال رابط إعادة تعيين كلمة المرور'
           : 'Failed to send password reset email'
+      );
+    }
+  };
+
+  const handleResendInvitation = async (user: UserWithRole) => {
+    try {
+      await resendInvitation.mutateAsync(user.user_id);
+      toast.success(
+        language === 'ar'
+          ? `تم إعادة إرسال الدعوة إلى ${user.email}`
+          : `Invitation resent to ${user.email}`
+      );
+    } catch (error) {
+      toast.error(
+        language === 'ar'
+          ? 'فشل إعادة إرسال الدعوة'
+          : 'Failed to resend invitation'
       );
     }
   };
@@ -349,6 +369,10 @@ export default function UsersPage() {
                             >
                               <Key className="w-4 h-4 me-2" />
                               {t('users.resetPassword')}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleResendInvitation(user)}>
+                              <Send className="w-4 h-4 me-2" />
+                              {language === 'ar' ? 'إعادة إرسال الدعوة' : 'Resend Invitation'}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => handleChangeRole(user, 'admin')}>
