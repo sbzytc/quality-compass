@@ -269,15 +269,15 @@ export default function EvaluationForm() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            {/* Progress indicator next to submit */}
-            <div className={cn(
-              "flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium",
-              progress.scored === progress.total 
-                ? "bg-score-excellent/10 text-score-excellent" 
-                : "bg-muted text-muted-foreground"
-            )}>
-              <span>{progress.scored}/{progress.total}</span>
-              {progress.scored === progress.total && <Check className="w-4 h-4" />}
+            {/* Progress indicator */}
+            <div className="text-end">
+              <p className="text-sm text-muted-foreground">{direction === 'rtl' ? 'التقدم' : 'Progress'}</p>
+              <p className={cn(
+                "text-2xl font-bold",
+                progress.scored === progress.total ? "text-score-excellent" : "text-foreground"
+              )}>
+                {progress.scored}/{progress.total}
+              </p>
             </div>
             <Button 
               className="gap-2" 
