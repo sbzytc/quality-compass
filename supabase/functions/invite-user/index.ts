@@ -130,7 +130,7 @@ const handler = async (req: Request): Promise<Response> => {
         const siteUrl = Deno.env.get("SITE_URL") || "https://your-app.lovable.app";
         
         await resend.emails.send({
-          from: "SQCS <noreply@yourdomain.com>",
+          from: "SQCS <onboarding@resend.dev>",
           to: [email],
           subject: "Welcome to SQCS - Your Account Has Been Created",
           html: `
