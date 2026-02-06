@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
@@ -15,10 +15,14 @@ import {
   UserCircle,
   Wrench,
   ClipboardList,
+  LogOut,
 } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth, AppRole } from '@/contexts/AuthContext';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 
 interface NavItem {
   labelKey: string;
@@ -26,33 +30,91 @@ interface NavItem {
   path: string;
   badge?: number;
   children?: NavItem[];
+  allowedRoles?: AppRole[];
 }
-
-const dashboardSubItems: NavItem[] = [
-  { labelKey: 'nav.dashboard.ceo', icon: Briefcase, path: '/dashboard/ceo' },
-  { labelKey: 'nav.dashboard.branchManager', icon: UserCircle, path: '/dashboard/branch-manager' },
-  { labelKey: 'nav.dashboard.operations', icon: Wrench, path: '/dashboard/operations' },
-  { labelKey: 'nav.dashboard.auditor', icon: ClipboardList, path: '/dashboard/auditor' },
-];
-
-const mainNavItems: NavItem[] = [
-  { labelKey: 'nav.dashboard', icon: LayoutDashboard, path: '/dashboard', children: dashboardSubItems },
-  { labelKey: 'nav.branches', icon: Building2, path: '/branches' },
-  { labelKey: 'nav.evaluations', icon: ClipboardCheck, path: '/evaluations' },
-  { labelKey: 'nav.findings', icon: AlertTriangle, path: '/findings', badge: 3 },
-];
-
-const settingsNavItems: NavItem[] = [
-  { labelKey: 'nav.users', icon: Users, path: '/users' },
-  { labelKey: 'nav.templates', icon: FileText, path: '/templates' },
-  { labelKey: 'nav.settings', icon: Settings, path: '/settings' },
-];
 
 export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [expandedItems, setExpandedItems] = useState<string[]>(['/dashboard']);
   const location = useLocation();
+  const navigate = useNavigate();
   const { t, direction } = useLanguage();
+  const { profile, roles, signOut, isAdmin, isExecutive, isBranchManager, isAssessor } = useAuth();
+
+  // Filter dashboard sub-items based on role
+  const dashboardSubItems: NavItem[] = ([
+    { 
+      labelKey: 'nav.dashboard.ceo', 
+      icon: Briefcase, 
+      path: '/dashboard/ceo',
+      allowedRoles: ['admin', 'executive'] as AppRole[]
+    },
+    { 
+      labelKey: 'nav.dashboard.branchManager', 
+      icon: UserCircle, 
+      path: '/dashboard/branch-manager',
+      allowedRoles: ['admin', 'executive', 'branch_manager'] as AppRole[]
+    },
+    { 
+      labelKey: 'nav.dashboard.operations', 
+      icon: Wrench, 
+      path: '/dashboard/operations',
+      allowedRoles: ['admin', 'executive', 'branch_manager'] as AppRole[]
+    },
+    { 
+      labelKey: 'nav.dashboard.auditor', 
+      icon: ClipboardList, 
+      path: '/dashboard/auditor',
+      allowedRoles: ['admin', 'assessor'] as AppRole[]
+    },
+  ] as NavItem[]).filter(item => !item.allowedRoles || item.allowedRoles.some(role => roles.includes(role)));
+
+  const mainNavItems: NavItem[] = ([
+    { 
+      labelKey: 'nav.dashboard', 
+      icon: LayoutDashboard, 
+      path: '/dashboard', 
+      children: dashboardSubItems 
+    },
+    { 
+      labelKey: 'nav.branches', 
+      icon: Building2, 
+      path: '/branches',
+      allowedRoles: ['admin', 'executive', 'branch_manager'] as AppRole[]
+    },
+    { 
+      labelKey: 'nav.evaluations', 
+      icon: ClipboardCheck, 
+      path: '/evaluations',
+      allowedRoles: ['admin', 'assessor'] as AppRole[]
+    },
+    { 
+      labelKey: 'nav.findings', 
+      icon: AlertTriangle, 
+      path: '/findings', 
+      badge: 3 
+    },
+  ] as NavItem[]).filter(item => !item.allowedRoles || item.allowedRoles.some(role => roles.includes(role)));
+
+  const settingsNavItems: NavItem[] = ([
+    { 
+      labelKey: 'nav.users', 
+      icon: Users, 
+      path: '/users',
+      allowedRoles: ['admin'] as AppRole[]
+    },
+    { 
+      labelKey: 'nav.templates', 
+      icon: FileText, 
+      path: '/templates',
+      allowedRoles: ['admin'] as AppRole[]
+    },
+    { 
+      labelKey: 'nav.settings', 
+      icon: Settings, 
+      path: '/settings' 
+    },
+  ] as NavItem[]).filter(item => !item.allowedRoles || item.allowedRoles.some(role => roles.includes(role)));
 
   const toggleExpanded = (path: string) => {
     setExpandedItems(prev => 
@@ -60,6 +122,28 @@ export function AppSidebar() {
         ? prev.filter(p => p !== path)
         : [...prev, path]
     );
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/login');
+  };
+
+  const getRoleBadge = () => {
+    if (isAdmin) return direction === 'rtl' ? 'مدير النظام' : 'Admin';
+    if (isExecutive) return direction === 'rtl' ? 'تنفيذي' : 'Executive';
+    if (isBranchManager) return direction === 'rtl' ? 'مدير الفرع' : 'Branch Manager';
+    if (isAssessor) return direction === 'rtl' ? 'مقيّم' : 'Assessor';
+    return '';
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   return (
@@ -112,25 +196,62 @@ export function AppSidebar() {
           ))}
         </div>
 
-        <div className="space-y-1">
-          {!collapsed && (
-            <p className="text-xs font-medium text-sidebar-foreground/50 px-3 py-2 uppercase tracking-wider">
-              {t('nav.settings')}
-            </p>
-          )}
-          {settingsNavItems.map((item) => (
-            <SidebarNavItem
-              key={item.path}
-              item={item}
-              collapsed={collapsed}
-              isActive={location.pathname === item.path}
-              isExpanded={false}
-              onToggle={() => {}}
-              currentPath={location.pathname}
-            />
-          ))}
-        </div>
+        {settingsNavItems.length > 0 && (
+          <div className="space-y-1">
+            {!collapsed && (
+              <p className="text-xs font-medium text-sidebar-foreground/50 px-3 py-2 uppercase tracking-wider">
+                {t('nav.settings')}
+              </p>
+            )}
+            {settingsNavItems.map((item) => (
+              <SidebarNavItem
+                key={item.path}
+                item={item}
+                collapsed={collapsed}
+                isActive={location.pathname === item.path}
+                isExpanded={false}
+                onToggle={() => {}}
+                currentPath={location.pathname}
+              />
+            ))}
+          </div>
+        )}
       </nav>
+
+      {/* User Profile & Logout */}
+      {profile && (
+        <div className="p-3 border-t border-sidebar-border">
+          <div className={cn(
+            "flex items-center gap-3 p-2 rounded-lg",
+            collapsed ? "justify-center" : ""
+          )}>
+            <Avatar className="w-9 h-9">
+              <AvatarImage src={profile.avatar_url || undefined} />
+              <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-sm">
+                {getInitials(profile.full_name)}
+              </AvatarFallback>
+            </Avatar>
+            {!collapsed && (
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{profile.full_name}</p>
+                <p className="text-xs text-sidebar-foreground/60">{getRoleBadge()}</p>
+              </div>
+            )}
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleSignOut}
+            className={cn(
+              "w-full mt-2 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+              collapsed ? "px-0" : ""
+            )}
+          >
+            <LogOut className="w-4 h-4" />
+            {!collapsed && <span className="ms-2">{direction === 'rtl' ? 'تسجيل الخروج' : 'Sign Out'}</span>}
+          </Button>
+        </div>
+      )}
 
       {/* Collapse button */}
       <div className="p-3 border-t border-sidebar-border">
