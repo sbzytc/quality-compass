@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronRight, ChevronDown, Camera, MessageSquare, AlertTriangle, Check, Save } from 'lucide-react';
+import { ChevronRight, ChevronDown, Camera, MessageSquare, AlertTriangle, Check, Save, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { getScoreLevel, ScoreLevel } from '@/types';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Mock evaluation template
 const evaluationTemplate = {
@@ -67,6 +69,8 @@ interface Score {
 }
 
 export default function EvaluationForm() {
+  const navigate = useNavigate();
+  const { t, direction } = useLanguage();
   const [selectedBranch] = useState({ id: '1', name: 'Downtown Central', city: 'Riyadh' });
   const [expandedCategories, setExpandedCategories] = useState<string[]>(['cat-1']);
   const [scores, setScores] = useState<Record<string, Score>>({});
@@ -149,14 +153,26 @@ export default function EvaluationForm() {
       {/* Header */}
       <div className="bg-card rounded-xl border border-border p-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">New Evaluation</h1>
-            <p className="text-muted-foreground mt-1">
-              {selectedBranch.name} • {selectedBranch.city}
-            </p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Template: {evaluationTemplate.name}
-            </p>
+          <div className="flex items-start gap-4">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => navigate(-1)}
+              className="mt-1"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">
+                {direction === 'rtl' ? 'تقييم جديد' : 'New Evaluation'}
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                {selectedBranch.name} • {selectedBranch.city}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                {direction === 'rtl' ? 'القالب:' : 'Template:'} {evaluationTemplate.name}
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Search, Building2, MapPin, Calendar } from 'lucide-react';
+import { Search, Building2, MapPin, Calendar, ArrowLeft } from 'lucide-react';
 import { QualityCircle } from '@/components/QualityCircle';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Input } from '@/components/ui/input';
@@ -14,7 +14,7 @@ import { ScoreLevel } from '@/types';
 
 export default function BranchesList() {
   const navigate = useNavigate();
-  const { t, language } = useLanguage();
+  const { t, language, direction } = useLanguage();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<ScoreLevel | 'all'>('all');
 
@@ -40,12 +40,22 @@ export default function BranchesList() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">{t('branches.title')}</h1>
-        <p className="text-muted-foreground mt-1">
-          {t('branches.subtitle')}
-        </p>
+      {/* Header with Back Button */}
+      <div className="flex items-start gap-4">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => navigate(-1)}
+          className="mt-1"
+        >
+          <ArrowLeft className="w-4 h-4" />
+        </Button>
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">{t('branches.title')}</h1>
+          <p className="text-muted-foreground mt-1">
+            {t('branches.subtitle')}
+          </p>
+        </div>
       </div>
 
       {/* Filters */}

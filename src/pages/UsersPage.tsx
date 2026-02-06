@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Users,
@@ -12,6 +13,7 @@ import {
   UserX,
   UserCheck,
   Loader2,
+  ArrowLeft,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -77,6 +79,7 @@ const roleColors: Record<AppRole, string> = {
 };
 
 export default function UsersPage() {
+  const navigate = useNavigate();
   const { t, language } = useLanguage();
   const { data: users, isLoading } = useUsers();
   const stats = useUserStats();
@@ -186,11 +189,21 @@ export default function UsersPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header with Back Button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">{t('users.title')}</h1>
-          <p className="text-muted-foreground mt-1">{t('users.subtitle')}</p>
+        <div className="flex items-start gap-4">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => navigate(-1)}
+            className="mt-1"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">{t('users.title')}</h1>
+            <p className="text-muted-foreground mt-1">{t('users.subtitle')}</p>
+          </div>
         </div>
         <Button onClick={() => setIsInviteDialogOpen(true)} className="gap-2">
           <Plus className="w-4 h-4" />
