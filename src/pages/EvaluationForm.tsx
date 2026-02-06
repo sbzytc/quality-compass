@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronRight, ChevronDown, Camera, MessageSquare, AlertTriangle, Check, Save, ArrowLeft } from 'lucide-react';
+import { ChevronRight, ChevronDown, Camera, MessageSquare, AlertTriangle, Check, Save, ArrowLeft, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { getScoreLevel, ScoreLevel } from '@/types';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useGoBack } from '@/hooks/useGoBack';
+import { useBranches } from '@/hooks/useBranches';
 
 // Mock evaluation template
 const evaluationTemplate = {
@@ -71,12 +73,16 @@ interface Score {
 
 export default function EvaluationForm() {
   const navigate = useNavigate();
-  const goBack = useGoBack('/dashboard/auditor');
+  const goBack = useGoBack('/evaluations');
   const { t, direction } = useLanguage();
-  const [selectedBranch] = useState({ id: '1', name: 'Downtown Central', city: 'Riyadh' });
+  const { data: branches, isLoading: branchesLoading } = useBranches();
+  
+  const [selectedBranchId, setSelectedBranchId] = useState<string>('');
   const [expandedCategories, setExpandedCategories] = useState<string[]>(['cat-1']);
   const [scores, setScores] = useState<Record<string, Score>>({});
   const [currentNotes, setCurrentNotes] = useState<string | null>(null);
+
+  const selectedBranch = branches?.find(b => b.id === selectedBranchId);
 
   const toggleCategory = (categoryId: string) => {
     setExpandedCategories((prev) =>
@@ -164,16 +170,46 @@ export default function EvaluationForm() {
             >
               <ArrowLeft className="w-4 h-4" />
             </Button>
-            <div>
+            <div className="flex-1">
               <h1 className="text-2xl font-bold text-foreground">
                 {direction === 'rtl' ? 'تقييم جديد' : 'New Evaluation'}
               </h1>
-              <p className="text-muted-foreground mt-1">
-                {selectedBranch.name} • {selectedBranch.city}
-              </p>
-              <p className="text-sm text-muted-foreground mt-1">
-                {direction === 'rtl' ? 'القالب:' : 'Template:'} {evaluationTemplate.name}
-              </p>
+              
+              {/* Branch Selector */}
+              <div className="mt-3">
+                <label className="text-sm text-muted-foreground mb-2 block">
+                  {direction === 'rtl' ? 'اختر الفرع' : 'Select Branch'}
+                </label>
+                <Select value={selectedBranchId} onValueChange={setSelectedBranchId}>
+                  <SelectTrigger className="w-full md:w-[300px]">
+                    <MapPin className="w-4 h-4 me-2 text-muted-foreground" />
+                    <SelectValue placeholder={direction === 'rtl' ? 'اختر الفرع للتقييم...' : 'Choose branch to evaluate...'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {branchesLoading ? (
+                      <SelectItem value="loading" disabled>
+                        {direction === 'rtl' ? 'جاري التحميل...' : 'Loading...'}
+                      </SelectItem>
+                    ) : branches && branches.length > 0 ? (
+                      branches.filter(b => b.isActive).map((branch) => (
+                        <SelectItem key={branch.id} value={branch.id}>
+                          {branch.name} • {branch.city || 'N/A'}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="none" disabled>
+                        {direction === 'rtl' ? 'لا توجد فروع' : 'No branches available'}
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {selectedBranch && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  {direction === 'rtl' ? 'القالب:' : 'Template:'} {evaluationTemplate.name}
+                </p>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -183,7 +219,7 @@ export default function EvaluationForm() {
                 {progress.scored}/{progress.total}
               </p>
             </div>
-            <Button className="gap-2">
+            <Button className="gap-2" disabled={!selectedBranch}>
               <Save className="w-4 h-4" />
               Submit
             </Button>
@@ -200,162 +236,179 @@ export default function EvaluationForm() {
         </div>
       </div>
 
-      {/* Categories */}
-      <div className="space-y-4">
-        {evaluationTemplate.categories.map((category) => {
-          const isExpanded = expandedCategories.includes(category.id);
-          const catProgress = getCategoryProgress(category.id);
-          const catStatus = catProgress.percentage > 0 ? getScoreLevel(catProgress.percentage) : null;
+      {/* Show message if no branch selected */}
+      {!selectedBranch && (
+        <div className="bg-card rounded-xl border border-border p-8 text-center">
+          <MapPin className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+          <h3 className="text-lg font-medium text-foreground mb-2">
+            {direction === 'rtl' ? 'اختر فرعاً للبدء' : 'Select a Branch to Start'}
+          </h3>
+          <p className="text-muted-foreground">
+            {direction === 'rtl' 
+              ? 'اختر الفرع الذي تريد تقييمه من القائمة أعلاه'
+              : 'Choose the branch you want to evaluate from the dropdown above'}
+          </p>
+        </div>
+      )}
 
-          return (
-            <motion.div
-              key={category.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-card rounded-xl border border-border overflow-hidden"
-            >
-              {/* Category Header */}
-              <button
-                onClick={() => toggleCategory(category.id)}
-                className="w-full flex items-center justify-between p-4 hover:bg-muted/30 transition-colors"
+      {/* Categories - only show when branch is selected */}
+      {selectedBranch && (
+        <div className="space-y-4">
+          {evaluationTemplate.categories.map((category) => {
+            const isExpanded = expandedCategories.includes(category.id);
+            const catProgress = getCategoryProgress(category.id);
+            const catStatus = catProgress.percentage > 0 ? getScoreLevel(catProgress.percentage) : null;
+
+            return (
+              <motion.div
+                key={category.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-card rounded-xl border border-border overflow-hidden"
               >
-                <div className="flex items-center gap-3">
-                  {isExpanded ? (
-                    <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                  ) : (
-                    <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                  )}
-                  <div className="text-left">
-                    <h3 className="font-semibold text-foreground">{category.name}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {catProgress.scored}/{catProgress.total} criteria scored •{' '}
-                      Weight: {category.weight}%
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  {catStatus && (
-                    <div
-                      className={cn(
-                        'w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold',
-                        getStatusColor(catStatus)
-                      )}
-                    >
-                      {catProgress.percentage}%
+                {/* Category Header */}
+                <button
+                  onClick={() => toggleCategory(category.id)}
+                  className="w-full flex items-center justify-between p-4 hover:bg-muted/30 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    {isExpanded ? (
+                      <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                    ) : (
+                      <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                    )}
+                    <div className="text-left">
+                      <h3 className="font-semibold text-foreground">{category.name}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {catProgress.scored}/{catProgress.total} criteria scored •{' '}
+                        Weight: {category.weight}%
+                      </p>
                     </div>
-                  )}
-                  {catProgress.scored === catProgress.total && (
-                    <Check className="w-5 h-5 text-score-excellent" />
-                  )}
-                </div>
-              </button>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {catStatus && (
+                      <div
+                        className={cn(
+                          'w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold',
+                          getStatusColor(catStatus)
+                        )}
+                      >
+                        {catProgress.percentage}%
+                      </div>
+                    )}
+                    {catProgress.scored === catProgress.total && (
+                      <Check className="w-5 h-5 text-score-excellent" />
+                    )}
+                  </div>
+                </button>
 
-              {/* Criteria */}
-              {isExpanded && (
-                <div className="border-t border-border divide-y divide-border">
-                  {category.criteria.map((criterion) => {
-                    const currentScore = scores[criterion.id]?.score;
-                    const showNotesInput = currentNotes === criterion.id;
+                {/* Criteria */}
+                {isExpanded && (
+                  <div className="border-t border-border divide-y divide-border">
+                    {category.criteria.map((criterion) => {
+                      const currentScore = scores[criterion.id]?.score;
+                      const showNotesInput = currentNotes === criterion.id;
 
-                    return (
-                      <div key={criterion.id} className="p-4">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-foreground">
-                                {criterion.name}
-                              </span>
-                              {criterion.isCritical && (
-                                <span className="px-2 py-0.5 text-xs font-medium bg-score-critical/10 text-score-critical rounded-full">
-                                  Critical
+                      return (
+                        <div key={criterion.id} className="p-4">
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-foreground">
+                                  {criterion.name}
                                 </span>
-                              )}
+                                {criterion.isCritical && (
+                                  <span className="px-2 py-0.5 text-xs font-medium bg-score-critical/10 text-score-critical rounded-full">
+                                    Critical
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                Max score: {criterion.maxScore} • Weight: {criterion.weight}x
+                              </p>
                             </div>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              Max score: {criterion.maxScore} • Weight: {criterion.weight}x
-                            </p>
-                          </div>
 
-                          {/* Score buttons */}
-                          <div className="flex items-center gap-2">
-                            {[0, 1, 2, 3, 4, 5].map((score) => (
-                              <button
-                                key={score}
-                                onClick={() => setScore(criterion.id, score)}
+                            {/* Score buttons */}
+                            <div className="flex items-center gap-2">
+                              {[0, 1, 2, 3, 4, 5].map((score) => (
+                                <button
+                                  key={score}
+                                  onClick={() => setScore(criterion.id, score)}
+                                  className={cn(
+                                    'w-10 h-10 rounded-lg font-medium transition-all',
+                                    currentScore === score
+                                      ? cn(
+                                          'text-white',
+                                          getStatusColor(getScoreLevel((score / 5) * 100))
+                                        )
+                                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                                  )}
+                                >
+                                  {score}
+                                </button>
+                              ))}
+                            </div>
+
+                            {/* Action buttons */}
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() =>
+                                  setCurrentNotes(showNotesInput ? null : criterion.id)
+                                }
                                 className={cn(
-                                  'w-10 h-10 rounded-lg font-medium transition-all',
-                                  currentScore === score
-                                    ? cn(
-                                        'text-white',
-                                        getStatusColor(getScoreLevel((score / 5) * 100))
-                                      )
-                                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                                  scores[criterion.id]?.notes && 'text-primary'
                                 )}
                               >
-                                {score}
-                              </button>
-                            ))}
+                                <MessageSquare className="w-4 h-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon">
+                                <Camera className="w-4 h-4" />
+                              </Button>
+                            </div>
                           </div>
 
-                          {/* Action buttons */}
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() =>
-                                setCurrentNotes(showNotesInput ? null : criterion.id)
-                              }
-                              className={cn(
-                                scores[criterion.id]?.notes && 'text-primary'
-                              )}
+                          {/* Notes input */}
+                          {showNotesInput && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              className="mt-4"
                             >
-                              <MessageSquare className="w-4 h-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon">
-                              <Camera className="w-4 h-4" />
-                            </Button>
-                          </div>
+                              <Textarea
+                                placeholder="Add notes about this criterion..."
+                                value={scores[criterion.id]?.notes || ''}
+                                onChange={(e) => setNotes(criterion.id, e.target.value)}
+                                className="min-h-[80px]"
+                              />
+                            </motion.div>
+                          )}
+
+                          {/* Warning for low critical scores */}
+                          {criterion.isCritical && currentScore !== undefined && currentScore < 3 && (
+                            <motion.div
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              className="mt-3 flex items-center gap-2 p-3 rounded-lg bg-score-critical/10 text-score-critical"
+                            >
+                              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                              <p className="text-sm">
+                                This is a critical criterion. A low score will cap the overall
+                                rating.
+                              </p>
+                            </motion.div>
+                          )}
                         </div>
-
-                        {/* Notes input */}
-                        {showNotesInput && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            className="mt-4"
-                          >
-                            <Textarea
-                              placeholder="Add notes about this criterion..."
-                              value={scores[criterion.id]?.notes || ''}
-                              onChange={(e) => setNotes(criterion.id, e.target.value)}
-                              className="min-h-[80px]"
-                            />
-                          </motion.div>
-                        )}
-
-                        {/* Warning for low critical scores */}
-                        {criterion.isCritical && currentScore !== undefined && currentScore < 3 && (
-                          <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="mt-3 flex items-center gap-2 p-3 rounded-lg bg-score-critical/10 text-score-critical"
-                          >
-                            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-                            <p className="text-sm">
-                              This is a critical criterion. A low score will cap the overall
-                              rating.
-                            </p>
-                          </motion.div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </motion.div>
-          );
-        })}
-      </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

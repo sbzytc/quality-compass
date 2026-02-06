@@ -49,7 +49,8 @@ export function getDefaultDashboard(roles: AppRole[]): string {
   } else if (roles.includes('branch_manager')) {
     return '/dashboard/branch-manager';
   } else if (roles.includes('assessor')) {
-    return '/dashboard/auditor';
+    // Assessors go directly to evaluations, not a dashboard
+    return '/evaluations';
   }
   return '/login';
 }

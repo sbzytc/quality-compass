@@ -1,18 +1,21 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Globe, Moon, Sun, Bell, Mail, Smartphone, ArrowLeft } from 'lucide-react';
+import { Globe, Moon, Sun, Bell, Mail, Smartphone, ArrowLeft, User } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useGoBack } from '@/hooks/useGoBack';
 import { toast } from 'sonner';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
-  const goBack = useGoBack('/dashboard/ceo');
-  const { language, setLanguage, t } = useLanguage();
+  const { isAdmin, profile } = useAuth();
+  const goBack = useGoBack('/evaluations');
+  const { language, setLanguage, t, direction } = useLanguage();
 
   const handleLanguageChange = (lang: 'en' | 'ar') => {
     setLanguage(lang);
@@ -38,7 +41,45 @@ export default function SettingsPage() {
       </div>
 
       <div className="grid gap-6">
-        {/* Language Settings */}
+        {/* Profile Settings - Always visible */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+        >
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <User className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle>{direction === 'rtl' ? 'الملف الشخصي' : 'Profile'}</CardTitle>
+                  <CardDescription>{direction === 'rtl' ? 'معلومات حسابك الشخصية' : 'Your personal account information'}</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>{direction === 'rtl' ? 'الاسم الكامل' : 'Full Name'}</Label>
+                  <Input value={profile?.full_name || ''} disabled className="bg-muted" />
+                </div>
+                <div className="space-y-2">
+                  <Label>{direction === 'rtl' ? 'البريد الإلكتروني' : 'Email'}</Label>
+                  <Input value={profile?.email || ''} disabled className="bg-muted" />
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {direction === 'rtl' 
+                  ? 'تواصل مع المسؤول لتحديث بياناتك الشخصية'
+                  : 'Contact an administrator to update your profile information'}
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Language Settings - Always visible */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -77,72 +118,76 @@ export default function SettingsPage() {
           </Card>
         </motion.div>
 
-        {/* Theme Settings */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Sun className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <CardTitle>{t('settings.theme')}</CardTitle>
-                  <CardDescription>{t('settings.themeDesc')}</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
+        {/* Theme Settings - Admin only */}
+        {isAdmin && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Card>
+              <CardHeader>
                 <div className="flex items-center gap-3">
-                  <Sun className="w-5 h-5 text-muted-foreground" />
-                  <Label htmlFor="dark-mode">Dark Mode</Label>
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Sun className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle>{t('settings.theme')}</CardTitle>
+                    <CardDescription>{t('settings.themeDesc')}</CardDescription>
+                  </div>
                 </div>
-                <Switch id="dark-mode" />
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Sun className="w-5 h-5 text-muted-foreground" />
+                    <Label htmlFor="dark-mode">Dark Mode</Label>
+                  </div>
+                  <Switch id="dark-mode" />
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
-        {/* Notification Settings */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Bell className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <CardTitle>{t('settings.notifications')}</CardTitle>
-                  <CardDescription>{t('settings.notificationsDesc')}</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
+        {/* Notification Settings - Admin only */}
+        {isAdmin && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <Card>
+              <CardHeader>
                 <div className="flex items-center gap-3">
-                  <Mail className="w-5 h-5 text-muted-foreground" />
-                  <Label htmlFor="email-notifications">{t('settings.email')}</Label>
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Bell className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle>{t('settings.notifications')}</CardTitle>
+                    <CardDescription>{t('settings.notificationsDesc')}</CardDescription>
+                  </div>
                 </div>
-                <Switch id="email-notifications" defaultChecked />
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Smartphone className="w-5 h-5 text-muted-foreground" />
-                  <Label htmlFor="push-notifications">{t('settings.push')}</Label>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Mail className="w-5 h-5 text-muted-foreground" />
+                    <Label htmlFor="email-notifications">{t('settings.email')}</Label>
+                  </div>
+                  <Switch id="email-notifications" defaultChecked />
                 </div>
-                <Switch id="push-notifications" defaultChecked />
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Smartphone className="w-5 h-5 text-muted-foreground" />
+                    <Label htmlFor="push-notifications">{t('settings.push')}</Label>
+                  </div>
+                  <Switch id="push-notifications" defaultChecked />
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
       </div>
     </div>
   );
