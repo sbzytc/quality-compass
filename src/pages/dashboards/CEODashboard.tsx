@@ -99,7 +99,7 @@ export default function CEODashboard() {
               subtitle={t('dashboard.acrossAllBranches')}
               icon={TrendingUp}
               variant={stats?.averageScore && stats.averageScore >= 80 ? 'good' : 'average'}
-              onClick={() => navigate('/branches')}
+              onClick={() => navigate('/score-analysis')}
             />
             <StatCard
               title={t('dashboard.openFindings')}
