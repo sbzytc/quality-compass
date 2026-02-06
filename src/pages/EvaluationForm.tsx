@@ -1,15 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronRight, ChevronDown, Camera, MessageSquare, AlertTriangle, Check, Save, ArrowLeft, MapPin, AlertCircle } from 'lucide-react';
+import { ChevronRight, ChevronDown, Camera, MessageSquare, AlertTriangle, Check, Save, ArrowLeft, MapPin, AlertCircle, Eye, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { getScoreLevel, ScoreLevel } from '@/types';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useGoBack } from '@/hooks/useGoBack';
 import { useBranches } from '@/hooks/useBranches';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 // Mock evaluation template with Arabic translations
@@ -77,10 +80,19 @@ interface Score {
   notes: string;
 }
 
+interface ExistingEvaluation {
+  id: string;
+  assessor_id: string;
+  assessor_name: string;
+  created_at: string;
+  status: string;
+}
+
 export default function EvaluationForm() {
   const navigate = useNavigate();
   const goBack = useGoBack('/evaluations');
   const { t, direction } = useLanguage();
+  const { user } = useAuth();
   const { data: branches, isLoading: branchesLoading } = useBranches();
   
   const [selectedBranchId, setSelectedBranchId] = useState<string>('');
@@ -88,8 +100,96 @@ export default function EvaluationForm() {
   const [scores, setScores] = useState<Record<string, Score>>({});
   const [currentNotes, setCurrentNotes] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  
+  // Duplicate evaluation check state
+  const [existingEvaluation, setExistingEvaluation] = useState<ExistingEvaluation | null>(null);
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
+  const [isCheckingDuplicate, setIsCheckingDuplicate] = useState(false);
 
   const selectedBranch = branches?.find(b => b.id === selectedBranchId);
+
+  // Check for existing evaluation when branch is selected
+  const checkExistingEvaluation = async (branchId: string) => {
+    if (!branchId) return;
+    
+    setIsCheckingDuplicate(true);
+    
+    try {
+      // Get today's date range
+      const today = new Date();
+      const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
+      const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString();
+      
+      // Check for evaluations of this branch today
+      const { data, error } = await supabase
+        .from('evaluations')
+        .select(`
+          id,
+          assessor_id,
+          created_at,
+          status,
+          profiles!evaluations_assessor_id_fkey(full_name)
+        `)
+        .eq('branch_id', branchId)
+        .gte('created_at', startOfDay)
+        .lt('created_at', endOfDay)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      
+      if (error) {
+        console.error('Error checking existing evaluation:', error);
+        return;
+      }
+      
+      if (data && data.length > 0) {
+        const evaluation = data[0];
+        setExistingEvaluation({
+          id: evaluation.id,
+          assessor_id: evaluation.assessor_id,
+          assessor_name: (evaluation.profiles as any)?.full_name || 'Unknown',
+          created_at: evaluation.created_at,
+          status: evaluation.status,
+        });
+        setShowDuplicateDialog(true);
+      } else {
+        setExistingEvaluation(null);
+      }
+    } catch (err) {
+      console.error('Error:', err);
+    } finally {
+      setIsCheckingDuplicate(false);
+    }
+  };
+
+  // Handle branch selection
+  const handleBranchSelect = (branchId: string) => {
+    setSelectedBranchId(branchId);
+    checkExistingEvaluation(branchId);
+  };
+
+  // Check if current user can edit the existing evaluation
+  const canEditExisting = existingEvaluation && user?.id === existingEvaluation.assessor_id;
+
+  // Handle viewing existing evaluation
+  const handleViewExisting = () => {
+    setShowDuplicateDialog(false);
+    // TODO: Navigate to view evaluation page when implemented
+    toast.info(direction === 'rtl' ? 'سيتم فتح التقييم للعرض' : 'Opening evaluation for viewing');
+  };
+
+  // Handle editing existing evaluation
+  const handleEditExisting = () => {
+    setShowDuplicateDialog(false);
+    // TODO: Load existing evaluation data for editing when implemented
+    toast.info(direction === 'rtl' ? 'سيتم فتح التقييم للتعديل' : 'Opening evaluation for editing');
+  };
+
+  // Handle starting new evaluation anyway (close dialog and clear selection)
+  const handleCancelDuplicate = () => {
+    setShowDuplicateDialog(false);
+    setSelectedBranchId('');
+    setExistingEvaluation(null);
+  };
 
   // Get all unanswered criteria
   const getUnansweredCriteria = () => {
@@ -249,7 +349,7 @@ export default function EvaluationForm() {
                 <label className="text-sm text-muted-foreground mb-2 block">
                   {direction === 'rtl' ? 'اختر الفرع' : 'Select Branch'}
                 </label>
-                <Select value={selectedBranchId} onValueChange={setSelectedBranchId}>
+                <Select value={selectedBranchId} onValueChange={handleBranchSelect}>
                   <SelectTrigger className="w-full md:w-[300px]">
                     <MapPin className="w-4 h-4 me-2 text-muted-foreground" />
                     <SelectValue placeholder={direction === 'rtl' ? 'اختر الفرع للتقييم...' : 'Choose branch to evaluate...'} />
@@ -525,6 +625,39 @@ export default function EvaluationForm() {
           </div>
         </div>
       )}
+
+      {/* Duplicate Evaluation Dialog */}
+      <Dialog open={showDuplicateDialog} onOpenChange={setShowDuplicateDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-score-average">
+              <AlertTriangle className="w-5 h-5" />
+              {direction === 'rtl' ? 'تقييم موجود' : 'Evaluation Exists'}
+            </DialogTitle>
+            <DialogDescription className="pt-2">
+              {direction === 'rtl' 
+                ? `هذا الفرع تم تقييمه اليوم بواسطة "${existingEvaluation?.assessor_name}". يمكنك عرض التقييم السابق ${canEditExisting ? 'أو تعديله' : ''}.`
+                : `This branch was already evaluated today by "${existingEvaluation?.assessor_name}". You can view the previous evaluation${canEditExisting ? ' or edit it' : ''}.`
+              }
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-row gap-2 mt-4">
+            <Button variant="outline" onClick={handleCancelDuplicate}>
+              {direction === 'rtl' ? 'اختر فرعاً آخر' : 'Choose Another Branch'}
+            </Button>
+            <Button variant="secondary" onClick={handleViewExisting} className="gap-2">
+              <Eye className="w-4 h-4" />
+              {direction === 'rtl' ? 'عرض التقييم' : 'View Evaluation'}
+            </Button>
+            {canEditExisting && (
+              <Button onClick={handleEditExisting} className="gap-2">
+                <Pencil className="w-4 h-4" />
+                {direction === 'rtl' ? 'تعديل التقييم' : 'Edit Evaluation'}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
