@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronRight, ChevronDown, Camera, MessageSquare, AlertTriangle, Check, Save, ArrowLeft, MapPin } from 'lucide-react';
+import { ChevronRight, ChevronDown, Camera, MessageSquare, AlertTriangle, Check, Save, ArrowLeft, MapPin, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -10,6 +10,7 @@ import { getScoreLevel, ScoreLevel } from '@/types';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useGoBack } from '@/hooks/useGoBack';
 import { useBranches } from '@/hooks/useBranches';
+import { toast } from 'sonner';
 
 // Mock evaluation template with Arabic translations
 const evaluationTemplate = {
@@ -86,18 +87,57 @@ export default function EvaluationForm() {
   const [expandedCategories, setExpandedCategories] = useState<string[]>(['cat-1']);
   const [scores, setScores] = useState<Record<string, Score>>({});
   const [currentNotes, setCurrentNotes] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
   const selectedBranch = branches?.find(b => b.id === selectedBranchId);
 
-  const toggleCategory = (categoryId: string) => {
-    setExpandedCategories((prev) =>
-      prev.includes(categoryId)
-        ? prev.filter((id) => id !== categoryId)
-        : [...prev, categoryId]
-    );
+  // Get all unanswered criteria
+  const getUnansweredCriteria = () => {
+    const unanswered: { criterion: typeof evaluationTemplate.categories[0]['criteria'][0]; category: typeof evaluationTemplate.categories[0] }[] = [];
+    evaluationTemplate.categories.forEach(category => {
+      category.criteria.forEach(criterion => {
+        if (scores[criterion.id]?.score === undefined) {
+          unanswered.push({ criterion, category });
+        }
+      });
+    });
+    return unanswered;
   };
 
-  const setScore = (criterionId: string, score: number) => {
+  const handleSubmit = () => {
+    const unanswered = getUnansweredCriteria();
+    
+    if (unanswered.length > 0) {
+      // Set validation errors
+      setValidationErrors(unanswered.map(u => u.criterion.id));
+      
+      // Expand the category with the first unanswered question
+      const firstUnansweredCategory = unanswered[0].category.id;
+      if (!expandedCategories.includes(firstUnansweredCategory)) {
+        setExpandedCategories(prev => [...prev, firstUnansweredCategory]);
+      }
+      
+      // Show toast with the first missing question
+      const firstMissing = unanswered[0];
+      const criterionName = direction === 'rtl' ? firstMissing.criterion.nameAr : firstMissing.criterion.name;
+      const categoryName = direction === 'rtl' ? firstMissing.category.nameAr : firstMissing.category.name;
+      
+      toast.error(
+        direction === 'rtl' 
+          ? `يرجى الإجابة على جميع الأسئلة. السؤال المفقود: "${criterionName}" في "${categoryName}"`
+          : `Please answer all questions. Missing: "${criterionName}" in "${categoryName}"`,
+        { duration: 5000 }
+      );
+      return;
+    }
+    
+    // Clear validation errors and proceed with submission
+    setValidationErrors([]);
+    toast.success(direction === 'rtl' ? 'تم إرسال التقييم بنجاح' : 'Evaluation submitted successfully');
+  };
+
+  // Clear validation error when a score is set
+  const setScoreWithValidation = (criterionId: string, score: number) => {
     setScores((prev) => ({
       ...prev,
       [criterionId]: {
@@ -107,7 +147,18 @@ export default function EvaluationForm() {
         notes: prev[criterionId]?.notes || '',
       },
     }));
+    // Remove from validation errors if present
+    setValidationErrors(prev => prev.filter(id => id !== criterionId));
   };
+
+  const toggleCategory = (categoryId: string) => {
+    setExpandedCategories((prev) =>
+      prev.includes(categoryId)
+        ? prev.filter((id) => id !== categoryId)
+        : [...prev, categoryId]
+    );
+  };
+
 
   const setNotes = (criterionId: string, notes: string) => {
     setScores((prev) => ({
@@ -218,13 +269,21 @@ export default function EvaluationForm() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-sm text-muted-foreground">{direction === 'rtl' ? 'التقدم' : 'Progress'}</p>
-              <p className="text-2xl font-bold text-foreground">
-                {progress.scored}/{progress.total}
-              </p>
+            {/* Progress indicator next to submit */}
+            <div className={cn(
+              "flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium",
+              progress.scored === progress.total 
+                ? "bg-score-excellent/10 text-score-excellent" 
+                : "bg-muted text-muted-foreground"
+            )}>
+              <span>{progress.scored}/{progress.total}</span>
+              {progress.scored === progress.total && <Check className="w-4 h-4" />}
             </div>
-            <Button className="gap-2" disabled={!selectedBranch}>
+            <Button 
+              className="gap-2" 
+              disabled={!selectedBranch}
+              onClick={handleSubmit}
+            >
               <Save className="w-4 h-4" />
               {direction === 'rtl' ? 'إرسال' : 'Submit'}
             </Button>
@@ -315,13 +374,26 @@ export default function EvaluationForm() {
                     {category.criteria.map((criterion) => {
                       const currentScore = scores[criterion.id]?.score;
                       const showNotesInput = currentNotes === criterion.id;
+                      const hasValidationError = validationErrors.includes(criterion.id);
 
                       return (
-                        <div key={criterion.id} className="p-4">
+                        <div 
+                          key={criterion.id} 
+                          className={cn(
+                            "p-4 transition-colors",
+                            hasValidationError && "bg-destructive/5 border-s-4 border-destructive"
+                          )}
+                        >
                           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div className="flex-1">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-medium text-foreground">
+                                {hasValidationError && (
+                                  <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" />
+                                )}
+                                <span className={cn(
+                                  "font-medium",
+                                  hasValidationError ? "text-destructive" : "text-foreground"
+                                )}>
                                   {direction === 'rtl' ? criterion.nameAr : criterion.name}
                                 </span>
                                 {criterion.isCritical && (
@@ -340,7 +412,7 @@ export default function EvaluationForm() {
                               {[0, 1, 2, 3, 4, 5].map((score) => (
                                 <button
                                   key={score}
-                                  onClick={() => setScore(criterion.id, score)}
+                                  onClick={() => setScoreWithValidation(criterion.id, score)}
                                   className={cn(
                                     'w-10 h-10 rounded-lg font-medium transition-all',
                                     currentScore === score
