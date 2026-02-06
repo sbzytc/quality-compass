@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { toast } from 'sonner';
 import { Loader2, Mail, Lock, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { getDefaultDashboard } from '@/components/ProtectedRoute';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -16,9 +17,16 @@ export default function LoginPage() {
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, user, roles, loading: authLoading } = useAuth();
   const { direction } = useLanguage();
   const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!authLoading && user && roles.length > 0) {
+      navigate(getDefaultDashboard(roles), { replace: true });
+    }
+  }, [user, roles, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,11 +68,12 @@ export default function LoginPage() {
           : 'Account created successfully! Logging in...'
       );
       
-      // Auto sign in after signup
-      const { error: signInError } = await signIn(email, password);
-      if (!signInError) {
-        navigate('/');
-      }
+      // Auto sign in after signup - the useEffect will handle redirect
+      await signIn(email, password);
+      // Small delay to allow auth state to update
+      setTimeout(() => {
+        navigate('/dashboard/auditor', { replace: true });
+      }, 100);
     } else {
       // Sign in flow
       const { error } = await signIn(email, password);
@@ -84,7 +93,11 @@ export default function LoginPage() {
           ? 'تم تسجيل الدخول بنجاح!'
           : 'Login successful!'
       );
-      navigate('/');
+      // Navigate will be handled by useEffect when roles load
+      // But also try immediate navigation
+      setTimeout(() => {
+        navigate('/', { replace: true });
+      }, 100);
     }
 
     setLoading(false);
