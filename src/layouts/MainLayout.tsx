@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Languages, LogOut, User, Settings } from 'lucide-react';
+import { LogOut, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export function MainLayout() {
@@ -47,28 +47,18 @@ export function MainLayout() {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <header className="h-14 border-b bg-background flex items-center justify-end px-4 gap-2">
-          {/* Language Toggle */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-9 w-9">
-                <Languages className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem 
-                onClick={() => setLanguage('en')}
-                className={language === 'en' ? 'bg-accent' : ''}
-              >
-                🇺🇸 English
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => setLanguage('ar')}
-                className={language === 'ar' ? 'bg-accent' : ''}
-              >
-                🇸🇦 العربية
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Language Toggle - Direct switch */}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-9 w-9"
+            onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
+            title={language === 'en' ? 'العربية' : 'English'}
+          >
+            <span className="text-sm font-medium">
+              {language === 'en' ? 'ع' : 'En'}
+            </span>
+          </Button>
 
           {/* User Profile Dropdown */}
           {profile && (
