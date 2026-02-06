@@ -46,8 +46,11 @@ export function AppSidebar() {
   // Get open findings count for badge
   const openFindingsCount = findingStats?.open || 0;
 
+  // Assessors should not see any dashboards
+  const showDashboards = !isAssessor || isAdmin;
+
   // Filter dashboard sub-items based on role
-  const dashboardSubItems: NavItem[] = ([
+  const dashboardSubItems: NavItem[] = showDashboards ? ([
     { 
       labelKey: 'nav.dashboard.ceo', 
       icon: Briefcase, 
@@ -66,21 +69,16 @@ export function AppSidebar() {
       path: '/dashboard/operations',
       allowedRoles: ['admin', 'executive', 'branch_manager'] as AppRole[]
     },
-    { 
-      labelKey: 'nav.dashboard.auditor', 
-      icon: ClipboardList, 
-      path: '/dashboard/auditor',
-      allowedRoles: ['admin', 'assessor'] as AppRole[]
-    },
-  ] as NavItem[]).filter(item => !item.allowedRoles || item.allowedRoles.some(role => roles.includes(role)));
+  ] as NavItem[]).filter(item => !item.allowedRoles || item.allowedRoles.some(role => roles.includes(role))) : [];
 
   const mainNavItems: NavItem[] = ([
-    { 
+    // Only show dashboard menu if user should see dashboards
+    ...(showDashboards ? [{ 
       labelKey: 'nav.dashboard', 
       icon: LayoutDashboard, 
       path: '/dashboard', 
       children: dashboardSubItems 
-    },
+    }] : []),
     { 
       labelKey: 'nav.branches', 
       icon: Building2, 
