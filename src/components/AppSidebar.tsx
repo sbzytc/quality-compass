@@ -21,6 +21,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth, AppRole } from '@/contexts/AuthContext';
+import { useFindingStats } from '@/hooks/useFindings';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 
@@ -40,6 +41,10 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const { t, direction } = useLanguage();
   const { profile, roles, signOut, isAdmin, isExecutive, isBranchManager, isAssessor } = useAuth();
+  const { data: findingStats } = useFindingStats();
+
+  // Get open findings count for badge
+  const openFindingsCount = findingStats?.open || 0;
 
   // Filter dashboard sub-items based on role
   const dashboardSubItems: NavItem[] = ([
@@ -92,7 +97,7 @@ export function AppSidebar() {
       labelKey: 'nav.findings', 
       icon: AlertTriangle, 
       path: '/findings', 
-      badge: 3 
+      badge: openFindingsCount > 0 ? openFindingsCount : undefined 
     },
   ] as NavItem[]).filter(item => !item.allowedRoles || item.allowedRoles.some(role => roles.includes(role)));
 
