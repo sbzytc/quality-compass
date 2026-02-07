@@ -36,16 +36,13 @@ interface EvaluationData {
 
 interface CategoryScore {
   id: string;
-  category_id: string;
+  name: string;
+  name_ar: string | null;
+  sort_order: number;
+  weight: number;
   score: number;
   max_score: number;
   percentage: number;
-  category: {
-    id: string;
-    name: string;
-    name_ar: string | null;
-    sort_order: number;
-  };
 }
 
 interface CriterionScore {
@@ -132,19 +129,14 @@ export default function EvaluationViewPage() {
           setAssessorName(profileData.full_name);
         }
 
-        // Fetch category scores
-        const { data: catScores, error: catError } = await supabase
-          .from('evaluation_category_scores')
-          .select(`
-            *,
-            category:template_categories (id, name, name_ar, sort_order)
-          `)
-          .eq('evaluation_id', evaluationId);
+        // Fetch template categories (used to render the question groups)
+        const { data: templateCategories, error: templateCatError } = await supabase
+          .from('template_categories')
+          .select('id, name, name_ar, sort_order, weight')
+          .eq('template_id', evalData.template_id)
+          .order('sort_order');
 
-        if (catError) throw catError;
-        setCategoryScores((catScores || []).sort((a, b) => 
-          (a.category?.sort_order || 0) - (b.category?.sort_order || 0)
-        ) as CategoryScore[]);
+        if (templateCatError) throw templateCatError;
 
         // Fetch criterion scores
         const { data: critScores, error: critError } = await supabase
@@ -156,9 +148,33 @@ export default function EvaluationViewPage() {
           .eq('evaluation_id', evaluationId);
 
         if (critError) throw critError;
-        setCriterionScores((critScores || []).sort((a, b) => 
+
+        const sortedCriteria = (critScores || []).sort((a: any, b: any) =>
           (a.criterion?.sort_order || 0) - (b.criterion?.sort_order || 0)
-        ) as CriterionScore[]);
+        ) as CriterionScore[];
+
+        setCriterionScores(sortedCriteria);
+
+        // Compute category scores from criterion scores (evaluation_category_scores are not guaranteed to exist)
+        const computedCategories: CategoryScore[] = (templateCategories || []).map((cat: any) => {
+          const catCriteria = (critScores || []).filter((cs: any) => cs.criterion?.category_id === cat.id);
+          const scoreSum = catCriteria.reduce((sum: number, cs: any) => sum + (Number(cs.score) || 0), 0);
+          const maxSum = catCriteria.reduce((sum: number, cs: any) => sum + (Number(cs.criterion?.max_score) || 0), 0);
+          const pct = maxSum > 0 ? Math.round((scoreSum / maxSum) * 100) : 0;
+
+          return {
+            id: cat.id,
+            name: cat.name,
+            name_ar: cat.name_ar,
+            sort_order: cat.sort_order,
+            weight: Number(cat.weight) || 0,
+            score: scoreSum,
+            max_score: maxSum,
+            percentage: pct,
+          };
+        });
+
+        setCategoryScores(computedCategories);
 
         // Initialize edited scores
         const initialScores: Record<string, { score: number; notes: string }> = {};
@@ -381,25 +397,25 @@ export default function EvaluationViewPage() {
         <CardContent>
           <Accordion type="multiple" className="space-y-2">
             {categoryScores.map((catScore) => {
-              const categoryName = language === 'ar' && catScore.category?.name_ar
-                ? catScore.category.name_ar
-                : catScore.category?.name || '';
-              
+              const categoryName = language === 'ar' && catScore.name_ar
+                ? catScore.name_ar
+                : catScore.name;
+
               const categoryCriteria = criterionScores.filter(
-                cs => cs.criterion?.category_id === catScore.category_id
+                cs => cs.criterion?.category_id === catScore.id
               );
 
               return (
-                <AccordionItem 
-                  key={catScore.id} 
-                  value={catScore.category_id}
+                <AccordionItem
+                  key={catScore.id}
+                  value={catScore.id}
                   className="border rounded-lg px-4"
                 >
                   <AccordionTrigger className="hover:no-underline">
                     <div className="flex items-center justify-between w-full pe-4">
                       <span className="font-medium">{categoryName}</span>
-                      <Badge 
-                        variant="outline" 
+                      <Badge
+                        variant="outline"
                         className={getScoreColor(catScore.percentage, 100)}
                       >
                         {Math.round(catScore.percentage)}%

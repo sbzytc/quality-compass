@@ -315,7 +315,7 @@ export default function EvaluationForm() {
 
       // Save all criterion scores for this draft
       const scoreEntries = Object.values(scores).filter(s => s.score !== undefined);
-      
+
       if (scoreEntries.length > 0) {
         // First delete existing scores for this evaluation
         await supabase
@@ -323,12 +323,13 @@ export default function EvaluationForm() {
           .delete()
           .eq('evaluation_id', evaluationId!);
 
-        // Insert all current scores
+        // Insert all current scores (including attachments)
         const scoresToInsert = scoreEntries.map(s => ({
           evaluation_id: evaluationId!,
           criterion_id: s.criterionId,
           score: s.score,
           notes: s.notes || null,
+          attachments: s.attachments || [],
         }));
 
         const { error: scoresError } = await supabase
@@ -340,6 +341,7 @@ export default function EvaluationForm() {
           throw scoresError;
         }
       }
+
       
       toast.success(
         direction === 'rtl' 
@@ -403,6 +405,8 @@ export default function EvaluationForm() {
       }
 
       // If we have an existing draft, update it to submitted; otherwise create new
+      let evaluationId = currentDraftId;
+
       if (currentDraftId) {
         const { error: updateError } = await supabase
           .from('evaluations')
@@ -414,8 +418,8 @@ export default function EvaluationForm() {
 
         if (updateError) throw updateError;
       } else {
-        // Create evaluation as submitted
-        const { error: evalError } = await supabase
+        // Create evaluation as submitted (need the id to persist answers)
+        const { data: evaluation, error: evalError } = await supabase
           .from('evaluations')
           .insert({
             branch_id: selectedBranchId,
@@ -423,9 +427,37 @@ export default function EvaluationForm() {
             assessor_id: user?.id,
             status: 'submitted',
             submitted_at: new Date().toISOString(),
-          });
+          })
+          .select()
+          .single();
 
         if (evalError) throw evalError;
+        evaluationId = evaluation.id;
+      }
+
+      // Persist all criterion scores for this submitted evaluation
+      const scoreEntries = Object.values(scores).filter(s => s.score !== undefined);
+
+      if (evaluationId && scoreEntries.length > 0) {
+        // Replace existing scores (if any)
+        await supabase
+          .from('evaluation_criterion_scores')
+          .delete()
+          .eq('evaluation_id', evaluationId);
+
+        const scoresToInsert = scoreEntries.map(s => ({
+          evaluation_id: evaluationId,
+          criterion_id: s.criterionId,
+          score: s.score,
+          notes: s.notes || null,
+          attachments: s.attachments || [],
+        }));
+
+        const { error: scoresError } = await supabase
+          .from('evaluation_criterion_scores')
+          .insert(scoresToInsert);
+
+        if (scoresError) throw scoresError;
       }
 
       toast.success(
