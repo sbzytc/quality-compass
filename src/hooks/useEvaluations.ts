@@ -21,6 +21,9 @@ export function useEvaluations() {
   return useQuery({
     queryKey: ['evaluations'],
     queryFn: async () => {
+      // Cleanup expired drafts before fetching
+      await supabase.rpc('cleanup_expired_drafts');
+
       const { data, error } = await supabase
         .from('evaluations')
         .select(`
