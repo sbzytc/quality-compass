@@ -211,15 +211,18 @@ export default function EvaluationForm() {
   // Handle viewing existing evaluation
   const handleViewExisting = () => {
     setShowDuplicateDialog(false);
-    // TODO: Navigate to view evaluation page when implemented
-    toast.info(direction === 'rtl' ? 'سيتم فتح التقييم للعرض' : 'Opening evaluation for viewing');
+    if (existingEvaluation) {
+      navigate(`/evaluations/${existingEvaluation.id}`);
+    }
   };
 
-  // Handle editing existing evaluation
+  // Handle editing existing evaluation (load as draft to continue editing)
   const handleEditExisting = () => {
     setShowDuplicateDialog(false);
-    // TODO: Load existing evaluation data for editing when implemented
-    toast.info(direction === 'rtl' ? 'سيتم فتح التقييم للتعديل' : 'Opening evaluation for editing');
+    if (existingEvaluation) {
+      // Navigate to the form with the existing evaluation as draft
+      navigate(`/evaluations/new?draft=${existingEvaluation.id}`);
+    }
   };
 
   // Handle starting new evaluation anyway (close dialog and clear selection)
