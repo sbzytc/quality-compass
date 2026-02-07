@@ -8,6 +8,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEvaluations } from '@/hooks/useEvaluations';
 import { ClipboardCheck, Search, Eye, Pencil, Clock, Calendar, Building2, User } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { format, differenceInHours } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import {
@@ -48,16 +49,22 @@ export default function PreviousEvaluationsPage() {
     return matchesSearch && matchesStatus;
   }) || [];
 
-  // Check if user can edit an evaluation (own evaluation within 24 hours of submission)
+  // Check if user can edit an evaluation (own evaluation within time limit)
+  // - Drafts: can continue within 5 hours of creation
+  // - Submitted: can edit within 24 hours of submission
   const canEdit = (evaluation: typeof filteredEvaluations[0]) => {
     if (!user) return false;
     
     // Must be the owner
     if (evaluation.assessorId !== user.id) return false;
     
-    // Must be within 24 hours of submission (or draft status)
-    if (evaluation.status === 'draft') return true;
+    // Draft: can continue within 5 hours of creation
+    if (evaluation.status === 'draft') {
+      const hoursSinceCreation = differenceInHours(new Date(), new Date(evaluation.createdAt));
+      return hoursSinceCreation <= 5;
+    }
     
+    // Submitted: can edit within 24 hours of submission
     if (evaluation.submittedAt) {
       const hoursSinceSubmission = differenceInHours(new Date(), new Date(evaluation.submittedAt));
       return hoursSinceSubmission <= 24;
@@ -66,14 +73,45 @@ export default function PreviousEvaluationsPage() {
     return false;
   };
 
-  const getStatusBadge = (status: string) => {
+  // Get remaining time text for drafts or submitted evaluations
+  const getRemainingTimeInfo = (evaluation: typeof filteredEvaluations[0]) => {
+    if (!user || evaluation.assessorId !== user.id) return null;
+    
+    if (evaluation.status === 'draft') {
+      const hoursSinceCreation = differenceInHours(new Date(), new Date(evaluation.createdAt));
+      const remainingHours = Math.max(0, 5 - hoursSinceCreation);
+      if (remainingHours > 0) {
+        return {
+          hours: remainingHours,
+          type: 'draft' as const,
+          expired: false,
+        };
+      }
+      return { hours: 0, type: 'draft' as const, expired: true };
+    }
+    
+    if (evaluation.status === 'submitted' && evaluation.submittedAt) {
+      const hoursSinceSubmission = differenceInHours(new Date(), new Date(evaluation.submittedAt));
+      const remainingHours = Math.max(0, 24 - hoursSinceSubmission);
+      if (remainingHours > 0) {
+        return {
+          hours: remainingHours,
+          type: 'submitted' as const,
+          expired: false,
+        };
+      }
+      return { hours: 0, type: 'submitted' as const, expired: true };
+    }
+    
+    return null;
+  };
+
+const getStatusBadge = (status: string) => {
     switch (status) {
       case 'submitted':
         return <Badge className="bg-primary/10 text-primary border-0">{language === 'ar' ? 'مرسل' : 'Submitted'}</Badge>;
       case 'draft':
         return <Badge variant="secondary">{language === 'ar' ? 'مسودة' : 'Draft'}</Badge>;
-      case 'approved':
-        return <Badge className="bg-score-excellent/10 text-score-excellent border-0">{language === 'ar' ? 'معتمد' : 'Approved'}</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -116,7 +154,6 @@ export default function PreviousEvaluationsPage() {
                 <SelectItem value="all">{language === 'ar' ? 'جميع الحالات' : 'All Statuses'}</SelectItem>
                 <SelectItem value="draft">{language === 'ar' ? 'مسودة' : 'Draft'}</SelectItem>
                 <SelectItem value="submitted">{language === 'ar' ? 'مرسل' : 'Submitted'}</SelectItem>
-                <SelectItem value="approved">{language === 'ar' ? 'معتمد' : 'Approved'}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -159,15 +196,10 @@ export default function PreviousEvaluationsPage() {
                   {filteredEvaluations.map((evaluation) => {
                     const isEditable = canEdit(evaluation);
                     const isOwner = user?.id === evaluation.assessorId;
-                    
-                    // Calculate remaining edit time
-                    let remainingHours = 0;
-                    if (isOwner && evaluation.submittedAt && evaluation.status !== 'draft') {
-                      remainingHours = Math.max(0, 24 - differenceInHours(new Date(), new Date(evaluation.submittedAt)));
-                    }
+                    const timeInfo = getRemainingTimeInfo(evaluation);
                     
                     return (
-                      <TableRow key={evaluation.id}>
+                      <TableRow key={evaluation.id} className={timeInfo?.expired && evaluation.status === 'draft' ? 'opacity-60' : ''}>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Building2 className="h-4 w-4 text-muted-foreground" />
@@ -193,7 +225,23 @@ export default function PreviousEvaluationsPage() {
                             <span className="text-muted-foreground">-</span>
                           )}
                         </TableCell>
-                        <TableCell>{getStatusBadge(evaluation.status)}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-1">
+                            {getStatusBadge(evaluation.status)}
+                            {/* Show expiry warning for drafts */}
+                            {evaluation.status === 'draft' && timeInfo && (
+                              <span className={cn(
+                                "text-xs flex items-center gap-1",
+                                timeInfo.expired ? "text-destructive" : "text-score-average"
+                              )}>
+                                <Clock className="h-3 w-3" />
+                                {timeInfo.expired 
+                                  ? (language === 'ar' ? 'منتهية الصلاحية' : 'Expired')
+                                  : (language === 'ar' ? `${timeInfo.hours} ساعة متبقية` : `${timeInfo.hours}h left`)}
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Calendar className="h-4 w-4" />
@@ -202,7 +250,7 @@ export default function PreviousEvaluationsPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center justify-center gap-2">
-                            {isEditable ? (
+                            {isEditable && !timeInfo?.expired ? (
                               <div className="flex flex-col items-center gap-1">
                                 <Button
                                   variant="outline"
@@ -211,12 +259,14 @@ export default function PreviousEvaluationsPage() {
                                   className="gap-1"
                                 >
                                   <Pencil className="h-4 w-4" />
-                                  {language === 'ar' ? 'تعديل' : 'Edit'}
+                                  {evaluation.status === 'draft' 
+                                    ? (language === 'ar' ? 'إكمال' : 'Continue')
+                                    : (language === 'ar' ? 'تعديل' : 'Edit')}
                                 </Button>
-                                {remainingHours > 0 && (
+                                {timeInfo && timeInfo.hours > 0 && timeInfo.type === 'submitted' && (
                                   <span className="text-xs text-muted-foreground flex items-center gap-1">
                                     <Clock className="h-3 w-3" />
-                                    {language === 'ar' ? `${remainingHours} ساعة متبقية` : `${remainingHours}h left`}
+                                    {language === 'ar' ? `${timeInfo.hours} ساعة متبقية` : `${timeInfo.hours}h left`}
                                   </span>
                                 )}
                               </div>
