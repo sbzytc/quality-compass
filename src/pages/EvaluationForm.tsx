@@ -12,67 +12,10 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGoBack } from '@/hooks/useGoBack';
 import { useBranches } from '@/hooks/useBranches';
+import { useActiveTemplate } from '@/hooks/useTemplateData';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { differenceInHours } from 'date-fns';
-// Mock evaluation template with Arabic translations
-const evaluationTemplate = {
-  name: 'Restaurant Evaluation v1.0',
-  nameAr: 'تقييم المطعم الإصدار 1.0',
-  categories: [
-    {
-      id: 'cat-1',
-      name: 'Building Condition',
-      nameAr: 'حالة المبنى',
-      weight: 10,
-      criteria: [
-        { id: 'c1-1', name: 'Exterior signage visible and clean', nameAr: 'اللافتات الخارجية مرئية ونظيفة', maxScore: 5, weight: 1, isCritical: false },
-        { id: 'c1-2', name: 'Parking area maintained', nameAr: 'صيانة منطقة وقوف السيارات', maxScore: 5, weight: 1, isCritical: false },
-        { id: 'c1-3', name: 'Entrance doors functional', nameAr: 'أبواب المدخل تعمل بشكل جيد', maxScore: 5, weight: 1, isCritical: false },
-        { id: 'c1-4', name: 'Windows clean and undamaged', nameAr: 'النوافذ نظيفة وغير متضررة', maxScore: 5, weight: 1, isCritical: false },
-      ],
-    },
-    {
-      id: 'cat-2',
-      name: 'Customer Area',
-      nameAr: 'منطقة العملاء',
-      weight: 15,
-      criteria: [
-        { id: 'c2-1', name: 'Floor cleanliness', nameAr: 'نظافة الأرضية', maxScore: 5, weight: 1, isCritical: false },
-        { id: 'c2-2', name: 'Tables and chairs clean', nameAr: 'نظافة الطاولات والكراسي', maxScore: 5, weight: 1, isCritical: false },
-        { id: 'c2-3', name: 'Lighting adequate', nameAr: 'الإضاءة كافية', maxScore: 5, weight: 1, isCritical: false },
-        { id: 'c2-4', name: 'Temperature comfortable', nameAr: 'درجة الحرارة مريحة', maxScore: 5, weight: 1, isCritical: false },
-        { id: 'c2-5', name: 'Restrooms clean and stocked', nameAr: 'دورات المياه نظيفة ومجهزة', maxScore: 5, weight: 2, isCritical: true },
-      ],
-    },
-    {
-      id: 'cat-3',
-      name: 'Food Quality',
-      nameAr: 'جودة الطعام',
-      weight: 25,
-      criteria: [
-        { id: 'c3-1', name: 'Food temperature (hot items ≥63°C)', nameAr: 'درجة حرارة الطعام (الأصناف الساخنة ≥63 درجة)', maxScore: 5, weight: 2, isCritical: true },
-        { id: 'c3-2', name: 'Food temperature (cold items ≤5°C)', nameAr: 'درجة حرارة الطعام (الأصناف الباردة ≤5 درجة)', maxScore: 5, weight: 2, isCritical: true },
-        { id: 'c3-3', name: 'Food presentation', nameAr: 'طريقة تقديم الطعام', maxScore: 5, weight: 1, isCritical: false },
-        { id: 'c3-4', name: 'Portion consistency', nameAr: 'ثبات حجم الحصص', maxScore: 5, weight: 1, isCritical: false },
-        { id: 'c3-5', name: 'Taste and quality', nameAr: 'المذاق والجودة', maxScore: 5, weight: 2, isCritical: false },
-      ],
-    },
-    {
-      id: 'cat-4',
-      name: 'Kitchen & Back Area',
-      nameAr: 'المطبخ والمنطقة الخلفية',
-      weight: 20,
-      criteria: [
-        { id: 'c4-1', name: 'Equipment cleanliness', nameAr: 'نظافة المعدات', maxScore: 5, weight: 1, isCritical: false },
-        { id: 'c4-2', name: 'Food storage organization', nameAr: 'تنظيم تخزين الطعام', maxScore: 5, weight: 1, isCritical: false },
-        { id: 'c4-3', name: 'Pest control measures', nameAr: 'إجراءات مكافحة الآفات', maxScore: 5, weight: 2, isCritical: true },
-        { id: 'c4-4', name: 'Waste management', nameAr: 'إدارة النفايات', maxScore: 5, weight: 1, isCritical: false },
-        { id: 'c4-5', name: 'Staff hygiene practices', nameAr: 'ممارسات النظافة الشخصية للموظفين', maxScore: 5, weight: 2, isCritical: true },
-      ],
-    },
-  ],
-};
 
 interface Score {
   criterionId: string;
@@ -96,9 +39,10 @@ export default function EvaluationForm() {
   const { t, direction } = useLanguage();
   const { user } = useAuth();
   const { data: branches, isLoading: branchesLoading } = useBranches();
+  const { data: templateData, isLoading: templateLoading } = useActiveTemplate();
   
   const [selectedBranchId, setSelectedBranchId] = useState<string>('');
-  const [expandedCategories, setExpandedCategories] = useState<string[]>(['cat-1']);
+  const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
   const [scores, setScores] = useState<Record<string, Score>>({});
   const [currentNotes, setCurrentNotes] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
@@ -115,22 +59,16 @@ export default function EvaluationForm() {
 
   const selectedBranch = branches?.find(b => b.id === selectedBranchId);
 
-  // Fetch active template on mount
+  // Set active template ID when template data loads
   useEffect(() => {
-    const fetchActiveTemplate = async () => {
-      const { data } = await supabase
-        .from('evaluation_templates')
-        .select('id')
-        .eq('is_active', true)
-        .limit(1)
-        .single();
-      
-      if (data) {
-        setActiveTemplateId(data.id);
-      }
-    };
-    fetchActiveTemplate();
-  }, []);
+    if (templateData?.id) {
+      setActiveTemplateId(templateData.id);
+    }
+    // Expand first category by default
+    if (templateData?.categories?.length && expandedCategories.length === 0) {
+      setExpandedCategories([templateData.categories[0].id]);
+    }
+  }, [templateData]);
 
   // Load draft evaluation if draftId is provided
   useEffect(() => {
@@ -288,8 +226,9 @@ export default function EvaluationForm() {
 
   // Get all unanswered criteria
   const getUnansweredCriteria = () => {
-    const unanswered: { criterion: typeof evaluationTemplate.categories[0]['criteria'][0]; category: typeof evaluationTemplate.categories[0] }[] = [];
-    evaluationTemplate.categories.forEach(category => {
+    if (!templateData) return [];
+    const unanswered: { criterion: typeof templateData.categories[0]['criteria'][0]; category: typeof templateData.categories[0] }[] = [];
+    templateData.categories.forEach(category => {
       category.criteria.forEach(criterion => {
         if (scores[criterion.id]?.score === undefined) {
           unanswered.push({ criterion, category });
@@ -525,7 +464,8 @@ export default function EvaluationForm() {
   };
 
   const getCategoryProgress = (categoryId: string) => {
-    const category = evaluationTemplate.categories.find((c) => c.id === categoryId);
+    if (!templateData) return { scored: 0, total: 0, percentage: 0 };
+    const category = templateData.categories.find((c) => c.id === categoryId);
     if (!category) return { scored: 0, total: 0, percentage: 0 };
 
     const scored = category.criteria.filter((c) => scores[c.id]?.score !== undefined).length;
@@ -541,7 +481,8 @@ export default function EvaluationForm() {
   };
 
   const getOverallProgress = () => {
-    const totalCriteria = evaluationTemplate.categories.reduce(
+    if (!templateData) return { scored: 0, total: 0 };
+    const totalCriteria = templateData.categories.reduce(
       (sum, cat) => sum + cat.criteria.length,
       0
     );
@@ -564,8 +505,8 @@ export default function EvaluationForm() {
 
   const progress = getOverallProgress();
 
-  // Show loading state when loading a draft
-  if (isLoadingDraft) {
+  // Show loading state when loading a draft or template
+  if (isLoadingDraft || templateLoading) {
     return (
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="bg-card rounded-xl border border-border p-6">
@@ -573,8 +514,34 @@ export default function EvaluationForm() {
             <div className="flex flex-col items-center gap-4">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               <p className="text-muted-foreground">
-                {direction === 'rtl' ? 'جاري تحميل المسودة...' : 'Loading draft...'}
+                {direction === 'rtl' ? 'جاري التحميل...' : 'Loading...'}
               </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if no template found
+  if (!templateData) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-6">
+        <div className="bg-card rounded-xl border border-border p-6">
+          <div className="flex items-center justify-center py-12">
+            <div className="flex flex-col items-center gap-4 text-center">
+              <AlertCircle className="w-12 h-12 text-destructive" />
+              <h3 className="text-lg font-medium text-foreground">
+                {direction === 'rtl' ? 'لا يوجد قالب تقييم نشط' : 'No Active Evaluation Template'}
+              </h3>
+              <p className="text-muted-foreground">
+                {direction === 'rtl' 
+                  ? 'يرجى الاتصال بالمسؤول لإعداد قالب تقييم'
+                  : 'Please contact an administrator to set up an evaluation template'}
+              </p>
+              <Button variant="outline" onClick={goBack}>
+                {direction === 'rtl' ? 'العودة' : 'Go Back'}
+              </Button>
             </div>
           </div>
         </div>
@@ -634,9 +601,9 @@ export default function EvaluationForm() {
                 </Select>
               </div>
               
-              {selectedBranch && (
+              {selectedBranch && templateData && (
                 <p className="text-sm text-muted-foreground mt-2">
-                  {direction === 'rtl' ? 'القالب:' : 'Template:'} {direction === 'rtl' ? evaluationTemplate.nameAr : evaluationTemplate.name}
+                  {direction === 'rtl' ? 'القالب:' : 'Template:'} {direction === 'rtl' ? templateData.nameAr : templateData.name}
                 </p>
               )}
             </div>
@@ -668,10 +635,10 @@ export default function EvaluationForm() {
         </div>
       )}
 
-      {/* Categories - only show when branch is selected */}
-      {selectedBranch && (
+      {/* Categories - only show when branch is selected and template loaded */}
+      {selectedBranch && templateData && (
         <div className="space-y-4">
-          {evaluationTemplate.categories.map((category) => {
+          {templateData.categories.map((category) => {
             const isExpanded = expandedCategories.includes(category.id);
             const catProgress = getCategoryProgress(category.id);
             const catStatus = catProgress.percentage > 0 ? getScoreLevel(catProgress.percentage) : null;
