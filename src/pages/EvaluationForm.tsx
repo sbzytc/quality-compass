@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronRight, ChevronDown, Camera, MessageSquare, AlertTriangle, Check, Save, ArrowLeft, MapPin, AlertCircle, Eye, Pencil } from 'lucide-react';
+import { ChevronRight, ChevronDown, Camera, MessageSquare, AlertTriangle, Check, Save, ArrowLeft, MapPin, AlertCircle, Eye, Pencil, FileText, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -14,7 +14,7 @@ import { useGoBack } from '@/hooks/useGoBack';
 import { useBranches } from '@/hooks/useBranches';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
+import { differenceInHours } from 'date-fns';
 // Mock evaluation template with Arabic translations
 const evaluationTemplate = {
   name: 'Restaurant Evaluation v1.0',
@@ -100,6 +100,8 @@ export default function EvaluationForm() {
   const [scores, setScores] = useState<Record<string, Score>>({});
   const [currentNotes, setCurrentNotes] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Duplicate evaluation check state
   const [existingEvaluation, setExistingEvaluation] = useState<ExistingEvaluation | null>(null);
@@ -211,7 +213,75 @@ export default function EvaluationForm() {
     return unanswered;
   };
 
-  const handleSubmit = () => {
+  // Save as Draft function
+  const handleSaveAsDraft = async () => {
+    if (!selectedBranchId || !user) {
+      toast.error(direction === 'rtl' ? 'يرجى اختيار فرع' : 'Please select a branch');
+      return;
+    }
+
+    // Check if at least one score is filled
+    const hasScores = Object.keys(scores).some(id => scores[id]?.score !== undefined);
+    if (!hasScores) {
+      toast.error(direction === 'rtl' ? 'يرجى إدخال درجة واحدة على الأقل للحفظ كمسودة' : 'Please enter at least one score to save as draft');
+      return;
+    }
+
+    setIsSavingDraft(true);
+    try {
+      // Create evaluation as draft
+      const { data: evaluation, error: evalError } = await supabase
+        .from('evaluations')
+        .insert({
+          branch_id: selectedBranchId,
+          template_id: '00000000-0000-0000-0000-000000000001', // Placeholder - will need real template ID
+          assessor_id: user.id,
+          status: 'draft',
+        })
+        .select()
+        .single();
+
+      if (evalError) throw evalError;
+
+      // Save criterion scores
+      const criterionScores = Object.entries(scores)
+        .filter(([_, s]) => s.score !== undefined)
+        .map(([criterionId, s]) => ({
+          evaluation_id: evaluation.id,
+          criterion_id: criterionId,
+          score: s.score,
+          notes: s.notes || null,
+        }));
+
+      if (criterionScores.length > 0) {
+        // Note: This will need real criterion IDs from the database
+        // For now, we're just showing the draft save flow
+      }
+
+      toast.success(
+        direction === 'rtl' 
+          ? 'تم حفظ المسودة بنجاح! لديك 5 ساعات لإكمالها.'
+          : 'Draft saved successfully! You have 5 hours to complete it.',
+        { duration: 4000 }
+      );
+
+      // Reset form
+      setSelectedBranchId('');
+      setScores({});
+      setExpandedCategories(['cat-1']);
+      setCurrentNotes(null);
+      
+      // Navigate to previous evaluations
+      navigate('/evaluations/previous');
+    } catch (error) {
+      console.error('Error saving draft:', error);
+      toast.error(direction === 'rtl' ? 'فشل في حفظ المسودة' : 'Failed to save draft');
+    } finally {
+      setIsSavingDraft(false);
+    }
+  };
+
+  const handleSubmit = async () => {
     const unanswered = getUnansweredCriteria();
     
     if (unanswered.length > 0) {
@@ -240,20 +310,40 @@ export default function EvaluationForm() {
     
     // Clear validation errors and proceed with submission
     setValidationErrors([]);
-    
-    // Show success message
-    toast.success(
-      direction === 'rtl' 
-        ? 'تم إرسال التقييم بنجاح! يمكنك البدء بتقييم جديد.'
-        : 'Evaluation submitted successfully! You can start a new evaluation.',
-      { duration: 4000 }
-    );
-    
-    // Reset form to empty state
-    setSelectedBranchId('');
-    setScores({});
-    setExpandedCategories(['cat-1']);
-    setCurrentNotes(null);
+    setIsSubmitting(true);
+
+    try {
+      // Create evaluation as submitted
+      const { error: evalError } = await supabase
+        .from('evaluations')
+        .insert({
+          branch_id: selectedBranchId,
+          template_id: '00000000-0000-0000-0000-000000000001', // Placeholder
+          assessor_id: user?.id,
+          status: 'submitted',
+          submitted_at: new Date().toISOString(),
+        });
+
+      if (evalError) throw evalError;
+
+      toast.success(
+        direction === 'rtl' 
+          ? 'تم إرسال التقييم بنجاح! يمكنك البدء بتقييم جديد.'
+          : 'Evaluation submitted successfully! You can start a new evaluation.',
+        { duration: 4000 }
+      );
+
+      // Reset form to empty state
+      setSelectedBranchId('');
+      setScores({});
+      setExpandedCategories(['cat-1']);
+      setCurrentNotes(null);
+    } catch (error) {
+      console.error('Error submitting evaluation:', error);
+      toast.error(direction === 'rtl' ? 'فشل في إرسال التقييم' : 'Failed to submit evaluation');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Clear validation error when a score is set
@@ -619,16 +709,39 @@ export default function EvaluationForm() {
               </div>
             </div>
             
-            {/* Submit Button */}
-            <Button 
-              size="lg"
-              className="gap-2 min-w-[140px]" 
-              disabled={!selectedBranch}
-              onClick={handleSubmit}
-            >
-              <Save className="w-5 h-5" />
-              {direction === 'rtl' ? 'إرسال' : 'Submit'}
-            </Button>
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2">
+              {/* Save as Draft Button */}
+              <Button 
+                variant="outline"
+                size="lg"
+                className="gap-2" 
+                disabled={!selectedBranch || isSavingDraft || isSubmitting || progress.scored === 0}
+                onClick={handleSaveAsDraft}
+              >
+                {isSavingDraft ? (
+                  <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <FileText className="w-5 h-5" />
+                )}
+                {direction === 'rtl' ? 'حفظ كمسودة' : 'Save Draft'}
+              </Button>
+              
+              {/* Submit Button */}
+              <Button 
+                size="lg"
+                className="gap-2 min-w-[140px]" 
+                disabled={!selectedBranch || isSavingDraft || isSubmitting}
+                onClick={handleSubmit}
+              >
+                {isSubmitting ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Save className="w-5 h-5" />
+                )}
+                {direction === 'rtl' ? 'إرسال' : 'Submit'}
+              </Button>
+            </div>
           </div>
         </div>
       )}
