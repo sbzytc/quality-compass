@@ -349,9 +349,33 @@ export default function EvaluationForm() {
         setCurrentDraftId(evaluation.id);
       }
 
-      // For each score, upsert the criterion score
-      // Note: The mock criteria IDs won't match real DB IDs, this is a demo
-      // In production, you'd use real criterion IDs from the template
+      // Save all criterion scores for this draft
+      const scoreEntries = Object.values(scores).filter(s => s.score !== undefined);
+      
+      if (scoreEntries.length > 0) {
+        // First delete existing scores for this evaluation
+        await supabase
+          .from('evaluation_criterion_scores')
+          .delete()
+          .eq('evaluation_id', evaluationId!);
+
+        // Insert all current scores
+        const scoresToInsert = scoreEntries.map(s => ({
+          evaluation_id: evaluationId!,
+          criterion_id: s.criterionId,
+          score: s.score,
+          notes: s.notes || null,
+        }));
+
+        const { error: scoresError } = await supabase
+          .from('evaluation_criterion_scores')
+          .insert(scoresToInsert);
+
+        if (scoresError) {
+          console.error('Error saving scores:', scoresError);
+          throw scoresError;
+        }
+      }
       
       toast.success(
         direction === 'rtl' 
