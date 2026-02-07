@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronRight, ChevronDown, Camera, MessageSquare, AlertTriangle, Check, Save, ArrowLeft, MapPin, AlertCircle, Eye, Pencil, FileText, Clock } from 'lucide-react';
+import { ChevronRight, ChevronDown, Camera, MessageSquare, AlertTriangle, Check, Save, ArrowLeft, MapPin, AlertCircle, Eye, Pencil, FileText, Clock, X, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -21,6 +21,7 @@ interface Score {
   criterionId: string;
   score: number;
   notes: string;
+  attachments?: string[];
 }
 
 interface ExistingEvaluation {
@@ -56,6 +57,10 @@ export default function EvaluationForm() {
   const [existingEvaluation, setExistingEvaluation] = useState<ExistingEvaluation | null>(null);
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
   const [isCheckingDuplicate, setIsCheckingDuplicate] = useState(false);
+  
+  // Image upload state
+  const [uploadingCriterionId, setUploadingCriterionId] = useState<string | null>(null);
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const selectedBranch = branches?.find(b => b.id === selectedBranchId);
 
@@ -459,8 +464,88 @@ export default function EvaluationForm() {
         criterionId,
         score: prev[criterionId]?.score || 0,
         notes,
+        attachments: prev[criterionId]?.attachments || [],
       },
     }));
+  };
+
+  // Handle image upload for a criterion
+  const handleImageUpload = async (criterionId: string, file: File) => {
+    if (!user) {
+      toast.error(direction === 'rtl' ? 'يجب تسجيل الدخول أولاً' : 'You must be logged in');
+      return;
+    }
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast.error(direction === 'rtl' ? 'نوع الملف غير مدعوم. استخدم JPEG, PNG, GIF أو WebP' : 'Unsupported file type. Use JPEG, PNG, GIF or WebP');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(direction === 'rtl' ? 'حجم الملف كبير جداً. الحد الأقصى 5 ميغابايت' : 'File too large. Maximum 5MB');
+      return;
+    }
+
+    setUploadingCriterionId(criterionId);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${criterionId}/${Date.now()}.${fileExt}`;
+
+      const { data, error } = await supabase.storage
+        .from('evaluation-attachments')
+        .upload(fileName, file);
+
+      if (error) throw error;
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('evaluation-attachments')
+        .getPublicUrl(fileName);
+
+      const imageUrl = urlData.publicUrl;
+
+      // Add to attachments
+      setScores((prev) => ({
+        ...prev,
+        [criterionId]: {
+          ...prev[criterionId],
+          criterionId,
+          score: prev[criterionId]?.score || 0,
+          notes: prev[criterionId]?.notes || '',
+          attachments: [...(prev[criterionId]?.attachments || []), imageUrl],
+        },
+      }));
+
+      toast.success(direction === 'rtl' ? 'تم رفع الصورة بنجاح' : 'Image uploaded successfully');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error(direction === 'rtl' ? 'فشل في رفع الصورة' : 'Failed to upload image');
+    } finally {
+      setUploadingCriterionId(null);
+    }
+  };
+
+  // Remove attachment from a criterion
+  const removeAttachment = (criterionId: string, attachmentUrl: string) => {
+    setScores((prev) => ({
+      ...prev,
+      [criterionId]: {
+        ...prev[criterionId],
+        criterionId,
+        score: prev[criterionId]?.score || 0,
+        notes: prev[criterionId]?.notes || '',
+        attachments: (prev[criterionId]?.attachments || []).filter(url => url !== attachmentUrl),
+      },
+    }));
+  };
+
+  // Trigger file input click
+  const triggerFileInput = (criterionId: string) => {
+    fileInputRefs.current[criterionId]?.click();
   };
 
   const getCategoryProgress = (categoryId: string) => {
@@ -762,11 +847,67 @@ export default function EvaluationForm() {
                               >
                                 <MessageSquare className="w-4 h-4" />
                               </Button>
-                              <Button variant="ghost" size="icon">
-                                <Camera className="w-4 h-4" />
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => triggerFileInput(criterion.id)}
+                                disabled={uploadingCriterionId === criterion.id}
+                                className={cn(
+                                  (scores[criterion.id]?.attachments?.length ?? 0) > 0 && 'text-primary'
+                                )}
+                              >
+                                {uploadingCriterionId === criterion.id ? (
+                                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                  <Camera className="w-4 h-4" />
+                                )}
                               </Button>
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/png,image/gif,image/webp"
+                                className="hidden"
+                                ref={(el) => { fileInputRefs.current[criterion.id] = el; }}
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    handleImageUpload(criterion.id, file);
+                                    e.target.value = ''; // Reset input
+                                  }
+                                }}
+                              />
                             </div>
                           </div>
+
+                          {/* Attachments preview */}
+                          {(scores[criterion.id]?.attachments?.length ?? 0) > 0 && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              className="mt-4"
+                            >
+                              <div className="flex items-center gap-2 mb-2 text-sm text-muted-foreground">
+                                <Image className="w-4 h-4" />
+                                <span>{direction === 'rtl' ? 'المرفقات' : 'Attachments'}</span>
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                {scores[criterion.id]?.attachments?.map((url, index) => (
+                                  <div key={index} className="relative group">
+                                    <img
+                                      src={url}
+                                      alt={`Attachment ${index + 1}`}
+                                      className="w-20 h-20 object-cover rounded-lg border border-border"
+                                    />
+                                    <button
+                                      onClick={() => removeAttachment(criterion.id, url)}
+                                      className="absolute -top-2 -right-2 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            </motion.div>
+                          )}
 
                           {/* Notes input */}
                           {showNotesInput && (
