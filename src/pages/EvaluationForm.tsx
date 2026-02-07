@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ChevronRight, ChevronDown, Camera, MessageSquare, AlertTriangle, Check, Save, ArrowLeft, MapPin, AlertCircle, Eye, Pencil, FileText, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -90,6 +90,8 @@ interface ExistingEvaluation {
 
 export default function EvaluationForm() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const draftId = searchParams.get('draft');
   const goBack = useGoBack('/evaluations');
   const { t, direction } = useLanguage();
   const { user } = useAuth();
@@ -103,6 +105,8 @@ export default function EvaluationForm() {
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null);
+  const [currentDraftId, setCurrentDraftId] = useState<string | null>(draftId);
+  const [isLoadingDraft, setIsLoadingDraft] = useState(!!draftId);
   
   // Duplicate evaluation check state
   const [existingEvaluation, setExistingEvaluation] = useState<ExistingEvaluation | null>(null);
@@ -127,6 +131,70 @@ export default function EvaluationForm() {
     };
     fetchActiveTemplate();
   }, []);
+
+  // Load draft evaluation if draftId is provided
+  useEffect(() => {
+    const loadDraft = async () => {
+      if (!draftId) return;
+      
+      setIsLoadingDraft(true);
+      try {
+        // Fetch the draft evaluation
+        const { data: evaluation, error } = await supabase
+          .from('evaluations')
+          .select('*')
+          .eq('id', draftId)
+          .eq('status', 'draft')
+          .single();
+        
+        if (error || !evaluation) {
+          toast.error(direction === 'rtl' ? 'المسودة غير موجودة أو انتهت صلاحيتها' : 'Draft not found or expired');
+          navigate('/evaluations/new');
+          return;
+        }
+
+        // Check if draft is still within 5 hours
+        const hoursSinceCreation = differenceInHours(new Date(), new Date(evaluation.created_at));
+        if (hoursSinceCreation > 5) {
+          toast.error(direction === 'rtl' ? 'انتهت صلاحية المسودة' : 'Draft has expired');
+          navigate('/evaluations/new');
+          return;
+        }
+
+        // Set branch ID
+        setSelectedBranchId(evaluation.branch_id);
+        setActiveTemplateId(evaluation.template_id);
+        setCurrentDraftId(evaluation.id);
+
+        // Fetch existing criterion scores for this draft
+        const { data: criterionScores } = await supabase
+          .from('evaluation_criterion_scores')
+          .select('criterion_id, score, notes')
+          .eq('evaluation_id', draftId);
+
+        if (criterionScores && criterionScores.length > 0) {
+          const loadedScores: Record<string, Score> = {};
+          criterionScores.forEach(cs => {
+            loadedScores[cs.criterion_id] = {
+              criterionId: cs.criterion_id,
+              score: cs.score,
+              notes: cs.notes || '',
+            };
+          });
+          setScores(loadedScores);
+        }
+
+        toast.success(direction === 'rtl' ? 'تم تحميل المسودة' : 'Draft loaded successfully');
+      } catch (error) {
+        console.error('Error loading draft:', error);
+        toast.error(direction === 'rtl' ? 'فشل في تحميل المسودة' : 'Failed to load draft');
+      } finally {
+        setIsLoadingDraft(false);
+      }
+    };
+
+    loadDraft();
+  }, [draftId, navigate, direction]);
 
   // Check for existing evaluation when branch is selected
   const checkExistingEvaluation = async (branchId: string) => {
@@ -252,35 +320,39 @@ export default function EvaluationForm() {
 
     setIsSavingDraft(true);
     try {
-      // Create evaluation as draft
-      const { data: evaluation, error: evalError } = await supabase
-        .from('evaluations')
-        .insert({
-          branch_id: selectedBranchId,
-          template_id: activeTemplateId,
-          assessor_id: user.id,
-          status: 'draft',
-        })
-        .select()
-        .single();
+      let evaluationId = currentDraftId;
 
-      if (evalError) throw evalError;
+      // If we have an existing draft, update it; otherwise create new
+      if (currentDraftId) {
+        // Update existing draft's updated_at
+        const { error: updateError } = await supabase
+          .from('evaluations')
+          .update({ updated_at: new Date().toISOString() })
+          .eq('id', currentDraftId);
 
-      // Save criterion scores
-      const criterionScores = Object.entries(scores)
-        .filter(([_, s]) => s.score !== undefined)
-        .map(([criterionId, s]) => ({
-          evaluation_id: evaluation.id,
-          criterion_id: criterionId,
-          score: s.score,
-          notes: s.notes || null,
-        }));
+        if (updateError) throw updateError;
+      } else {
+        // Create new evaluation as draft
+        const { data: evaluation, error: evalError } = await supabase
+          .from('evaluations')
+          .insert({
+            branch_id: selectedBranchId,
+            template_id: activeTemplateId,
+            assessor_id: user.id,
+            status: 'draft',
+          })
+          .select()
+          .single();
 
-      if (criterionScores.length > 0) {
-        // Note: This will need real criterion IDs from the database
-        // For now, we're just showing the draft save flow
+        if (evalError) throw evalError;
+        evaluationId = evaluation.id;
+        setCurrentDraftId(evaluation.id);
       }
 
+      // For each score, upsert the criterion score
+      // Note: The mock criteria IDs won't match real DB IDs, this is a demo
+      // In production, you'd use real criterion IDs from the template
+      
       toast.success(
         direction === 'rtl' 
           ? 'تم حفظ المسودة بنجاح! لديك 5 ساعات لإكمالها.'
@@ -293,6 +365,7 @@ export default function EvaluationForm() {
       setScores({});
       setExpandedCategories(['cat-1']);
       setCurrentNotes(null);
+      setCurrentDraftId(null);
       
       // Navigate to previous evaluations
       navigate('/evaluations/previous');
@@ -341,18 +414,31 @@ export default function EvaluationForm() {
         return;
       }
 
-      // Create evaluation as submitted
-      const { error: evalError } = await supabase
-        .from('evaluations')
-        .insert({
-          branch_id: selectedBranchId,
-          template_id: activeTemplateId,
-          assessor_id: user?.id,
-          status: 'submitted',
-          submitted_at: new Date().toISOString(),
-        });
+      // If we have an existing draft, update it to submitted; otherwise create new
+      if (currentDraftId) {
+        const { error: updateError } = await supabase
+          .from('evaluations')
+          .update({
+            status: 'submitted',
+            submitted_at: new Date().toISOString(),
+          })
+          .eq('id', currentDraftId);
 
-      if (evalError) throw evalError;
+        if (updateError) throw updateError;
+      } else {
+        // Create evaluation as submitted
+        const { error: evalError } = await supabase
+          .from('evaluations')
+          .insert({
+            branch_id: selectedBranchId,
+            template_id: activeTemplateId,
+            assessor_id: user?.id,
+            status: 'submitted',
+            submitted_at: new Date().toISOString(),
+          });
+
+        if (evalError) throw evalError;
+      }
 
       toast.success(
         direction === 'rtl' 
@@ -366,6 +452,10 @@ export default function EvaluationForm() {
       setScores({});
       setExpandedCategories(['cat-1']);
       setCurrentNotes(null);
+      setCurrentDraftId(null);
+      
+      // Navigate to previous evaluations to see the submitted entry
+      navigate('/evaluations/previous');
     } catch (error) {
       console.error('Error submitting evaluation:', error);
       toast.error(direction === 'rtl' ? 'فشل في إرسال التقييم' : 'Failed to submit evaluation');
@@ -450,6 +540,24 @@ export default function EvaluationForm() {
 
   const progress = getOverallProgress();
 
+  // Show loading state when loading a draft
+  if (isLoadingDraft) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-6">
+        <div className="bg-card rounded-xl border border-border p-6">
+          <div className="flex items-center justify-center py-12">
+            <div className="flex flex-col items-center gap-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <p className="text-muted-foreground">
+                {direction === 'rtl' ? 'جاري تحميل المسودة...' : 'Loading draft...'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
@@ -466,7 +574,10 @@ export default function EvaluationForm() {
             </Button>
             <div className="flex-1">
               <h1 className="text-2xl font-bold text-foreground">
-                {direction === 'rtl' ? 'تقييم جديد' : 'New Evaluation'}
+                {currentDraftId 
+                  ? (direction === 'rtl' ? 'إكمال التقييم' : 'Continue Evaluation')
+                  : (direction === 'rtl' ? 'تقييم جديد' : 'New Evaluation')
+                }
               </h1>
               
               {/* Branch Selector */}
