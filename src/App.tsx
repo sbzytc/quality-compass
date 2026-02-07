@@ -15,6 +15,8 @@ import AuditorDashboard from "@/pages/dashboards/AuditorDashboard";
 import BranchesList from "@/pages/BranchesList";
 import BranchDetail from "@/pages/BranchDetail";
 import EvaluationForm from "@/pages/EvaluationForm";
+import PreviousEvaluationsPage from "@/pages/PreviousEvaluationsPage";
+import EvaluationViewPage from "@/pages/EvaluationViewPage";
 import TemplatesPage from "@/pages/TemplatesPage";
 import UsersPage from "@/pages/UsersPage";
 import SettingsPage from "@/pages/SettingsPage";
@@ -98,7 +100,22 @@ const AppRoutes = () => (
       {/* Evaluations - Admin and Assessor */}
       <Route path="/evaluations" element={
         <ProtectedRoute allowedRoles={['admin', 'assessor']}>
+          <Navigate to="/evaluations/new" replace />
+        </ProtectedRoute>
+      } />
+      <Route path="/evaluations/new" element={
+        <ProtectedRoute allowedRoles={['admin', 'assessor']}>
           <EvaluationForm />
+        </ProtectedRoute>
+      } />
+      <Route path="/evaluations/previous" element={
+        <ProtectedRoute allowedRoles={['admin', 'assessor']}>
+          <PreviousEvaluationsPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/evaluations/:evaluationId" element={
+        <ProtectedRoute allowedRoles={['admin', 'assessor']}>
+          <EvaluationViewPage />
         </ProtectedRoute>
       } />
       

@@ -20,6 +20,8 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.dashboard.auditor': 'Quality Auditor',
     'nav.branches': 'Branches',
     'nav.evaluations': 'Evaluations',
+    'nav.evaluations.new': 'New Evaluation',
+    'nav.evaluations.previous': 'Previous Evaluations',
     'nav.findings': 'Findings',
     'nav.users': 'Users',
     'nav.templates': 'Templates',
@@ -106,6 +108,8 @@ const translations: Record<Language, Record<string, string>> = {
     'evaluations.start': 'Start Evaluation',
     'evaluations.submit': 'Submit Evaluation',
     'evaluations.saveDraft': 'Save Draft',
+    'evaluations.previous.title': 'Previous Evaluations',
+    'evaluations.previous.subtitle': 'View and manage all previous evaluations',
     
     // Templates
     'templates.title': 'Evaluation Templates',
@@ -196,6 +200,8 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.dashboard.auditor': 'مراجع الجودة',
     'nav.branches': 'الفروع',
     'nav.evaluations': 'التقييمات',
+    'nav.evaluations.new': 'تقييم جديد',
+    'nav.evaluations.previous': 'التقييمات السابقة',
     'nav.findings': 'الملاحظات',
     'nav.users': 'المستخدمين',
     'nav.templates': 'القوالب',
@@ -282,6 +288,8 @@ const translations: Record<Language, Record<string, string>> = {
     'evaluations.start': 'بدء التقييم',
     'evaluations.submit': 'إرسال التقييم',
     'evaluations.saveDraft': 'حفظ كمسودة',
+    'evaluations.previous.title': 'التقييمات السابقة',
+    'evaluations.previous.subtitle': 'عرض وإدارة جميع التقييمات السابقة',
     
     // Templates
     'templates.title': 'قوالب التقييم',

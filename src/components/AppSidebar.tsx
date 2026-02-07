@@ -16,6 +16,8 @@ import {
   Wrench,
   ClipboardList,
   LogOut,
+  PlusCircle,
+  History,
 } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -71,6 +73,20 @@ export function AppSidebar() {
     },
   ] as NavItem[]).filter(item => !item.allowedRoles || item.allowedRoles.some(role => roles.includes(role))) : [];
 
+  // Evaluation sub-items
+  const evaluationSubItems: NavItem[] = [
+    { 
+      labelKey: 'nav.evaluations.new', 
+      icon: PlusCircle, 
+      path: '/evaluations/new',
+    },
+    { 
+      labelKey: 'nav.evaluations.previous', 
+      icon: History, 
+      path: '/evaluations/previous',
+    },
+  ];
+
   const mainNavItems: NavItem[] = ([
     // Only show dashboard menu if user should see dashboards
     ...(showDashboards ? [{ 
@@ -89,7 +105,8 @@ export function AppSidebar() {
       labelKey: 'nav.evaluations', 
       icon: ClipboardCheck, 
       path: '/evaluations',
-      allowedRoles: ['admin', 'assessor'] as AppRole[]
+      allowedRoles: ['admin', 'assessor'] as AppRole[],
+      children: evaluationSubItems
     },
     { 
       labelKey: 'nav.findings', 
