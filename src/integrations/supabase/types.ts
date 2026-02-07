@@ -544,6 +544,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_drafts: { Args: never; Returns: undefined }
       create_user_profile: {
         Args: {
           _email: string
