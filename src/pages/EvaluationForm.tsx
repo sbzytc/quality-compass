@@ -567,12 +567,15 @@ export default function EvaluationForm() {
 
   const getOverallProgress = () => {
     if (!templateData) return { scored: 0, total: 0 };
-    const totalCriteria = templateData.categories.reduce(
-      (sum, cat) => sum + cat.criteria.length,
-      0
+    // Get all valid criterion IDs from the current template
+    const validCriterionIds = new Set(
+      templateData.categories.flatMap(cat => cat.criteria.map(c => c.id))
     );
+    const totalCriteria = validCriterionIds.size;
+    
+    // Only count scores that belong to criteria in the current template
     const scoredCriteria = Object.keys(scores).filter(
-      (id) => scores[id]?.score !== undefined
+      (id) => validCriterionIds.has(id) && scores[id]?.score !== undefined
     ).length;
     return { scored: scoredCriteria, total: totalCriteria };
   };
