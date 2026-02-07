@@ -102,6 +102,7 @@ export default function EvaluationForm() {
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null);
   
   // Duplicate evaluation check state
   const [existingEvaluation, setExistingEvaluation] = useState<ExistingEvaluation | null>(null);
@@ -109,6 +110,23 @@ export default function EvaluationForm() {
   const [isCheckingDuplicate, setIsCheckingDuplicate] = useState(false);
 
   const selectedBranch = branches?.find(b => b.id === selectedBranchId);
+
+  // Fetch active template on mount
+  useEffect(() => {
+    const fetchActiveTemplate = async () => {
+      const { data } = await supabase
+        .from('evaluation_templates')
+        .select('id')
+        .eq('is_active', true)
+        .limit(1)
+        .single();
+      
+      if (data) {
+        setActiveTemplateId(data.id);
+      }
+    };
+    fetchActiveTemplate();
+  }, []);
 
   // Check for existing evaluation when branch is selected
   const checkExistingEvaluation = async (branchId: string) => {
@@ -220,6 +238,11 @@ export default function EvaluationForm() {
       return;
     }
 
+    if (!activeTemplateId) {
+      toast.error(direction === 'rtl' ? 'لا يوجد قالب نشط' : 'No active template available');
+      return;
+    }
+
     // Check if at least one score is filled
     const hasScores = Object.keys(scores).some(id => scores[id]?.score !== undefined);
     if (!hasScores) {
@@ -234,7 +257,7 @@ export default function EvaluationForm() {
         .from('evaluations')
         .insert({
           branch_id: selectedBranchId,
-          template_id: '00000000-0000-0000-0000-000000000001', // Placeholder - will need real template ID
+          template_id: activeTemplateId,
           assessor_id: user.id,
           status: 'draft',
         })
@@ -313,12 +336,17 @@ export default function EvaluationForm() {
     setIsSubmitting(true);
 
     try {
+      if (!activeTemplateId) {
+        toast.error(direction === 'rtl' ? 'لا يوجد قالب نشط' : 'No active template available');
+        return;
+      }
+
       // Create evaluation as submitted
       const { error: evalError } = await supabase
         .from('evaluations')
         .insert({
           branch_id: selectedBranchId,
-          template_id: '00000000-0000-0000-0000-000000000001', // Placeholder
+          template_id: activeTemplateId,
           assessor_id: user?.id,
           status: 'submitted',
           submitted_at: new Date().toISOString(),
