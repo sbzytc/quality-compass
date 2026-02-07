@@ -76,32 +76,45 @@ export default function EvaluationForm() {
   }, [templateData]);
 
   // Load draft evaluation if draftId is provided
+  // Load existing evaluation (draft or submitted within 24h)
   useEffect(() => {
-    const loadDraft = async () => {
+    const loadEvaluation = async () => {
       if (!draftId) return;
       
       setIsLoadingDraft(true);
       try {
-        // Fetch the draft evaluation
+        // Fetch the evaluation (can be draft OR submitted)
         const { data: evaluation, error } = await supabase
           .from('evaluations')
           .select('*')
           .eq('id', draftId)
-          .eq('status', 'draft')
-          .single();
+          .maybeSingle();
         
         if (error || !evaluation) {
-          toast.error(direction === 'rtl' ? 'المسودة غير موجودة أو انتهت صلاحيتها' : 'Draft not found or expired');
+          toast.error(direction === 'rtl' ? 'التقييم غير موجود' : 'Evaluation not found');
           navigate('/evaluations/new');
           return;
         }
 
-        // Check if draft is still within 5 hours
-        const hoursSinceCreation = differenceInHours(new Date(), new Date(evaluation.created_at));
-        if (hoursSinceCreation > 5) {
-          toast.error(direction === 'rtl' ? 'انتهت صلاحية المسودة' : 'Draft has expired');
-          navigate('/evaluations/new');
-          return;
+        // Check if evaluation can still be edited
+        if (evaluation.status === 'draft') {
+          // Drafts expire after 5 hours
+          const hoursSinceCreation = differenceInHours(new Date(), new Date(evaluation.created_at));
+          if (hoursSinceCreation > 5) {
+            toast.error(direction === 'rtl' ? 'انتهت صلاحية المسودة' : 'Draft has expired');
+            navigate('/evaluations/new');
+            return;
+          }
+        } else if (evaluation.status === 'submitted') {
+          // Submitted evaluations can be edited within 24 hours
+          if (evaluation.submitted_at) {
+            const hoursSinceSubmission = differenceInHours(new Date(), new Date(evaluation.submitted_at));
+            if (hoursSinceSubmission > 24) {
+              toast.error(direction === 'rtl' ? 'انتهت فترة تعديل التقييم (24 ساعة)' : 'Edit window expired (24 hours)');
+              navigate(`/evaluations/${draftId}`);
+              return;
+            }
+          }
         }
 
         // Set branch ID
@@ -109,10 +122,10 @@ export default function EvaluationForm() {
         setActiveTemplateId(evaluation.template_id);
         setCurrentDraftId(evaluation.id);
 
-        // Fetch existing criterion scores for this draft
+        // Fetch existing criterion scores for this evaluation
         const { data: criterionScores } = await supabase
           .from('evaluation_criterion_scores')
-          .select('criterion_id, score, notes')
+          .select('criterion_id, score, notes, attachments')
           .eq('evaluation_id', draftId);
 
         if (criterionScores && criterionScores.length > 0) {
@@ -122,21 +135,25 @@ export default function EvaluationForm() {
               criterionId: cs.criterion_id,
               score: cs.score,
               notes: cs.notes || '',
+              attachments: cs.attachments || [],
             };
           });
           setScores(loadedScores);
         }
 
-        toast.success(direction === 'rtl' ? 'تم تحميل المسودة' : 'Draft loaded successfully');
+        const statusMsg = evaluation.status === 'draft' 
+          ? (direction === 'rtl' ? 'تم تحميل المسودة' : 'Draft loaded successfully')
+          : (direction === 'rtl' ? 'تم تحميل التقييم للتعديل' : 'Evaluation loaded for editing');
+        toast.success(statusMsg);
       } catch (error) {
-        console.error('Error loading draft:', error);
-        toast.error(direction === 'rtl' ? 'فشل في تحميل المسودة' : 'Failed to load draft');
+        console.error('Error loading evaluation:', error);
+        toast.error(direction === 'rtl' ? 'فشل في تحميل التقييم' : 'Failed to load evaluation');
       } finally {
         setIsLoadingDraft(false);
       }
     };
 
-    loadDraft();
+    loadEvaluation();
   }, [draftId, navigate, direction]);
 
   // Check for existing evaluation when branch is selected
