@@ -7,7 +7,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Building2, Calendar, User, ClipboardCheck, Lock, Pencil, Save, X } from 'lucide-react';
+import { ArrowLeft, Building2, Calendar, User, ClipboardCheck, Lock, Pencil, Save, X, AlertTriangle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { format, differenceInHours } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { Textarea } from '@/components/ui/textarea';
@@ -61,6 +62,16 @@ interface CriterionScore {
   };
 }
 
+interface TemplateCriterion {
+  id: string;
+  name: string;
+  name_ar: string | null;
+  max_score: number;
+  is_critical: boolean;
+  category_id: string;
+  sort_order: number;
+}
+
 export default function EvaluationViewPage() {
   const { evaluationId } = useParams<{ evaluationId: string }>();
   const [searchParams] = useSearchParams();
@@ -72,11 +83,13 @@ export default function EvaluationViewPage() {
   const [evaluation, setEvaluation] = useState<EvaluationData | null>(null);
   const [categoryScores, setCategoryScores] = useState<CategoryScore[]>([]);
   const [criterionScores, setCriterionScores] = useState<CriterionScore[]>([]);
+  const [templateCriteria, setTemplateCriteria] = useState<TemplateCriterion[]>([]);
   const [assessorName, setAssessorName] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(mode === 'edit');
   const [editedScores, setEditedScores] = useState<Record<string, { score: number; notes: string }>>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [hasNoSavedScores, setHasNoSavedScores] = useState(false);
 
   const dateLocale = language === 'ar' ? ar : enUS;
 
@@ -138,6 +151,17 @@ export default function EvaluationViewPage() {
 
         if (templateCatError) throw templateCatError;
 
+        // Fetch all template criteria (so we can display even if no scores exist)
+        const categoryIds = (templateCategories || []).map((c: any) => c.id);
+        const { data: allCriteria, error: allCritError } = await supabase
+          .from('template_criteria')
+          .select('id, name, name_ar, max_score, is_critical, category_id, sort_order')
+          .in('category_id', categoryIds)
+          .order('sort_order');
+
+        if (allCritError) throw allCritError;
+        setTemplateCriteria(allCriteria || []);
+
         // Fetch criterion scores
         const { data: critScores, error: critError } = await supabase
           .from('evaluation_criterion_scores')
@@ -154,29 +178,47 @@ export default function EvaluationViewPage() {
         ) as CriterionScore[];
 
         setCriterionScores(sortedCriteria);
+        setHasNoSavedScores((critScores || []).length === 0);
 
-        // Compute category scores from criterion scores (evaluation_category_scores are not guaranteed to exist)
+        // Compute category scores from criterion scores OR template criteria
         const computedCategories: CategoryScore[] = (templateCategories || []).map((cat: any) => {
-          const catCriteria = (critScores || []).filter((cs: any) => cs.criterion?.category_id === cat.id);
-          const scoreSum = catCriteria.reduce((sum: number, cs: any) => sum + (Number(cs.score) || 0), 0);
-          const maxSum = catCriteria.reduce((sum: number, cs: any) => sum + (Number(cs.criterion?.max_score) || 0), 0);
-          const pct = maxSum > 0 ? Math.round((scoreSum / maxSum) * 100) : 0;
+          const catCritScores = (critScores || []).filter((cs: any) => cs.criterion?.category_id === cat.id);
+          const catTemplateCriteria = (allCriteria || []).filter((c: any) => c.category_id === cat.id);
 
-          return {
-            id: cat.id,
-            name: cat.name,
-            name_ar: cat.name_ar,
-            sort_order: cat.sort_order,
-            weight: Number(cat.weight) || 0,
-            score: scoreSum,
-            max_score: maxSum,
-            percentage: pct,
-          };
+          // If we have saved scores, use them; otherwise show 0/max from template
+          if (catCritScores.length > 0) {
+            const scoreSum = catCritScores.reduce((sum: number, cs: any) => sum + (Number(cs.score) || 0), 0);
+            const maxSum = catCritScores.reduce((sum: number, cs: any) => sum + (Number(cs.criterion?.max_score) || 0), 0);
+            const pct = maxSum > 0 ? Math.round((scoreSum / maxSum) * 100) : 0;
+            return {
+              id: cat.id,
+              name: cat.name,
+              name_ar: cat.name_ar,
+              sort_order: cat.sort_order,
+              weight: Number(cat.weight) || 0,
+              score: scoreSum,
+              max_score: maxSum,
+              percentage: pct,
+            };
+          } else {
+            // No saved scores - show 0% but correct max_score
+            const maxSum = catTemplateCriteria.reduce((sum: number, c: any) => sum + (Number(c.max_score) || 0), 0);
+            return {
+              id: cat.id,
+              name: cat.name,
+              name_ar: cat.name_ar,
+              sort_order: cat.sort_order,
+              weight: Number(cat.weight) || 0,
+              score: 0,
+              max_score: maxSum,
+              percentage: 0,
+            };
+          }
         });
 
         setCategoryScores(computedCategories);
 
-        // Initialize edited scores
+        // Initialize edited scores from saved scores
         const initialScores: Record<string, { score: number; notes: string }> = {};
         (critScores || []).forEach((cs: any) => {
           initialScores[cs.criterion_id] = {
@@ -389,6 +431,41 @@ export default function EvaluationViewPage() {
         </CardContent>
       </Card>
 
+      {/* No Saved Scores Warning */}
+      {hasNoSavedScores && (
+        <Card className="border-destructive/50 bg-destructive/5">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-destructive/10 rounded-lg">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+              </div>
+              <div>
+                <p className="font-medium text-destructive">
+                  {language === 'ar' 
+                    ? 'لم يتم حفظ إجابات هذا التقييم' 
+                    : 'No responses were saved for this evaluation'}
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {language === 'ar'
+                    ? 'يمكنك تعديل التقييم وإعادة تعبئة الإجابات ثم إرسالها مرة أخرى.'
+                    : 'You can edit this evaluation, refill the answers, and submit again.'}
+                </p>
+                {canEdit() && (
+                  <Button 
+                    className="mt-3" 
+                    size="sm"
+                    onClick={() => navigate(`/evaluations/new?draft=${evaluationId}`)}
+                  >
+                    <Pencil className="h-4 w-4 me-2" />
+                    {language === 'ar' ? 'تعديل التقييم' : 'Edit Evaluation'}
+                  </Button>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Category Scores */}
       <Card>
         <CardHeader>
@@ -401,8 +478,17 @@ export default function EvaluationViewPage() {
                 ? catScore.name_ar
                 : catScore.name;
 
-              const categoryCriteria = criterionScores.filter(
+              // Get saved criterion scores for this category
+              const savedCriteria = criterionScores.filter(
                 cs => cs.criterion?.category_id === catScore.id
+              );
+              
+              // Get all template criteria for this category (to show even unsaved ones)
+              const allCriteria = templateCriteria.filter(c => c.category_id === catScore.id);
+
+              // Create a map of saved scores by criterion_id
+              const savedScoresMap = new Map(
+                savedCriteria.map(sc => [sc.criterion_id, sc])
               );
 
               return (
@@ -424,75 +510,97 @@ export default function EvaluationViewPage() {
                   </AccordionTrigger>
                   <AccordionContent>
                     <div className="space-y-4 pt-2">
-                      {categoryCriteria.map((critScore) => {
-                        const criterionName = language === 'ar' && critScore.criterion?.name_ar
-                          ? critScore.criterion.name_ar
-                          : critScore.criterion?.name || '';
-                        
-                        const currentScore = isEditing 
-                          ? editedScores[critScore.criterion_id]?.score ?? critScore.score
-                          : critScore.score;
-                        
-                        const currentNotes = isEditing
-                          ? editedScores[critScore.criterion_id]?.notes ?? critScore.notes ?? ''
-                          : critScore.notes;
+                      {allCriteria.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">
+                          {language === 'ar' ? 'لا توجد معايير في هذه الفئة' : 'No criteria in this category'}
+                        </p>
+                      ) : (
+                        allCriteria.map((criterion) => {
+                          const savedScore = savedScoresMap.get(criterion.id);
+                          const criterionName = language === 'ar' && criterion.name_ar
+                            ? criterion.name_ar
+                            : criterion.name;
+                          
+                          const currentScore = isEditing 
+                            ? editedScores[criterion.id]?.score ?? savedScore?.score ?? 0
+                            : savedScore?.score ?? 0;
+                          
+                          const currentNotes = isEditing
+                            ? editedScores[criterion.id]?.notes ?? savedScore?.notes ?? ''
+                            : savedScore?.notes ?? '';
 
-                        return (
-                          <div 
-                            key={critScore.id} 
-                            className="p-4 bg-muted/50 rounded-lg space-y-3"
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium">{criterionName}</span>
-                                {critScore.criterion?.is_critical && (
-                                  <Badge variant="destructive" className="text-xs">
-                                    {language === 'ar' ? 'حرج' : 'Critical'}
-                                  </Badge>
+                          const hasSavedScore = savedScore !== undefined;
+
+                          return (
+                            <div 
+                              key={criterion.id} 
+                              className={cn(
+                                "p-4 rounded-lg space-y-3",
+                                hasSavedScore ? "bg-muted/50" : "bg-muted/20 border border-dashed border-muted-foreground/30"
+                              )}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium">{criterionName}</span>
+                                  {criterion.is_critical && (
+                                    <Badge variant="destructive" className="text-xs">
+                                      {language === 'ar' ? 'حرج' : 'Critical'}
+                                    </Badge>
+                                  )}
+                                  {!hasSavedScore && (
+                                    <Badge variant="outline" className="text-xs text-muted-foreground">
+                                      {language === 'ar' ? 'غير مُجاب' : 'Unanswered'}
+                                    </Badge>
+                                  )}
+                                </div>
+                                {isEditing ? (
+                                  <div className="flex items-center gap-1">
+                                    {Array.from({ length: criterion.max_score || 5 }, (_, i) => i + 1).map((score) => (
+                                      <Button
+                                        key={score}
+                                        variant={currentScore === score ? 'default' : 'outline'}
+                                        size="sm"
+                                        className="w-8 h-8 p-0"
+                                        onClick={() => handleScoreChange(criterion.id, score)}
+                                      >
+                                        {score}
+                                      </Button>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <span className={cn(
+                                    "font-bold",
+                                    hasSavedScore 
+                                      ? getScoreColor(currentScore, criterion.max_score || 5)
+                                      : "text-muted-foreground"
+                                  )}>
+                                    {hasSavedScore ? `${currentScore} / ${criterion.max_score || 5}` : '-'}
+                                  </span>
                                 )}
                               </div>
-                              {isEditing ? (
-                                <div className="flex items-center gap-1">
-                                  {Array.from({ length: critScore.criterion?.max_score || 5 }, (_, i) => i + 1).map((score) => (
-                                    <Button
-                                      key={score}
-                                      variant={currentScore === score ? 'default' : 'outline'}
-                                      size="sm"
-                                      className="w-8 h-8 p-0"
-                                      onClick={() => handleScoreChange(critScore.criterion_id, score)}
-                                    >
-                                      {score}
-                                    </Button>
-                                  ))}
+                              {(isEditing || currentNotes) && (
+                                <div>
+                                  <p className="text-sm text-muted-foreground mb-1">
+                                    {language === 'ar' ? 'ملاحظات' : 'Notes'}
+                                  </p>
+                                  {isEditing ? (
+                                    <Textarea
+                                      value={currentNotes}
+                                      onChange={(e) => handleNotesChange(criterion.id, e.target.value)}
+                                      placeholder={language === 'ar' ? 'أضف ملاحظات...' : 'Add notes...'}
+                                      className="min-h-[60px]"
+                                    />
+                                  ) : (
+                                    <p className="text-sm bg-background p-2 rounded">
+                                      {currentNotes}
+                                    </p>
+                                  )}
                                 </div>
-                              ) : (
-                                <span className={`font-bold ${getScoreColor(critScore.score, critScore.criterion?.max_score || 5)}`}>
-                                  {critScore.score} / {critScore.criterion?.max_score || 5}
-                                </span>
                               )}
                             </div>
-                            {(isEditing || currentNotes) && (
-                              <div>
-                                <p className="text-sm text-muted-foreground mb-1">
-                                  {language === 'ar' ? 'ملاحظات' : 'Notes'}
-                                </p>
-                                {isEditing ? (
-                                  <Textarea
-                                    value={currentNotes}
-                                    onChange={(e) => handleNotesChange(critScore.criterion_id, e.target.value)}
-                                    placeholder={language === 'ar' ? 'أضف ملاحظات...' : 'Add notes...'}
-                                    className="min-h-[60px]"
-                                  />
-                                ) : (
-                                  <p className="text-sm bg-background p-2 rounded">
-                                    {currentNotes}
-                                  </p>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                          );
+                        })
+                      )}
                     </div>
                   </AccordionContent>
                 </AccordionItem>
