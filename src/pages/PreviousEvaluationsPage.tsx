@@ -118,7 +118,12 @@ const getStatusBadge = (status: string) => {
   };
 
   const handleViewEdit = (evaluation: typeof filteredEvaluations[0], mode: 'view' | 'edit') => {
-    navigate(`/evaluations/${evaluation.id}?mode=${mode}`);
+    // For drafts, navigate to the evaluation form to continue filling
+    if (evaluation.status === 'draft' && mode === 'edit') {
+      navigate(`/evaluations/new?draft=${evaluation.id}`);
+    } else {
+      navigate(`/evaluations/${evaluation.id}?mode=${mode}`);
+    }
   };
 
   return (

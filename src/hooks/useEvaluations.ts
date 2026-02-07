@@ -21,8 +21,12 @@ export function useEvaluations() {
   return useQuery({
     queryKey: ['evaluations'],
     queryFn: async () => {
-      // Cleanup expired drafts before fetching
-      await supabase.rpc('cleanup_expired_drafts');
+      // Cleanup expired drafts before fetching (non-blocking, ignore errors)
+      try {
+        await supabase.rpc('cleanup_expired_drafts');
+      } catch (e) {
+        console.warn('Cleanup expired drafts failed:', e);
+      }
 
       const { data, error } = await supabase
         .from('evaluations')
