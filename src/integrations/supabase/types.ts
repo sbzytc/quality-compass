@@ -242,6 +242,7 @@ export type Database = {
           branch_id: string
           created_at: string
           id: string
+          is_archived: boolean
           notes: string | null
           overall_percentage: number | null
           overall_score: number | null
@@ -257,6 +258,7 @@ export type Database = {
           branch_id: string
           created_at?: string
           id?: string
+          is_archived?: boolean
           notes?: string | null
           overall_percentage?: number | null
           overall_score?: number | null
@@ -272,6 +274,7 @@ export type Database = {
           branch_id?: string
           created_at?: string
           id?: string
+          is_archived?: boolean
           notes?: string | null
           overall_percentage?: number | null
           overall_score?: number | null

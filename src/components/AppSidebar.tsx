@@ -18,6 +18,7 @@ import {
   LogOut,
   PlusCircle,
   History,
+  Archive,
 } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -84,6 +85,11 @@ export function AppSidebar() {
       labelKey: 'nav.evaluations.previous', 
       icon: History, 
       path: '/evaluations/previous',
+    },
+    { 
+      labelKey: 'nav.evaluations.archived', 
+      icon: Archive, 
+      path: '/evaluations/archived',
     },
   ];
 

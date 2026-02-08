@@ -15,6 +15,7 @@ export interface EvaluationWithDetails {
   status: 'draft' | 'submitted' | 'approved';
   createdAt: string;
   submittedAt: string | null;
+  isArchived?: boolean;
 }
 
 export function useEvaluations() {
@@ -35,6 +36,7 @@ export function useEvaluations() {
           branches:branch_id (name),
           evaluation_templates:template_id (name)
         `)
+        .eq('is_archived', false)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -52,7 +54,100 @@ export function useEvaluations() {
         status: e.status as 'draft' | 'submitted' | 'approved',
         createdAt: e.created_at,
         submittedAt: e.submitted_at,
+        isArchived: e.is_archived,
       })) as EvaluationWithDetails[];
+    },
+  });
+}
+
+export function useArchivedEvaluations() {
+  return useQuery({
+    queryKey: ['evaluations-archived'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('evaluations')
+        .select(`
+          *,
+          branches:branch_id (name),
+          evaluation_templates:template_id (name)
+        `)
+        .eq('is_archived', true)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      return data.map(e => ({
+        id: e.id,
+        branchId: e.branch_id,
+        branchName: (e.branches as any)?.name || 'Unknown',
+        templateId: e.template_id,
+        templateName: (e.evaluation_templates as any)?.name || 'Unknown',
+        assessorId: e.assessor_id,
+        assessorName: 'Assessor',
+        overallScore: e.overall_score,
+        overallPercentage: e.overall_percentage,
+        status: e.status as 'draft' | 'submitted' | 'approved',
+        createdAt: e.created_at,
+        submittedAt: e.submitted_at,
+        isArchived: e.is_archived,
+      })) as EvaluationWithDetails[];
+    },
+  });
+}
+
+export function useArchiveEvaluations() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (evaluationIds: string[]) => {
+      const { error } = await supabase
+        .from('evaluations')
+        .update({ is_archived: true })
+        .in('id', evaluationIds);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['evaluations'] });
+      queryClient.invalidateQueries({ queryKey: ['evaluations-archived'] });
+    },
+  });
+}
+
+export function useUnarchiveEvaluations() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (evaluationIds: string[]) => {
+      const { error } = await supabase
+        .from('evaluations')
+        .update({ is_archived: false })
+        .in('id', evaluationIds);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['evaluations'] });
+      queryClient.invalidateQueries({ queryKey: ['evaluations-archived'] });
+    },
+  });
+}
+
+export function useDeleteEvaluation() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (evaluationId: string) => {
+      const { error } = await supabase
+        .from('evaluations')
+        .delete()
+        .eq('id', evaluationId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['evaluations'] });
+      queryClient.invalidateQueries({ queryKey: ['my-evaluations'] });
     },
   });
 }
