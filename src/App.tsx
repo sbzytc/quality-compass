@@ -16,6 +16,7 @@ import BranchesList from "@/pages/BranchesList";
 import BranchDetail from "@/pages/BranchDetail";
 import EvaluationForm from "@/pages/EvaluationForm";
 import PreviousEvaluationsPage from "@/pages/PreviousEvaluationsPage";
+import ArchivedEvaluationsPage from "@/pages/ArchivedEvaluationsPage";
 import EvaluationViewPage from "@/pages/EvaluationViewPage";
 import TemplatesPage from "@/pages/TemplatesPage";
 import UsersPage from "@/pages/UsersPage";
@@ -111,6 +112,11 @@ const AppRoutes = () => (
       <Route path="/evaluations/previous" element={
         <ProtectedRoute allowedRoles={['admin', 'assessor']}>
           <PreviousEvaluationsPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/evaluations/archived" element={
+        <ProtectedRoute allowedRoles={['admin', 'assessor']}>
+          <ArchivedEvaluationsPage />
         </ProtectedRoute>
       } />
       <Route path="/evaluations/:evaluationId" element={

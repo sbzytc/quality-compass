@@ -4,13 +4,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { useEvaluations } from '@/hooks/useEvaluations';
-import { ClipboardCheck, Search, Eye, Pencil, Clock, Calendar, Building2, User } from 'lucide-react';
+import { useEvaluations, useArchiveEvaluations, useDeleteEvaluation } from '@/hooks/useEvaluations';
+import { ClipboardCheck, Search, Eye, Pencil, Clock, Calendar, Building2, User, Archive, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, differenceInHours } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
+import { useToast } from '@/hooks/use-toast';
 import {
   Table,
   TableBody,
@@ -26,14 +28,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 export default function PreviousEvaluationsPage() {
   const { t, language, direction } = useLanguage();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { data: evaluations, isLoading } = useEvaluations();
+  const archiveMutation = useArchiveEvaluations();
+  const deleteMutation = useDeleteEvaluation();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const dateLocale = language === 'ar' ? ar : enUS;
 
@@ -49,22 +66,19 @@ export default function PreviousEvaluationsPage() {
     return matchesSearch && matchesStatus;
   }) || [];
 
+  // Get only completed (submitted) evaluations for archiving
+  const completedEvaluations = filteredEvaluations.filter(e => e.status === 'submitted');
+
   // Check if user can edit an evaluation (own evaluation within time limit)
-  // - Drafts: can continue within 5 hours of creation
-  // - Submitted: can edit within 24 hours of submission
   const canEdit = (evaluation: typeof filteredEvaluations[0]) => {
     if (!user) return false;
-    
-    // Must be the owner
     if (evaluation.assessorId !== user.id) return false;
     
-    // Draft: can continue within 5 hours of creation
     if (evaluation.status === 'draft') {
       const hoursSinceCreation = differenceInHours(new Date(), new Date(evaluation.createdAt));
       return hoursSinceCreation <= 5;
     }
     
-    // Submitted: can edit within 24 hours of submission
     if (evaluation.submittedAt) {
       const hoursSinceSubmission = differenceInHours(new Date(), new Date(evaluation.submittedAt));
       return hoursSinceSubmission <= 24;
@@ -73,7 +87,12 @@ export default function PreviousEvaluationsPage() {
     return false;
   };
 
-  // Get remaining time text for drafts or submitted evaluations
+  // Check if user can delete (only drafts they own)
+  const canDelete = (evaluation: typeof filteredEvaluations[0]) => {
+    if (!user) return false;
+    return evaluation.assessorId === user.id && evaluation.status === 'draft';
+  };
+
   const getRemainingTimeInfo = (evaluation: typeof filteredEvaluations[0]) => {
     if (!user || evaluation.assessorId !== user.id) return null;
     
@@ -81,11 +100,7 @@ export default function PreviousEvaluationsPage() {
       const hoursSinceCreation = differenceInHours(new Date(), new Date(evaluation.createdAt));
       const remainingHours = Math.max(0, 5 - hoursSinceCreation);
       if (remainingHours > 0) {
-        return {
-          hours: remainingHours,
-          type: 'draft' as const,
-          expired: false,
-        };
+        return { hours: remainingHours, type: 'draft' as const, expired: false };
       }
       return { hours: 0, type: 'draft' as const, expired: true };
     }
@@ -94,11 +109,7 @@ export default function PreviousEvaluationsPage() {
       const hoursSinceSubmission = differenceInHours(new Date(), new Date(evaluation.submittedAt));
       const remainingHours = Math.max(0, 24 - hoursSinceSubmission);
       if (remainingHours > 0) {
-        return {
-          hours: remainingHours,
-          type: 'submitted' as const,
-          expired: false,
-        };
+        return { hours: remainingHours, type: 'submitted' as const, expired: false };
       }
       return { hours: 0, type: 'submitted' as const, expired: true };
     }
@@ -106,7 +117,7 @@ export default function PreviousEvaluationsPage() {
     return null;
   };
 
-const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case 'submitted':
         return <Badge className="bg-primary/10 text-primary border-0">{language === 'ar' ? 'مرسل' : 'Submitted'}</Badge>;
@@ -118,7 +129,6 @@ const getStatusBadge = (status: string) => {
   };
 
   const handleViewEdit = (evaluation: typeof filteredEvaluations[0], mode: 'view' | 'edit') => {
-    // For drafts, navigate to the evaluation form to continue filling
     if (evaluation.status === 'draft' && mode === 'edit') {
       navigate(`/evaluations/new?draft=${evaluation.id}`);
     } else {
@@ -126,16 +136,91 @@ const getStatusBadge = (status: string) => {
     }
   };
 
+  const handleSelectOne = (id: string, checked: boolean) => {
+    if (checked) {
+      setSelectedIds(prev => [...prev, id]);
+    } else {
+      setSelectedIds(prev => prev.filter(x => x !== id));
+    }
+  };
+
+  const handleArchive = async () => {
+    if (selectedIds.length === 0) return;
+    
+    // Only archive submitted evaluations
+    const validIds = selectedIds.filter(id => 
+      completedEvaluations.some(e => e.id === id)
+    );
+    
+    if (validIds.length === 0) {
+      toast({
+        title: language === 'ar' ? 'خطأ' : 'Error',
+        description: language === 'ar' 
+          ? 'يمكن أرشفة التقييمات المكتملة فقط' 
+          : 'Only completed evaluations can be archived',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    try {
+      await archiveMutation.mutateAsync(validIds);
+      toast({
+        title: language === 'ar' ? 'تم الأرشفة' : 'Archived',
+        description: language === 'ar' 
+          ? `تم أرشفة ${validIds.length} تقييم(ات)` 
+          : `${validIds.length} evaluation(s) archived`,
+      });
+      setSelectedIds([]);
+    } catch {
+      toast({
+        title: language === 'ar' ? 'خطأ' : 'Error',
+        description: language === 'ar' ? 'فشل في الأرشفة' : 'Failed to archive',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteMutation.mutateAsync(id);
+      toast({
+        title: language === 'ar' ? 'تم الحذف' : 'Deleted',
+        description: language === 'ar' ? 'تم حذف التقييم' : 'Evaluation deleted',
+      });
+    } catch {
+      toast({
+        title: language === 'ar' ? 'خطأ' : 'Error',
+        description: language === 'ar' ? 'فشل في الحذف' : 'Failed to delete',
+        variant: 'destructive',
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">
-          {t('evaluations.previous.title')}
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          {t('evaluations.previous.subtitle')}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">
+            {t('evaluations.previous.title')}
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            {t('evaluations.previous.subtitle')}
+          </p>
+        </div>
+        {selectedIds.length > 0 && (
+          <Button 
+            onClick={handleArchive}
+            disabled={archiveMutation.isPending}
+            className="gap-2"
+          >
+            <Archive className="h-4 w-4" />
+            {language === 'ar' 
+              ? `إضافة للأرشيف (${selectedIds.length})` 
+              : `Add to Archive (${selectedIds.length})`}
+          </Button>
+        )}
       </div>
 
       {/* Filters */}
@@ -188,6 +273,9 @@ const getStatusBadge = (status: string) => {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-12">
+                      {/* Checkbox header - only for submitted */}
+                    </TableHead>
                     <TableHead>{language === 'ar' ? 'الفرع' : 'Branch'}</TableHead>
                     <TableHead>{language === 'ar' ? 'القالب' : 'Template'}</TableHead>
                     <TableHead>{language === 'ar' ? 'المقيّم' : 'Assessor'}</TableHead>
@@ -200,11 +288,21 @@ const getStatusBadge = (status: string) => {
                 <TableBody>
                   {filteredEvaluations.map((evaluation) => {
                     const isEditable = canEdit(evaluation);
+                    const isDeletable = canDelete(evaluation);
                     const isOwner = user?.id === evaluation.assessorId;
                     const timeInfo = getRemainingTimeInfo(evaluation);
+                    const isCompleted = evaluation.status === 'submitted';
                     
                     return (
                       <TableRow key={evaluation.id} className={timeInfo?.expired && evaluation.status === 'draft' ? 'opacity-60' : ''}>
+                        <TableCell>
+                          {isCompleted && (
+                            <Checkbox
+                              checked={selectedIds.includes(evaluation.id)}
+                              onCheckedChange={(checked) => handleSelectOne(evaluation.id, !!checked)}
+                            />
+                          )}
+                        </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Building2 className="h-4 w-4 text-muted-foreground" />
@@ -233,7 +331,6 @@ const getStatusBadge = (status: string) => {
                         <TableCell>
                           <div className="flex flex-col gap-1">
                             {getStatusBadge(evaluation.status)}
-                            {/* Show expiry warning for drafts */}
                             {evaluation.status === 'draft' && timeInfo && (
                               <span className={cn(
                                 "text-xs flex items-center gap-1",
@@ -285,6 +382,44 @@ const getStatusBadge = (status: string) => {
                                 <Eye className="h-4 w-4" />
                                 {language === 'ar' ? 'عرض' : 'View'}
                               </Button>
+                            )}
+                            
+                            {/* Delete button for drafts */}
+                            {isDeletable && (
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                      {language === 'ar' ? 'حذف التقييم' : 'Delete Evaluation'}
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      {language === 'ar' 
+                                        ? 'هل أنت متأكد من حذف هذا التقييم؟ لا يمكن التراجع عن هذا الإجراء.'
+                                        : 'Are you sure you want to delete this evaluation? This action cannot be undone.'}
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>
+                                      {language === 'ar' ? 'إلغاء' : 'Cancel'}
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleDelete(evaluation.id)}
+                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    >
+                                      {language === 'ar' ? 'حذف' : 'Delete'}
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                             )}
                           </div>
                         </TableCell>
