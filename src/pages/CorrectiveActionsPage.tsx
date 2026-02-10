@@ -264,23 +264,25 @@ export default function CorrectiveActionsPage() {
 
       {/* Tabs and Actions List */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="flex w-full overflow-x-auto mb-6">
-          <TabsTrigger value="all">
-            {language === 'ar' ? 'الكل' : 'All'} ({stats?.total || 0})
-          </TabsTrigger>
-          <TabsTrigger value="overdue">
-            {language === 'ar' ? 'متأخر' : 'Overdue'} ({stats?.overdue || 0})
-          </TabsTrigger>
-          <TabsTrigger value="pending">
-            {language === 'ar' ? 'معلّق' : 'Pending'} ({stats?.pending || 0})
-          </TabsTrigger>
-          <TabsTrigger value="in_progress">
-            {language === 'ar' ? 'قيد التنفيذ' : 'In Progress'} ({stats?.inProgress || 0})
-          </TabsTrigger>
-          <TabsTrigger value="completed">
-            {language === 'ar' ? 'مكتمل' : 'Completed'} ({stats?.completed || 0})
-          </TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto mb-6">
+          <TabsList className="inline-flex w-full min-w-max">
+            <TabsTrigger value="all" className="flex-1 whitespace-nowrap text-xs sm:text-sm px-2 sm:px-3">
+              {language === 'ar' ? 'الكل' : 'All'} ({stats?.total || 0})
+            </TabsTrigger>
+            <TabsTrigger value="overdue" className="flex-1 whitespace-nowrap text-xs sm:text-sm px-2 sm:px-3">
+              {language === 'ar' ? 'متأخر' : 'Overdue'} ({stats?.overdue || 0})
+            </TabsTrigger>
+            <TabsTrigger value="pending" className="flex-1 whitespace-nowrap text-xs sm:text-sm px-2 sm:px-3">
+              {language === 'ar' ? 'معلّق' : 'Pending'} ({stats?.pending || 0})
+            </TabsTrigger>
+            <TabsTrigger value="in_progress" className="flex-1 whitespace-nowrap text-xs sm:text-sm px-2 sm:px-3">
+              {language === 'ar' ? 'قيد التنفيذ' : 'In Progress'} ({stats?.inProgress || 0})
+            </TabsTrigger>
+            <TabsTrigger value="completed" className="flex-1 whitespace-nowrap text-xs sm:text-sm px-2 sm:px-3">
+              {language === 'ar' ? 'مكتمل' : 'Completed'} ({stats?.completed || 0})
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value={activeTab} className="mt-0">
           <div className="bg-card rounded-xl border border-border overflow-hidden">
