@@ -264,7 +264,7 @@ export default function CorrectiveActionsPage() {
 
       {/* Tabs and Actions List */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5 mb-6">
+        <TabsList className="flex w-full overflow-x-auto mb-6">
           <TabsTrigger value="all">
             {language === 'ar' ? 'الكل' : 'All'} ({stats?.total || 0})
           </TabsTrigger>
