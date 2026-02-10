@@ -11,6 +11,7 @@ const corsHeaders = {
 interface ResetPasswordRequest {
   userId: string;
   email: string;
+  customPassword?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -63,7 +64,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { userId, email }: ResetPasswordRequest = await req.json();
+    const { userId, email, customPassword }: ResetPasswordRequest = await req.json();
 
     if (!userId || !email) {
       return new Response(
@@ -72,12 +73,12 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Generate new temporary password
-    const tempPassword = crypto.randomUUID().slice(0, 12) + "Aa1!";
+    // Use custom password if provided, otherwise generate one
+    const newPassword = customPassword || (crypto.randomUUID().slice(0, 12) + "Aa1!");
 
     // Update user password
     const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
-      password: tempPassword,
+      password: newPassword,
     });
 
     if (updateError) {
@@ -90,7 +91,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send password reset email if Resend is configured
     let emailSent = false;
-    if (resendApiKey) {
+    const shouldSendEmail = !customPassword; // Only send email for auto-generated passwords
+    if (resendApiKey && shouldSendEmail) {
       try {
         const resend = new Resend(resendApiKey);
         const siteUrl = Deno.env.get("SITE_URL") || "https://your-app.lovable.app";
@@ -103,7 +105,7 @@ const handler = async (req: Request): Promise<Response> => {
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
               <h1 style="color: #333;">Password Reset</h1>
               <p>Your password has been reset by an administrator.</p>
-              <p><strong>Your new temporary password:</strong> ${tempPassword}</p>
+              <p><strong>Your new temporary password:</strong> ${newPassword}</p>
               <p>Please login and change your password immediately.</p>
               <p><a href="${siteUrl}/auth" style="background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Login to SQCS</a></p>
             </div>
@@ -119,7 +121,7 @@ const handler = async (req: Request): Promise<Response> => {
       JSON.stringify({
         success: true,
         emailSent,
-        tempPassword: emailSent ? undefined : tempPassword,
+        tempPassword: customPassword ? undefined : (emailSent ? undefined : newPassword),
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

@@ -97,6 +97,9 @@ export default function UsersPage() {
   const [roleFilter, setRoleFilter] = useState<AppRole | 'all'>('all');
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [isResetPasswordDialogOpen, setIsResetPasswordDialogOpen] = useState(false);
+  const [resetMode, setResetMode] = useState<'choose' | 'email' | 'manual' | 'done'>('choose');
+  const [manualPassword, setManualPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [resetResult, setResetResult] = useState<{ tempPassword?: string; emailSent?: boolean } | null>(null);
   const [selectedUser, setSelectedUser] = useState<UserWithRole | null>(null);
   const [inviteForm, setInviteForm] = useState({
@@ -143,30 +146,38 @@ export default function UsersPage() {
     }
   };
 
-  const handleResetPassword = async () => {
+  const handleResetViaEmail = async () => {
     if (!selectedUser) return;
     try {
       const result = await resetPassword.mutateAsync({ userId: selectedUser.user_id, email: selectedUser.email });
       setResetResult(result);
-      if (result.emailSent) {
-        toast.success(
-          language === 'ar'
-            ? `تم إرسال كلمة المرور الجديدة إلى ${selectedUser.email}`
-            : `New password sent to ${selectedUser.email}`
-        );
-      } else {
-        toast.success(
-          language === 'ar'
-            ? 'تم إعادة تعيين كلمة المرور بنجاح'
-            : 'Password reset successfully'
-        );
-      }
-    } catch (error) {
-      toast.error(
+      setResetMode('done');
+      toast.success(
         language === 'ar'
-          ? 'فشل إعادة تعيين كلمة المرور'
-          : 'Failed to reset password'
+          ? result.emailSent ? `تم إرسال كلمة المرور الجديدة إلى ${selectedUser.email}` : 'تم إعادة تعيين كلمة المرور بنجاح'
+          : result.emailSent ? `New password sent to ${selectedUser.email}` : 'Password reset successfully'
       );
+    } catch (error) {
+      toast.error(language === 'ar' ? 'فشل إعادة تعيين كلمة المرور' : 'Failed to reset password');
+    }
+  };
+
+  const handleResetManual = async () => {
+    if (!selectedUser) return;
+    if (manualPassword !== confirmPassword) {
+      toast.error(language === 'ar' ? 'كلمات المرور غير متطابقة' : 'Passwords do not match');
+      return;
+    }
+    if (manualPassword.length < 6) {
+      toast.error(language === 'ar' ? 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' : 'Password must be at least 6 characters');
+      return;
+    }
+    try {
+      await resetPassword.mutateAsync({ userId: selectedUser.user_id, email: selectedUser.email, customPassword: manualPassword });
+      setResetMode('done');
+      toast.success(language === 'ar' ? 'تم تعيين كلمة المرور بنجاح' : 'Password set successfully');
+    } catch (error) {
+      toast.error(language === 'ar' ? 'فشل تعيين كلمة المرور' : 'Failed to set password');
     }
   };
 
@@ -500,6 +511,9 @@ export default function UsersPage() {
         if (!open) {
           setResetResult(null);
           setSelectedUser(null);
+          setResetMode('choose');
+          setManualPassword('');
+          setConfirmPassword('');
         }
       }}>
         <DialogContent>
@@ -507,8 +521,8 @@ export default function UsersPage() {
             <DialogTitle>{t('users.resetPassword')}</DialogTitle>
             <DialogDescription>
               {language === 'ar'
-                ? 'سيتم إنشاء كلمة مرور مؤقتة جديدة للمستخدم'
-                : 'Generate a new temporary password for the user'
+                ? 'اختر طريقة إعادة تعيين كلمة المرور'
+                : 'Choose how to reset the password'
               }
             </DialogDescription>
           </DialogHeader>
@@ -526,64 +540,145 @@ export default function UsersPage() {
                   <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
                 </div>
               </div>
-              {resetResult?.tempPassword && (
-                <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg space-y-2">
-                  <p className="text-sm font-medium text-foreground">
-                    {language === 'ar' ? 'كلمة المرور المؤقتة الجديدة:' : 'New temporary password:'}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <code className="flex-1 p-2 bg-muted rounded text-sm font-mono select-all break-all">
-                      {resetResult.tempPassword}
-                    </code>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        navigator.clipboard.writeText(resetResult.tempPassword!);
-                        toast.success(language === 'ar' ? 'تم النسخ' : 'Copied!');
-                      }}
-                    >
-                      {language === 'ar' ? 'نسخ' : 'Copy'}
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {language === 'ar' 
-                      ? 'يرجى مشاركة كلمة المرور هذه مع المستخدم بشكل آمن'
-                      : 'Please share this password with the user securely'}
+
+              {/* Choose mode */}
+              {resetMode === 'choose' && (
+                <div className="flex flex-col gap-3">
+                  <Button variant="outline" className="justify-start gap-3 h-auto py-3" onClick={() => setResetMode('email')}>
+                    <Mail className="w-5 h-5 text-primary" />
+                    <div className="text-start">
+                      <p className="font-medium">{language === 'ar' ? 'إرسال عبر البريد الإلكتروني' : 'Send via Email'}</p>
+                      <p className="text-xs text-muted-foreground">{language === 'ar' ? 'إنشاء كلمة مرور مؤقتة وإرسالها للمستخدم' : 'Generate a temporary password and email it to the user'}</p>
+                    </div>
+                  </Button>
+                  <Button variant="outline" className="justify-start gap-3 h-auto py-3" onClick={() => setResetMode('manual')}>
+                    <Key className="w-5 h-5 text-primary" />
+                    <div className="text-start">
+                      <p className="font-medium">{language === 'ar' ? 'تعيين يدوي' : 'Set Manually'}</p>
+                      <p className="text-xs text-muted-foreground">{language === 'ar' ? 'إدخال كلمة مرور جديدة يدوياً' : 'Enter a new password manually'}</p>
+                    </div>
+                  </Button>
+                </div>
+              )}
+
+              {/* Email confirmation */}
+              {resetMode === 'email' && (
+                <div className="p-4 bg-muted/30 rounded-lg">
+                  <p className="text-sm text-foreground">
+                    {language === 'ar'
+                      ? 'سيتم إنشاء كلمة مرور مؤقتة جديدة وإرسالها إلى بريد المستخدم. هل تريد المتابعة؟'
+                      : 'A new temporary password will be generated and sent to the user\'s email. Continue?'}
                   </p>
                 </div>
               )}
-              {resetResult?.emailSent && (
-                <div className="p-3 bg-score-excellent/10 border border-score-excellent/20 rounded-lg">
-                  <p className="text-sm text-score-excellent">
-                    {language === 'ar' 
-                      ? '✓ تم إرسال كلمة المرور الجديدة عبر البريد الإلكتروني'
-                      : '✓ New password has been sent via email'}
-                  </p>
+
+              {/* Manual password entry */}
+              {resetMode === 'manual' && (
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <Label>{language === 'ar' ? 'كلمة المرور الجديدة' : 'New Password'}</Label>
+                    <Input
+                      type="password"
+                      value={manualPassword}
+                      onChange={(e) => setManualPassword(e.target.value)}
+                      placeholder={language === 'ar' ? 'أدخل كلمة المرور الجديدة' : 'Enter new password'}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{language === 'ar' ? 'تأكيد كلمة المرور' : 'Confirm Password'}</Label>
+                    <Input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder={language === 'ar' ? 'أعد إدخال كلمة المرور' : 'Re-enter password'}
+                    />
+                  </div>
+                  {manualPassword && confirmPassword && manualPassword !== confirmPassword && (
+                    <p className="text-xs text-destructive">
+                      {language === 'ar' ? 'كلمات المرور غير متطابقة' : 'Passwords do not match'}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Done state */}
+              {resetMode === 'done' && (
+                <div className="space-y-3">
+                  {resetResult?.tempPassword && (
+                    <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg space-y-2">
+                      <p className="text-sm font-medium text-foreground">
+                        {language === 'ar' ? 'كلمة المرور المؤقتة الجديدة:' : 'New temporary password:'}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <code className="flex-1 p-2 bg-muted rounded text-sm font-mono select-all break-all">
+                          {resetResult.tempPassword}
+                        </code>
+                        <Button variant="outline" size="sm" onClick={() => {
+                          navigator.clipboard.writeText(resetResult.tempPassword!);
+                          toast.success(language === 'ar' ? 'تم النسخ' : 'Copied!');
+                        }}>
+                          {language === 'ar' ? 'نسخ' : 'Copy'}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  {resetResult?.emailSent && (
+                    <div className="p-3 bg-score-excellent/10 border border-score-excellent/20 rounded-lg">
+                      <p className="text-sm text-score-excellent">
+                        {language === 'ar' ? '✓ تم إرسال كلمة المرور الجديدة عبر البريد الإلكتروني' : '✓ New password has been sent via email'}
+                      </p>
+                    </div>
+                  )}
+                  {!resetResult?.tempPassword && !resetResult?.emailSent && (
+                    <div className="p-3 bg-score-excellent/10 border border-score-excellent/20 rounded-lg">
+                      <p className="text-sm text-score-excellent">
+                        {language === 'ar' ? '✓ تم تعيين كلمة المرور بنجاح' : '✓ Password has been set successfully'}
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           )}
           <DialogFooter>
-            {resetResult ? (
+            {resetMode === 'done' ? (
               <Button onClick={() => {
                 setIsResetPasswordDialogOpen(false);
                 setResetResult(null);
                 setSelectedUser(null);
+                setResetMode('choose');
+                setManualPassword('');
+                setConfirmPassword('');
               }}>
                 {language === 'ar' ? 'إغلاق' : 'Close'}
               </Button>
+            ) : resetMode === 'choose' ? (
+              <Button variant="outline" onClick={() => setIsResetPasswordDialogOpen(false)}>
+                {t('common.cancel')}
+              </Button>
             ) : (
-              <>
-                <Button variant="outline" onClick={() => setIsResetPasswordDialogOpen(false)}>
-                  {t('common.cancel')}
+              <div className="flex gap-2 w-full justify-end">
+                <Button variant="outline" onClick={() => setResetMode('choose')}>
+                  {language === 'ar' ? 'رجوع' : 'Back'}
                 </Button>
-                <Button onClick={handleResetPassword} disabled={resetPassword.isPending}>
-                  {resetPassword.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
-                  <Key className="w-4 h-4 me-2" />
-                  {t('users.resetPassword')}
-                </Button>
-              </>
+                {resetMode === 'email' && (
+                  <Button onClick={handleResetViaEmail} disabled={resetPassword.isPending}>
+                    {resetPassword.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
+                    <Mail className="w-4 h-4 me-2" />
+                    {language === 'ar' ? 'إرسال' : 'Send'}
+                  </Button>
+                )}
+                {resetMode === 'manual' && (
+                  <Button
+                    onClick={handleResetManual}
+                    disabled={resetPassword.isPending || !manualPassword || manualPassword !== confirmPassword}
+                  >
+                    {resetPassword.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
+                    <Key className="w-4 h-4 me-2" />
+                    {language === 'ar' ? 'تعيين كلمة المرور' : 'Set Password'}
+                  </Button>
+                )}
+              </div>
             )}
           </DialogFooter>
         </DialogContent>

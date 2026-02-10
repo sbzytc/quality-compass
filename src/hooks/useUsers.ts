@@ -104,9 +104,9 @@ export function useResendInvitation() {
 
 export function useResetPassword() {
   return useMutation({
-    mutationFn: async ({ userId, email }: { userId: string; email: string }) => {
+    mutationFn: async ({ userId, email, customPassword }: { userId: string; email: string; customPassword?: string }) => {
       const response = await supabase.functions.invoke('reset-user-password', {
-        body: { userId, email },
+        body: { userId, email, customPassword },
       });
 
       if (response.error) throw response.error;
