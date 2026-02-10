@@ -303,10 +303,12 @@ export type Database = {
       non_conformities: {
         Row: {
           assessor_notes: string | null
+          assigned_to: string | null
           attachments: string[] | null
           branch_id: string
           created_at: string
           criterion_id: string
+          due_date: string | null
           evaluation_id: string
           id: string
           max_score: number
@@ -318,10 +320,12 @@ export type Database = {
         }
         Insert: {
           assessor_notes?: string | null
+          assigned_to?: string | null
           attachments?: string[] | null
           branch_id: string
           created_at?: string
           criterion_id: string
+          due_date?: string | null
           evaluation_id: string
           id?: string
           max_score: number
@@ -333,10 +337,12 @@ export type Database = {
         }
         Update: {
           assessor_notes?: string | null
+          assigned_to?: string | null
           attachments?: string[] | null
           branch_id?: string
           created_at?: string
           criterion_id?: string
+          due_date?: string | null
           evaluation_id?: string
           id?: string
           max_score?: number
@@ -369,6 +375,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          reference_id: string | null
+          reference_type: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          reference_id?: string | null
+          reference_type?: string | null
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          reference_id?: string | null
+          reference_type?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
