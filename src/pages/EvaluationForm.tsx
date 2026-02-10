@@ -458,6 +458,29 @@ export default function EvaluationForm() {
           .insert(scoresToInsert);
 
         if (scoresError) throw scoresError;
+
+        // Calculate and save overall score/percentage
+        if (templateData) {
+          let totalScore = 0;
+          let totalMaxScore = 0;
+          templateData.categories.forEach(category => {
+            category.criteria.forEach(criterion => {
+              const s = scores[criterion.id];
+              if (s?.score !== undefined) {
+                totalScore += s.score;
+                totalMaxScore += criterion.maxScore;
+              }
+            });
+          });
+          const overallPercentage = totalMaxScore > 0 ? (totalScore / totalMaxScore) * 100 : 0;
+          await supabase
+            .from('evaluations')
+            .update({
+              overall_score: totalScore,
+              overall_percentage: Math.round(overallPercentage * 100) / 100,
+            })
+            .eq('id', evaluationId);
+        }
       }
 
       toast.success(
