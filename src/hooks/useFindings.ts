@@ -23,6 +23,7 @@ export interface Finding {
   resolvedAt?: string;
   resolvedBy?: string;
   createdAt: string;
+  evaluationDate?: string;
 }
 
 export interface CorrectiveAction {
@@ -61,6 +62,7 @@ function mapFinding(f: any): Finding {
     resolvedAt: f.resolved_at,
     resolvedBy: f.resolved_by,
     createdAt: f.created_at,
+    evaluationDate: (f.evaluations as any)?.submitted_at || (f.evaluations as any)?.created_at,
   };
 }
 
@@ -71,7 +73,8 @@ const FINDINGS_SELECT = `
     name,
     name_ar,
     template_categories!inner (name, name_ar)
-  )
+  ),
+  evaluations!inner (status, is_archived, submitted_at, created_at)
 `;
 
 export function useFindings(filters?: { status?: string; branchId?: string }) {
@@ -81,6 +84,8 @@ export function useFindings(filters?: { status?: string; branchId?: string }) {
       let query = supabase
         .from('non_conformities')
         .select(FINDINGS_SELECT)
+        .in('evaluations.status', ['submitted', 'approved'])
+        .eq('evaluations.is_archived', false)
         .order('created_at', { ascending: false });
 
       if (filters?.status) {
@@ -105,6 +110,8 @@ export function useCriticalFindings(filters?: { status?: string; branchId?: stri
       let query = supabase
         .from('non_conformities')
         .select(FINDINGS_SELECT)
+        .in('evaluations.status', ['submitted', 'approved'])
+        .eq('evaluations.is_archived', false)
         .lte('score', 3)
         .order('score', { ascending: true })
         .order('created_at', { ascending: false });
@@ -127,11 +134,13 @@ export function useFindingStats() {
   return useQuery({
     queryKey: ['finding-stats'],
     queryFn: async () => {
-      // Get all critical findings (score <= 3)
+      // Get all critical findings (score <= 3) from non-archived, completed evaluations
       const { data: allFindings, error } = await supabase
         .from('non_conformities')
-        .select('status, score, assigned_to, due_date, resolved_at, created_at')
-        .lte('score', 3);
+        .select('status, score, assigned_to, due_date, resolved_at, created_at, evaluations!inner(status, is_archived)')
+        .lte('score', 3)
+        .in('evaluations.status', ['submitted', 'approved'])
+        .eq('evaluations.is_archived', false);
 
       if (error) throw error;
 

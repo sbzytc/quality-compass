@@ -18,7 +18,7 @@ import { useCriticalFindings, useFindingStats, useAssignFinding, useResolveFindi
 import { useUsers } from '@/hooks/useUsers';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useGoBack } from '@/hooks/useGoBack';
-import { format } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 import { toast } from 'sonner';
 
 export default function FindingsPage() {
@@ -48,13 +48,19 @@ export default function FindingsPage() {
   // Group findings by branch
   const branchGroups = useMemo(() => {
     if (!findings) return [];
-    const groups = new Map<string, { branchId: string; branchName: string; findings: Finding[] }>();
+    const groups = new Map<string, { branchId: string; branchName: string; findings: Finding[]; earliestDate: string }>();
     findings.forEach(f => {
       const name = isAr ? (f.branchNameAr || f.branchName) : f.branchName;
       if (!groups.has(f.branchId)) {
-        groups.set(f.branchId, { branchId: f.branchId, branchName: name, findings: [] });
+        groups.set(f.branchId, { branchId: f.branchId, branchName: name, findings: [], earliestDate: f.evaluationDate || f.createdAt });
       }
-      groups.get(f.branchId)!.findings.push(f);
+      const group = groups.get(f.branchId)!;
+      group.findings.push(f);
+      // Track the earliest evaluation date for this branch's findings
+      const findingDate = f.evaluationDate || f.createdAt;
+      if (findingDate < group.earliestDate) {
+        group.earliestDate = findingDate;
+      }
     });
     return Array.from(groups.values()).sort((a, b) => b.findings.length - a.findings.length);
   }, [findings, isAr]);
@@ -262,6 +268,7 @@ export default function FindingsPage() {
               const overdueCount = group.findings.filter(f =>
                 f.dueDate && new Date(f.dueDate) < new Date() && f.status !== 'resolved'
               ).length;
+              const daysSince = differenceInDays(new Date(), new Date(group.earliestDate));
 
               return (
                 <motion.div
@@ -279,9 +286,18 @@ export default function FindingsPage() {
                       <Building2 className="w-5 h-5 text-primary" />
                       <div className={`text-${direction === 'rtl' ? 'right' : 'left'}`}>
                         <h3 className="font-semibold text-foreground">{group.branchName}</h3>
-                        <p className="text-xs text-muted-foreground">
-                          {group.findings.length} {isAr ? 'ملاحظة' : 'findings'}
-                        </p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span>{group.findings.length} {isAr ? 'ملاحظة' : 'findings'}</span>
+                          <span>•</span>
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {format(new Date(group.earliestDate), 'MMM d, yyyy')}
+                          </span>
+                          <span>•</span>
+                          <span className={`font-medium ${daysSince > 30 ? 'text-score-critical' : daysSince > 14 ? 'text-score-weak' : 'text-muted-foreground'}`}>
+                            {daysSince} {isAr ? 'يوم' : daysSince === 1 ? 'day' : 'days'}
+                          </span>
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
