@@ -97,6 +97,7 @@ export default function UsersPage() {
   const [roleFilter, setRoleFilter] = useState<AppRole | 'all'>('all');
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [isResetPasswordDialogOpen, setIsResetPasswordDialogOpen] = useState(false);
+  const [resetResult, setResetResult] = useState<{ tempPassword?: string; emailSent?: boolean } | null>(null);
   const [selectedUser, setSelectedUser] = useState<UserWithRole | null>(null);
   const [inviteForm, setInviteForm] = useState({
     email: '',
@@ -145,19 +146,26 @@ export default function UsersPage() {
   const handleResetPassword = async () => {
     if (!selectedUser) return;
     try {
-      await resetPassword.mutateAsync(selectedUser.user_id);
-      toast.success(
-        language === 'ar'
-          ? `تم إرسال رابط إعادة تعيين كلمة المرور إلى ${selectedUser.email}`
-          : `Password reset email sent to ${selectedUser.email}`
-      );
-      setIsResetPasswordDialogOpen(false);
-      setSelectedUser(null);
+      const result = await resetPassword.mutateAsync({ userId: selectedUser.user_id, email: selectedUser.email });
+      setResetResult(result);
+      if (result.emailSent) {
+        toast.success(
+          language === 'ar'
+            ? `تم إرسال كلمة المرور الجديدة إلى ${selectedUser.email}`
+            : `New password sent to ${selectedUser.email}`
+        );
+      } else {
+        toast.success(
+          language === 'ar'
+            ? 'تم إعادة تعيين كلمة المرور بنجاح'
+            : 'Password reset successfully'
+        );
+      }
     } catch (error) {
       toast.error(
         language === 'ar'
-          ? 'فشل إرسال رابط إعادة تعيين كلمة المرور'
-          : 'Failed to send password reset email'
+          ? 'فشل إعادة تعيين كلمة المرور'
+          : 'Failed to reset password'
       );
     }
   };
@@ -487,19 +495,25 @@ export default function UsersPage() {
       </Dialog>
 
       {/* Reset Password Dialog */}
-      <Dialog open={isResetPasswordDialogOpen} onOpenChange={setIsResetPasswordDialogOpen}>
+      <Dialog open={isResetPasswordDialogOpen} onOpenChange={(open) => {
+        setIsResetPasswordDialogOpen(open);
+        if (!open) {
+          setResetResult(null);
+          setSelectedUser(null);
+        }
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t('users.resetPassword')}</DialogTitle>
             <DialogDescription>
               {language === 'ar'
-                ? 'سيتم إنشاء كلمة مرور مؤقتة جديدة وإرسالها إلى بريد المستخدم'
-                : 'This will generate a new temporary password and send it to the user\'s email'
+                ? 'سيتم إنشاء كلمة مرور مؤقتة جديدة للمستخدم'
+                : 'Generate a new temporary password for the user'
               }
             </DialogDescription>
           </DialogHeader>
           {selectedUser && (
-            <div className="py-4">
+            <div className="py-4 space-y-4">
               <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
                 <Avatar>
                   <AvatarImage src={selectedUser.avatar_url || undefined} />
@@ -512,17 +526,65 @@ export default function UsersPage() {
                   <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
                 </div>
               </div>
+              {resetResult?.tempPassword && (
+                <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg space-y-2">
+                  <p className="text-sm font-medium text-foreground">
+                    {language === 'ar' ? 'كلمة المرور المؤقتة الجديدة:' : 'New temporary password:'}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 p-2 bg-muted rounded text-sm font-mono select-all break-all">
+                      {resetResult.tempPassword}
+                    </code>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        navigator.clipboard.writeText(resetResult.tempPassword!);
+                        toast.success(language === 'ar' ? 'تم النسخ' : 'Copied!');
+                      }}
+                    >
+                      {language === 'ar' ? 'نسخ' : 'Copy'}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {language === 'ar' 
+                      ? 'يرجى مشاركة كلمة المرور هذه مع المستخدم بشكل آمن'
+                      : 'Please share this password with the user securely'}
+                  </p>
+                </div>
+              )}
+              {resetResult?.emailSent && (
+                <div className="p-3 bg-score-excellent/10 border border-score-excellent/20 rounded-lg">
+                  <p className="text-sm text-score-excellent">
+                    {language === 'ar' 
+                      ? '✓ تم إرسال كلمة المرور الجديدة عبر البريد الإلكتروني'
+                      : '✓ New password has been sent via email'}
+                  </p>
+                </div>
+              )}
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsResetPasswordDialogOpen(false)}>
-              {t('common.cancel')}
-            </Button>
-            <Button onClick={handleResetPassword} disabled={resetPassword.isPending}>
-              {resetPassword.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
-              <Key className="w-4 h-4 me-2" />
-              {t('users.resetPassword')}
-            </Button>
+            {resetResult ? (
+              <Button onClick={() => {
+                setIsResetPasswordDialogOpen(false);
+                setResetResult(null);
+                setSelectedUser(null);
+              }}>
+                {language === 'ar' ? 'إغلاق' : 'Close'}
+              </Button>
+            ) : (
+              <>
+                <Button variant="outline" onClick={() => setIsResetPasswordDialogOpen(false)}>
+                  {t('common.cancel')}
+                </Button>
+                <Button onClick={handleResetPassword} disabled={resetPassword.isPending}>
+                  {resetPassword.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
+                  <Key className="w-4 h-4 me-2" />
+                  {t('users.resetPassword')}
+                </Button>
+              </>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
