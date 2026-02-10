@@ -28,6 +28,8 @@ export default function CEODashboard() {
 
   // Calculate overall score across all branches
   const overallScore = stats?.averageScore || 0;
+  const evaluatedBranches = branches?.filter(b => b.lastEvaluationDate !== null).length || 0;
+  const totalBranches = stats?.totalBranches || 0;
   const overallStatus = overallScore >= 90 ? 'excellent' : 
                         overallScore >= 75 ? 'good' : 
                         overallScore >= 60 ? 'average' : 
@@ -103,7 +105,16 @@ export default function CEODashboard() {
             <StatCard
               title={t('dashboard.averageScore')}
               value={`${stats?.averageScore || 0}%`}
-              subtitle={t('dashboard.acrossAllBranches')}
+              subtitle={
+                <span>
+                  {t('dashboard.acrossAllBranches')}
+                  <span className="block text-[11px] text-muted-foreground/70 mt-0.5">
+                    {language === 'ar' 
+                      ? `${evaluatedBranches} من ${totalBranches} فرع مُقيَّم`
+                      : `${evaluatedBranches} of ${totalBranches} branches evaluated`}
+                  </span>
+                </span>
+              }
               icon={TrendingUp}
               variant={stats?.averageScore && stats.averageScore >= 80 ? 'good' : 'average'}
               onClick={() => navigate('/score-analysis')}
