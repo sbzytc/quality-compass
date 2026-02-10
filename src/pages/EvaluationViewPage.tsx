@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Image as ImageIcon } from 'lucide-react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -51,6 +52,7 @@ interface CriterionScore {
   criterion_id: string;
   score: number;
   notes: string | null;
+  attachments: string[] | null;
   criterion: {
     id: string;
     name: string;
@@ -595,6 +597,26 @@ export default function EvaluationViewPage() {
                                       {currentNotes}
                                     </p>
                                   )}
+                                </div>
+                              )}
+                              {/* Attachments */}
+                              {savedScore?.attachments && savedScore.attachments.length > 0 && (
+                                <div>
+                                  <p className="text-sm text-muted-foreground mb-2 flex items-center gap-1">
+                                    <ImageIcon className="h-3 w-3" />
+                                    {language === 'ar' ? 'المرفقات' : 'Attachments'} ({savedScore.attachments.length})
+                                  </p>
+                                  <div className="flex flex-wrap gap-2">
+                                    {savedScore.attachments.map((url, idx) => (
+                                      <a key={idx} href={url} target="_blank" rel="noopener noreferrer">
+                                        <img
+                                          src={url}
+                                          alt={`Attachment ${idx + 1}`}
+                                          className="h-20 w-20 object-cover rounded-lg border hover:opacity-80 transition-opacity cursor-pointer"
+                                        />
+                                      </a>
+                                    ))}
+                                  </div>
                                 </div>
                               )}
                             </div>
