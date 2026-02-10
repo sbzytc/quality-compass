@@ -30,9 +30,11 @@ export default function FindingsPage() {
   const [activeTab, setActiveTab] = useState<string>('all');
   const [expandedBranches, setExpandedBranches] = useState<Set<string>>(new Set());
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+  const [resolveDialogOpen, setResolveDialogOpen] = useState(false);
   const [selectedFinding, setSelectedFinding] = useState<Finding | null>(null);
   const [assignUserId, setAssignUserId] = useState('');
   const [assignDueDate, setAssignDueDate] = useState('');
+  const [resolveNotes, setResolveNotes] = useState('');
 
   const statusFilter = activeTab !== 'all' ? activeTab : undefined;
   const { data: findings, isLoading: findingsLoading } = useCriticalFindings(
@@ -99,13 +101,22 @@ export default function FindingsPage() {
     }
   };
 
-  const handleResolve = async (finding: Finding) => {
+  const handleResolve = (finding: Finding) => {
+    setSelectedFinding(finding);
+    setResolveNotes('');
+    setResolveDialogOpen(true);
+  };
+
+  const submitResolve = async () => {
+    if (!selectedFinding || !resolveNotes.trim()) return;
     try {
       await resolveMutation.mutateAsync({
-        findingId: finding.id,
-        assignedTo: finding.assignedTo,
+        findingId: selectedFinding.id,
+        assignedTo: selectedFinding.assignedTo,
+        resolution: resolveNotes.trim(),
       });
       toast.success(isAr ? 'تم حل الملاحظة بنجاح' : 'Finding resolved successfully');
+      setResolveDialogOpen(false);
     } catch {
       toast.error(isAr ? 'حدث خطأ' : 'Failed to resolve finding');
     }
@@ -406,7 +417,6 @@ export default function FindingsPage() {
                                           variant="default"
                                           className="text-xs h-7"
                                           onClick={() => handleResolve(finding)}
-                                          disabled={resolveMutation.isPending}
                                         >
                                           <CheckCircle2 className="w-3 h-3 mr-1" />
                                           {isAr ? 'حل' : 'Resolve'}
@@ -489,6 +499,53 @@ export default function FindingsPage() {
               {assignMutation.isPending
                 ? (isAr ? 'جاري التعيين...' : 'Assigning...')
                 : (isAr ? 'تعيين' : 'Assign')
+              }
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Resolve Dialog */}
+      <Dialog open={resolveDialogOpen} onOpenChange={setResolveDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {isAr ? 'حل الملاحظة' : 'Resolve Finding'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {selectedFinding && (
+              <div className="p-3 bg-muted/50 rounded-lg text-sm">
+                <p className="font-medium">{isAr ? (selectedFinding.criterionNameAr || selectedFinding.criterionName) : selectedFinding.criterionName}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {isAr ? 'الدرجة:' : 'Score:'} {selectedFinding.score}/{selectedFinding.maxScore}
+                </p>
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label>{isAr ? 'الإجراء المتخذ (إلزامي)' : 'Resolution / Action Taken (required)'}</Label>
+              <textarea
+                className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                placeholder={isAr ? 'اكتب الإجراء الذي تم اتخاذه لحل هذه الملاحظة...' : 'Describe what action was taken to resolve this finding...'}
+                value={resolveNotes}
+                onChange={e => setResolveNotes(e.target.value)}
+              />
+              {resolveNotes.length === 0 && (
+                <p className="text-xs text-score-critical">{isAr ? 'هذا الحقل إلزامي' : 'This field is required'}</p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResolveDialogOpen(false)}>
+              {isAr ? 'إلغاء' : 'Cancel'}
+            </Button>
+            <Button
+              onClick={submitResolve}
+              disabled={!resolveNotes.trim() || resolveMutation.isPending}
+            >
+              {resolveMutation.isPending
+                ? (isAr ? 'جاري الحل...' : 'Resolving...')
+                : (isAr ? 'حل' : 'Resolve')
               }
             </Button>
           </DialogFooter>
