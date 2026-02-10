@@ -480,6 +480,51 @@ export default function EvaluationForm() {
               overall_percentage: Math.round(overallPercentage * 100) / 100,
             })
             .eq('id', evaluationId);
+
+          // Create non_conformities (findings) for criteria scoring 0-3
+          const criticalFindings: {
+            evaluation_id: string;
+            branch_id: string;
+            criterion_id: string;
+            score: number;
+            max_score: number;
+            assessor_notes: string | null;
+            attachments: string[];
+          }[] = [];
+
+          templateData.categories.forEach(category => {
+            category.criteria.forEach(criterion => {
+              const s = scores[criterion.id];
+              if (s?.score !== undefined && s.score <= 3) {
+                criticalFindings.push({
+                  evaluation_id: evaluationId!,
+                  branch_id: selectedBranchId,
+                  criterion_id: criterion.id,
+                  score: s.score,
+                  max_score: criterion.maxScore,
+                  assessor_notes: s.notes || null,
+                  attachments: s.attachments || [],
+                });
+              }
+            });
+          });
+
+          if (criticalFindings.length > 0) {
+            // Delete existing findings for this evaluation (in case of re-submission)
+            await supabase
+              .from('non_conformities')
+              .delete()
+              .eq('evaluation_id', evaluationId!);
+
+            const { error: findingsError } = await supabase
+              .from('non_conformities')
+              .insert(criticalFindings);
+
+            if (findingsError) {
+              console.error('Error creating findings:', findingsError);
+              // Don't throw - evaluation is already saved, findings are secondary
+            }
+          }
         }
       }
 
