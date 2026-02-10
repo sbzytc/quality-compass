@@ -230,13 +230,14 @@ export function useResolveFinding() {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ findingId, assignedTo }: { findingId: string; assignedTo?: string }) => {
+    mutationFn: async ({ findingId, assignedTo, resolution }: { findingId: string; assignedTo?: string; resolution: string }) => {
       const { error } = await supabase
         .from('non_conformities')
         .update({
           status: 'resolved',
           resolved_at: new Date().toISOString(),
           resolved_by: user?.id,
+          assessor_notes: resolution,
         })
         .eq('id', findingId);
 
