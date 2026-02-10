@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Globe, Moon, Sun, Bell, Mail, Smartphone, ArrowLeft, User, Key, Lock, Settings } from 'lucide-react';
+import { Globe, Moon, Sun, Bell, Mail, Smartphone, ArrowLeft, User, Key, Lock, Settings, Shield } from 'lucide-react';
+import RolePermissionsManager from '@/components/RolePermissionsManager';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -307,6 +308,15 @@ export default function SettingsPage() {
                   </div>
                 </CardContent>
               </Card>
+            </motion.div>
+
+            {/* Role Permissions */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35 }}
+            >
+              <RolePermissionsManager />
             </motion.div>
           </div>
         </div>
