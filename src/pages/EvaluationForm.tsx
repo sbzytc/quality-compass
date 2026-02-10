@@ -1110,21 +1110,21 @@ export default function EvaluationForm() {
               }
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="flex-col sm:flex-row gap-2 mt-4">
-            <Button variant="outline" onClick={handleCancelDuplicate}>
-              {direction === 'rtl' ? 'اختر فرعاً آخر' : 'Choose Another Branch'}
-            </Button>
-            <Button variant="secondary" onClick={handleViewExisting} className="gap-2">
-              <Eye className="w-4 h-4" />
-              {direction === 'rtl' ? 'عرض التقييم' : 'View Evaluation'}
-            </Button>
+          <div className="flex flex-col gap-2 mt-4">
             {canEditExisting && (
-              <Button onClick={handleEditExisting} className="gap-2">
+              <Button onClick={handleEditExisting} className="gap-2 w-full">
                 <Pencil className="w-4 h-4" />
                 {direction === 'rtl' ? 'تعديل التقييم' : 'Edit Evaluation'}
               </Button>
             )}
-          </DialogFooter>
+            <Button variant="secondary" onClick={handleViewExisting} className="gap-2 w-full">
+              <Eye className="w-4 h-4" />
+              {direction === 'rtl' ? 'عرض التقييم' : 'View Evaluation'}
+            </Button>
+            <Button variant="outline" onClick={handleCancelDuplicate} className="w-full">
+              {direction === 'rtl' ? 'اختر فرعاً آخر' : 'Choose Another Branch'}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
