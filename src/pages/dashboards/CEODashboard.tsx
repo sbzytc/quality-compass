@@ -133,7 +133,7 @@ export default function CEODashboard() {
               subtitle={t('dashboard.pastDueDate')}
               icon={CheckCircle2}
               variant={stats?.overdueActions && stats.overdueActions > 0 ? 'critical' : 'excellent'}
-              onClick={() => navigate('/findings')}
+              onClick={() => navigate('/corrective-actions')}
             />
           </>
         )}

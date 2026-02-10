@@ -19,6 +19,7 @@ import {
   PlusCircle,
   History,
   Archive,
+  ListChecks,
 } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -119,6 +120,11 @@ export function AppSidebar() {
       icon: AlertTriangle, 
       path: '/findings', 
       badge: openFindingsCount > 0 ? openFindingsCount : undefined 
+    },
+    { 
+      labelKey: 'nav.correctiveActions', 
+      icon: ListChecks, 
+      path: '/corrective-actions',
     },
   ] as NavItem[]).filter(item => !item.allowedRoles || item.allowedRoles.some(role => roles.includes(role)));
 

@@ -23,6 +23,7 @@ import UsersPage from "@/pages/UsersPage";
 import SettingsPage from "@/pages/SettingsPage";
 import ScoreAnalysisPage from "@/pages/ScoreAnalysisPage";
 import FindingsPage from "@/pages/FindingsPage";
+import CorrectiveActionsPage from "@/pages/CorrectiveActionsPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -128,6 +129,9 @@ const AppRoutes = () => (
       {/* Findings - All authenticated users */}
       {/* Findings - All authenticated users */}
       <Route path="/findings" element={<FindingsPage />} />
+      
+      {/* Corrective Actions - All authenticated users */}
+      <Route path="/corrective-actions" element={<CorrectiveActionsPage />} />
       
       {/* Users - Admin only */}
       <Route path="/users" element={
