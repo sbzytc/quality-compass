@@ -168,17 +168,9 @@ export default function CEODashboard() {
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className={`text-2xl font-bold ${
-                  overallScore >= 90 ? 'text-score-excellent' :
-                  overallScore >= 75 ? 'text-score-good' :
-                  overallScore >= 60 ? 'text-score-average' :
-                  overallScore >= 40 ? 'text-score-weak' : 'text-score-critical'
-                }`}>{overallScore}%</span>
+                <span className="text-sm font-bold text-foreground">{language === 'ar' ? 'التقييم' : 'Evaluation'}</span>
               </div>
-            </div>
-            <span className="text-sm font-bold text-foreground mt-2">
-              {language === 'ar' ? 'التقييم' : 'Evaluation'}
-            </span>
+          </div>
           </div>
           {/* Resolution Pie */}
           <div className="flex flex-col items-center cursor-pointer" onClick={() => navigate('/findings')}>
@@ -241,12 +233,9 @@ export default function CEODashboard() {
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-2xl font-bold text-foreground">{findingStats?.resolutionRate || 0}%</span>
+                <span className="text-sm font-bold text-foreground">{language === 'ar' ? 'نسبة الحل' : 'Resolution'}</span>
               </div>
-            </div>
-            <span className="text-sm font-bold text-foreground mt-2">
-              {language === 'ar' ? 'نسبة الحل' : 'Resolution'}
-            </span>
+          </div>
           </div>
         </div>
       )}
