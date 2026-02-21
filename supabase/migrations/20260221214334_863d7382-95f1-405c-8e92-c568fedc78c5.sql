@@ -1,0 +1,2 @@
+ALTER TABLE public.non_conformities DROP CONSTRAINT non_conformities_status_check;
+ALTER TABLE public.non_conformities ADD CONSTRAINT non_conformities_status_check CHECK (status = ANY (ARRAY['open'::text, 'in_progress'::text, 'resolved'::text, 'pending_review'::text, 'rejected'::text]));
