@@ -11,6 +11,8 @@ import { useFindingStats } from '@/hooks/useFindings';
 import { format } from 'date-fns';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function CEODashboard() {
   const navigate = useNavigate();
@@ -20,7 +22,35 @@ export default function CEODashboard() {
   const { data: findingStats, isLoading: findingStatsLoading } = useFindingStats();
   const { data: regions } = useRegions();
 
-  const isLoading = branchesLoading || statsLoading || findingStatsLoading;
+  // Fetch aggregated criterion scores across all submitted evaluations
+  const { data: criterionScoreDistribution, isLoading: criterionScoresLoading } = useQuery({
+    queryKey: ['criterion-score-distribution'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('evaluation_criterion_scores')
+        .select('score, evaluations!inner(status)')
+        .eq('evaluations.status', 'submitted');
+
+      if (error) throw error;
+
+      let excellent = 0; // score = 5
+      let good = 0;      // score = 4
+      let medium = 0;    // score = 3
+      let bad = 0;       // score = 0-2
+
+      for (const row of data || []) {
+        const s = row.score;
+        if (s === 5) excellent++;
+        else if (s === 4) good++;
+        else if (s === 3) medium++;
+        else bad++; // 0, 1, 2
+      }
+
+      return { excellent, good, medium, bad, total: (data || []).length };
+    },
+  });
+
+  const isLoading = branchesLoading || statsLoading || findingStatsLoading || criterionScoresLoading;
 
   // Build findings summary subtitle
   const findingsSummary = language === 'ar'
@@ -36,14 +66,12 @@ export default function CEODashboard() {
                         overallScore >= 60 ? 'average' : 
                         overallScore >= 40 ? 'weak' : 'critical';
 
-  // Calculate score distribution (only branches that have been evaluated)
-  const evaluatedBranchesList = branches?.filter(b => b.lastEvaluationDate !== null) || [];
+  // Score distribution from aggregated criterion scores
   const scoreDistribution = {
-    excellent: evaluatedBranchesList.filter(b => b.status === 'excellent').length,
-    good: evaluatedBranchesList.filter(b => b.status === 'good').length,
-    average: evaluatedBranchesList.filter(b => b.status === 'average').length,
-    weak: evaluatedBranchesList.filter(b => b.status === 'weak').length,
-    critical: evaluatedBranchesList.filter(b => b.status === 'critical').length,
+    excellent: criterionScoreDistribution?.excellent || 0,
+    good: criterionScoreDistribution?.good || 0,
+    medium: criterionScoreDistribution?.medium || 0,
+    bad: criterionScoreDistribution?.bad || 0,
   };
 
   // Calculate regional stats
@@ -88,9 +116,8 @@ export default function CEODashboard() {
                     const raw = [
                       { name: language === 'ar' ? 'ممتاز' : 'Excellent', value: scoreDistribution.excellent, color: 'hsl(142, 76%, 36%)' },
                       { name: language === 'ar' ? 'جيد' : 'Good', value: scoreDistribution.good, color: 'hsl(142, 52%, 50%)' },
-                      { name: language === 'ar' ? 'متوسط' : 'Average', value: scoreDistribution.average, color: 'hsl(45, 93%, 47%)' },
-                      { name: language === 'ar' ? 'ضعيف' : 'Weak', value: scoreDistribution.weak, color: 'hsl(14, 89%, 57%)' },
-                      { name: language === 'ar' ? 'حرج' : 'Critical', value: scoreDistribution.critical, color: 'hsl(0, 84%, 50%)' },
+                      { name: language === 'ar' ? 'متوسط' : 'Medium', value: scoreDistribution.medium, color: 'hsl(45, 93%, 47%)' },
+                      { name: language === 'ar' ? 'سيء' : 'Bad', value: scoreDistribution.bad, color: 'hsl(0, 84%, 50%)' },
                     ];
                     const total = raw.reduce((s, d) => s + d.value, 0);
                     const filtered = raw.filter(d => d.value > 0).map(d => ({ ...d, percent: total > 0 ? Math.round((d.value / total) * 100) : 0 }));
@@ -295,29 +322,16 @@ export default function CEODashboard() {
         <h2 className="text-lg font-semibold text-foreground mb-4">{t('dashboard.scoreDistribution')}</h2>
         <div className="flex flex-wrap gap-4 justify-center md:justify-start">
           {[
-            { label: t('status.excellent'), count: scoreDistribution.excellent, status: 'excellent' as const },
-            { label: t('status.good'), count: scoreDistribution.good, status: 'good' as const },
-            { label: t('status.average'), count: scoreDistribution.average, status: 'average' as const },
-            { label: t('status.weak'), count: scoreDistribution.weak, status: 'weak' as const },
-            { label: t('status.critical'), count: scoreDistribution.critical, status: 'critical' as const },
-          ].map((item) => (
+            { label: language === 'ar' ? 'ممتاز (5)' : 'Excellent (5)', count: scoreDistribution.excellent, colorClass: 'bg-score-excellent' },
+            { label: language === 'ar' ? 'جيد (4)' : 'Good (4)', count: scoreDistribution.good, colorClass: 'bg-score-good' },
+            { label: language === 'ar' ? 'متوسط (3)' : 'Medium (3)', count: scoreDistribution.medium, colorClass: 'bg-score-average' },
+            { label: language === 'ar' ? 'سيء (0-2)' : 'Bad (0-2)', count: scoreDistribution.bad, colorClass: 'bg-score-critical' },
+          ].map((item, idx) => (
             <div
-              key={item.status}
+              key={idx}
               className="flex items-center gap-3 px-4 py-3 rounded-lg bg-muted/50"
             >
-              <div
-                className={`w-4 h-4 rounded-full ${
-                  item.status === 'excellent'
-                    ? 'bg-score-excellent'
-                    : item.status === 'good'
-                    ? 'bg-score-good'
-                    : item.status === 'average'
-                    ? 'bg-score-average'
-                    : item.status === 'weak'
-                    ? 'bg-score-weak'
-                    : 'bg-score-critical'
-                }`}
-              />
+              <div className={`w-4 h-4 rounded-full ${item.colorClass}`} />
               <div>
                 <p className="text-sm font-medium text-foreground">{item.label}</p>
                 <p className="text-2xl font-bold text-foreground">{item.count}</p>

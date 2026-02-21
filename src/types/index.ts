@@ -2,6 +2,9 @@
 
 export type ScoreLevel = 'excellent' | 'good' | 'average' | 'weak' | 'critical';
 
+// New 4-category scoring for individual criterion scores (0-5)
+export type ScoreCategory = 'excellent' | 'good' | 'medium' | 'bad';
+
 export interface Branch {
   id: string;
   name: string;
@@ -122,13 +125,32 @@ export interface EvaluationCriterion {
   isCritical: boolean;
 }
 
-// Helper function to determine score level
+// Helper function to determine score level (percentage-based, for overall scores)
 export function getScoreLevel(percentage: number): ScoreLevel {
   if (percentage >= 90) return 'excellent';
   if (percentage >= 80) return 'good';
   if (percentage >= 70) return 'average';
   if (percentage >= 60) return 'weak';
   return 'critical';
+}
+
+// Helper function to determine score category (criterion score 0-5)
+export function getScoreCategory(score: number): ScoreCategory {
+  if (score === 5) return 'excellent';
+  if (score === 4) return 'good';
+  if (score === 3) return 'medium';
+  return 'bad'; // 0, 1, 2
+}
+
+// Map ScoreCategory to existing CSS color tokens
+export function getScoreCategoryColor(category: ScoreCategory): string {
+  const colors: Record<ScoreCategory, string> = {
+    excellent: 'bg-score-excellent',
+    good: 'bg-score-good',
+    medium: 'bg-score-average',
+    bad: 'bg-score-critical',
+  };
+  return colors[category];
 }
 
 export function getScoreLabel(level: ScoreLevel): string {

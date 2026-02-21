@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
-import { getScoreLevel, ScoreLevel } from '@/types';
+import { getScoreLevel, getScoreCategory, getScoreCategoryColor, ScoreLevel } from '@/types';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGoBack } from '@/hooks/useGoBack';
@@ -941,15 +941,15 @@ export default function EvaluationForm() {
                                 <button
                                   key={score}
                                   onClick={() => setScoreWithValidation(criterion.id, score)}
-                                  className={cn(
-                                    'w-10 h-10 rounded-lg font-medium transition-all',
-                                    currentScore === score
-                                      ? cn(
-                                          'text-white',
-                                          getStatusColor(getScoreLevel((score / 5) * 100))
-                                        )
-                                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                                  )}
+                                    className={cn(
+                                      'w-10 h-10 rounded-lg font-medium transition-all',
+                                      currentScore === score
+                                        ? cn(
+                                            'text-white',
+                                            getScoreCategoryColor(getScoreCategory(score))
+                                          )
+                                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                                    )}
                                 >
                                   {score}
                                 </button>
