@@ -106,7 +106,7 @@ export default function CEODashboard() {
 
       {/* Score Circles */}
       {!isLoading && (
-        <div className="flex items-center justify-center gap-4 flex-wrap">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 justify-items-center">
           {/* Evaluation Pie */}
           <div className="flex flex-col items-center cursor-pointer" onClick={() => navigate('/score-analysis')}>
             <div className="w-[340px] h-[340px] relative">
