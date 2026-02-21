@@ -17,13 +17,21 @@ export interface Finding {
   maxScore: number;
   assessorNotes?: string;
   attachments: string[];
-  status: 'open' | 'in_progress' | 'resolved';
+  status: 'open' | 'in_progress' | 'pending_review' | 'resolved' | 'rejected';
   assignedTo?: string;
   dueDate?: string;
   resolvedAt?: string;
   resolvedBy?: string;
   createdAt: string;
   evaluationDate?: string;
+  // Review workflow fields
+  resolutionNotes?: string;
+  resolutionAttachments?: string[];
+  rejectionReason?: string;
+  reviewAttachments?: string[];
+  reviewedBy?: string;
+  reviewedAt?: string;
+  assessorId?: string; // the evaluator who created the finding
 }
 
 export interface CorrectiveAction {
@@ -63,6 +71,13 @@ function mapFinding(f: any): Finding {
     resolvedBy: f.resolved_by,
     createdAt: f.created_at,
     evaluationDate: (f.evaluations as any)?.submitted_at || (f.evaluations as any)?.created_at,
+    resolutionNotes: f.resolution_notes,
+    resolutionAttachments: f.resolution_attachments || [],
+    rejectionReason: f.rejection_reason,
+    reviewAttachments: f.review_attachments || [],
+    reviewedBy: f.reviewed_by,
+    reviewedAt: f.reviewed_at,
+    assessorId: (f.evaluations as any)?.assessor_id,
   };
 }
 
@@ -74,7 +89,7 @@ const FINDINGS_SELECT = `
     name_ar,
     template_categories!inner (name, name_ar)
   ),
-  evaluations!inner (status, is_archived, submitted_at, created_at)
+  evaluations!inner (status, is_archived, submitted_at, created_at, assessor_id)
 `;
 
 export function useFindings(filters?: { status?: string; branchId?: string }) {
@@ -134,7 +149,6 @@ export function useFindingStats() {
   return useQuery({
     queryKey: ['finding-stats'],
     queryFn: async () => {
-      // Get all critical findings (score <= 3) from non-archived, completed evaluations
       const { data: allFindings, error } = await supabase
         .from('non_conformities')
         .select('status, score, assigned_to, due_date, resolved_at, created_at, evaluations!inner(status, is_archived)')
@@ -145,19 +159,20 @@ export function useFindingStats() {
       if (error) throw error;
 
       const open = allFindings.filter(f => f.status === 'open').length;
-      const inProgress = allFindings.filter(f => f.status === 'in_progress').length;
+      const inProgress = allFindings.filter(f => f.status === 'in_progress' || f.status === 'rejected').length;
+      const pendingReview = allFindings.filter(f => f.status === 'pending_review').length;
       const resolved = allFindings.filter(f => f.status === 'resolved').length;
+      const rejected = allFindings.filter(f => f.status === 'rejected').length;
       const total = allFindings.length;
 
       const assigned = allFindings.filter(f => f.assigned_to).length;
-      const unassigned = allFindings.filter(f => !f.assigned_to && f.status !== 'resolved').length;
+      const unassigned = allFindings.filter(f => !f.assigned_to && !['resolved', 'pending_review'].includes(f.status)).length;
 
       const now = new Date();
       const overdue = allFindings.filter(f => 
-        f.due_date && new Date(f.due_date) < now && f.status !== 'resolved'
+        f.due_date && new Date(f.due_date) < now && !['resolved'].includes(f.status)
       ).length;
 
-      // Calculate average resolution time (days) for resolved findings
       const resolvedFindings = allFindings.filter(f => f.resolved_at);
       let avgResolutionDays = 0;
       if (resolvedFindings.length > 0) {
@@ -174,7 +189,9 @@ export function useFindingStats() {
       return {
         open,
         inProgress,
+        pendingReview,
         resolved,
+        rejected,
         total,
         assigned,
         unassigned,
@@ -230,15 +247,15 @@ export function useResolveFinding() {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ findingId, assignedTo, resolution, attachments }: { findingId: string; assignedTo?: string; resolution: string; attachments?: string[] }) => {
+    mutationFn: async ({ findingId, assessorId, resolution, attachments }: { findingId: string; assessorId?: string; resolution: string; attachments?: string[] }) => {
       const updateData: any = {
-        status: 'resolved',
+        status: 'pending_review',
         resolved_at: new Date().toISOString(),
         resolved_by: user?.id,
-        assessor_notes: resolution,
+        resolution_notes: resolution,
       };
       if (attachments && attachments.length > 0) {
-        updateData.attachments = attachments;
+        updateData.resolution_attachments = attachments;
       }
       const { error } = await supabase
         .from('non_conformities')
@@ -247,13 +264,87 @@ export function useResolveFinding() {
 
       if (error) throw error;
 
-      // Notify the branch manager and admins
+      // Notify the assessor (evaluator) that a finding is ready for review
+      if (assessorId) {
+        await supabase.from('notifications').insert({
+          user_id: assessorId,
+          title: 'Finding Ready for Review',
+          message: 'A finding fix has been submitted and is awaiting your review.',
+          type: 'review_pending',
+          reference_type: 'finding',
+          reference_id: findingId,
+        });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['findings'] });
+      queryClient.invalidateQueries({ queryKey: ['critical-findings'] });
+      queryClient.invalidateQueries({ queryKey: ['finding-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+  });
+}
+
+export function useApproveFinding() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ findingId, notes, attachments }: { findingId: string; notes?: string; attachments?: string[] }) => {
+      const updateData: any = {
+        status: 'resolved',
+        reviewed_by: user?.id,
+        reviewed_at: new Date().toISOString(),
+      };
+      if (notes) updateData.assessor_notes = notes;
+      if (attachments && attachments.length > 0) updateData.review_attachments = attachments;
+
+      const { error } = await supabase
+        .from('non_conformities')
+        .update(updateData)
+        .eq('id', findingId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['findings'] });
+      queryClient.invalidateQueries({ queryKey: ['critical-findings'] });
+      queryClient.invalidateQueries({ queryKey: ['finding-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+  });
+}
+
+export function useRejectFinding() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ findingId, reason, attachments, assignedTo }: { findingId: string; reason: string; attachments?: string[]; assignedTo?: string }) => {
+      const updateData: any = {
+        status: 'rejected',
+        reviewed_by: user?.id,
+        reviewed_at: new Date().toISOString(),
+        rejection_reason: reason,
+        resolved_at: null,
+        resolved_by: null,
+      };
+      if (attachments && attachments.length > 0) updateData.review_attachments = attachments;
+
+      const { error } = await supabase
+        .from('non_conformities')
+        .update(updateData)
+        .eq('id', findingId);
+
+      if (error) throw error;
+
+      // Notify the branch manager about the rejection
       if (assignedTo) {
         await supabase.from('notifications').insert({
           user_id: assignedTo,
-          title: 'Finding Resolved',
-          message: 'A finding assigned to you has been marked as resolved.',
-          type: 'resolution',
+          title: 'Finding Fix Rejected',
+          message: `Your fix was rejected. Reason: ${reason}`,
+          type: 'rejection',
           reference_type: 'finding',
           reference_id: findingId,
         });

@@ -312,8 +312,14 @@ export type Database = {
           evaluation_id: string
           id: string
           max_score: number
+          rejection_reason: string | null
+          resolution_attachments: string[] | null
+          resolution_notes: string | null
           resolved_at: string | null
           resolved_by: string | null
+          review_attachments: string[] | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           score: number
           status: string
           updated_at: string
@@ -329,8 +335,14 @@ export type Database = {
           evaluation_id: string
           id?: string
           max_score: number
+          rejection_reason?: string | null
+          resolution_attachments?: string[] | null
+          resolution_notes?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
+          review_attachments?: string[] | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           score: number
           status?: string
           updated_at?: string
@@ -346,8 +358,14 @@ export type Database = {
           evaluation_id?: string
           id?: string
           max_score?: number
+          rejection_reason?: string | null
+          resolution_attachments?: string[] | null
+          resolution_notes?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
+          review_attachments?: string[] | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           score?: number
           status?: string
           updated_at?: string
