@@ -188,6 +188,80 @@ export default function CEODashboard() {
         </div>
       </div>
 
+      {/* Resolution Overview */}
+      <div className="bg-card rounded-xl border border-border p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-foreground">
+            {language === 'ar' ? 'حالة حل المشكلات' : 'Resolution Overview'}
+          </h2>
+          <button
+            onClick={() => navigate('/findings')}
+            className="text-sm text-primary hover:underline"
+          >
+            {t('common.viewDetails')} →
+          </button>
+        </div>
+        {findingStatsLoading ? (
+          <Skeleton className="h-24 rounded-xl" />
+        ) : (
+          <>
+            {/* Progress bar */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between text-sm mb-1.5">
+                <span className="text-muted-foreground">
+                  {language === 'ar' ? 'تقدم الحل' : 'Resolution Progress'}
+                </span>
+                <span className="font-semibold text-foreground">
+                  {findingStats?.resolutionRate || 0}%
+                </span>
+              </div>
+              <div className="w-full h-3 rounded-full bg-muted overflow-hidden">
+                <div className="flex h-full">
+                  <div
+                    className="bg-score-excellent transition-all duration-500"
+                    style={{ width: `${findingStats?.total ? ((findingStats?.resolved || 0) / findingStats.total) * 100 : 0}%` }}
+                  />
+                  <div
+                    className="bg-score-average transition-all duration-500"
+                    style={{ width: `${findingStats?.total ? ((findingStats?.inProgress || 0) / findingStats.total) * 100 : 0}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+            {/* Status breakdown */}
+            <div className="flex flex-wrap gap-4 justify-center md:justify-start">
+              {[
+                { label: language === 'ar' ? 'تم الحل' : 'Resolved', count: findingStats?.resolved || 0, color: 'bg-score-excellent' },
+                { label: language === 'ar' ? 'قيد المعالجة' : 'In Progress', count: findingStats?.inProgress || 0, color: 'bg-score-average' },
+                { label: language === 'ar' ? 'مفتوح' : 'Open', count: findingStats?.open || 0, color: 'bg-score-critical' },
+                { label: language === 'ar' ? 'متأخر' : 'Overdue', count: findingStats?.overdue || 0, color: 'bg-score-weak' },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="flex items-center gap-3 px-4 py-3 rounded-lg bg-muted/50"
+                >
+                  <div className={`w-4 h-4 rounded-full ${item.color}`} />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{item.label}</p>
+                    <p className="text-2xl font-bold text-foreground">{item.count}</p>
+                  </div>
+                </div>
+              ))}
+              <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-muted/50 border border-border">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {language === 'ar' ? 'متوسط وقت الحل' : 'Avg Resolution Time'}
+                  </p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {findingStats?.avgResolutionDays || 0} <span className="text-sm font-normal text-muted-foreground">{language === 'ar' ? 'يوم' : 'days'}</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
       {/* Branch Circles Grid */}
       <div className="bg-card rounded-xl border border-border p-6">
         <div className="flex items-center justify-between mb-6">
