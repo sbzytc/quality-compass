@@ -36,13 +36,14 @@ export default function CEODashboard() {
                         overallScore >= 60 ? 'average' : 
                         overallScore >= 40 ? 'weak' : 'critical';
 
-  // Calculate score distribution
+  // Calculate score distribution (only branches that have been evaluated)
+  const evaluatedBranchesList = branches?.filter(b => b.lastEvaluationDate !== null) || [];
   const scoreDistribution = {
-    excellent: branches?.filter(b => b.status === 'excellent').length || 0,
-    good: branches?.filter(b => b.status === 'good').length || 0,
-    average: branches?.filter(b => b.status === 'average').length || 0,
-    weak: branches?.filter(b => b.status === 'weak').length || 0,
-    critical: branches?.filter(b => b.status === 'critical').length || 0,
+    excellent: evaluatedBranchesList.filter(b => b.status === 'excellent').length,
+    good: evaluatedBranchesList.filter(b => b.status === 'good').length,
+    average: evaluatedBranchesList.filter(b => b.status === 'average').length,
+    weak: evaluatedBranchesList.filter(b => b.status === 'weak').length,
+    critical: evaluatedBranchesList.filter(b => b.status === 'critical').length,
   };
 
   // Calculate regional stats
