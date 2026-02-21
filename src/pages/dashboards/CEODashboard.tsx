@@ -131,24 +131,24 @@ export default function CEODashboard() {
                         paddingAngle={3}
                         dataKey="value"
                         strokeWidth={0}
-                        label={({ cx, cy, midAngle, outerRadius: oR, percent, name, color, index }: any) => {
+                        label={({ cx, cy, midAngle, outerRadius: oR, percent, name, color }: any) => {
                           const RADIAN = Math.PI / 180;
                           const sin = Math.sin(-midAngle * RADIAN);
                           const cos = Math.cos(-midAngle * RADIAN);
-                          const mx = cx + (oR + 10) * cos;
-                          const my = cy + (oR + 10) * sin;
-                          const ex = cx + (oR + 35) * cos;
-                          const ey = cy + (oR + 35) * sin;
-                          const elbowX = ex + (cos >= 0 ? 25 : -25);
+                          const mx = cx + (oR + 8) * cos;
+                          const my = cy + (oR + 8) * sin;
+                          const lineEndX = cx + (oR + 28) * cos;
+                          const lineEndY = cy + (oR + 28) * sin;
+                          const textX = cx + (oR + 38) * cos;
+                          const textY = cy + (oR + 38) * sin;
                           const textAnchor = cos >= 0 ? 'start' : 'end';
                           return (
                             <g>
-                              <path d={`M${mx},${my}L${ex},${ey}L${elbowX},${ey}`} stroke={color} strokeWidth={1.5} fill="none" />
-                              <circle cx={elbowX} cy={ey} r={2} fill={color} />
-                              <text x={elbowX + (cos >= 0 ? 5 : -5)} y={ey - 4} textAnchor={textAnchor} fontSize={9} fill={color} opacity={0.8}>
+                              <path d={`M${mx},${my}L${lineEndX},${lineEndY}`} stroke={color} strokeWidth={1.5} fill="none" />
+                              <text x={textX} y={textY - 2} textAnchor={textAnchor} fontSize={9} fill={color} opacity={0.8}>
                                 {name}
                               </text>
-                              <text x={elbowX + (cos >= 0 ? 5 : -5)} y={ey + 9} textAnchor={textAnchor} fontSize={11} fontWeight={700} fill={color}>
+                              <text x={textX} y={textY + 10} textAnchor={textAnchor} fontSize={11} fontWeight={700} fill={color}>
                                 {percent}%
                               </text>
                             </g>
@@ -201,20 +201,20 @@ export default function CEODashboard() {
                           const RADIAN = Math.PI / 180;
                           const sin = Math.sin(-midAngle * RADIAN);
                           const cos = Math.cos(-midAngle * RADIAN);
-                          const mx = cx + (oR + 10) * cos;
-                          const my = cy + (oR + 10) * sin;
-                          const ex = cx + (oR + 35) * cos;
-                          const ey = cy + (oR + 35) * sin;
-                          const elbowX = ex + (cos >= 0 ? 25 : -25);
+                          const mx = cx + (oR + 8) * cos;
+                          const my = cy + (oR + 8) * sin;
+                          const lineEndX = cx + (oR + 28) * cos;
+                          const lineEndY = cy + (oR + 28) * sin;
+                          const textX = cx + (oR + 38) * cos;
+                          const textY = cy + (oR + 38) * sin;
                           const textAnchor = cos >= 0 ? 'start' : 'end';
                           return (
                             <g>
-                              <path d={`M${mx},${my}L${ex},${ey}L${elbowX},${ey}`} stroke={color} strokeWidth={1.5} fill="none" />
-                              <circle cx={elbowX} cy={ey} r={2} fill={color} />
-                              <text x={elbowX + (cos >= 0 ? 5 : -5)} y={ey - 4} textAnchor={textAnchor} fontSize={9} fill={color} opacity={0.8}>
+                              <path d={`M${mx},${my}L${lineEndX},${lineEndY}`} stroke={color} strokeWidth={1.5} fill="none" />
+                              <text x={textX} y={textY - 2} textAnchor={textAnchor} fontSize={9} fill={color} opacity={0.8}>
                                 {name}
                               </text>
-                              <text x={elbowX + (cos >= 0 ? 5 : -5)} y={ey + 9} textAnchor={textAnchor} fontSize={11} fontWeight={700} fill={color}>
+                              <text x={textX} y={textY + 10} textAnchor={textAnchor} fontSize={11} fontWeight={700} fill={color}>
                                 {percent}%
                               </text>
                             </g>
