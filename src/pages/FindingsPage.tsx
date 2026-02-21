@@ -174,7 +174,7 @@ export default function FindingsPage() {
       </div>
 
       {/* KPI Dashboard */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
         {isLoading ? (
           [...Array(5)].map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)
         ) : (
@@ -218,16 +218,28 @@ export default function FindingsPage() {
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
               className="bg-score-excellent/5 border border-score-excellent/20 rounded-xl p-4 flex flex-col">
               <div className="flex items-center gap-2 text-sm text-score-excellent mb-1">
+                <CheckCircle2 className="w-4 h-4" />
+                {isAr ? 'تم الحل' : 'Resolved'}
+              </div>
+              <p className="text-2xl font-bold text-foreground">{stats?.resolved || 0}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {isAr ? 'ملاحظة محلولة' : 'issues resolved'}
+              </p>
+            </motion.div>
+
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+              className="bg-score-excellent/5 border border-score-excellent/20 rounded-xl p-4 flex flex-col">
+              <div className="flex items-center gap-2 text-sm text-score-excellent mb-1">
                 <TrendingUp className="w-4 h-4" />
                 {isAr ? 'نسبة الحل' : 'Resolution Rate'}
               </div>
               <p className="text-2xl font-bold text-foreground">{stats?.resolutionRate || 0}%</p>
               <p className="text-xs text-muted-foreground mt-1">
-                {stats?.resolved || 0} {isAr ? 'تم حلها' : 'resolved'}
+                {isAr ? 'من الإجمالي' : 'of total'}
               </p>
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
               className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex flex-col">
               <div className="flex items-center gap-2 text-sm text-primary mb-1">
                 <BarChart3 className="w-4 h-4" />
