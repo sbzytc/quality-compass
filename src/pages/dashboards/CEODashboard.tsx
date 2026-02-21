@@ -86,10 +86,10 @@ export default function CEODashboard() {
                   {(() => {
                     const raw = [
                       { name: language === 'ar' ? 'ممتاز' : 'Excellent', value: scoreDistribution.excellent, color: 'hsl(142, 76%, 36%)' },
-                      { name: language === 'ar' ? 'جيد' : 'Good', value: scoreDistribution.good, color: 'hsl(200, 80%, 50%)' },
+                      { name: language === 'ar' ? 'جيد' : 'Good', value: scoreDistribution.good, color: 'hsl(142, 52%, 50%)' },
                       { name: language === 'ar' ? 'متوسط' : 'Average', value: scoreDistribution.average, color: 'hsl(45, 93%, 47%)' },
-                      { name: language === 'ar' ? 'ضعيف' : 'Weak', value: scoreDistribution.weak, color: 'hsl(25, 95%, 53%)' },
-                      { name: language === 'ar' ? 'حرج' : 'Critical', value: scoreDistribution.critical, color: 'hsl(0, 84%, 60%)' },
+                      { name: language === 'ar' ? 'ضعيف' : 'Weak', value: scoreDistribution.weak, color: 'hsl(14, 89%, 57%)' },
+                      { name: language === 'ar' ? 'حرج' : 'Critical', value: scoreDistribution.critical, color: 'hsl(0, 84%, 50%)' },
                     ];
                     const total = raw.reduce((s, d) => s + d.value, 0);
                     const filtered = raw.filter(d => d.value > 0).map(d => ({ ...d, percent: total > 0 ? Math.round((d.value / total) * 100) : 0 }));
@@ -142,9 +142,9 @@ export default function CEODashboard() {
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <span className={`text-2xl font-bold ${
                   overallScore >= 90 ? 'text-score-excellent' :
-                  overallScore >= 75 ? 'text-[hsl(200,80%,50%)]' :
+                  overallScore >= 75 ? 'text-score-good' :
                   overallScore >= 60 ? 'text-score-average' :
-                  overallScore >= 40 ? 'text-[hsl(25,95%,53%)]' : 'text-score-critical'
+                  overallScore >= 40 ? 'text-score-weak' : 'text-score-critical'
                 }`}>{overallScore}%</span>
               </div>
             </div>
