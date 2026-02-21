@@ -1,10 +1,10 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, AlertTriangle, Clock, CheckCircle2, Target,
   UserPlus, Calendar, TrendingUp, Building2, ChevronDown,
-  ChevronRight, AlertCircle, Timer, BarChart3
+  ChevronRight, AlertCircle, Timer, BarChart3, Camera, X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCriticalFindings, useFindingStats, useAssignFinding, useResolveFinding, Finding } from '@/hooks/useFindings';
+import { supabase } from '@/integrations/supabase/client';
 import { useUsers } from '@/hooks/useUsers';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useGoBack } from '@/hooks/useGoBack';
@@ -35,7 +36,10 @@ export default function FindingsPage() {
   const [assignUserId, setAssignUserId] = useState('');
   const [assignDueDate, setAssignDueDate] = useState('');
   const [resolveNotes, setResolveNotes] = useState('');
-
+  const [resolveImages, setResolveImages] = useState<File[]>([]);
+  const [resolveImagePreviews, setResolveImagePreviews] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const resolveFileInputRef = useRef<HTMLInputElement>(null);
   const statusFilter = activeTab !== 'all' ? activeTab : undefined;
   const { data: findings, isLoading: findingsLoading } = useCriticalFindings(
     statusFilter ? { status: statusFilter } : undefined
@@ -104,21 +108,62 @@ export default function FindingsPage() {
   const handleResolve = (finding: Finding) => {
     setSelectedFinding(finding);
     setResolveNotes('');
+    setResolveImages([]);
+    setResolveImagePreviews([]);
     setResolveDialogOpen(true);
+  };
+
+  const handleResolveImageAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const validFiles = files.filter(f => f.size <= 5 * 1024 * 1024);
+    if (validFiles.length < files.length) {
+      toast.error(isAr ? 'بعض الملفات تجاوزت 5MB' : 'Some files exceed 5MB limit');
+    }
+    setResolveImages(prev => [...prev, ...validFiles]);
+    validFiles.forEach(f => {
+      const reader = new FileReader();
+      reader.onloadend = () => setResolveImagePreviews(prev => [...prev, reader.result as string]);
+      reader.readAsDataURL(f);
+    });
+    if (resolveFileInputRef.current) resolveFileInputRef.current.value = '';
+  };
+
+  const removeResolveImage = (index: number) => {
+    setResolveImages(prev => prev.filter((_, i) => i !== index));
+    setResolveImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
   const submitResolve = async () => {
     if (!selectedFinding || !resolveNotes.trim()) return;
     try {
+      setIsUploading(true);
+      // Upload images if any
+      const uploadedUrls: string[] = [];
+      for (const file of resolveImages) {
+        const ext = file.name.split('.').pop();
+        const path = `findings/${selectedFinding.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from('evaluation-attachments')
+          .upload(path, file);
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage
+          .from('evaluation-attachments')
+          .getPublicUrl(path);
+        uploadedUrls.push(urlData.publicUrl);
+      }
+
       await resolveMutation.mutateAsync({
         findingId: selectedFinding.id,
         assignedTo: selectedFinding.assignedTo,
         resolution: resolveNotes.trim(),
+        attachments: uploadedUrls.length > 0 ? uploadedUrls : undefined,
       });
       toast.success(isAr ? 'تم حل الملاحظة بنجاح' : 'Finding resolved successfully');
       setResolveDialogOpen(false);
     } catch {
       toast.error(isAr ? 'حدث خطأ' : 'Failed to resolve finding');
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -546,6 +591,44 @@ export default function FindingsPage() {
                 <p className="text-xs text-score-critical">{isAr ? 'هذا الحقل إلزامي' : 'This field is required'}</p>
               )}
             </div>
+
+            {/* Image Upload */}
+            <div className="space-y-2">
+              <Label>{isAr ? 'إرفاق صورة (اختياري)' : 'Attach Photo (optional)'}</Label>
+              <input
+                ref={resolveFileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={handleResolveImageAdd}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={() => resolveFileInputRef.current?.click()}
+              >
+                <Camera className="w-4 h-4 mr-2" />
+                {isAr ? 'إضافة صورة' : 'Add Photo'}
+              </Button>
+              {resolveImagePreviews.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {resolveImagePreviews.map((src, i) => (
+                    <div key={i} className="relative w-16 h-16 rounded-md overflow-hidden border border-border">
+                      <img src={src} alt="" className="w-full h-full object-cover" />
+                      <button
+                        onClick={() => removeResolveImage(i)}
+                        className="absolute top-0.5 right-0.5 bg-background/80 rounded-full p-0.5"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setResolveDialogOpen(false)}>
@@ -553,7 +636,7 @@ export default function FindingsPage() {
             </Button>
             <Button
               onClick={submitResolve}
-              disabled={!resolveNotes.trim() || resolveMutation.isPending}
+              disabled={!resolveNotes.trim() || resolveMutation.isPending || isUploading}
             >
               {resolveMutation.isPending
                 ? (isAr ? 'جاري الحل...' : 'Resolving...')

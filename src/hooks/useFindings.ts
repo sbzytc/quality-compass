@@ -230,15 +230,19 @@ export function useResolveFinding() {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ findingId, assignedTo, resolution }: { findingId: string; assignedTo?: string; resolution: string }) => {
+    mutationFn: async ({ findingId, assignedTo, resolution, attachments }: { findingId: string; assignedTo?: string; resolution: string; attachments?: string[] }) => {
+      const updateData: any = {
+        status: 'resolved',
+        resolved_at: new Date().toISOString(),
+        resolved_by: user?.id,
+        assessor_notes: resolution,
+      };
+      if (attachments && attachments.length > 0) {
+        updateData.attachments = attachments;
+      }
       const { error } = await supabase
         .from('non_conformities')
-        .update({
-          status: 'resolved',
-          resolved_at: new Date().toISOString(),
-          resolved_by: user?.id,
-          assessor_notes: resolution,
-        })
+        .update(updateData)
         .eq('id', findingId);
 
       if (error) throw error;
