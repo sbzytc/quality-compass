@@ -132,6 +132,18 @@ export default function CEODashboard() {
                         dataKey="value"
                         strokeWidth={0}
                         labelLine={false}
+                        label={({ cx, cy, midAngle, innerRadius: iR, outerRadius: oR, percent }: any) => {
+                          if (percent < 0.05) return null;
+                          const RADIAN = Math.PI / 180;
+                          const radius = iR + (oR - iR) / 2;
+                          const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                          const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                          return (
+                            <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={10} fontWeight={700}>
+                              {Math.round(percent * 100)}%
+                            </text>
+                          );
+                        }}
                       >
                         {filtered.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
@@ -194,6 +206,18 @@ export default function CEODashboard() {
                         dataKey="value"
                         strokeWidth={0}
                         labelLine={false}
+                        label={({ cx, cy, midAngle, innerRadius: iR, outerRadius: oR, percent }: any) => {
+                          if (percent < 0.05) return null;
+                          const RADIAN = Math.PI / 180;
+                          const radius = iR + (oR - iR) / 2;
+                          const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                          const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                          return (
+                            <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={10} fontWeight={700}>
+                              {Math.round(percent * 100)}%
+                            </text>
+                          );
+                        }}
                       >
                         {filtered.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
