@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Building2, TrendingUp, AlertTriangle, CheckCircle2, Clock } from 'lucide-react';
+import { Building2, TrendingUp, AlertTriangle, CheckCircle2, Clock, ShieldCheck } from 'lucide-react';
 import { QualityCircle } from '@/components/QualityCircle';
 import { StatCard } from '@/components/StatCard';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -86,10 +86,10 @@ export default function CEODashboard() {
       </div>
 
       {/* Summary Stats - Now Clickable */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {isLoading ? (
           <>
-            {[...Array(4)].map((_, i) => (
+            {[...Array(5)].map((_, i) => (
               <Skeleton key={i} className="h-32 rounded-xl" />
             ))}
           </>
@@ -125,6 +125,18 @@ export default function CEODashboard() {
               subtitle={findingsSummary}
               icon={AlertTriangle}
               variant={findingStats?.open && findingStats.open > 0 ? 'average' : 'excellent'}
+              onClick={() => navigate('/findings')}
+            />
+            <StatCard
+              title={language === 'ar' ? 'نسبة الحل' : 'Resolution Rate'}
+              value={`${findingStats?.total ? Math.round(((findingStats?.resolved || 0) / findingStats.total) * 100) : 0}%`}
+              subtitle={
+                language === 'ar'
+                  ? `${findingStats?.resolved || 0} من ${findingStats?.total || 0} تم حلها`
+                  : `${findingStats?.resolved || 0} of ${findingStats?.total || 0} resolved`
+              }
+              icon={ShieldCheck}
+              variant={findingStats?.total && findingStats.total > 0 && ((findingStats?.resolved || 0) / findingStats.total) >= 0.7 ? 'excellent' : (findingStats?.resolved || 0) > 0 ? 'average' : 'weak'}
               onClick={() => navigate('/findings')}
             />
             <StatCard
