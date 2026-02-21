@@ -65,12 +65,36 @@ export default function CEODashboard() {
         <div className="flex items-center gap-6">
           {/* Large Overall Score Circle */}
           {!isLoading && (
-            <QualityCircle
-              score={overallScore}
-              status={overallStatus as any}
-              size="xl"
-              showLabel
-            />
+            <>
+              <div className="flex flex-col items-center">
+                <QualityCircle
+                  score={overallScore}
+                  status={overallStatus as any}
+                  size="xl"
+                  showLabel
+                />
+                <span className="text-xs text-muted-foreground mt-1">
+                  {language === 'ar' ? 'التقييم' : 'Evaluation'}
+                </span>
+              </div>
+              <div className="flex flex-col items-center">
+                <QualityCircle
+                  score={findingStats?.resolutionRate || 0}
+                  status={
+                    (findingStats?.resolutionRate || 0) >= 90 ? 'excellent' :
+                    (findingStats?.resolutionRate || 0) >= 70 ? 'good' :
+                    (findingStats?.resolutionRate || 0) >= 50 ? 'average' :
+                    (findingStats?.resolutionRate || 0) >= 30 ? 'weak' : 'critical'
+                  }
+                  size="xl"
+                  showLabel
+                  onClick={() => navigate('/findings')}
+                />
+                <span className="text-xs text-muted-foreground mt-1">
+                  {language === 'ar' ? 'نسبة الحل' : 'Resolution'}
+                </span>
+              </div>
+            </>
           )}
           <div>
             <h1 className="text-3xl font-bold text-foreground">{t('dashboard.ceo.title')}</h1>
