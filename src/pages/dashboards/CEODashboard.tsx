@@ -135,19 +135,19 @@ export default function CEODashboard() {
                           const RADIAN = Math.PI / 180;
                           const sin = Math.sin(-midAngle * RADIAN);
                           const cos = Math.cos(-midAngle * RADIAN);
-                          const mx = cx + (oR + 12) * cos;
-                          const my = cy + (oR + 12) * sin;
-                          const ex = cx + (oR + 35) * cos;
-                          const ey = cy + (oR + 35) * sin;
+                          const mx = cx + (oR + 14) * cos;
+                          const my = cy + (oR + 14) * sin;
+                          const ex = cx + (oR + 50) * cos;
+                          const ey = cy + (oR + 50) * sin;
                           const textAnchor = cos >= 0 ? 'start' : 'end';
                           return (
                             <g>
                               <path d={`M${mx},${my}L${ex},${ey}`} stroke={color} strokeWidth={1.5} fill="none" />
                               <circle cx={ex} cy={ey} r={2} fill={color} />
-                              <text x={ex + (cos >= 0 ? 5 : -5)} y={ey - 6} textAnchor={textAnchor} fontSize={9} fill={color} opacity={0.8}>
+                              <text x={ex + (cos >= 0 ? 6 : -6)} y={ey - 6} textAnchor={textAnchor} fontSize={9} fill={color} opacity={0.8}>
                                 {name}
                               </text>
-                              <text x={ex + (cos >= 0 ? 5 : -5)} y={ey + 6} textAnchor={textAnchor} fontSize={11} fontWeight={700} fill={color}>
+                              <text x={ex + (cos >= 0 ? 6 : -6)} y={ey + 6} textAnchor={textAnchor} fontSize={11} fontWeight={700} fill={color}>
                                 {percent}%
                               </text>
                             </g>
@@ -200,19 +200,19 @@ export default function CEODashboard() {
                           const RADIAN = Math.PI / 180;
                           const sin = Math.sin(-midAngle * RADIAN);
                           const cos = Math.cos(-midAngle * RADIAN);
-                          const mx = cx + (oR + 12) * cos;
-                          const my = cy + (oR + 12) * sin;
-                          const ex = cx + (oR + 35) * cos;
-                          const ey = cy + (oR + 35) * sin;
+                          const mx = cx + (oR + 14) * cos;
+                          const my = cy + (oR + 14) * sin;
+                          const ex = cx + (oR + 50) * cos;
+                          const ey = cy + (oR + 50) * sin;
                           const textAnchor = cos >= 0 ? 'start' : 'end';
                           return (
                             <g>
                               <path d={`M${mx},${my}L${ex},${ey}`} stroke={color} strokeWidth={1.5} fill="none" />
                               <circle cx={ex} cy={ey} r={2} fill={color} />
-                              <text x={ex + (cos >= 0 ? 5 : -5)} y={ey - 6} textAnchor={textAnchor} fontSize={9} fill={color} opacity={0.8}>
+                              <text x={ex + (cos >= 0 ? 6 : -6)} y={ey - 6} textAnchor={textAnchor} fontSize={9} fill={color} opacity={0.8}>
                                 {name}
                               </text>
-                              <text x={ex + (cos >= 0 ? 5 : -5)} y={ey + 6} textAnchor={textAnchor} fontSize={11} fontWeight={700} fill={color}>
+                              <text x={ex + (cos >= 0 ? 6 : -6)} y={ey + 6} textAnchor={textAnchor} fontSize={11} fontWeight={700} fill={color}>
                                 {percent}%
                               </text>
                             </g>
