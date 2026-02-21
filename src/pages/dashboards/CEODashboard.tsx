@@ -83,59 +83,56 @@ export default function CEODashboard() {
             <div className="w-72 h-72 relative">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie
-                    data={(() => {
-                      const raw = [
-                        { name: language === 'ar' ? 'ممتاز' : 'Excellent', value: scoreDistribution.excellent, color: 'hsl(142, 76%, 36%)' },
-                        { name: language === 'ar' ? 'جيد' : 'Good', value: scoreDistribution.good, color: 'hsl(200, 80%, 50%)' },
-                        { name: language === 'ar' ? 'متوسط' : 'Average', value: scoreDistribution.average, color: 'hsl(45, 93%, 47%)' },
-                        { name: language === 'ar' ? 'ضعيف' : 'Weak', value: scoreDistribution.weak, color: 'hsl(25, 95%, 53%)' },
-                        { name: language === 'ar' ? 'حرج' : 'Critical', value: scoreDistribution.critical, color: 'hsl(0, 84%, 60%)' },
-                      ];
-                      const total = raw.reduce((s, d) => s + d.value, 0);
-                      return raw.filter(d => d.value > 0).map(d => ({ ...d, percent: total > 0 ? Math.round((d.value / total) * 100) : 0 }));
-                    })()}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={52}
-                    outerRadius={75}
-                    paddingAngle={3}
-                    dataKey="value"
-                    strokeWidth={0}
-                    label={({ cx, cy, midAngle, outerRadius: oR, percent, name, color }: any) => {
-                      const RADIAN = Math.PI / 180;
-                      const sin = Math.sin(-midAngle * RADIAN);
-                      const cos = Math.cos(-midAngle * RADIAN);
-                      const mx = cx + (oR + 12) * cos;
-                      const my = cy + (oR + 12) * sin;
-                      const ex = cx + (oR + 35) * cos;
-                      const ey = cy + (oR + 35) * sin;
-                      const textAnchor = cos >= 0 ? 'start' : 'end';
-                      return (
-                        <g>
-                          <path d={`M${mx},${my}L${ex},${ey}`} stroke={color} strokeWidth={1.5} fill="none" />
-                          <circle cx={ex} cy={ey} r={2} fill={color} />
-                          <text x={ex + (cos >= 0 ? 5 : -5)} y={ey - 6} textAnchor={textAnchor} fontSize={9} fill={color} opacity={0.8}>
-                            {name}
-                          </text>
-                          <text x={ex + (cos >= 0 ? 5 : -5)} y={ey + 6} textAnchor={textAnchor} fontSize={11} fontWeight={700} fill={color}>
-                            {percent}%
-                          </text>
-                        </g>
-                      );
-                    }}
-                    labelLine={false}
-                  >
-                    {[
-                      'hsl(142, 76%, 36%)',
-                      'hsl(200, 80%, 50%)',
-                      'hsl(45, 93%, 47%)',
-                      'hsl(25, 95%, 53%)',
-                      'hsl(0, 84%, 60%)',
-                    ].map((color, index) => (
-                      <Cell key={`cell-${index}`} fill={color} />
-                    ))}
-                  </Pie>
+                  {(() => {
+                    const raw = [
+                      { name: language === 'ar' ? 'ممتاز' : 'Excellent', value: scoreDistribution.excellent, color: 'hsl(142, 76%, 36%)' },
+                      { name: language === 'ar' ? 'جيد' : 'Good', value: scoreDistribution.good, color: 'hsl(200, 80%, 50%)' },
+                      { name: language === 'ar' ? 'متوسط' : 'Average', value: scoreDistribution.average, color: 'hsl(45, 93%, 47%)' },
+                      { name: language === 'ar' ? 'ضعيف' : 'Weak', value: scoreDistribution.weak, color: 'hsl(25, 95%, 53%)' },
+                      { name: language === 'ar' ? 'حرج' : 'Critical', value: scoreDistribution.critical, color: 'hsl(0, 84%, 60%)' },
+                    ];
+                    const total = raw.reduce((s, d) => s + d.value, 0);
+                    const filtered = raw.filter(d => d.value > 0).map(d => ({ ...d, percent: total > 0 ? Math.round((d.value / total) * 100) : 0 }));
+                    return (
+                      <Pie
+                        data={filtered}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={52}
+                        outerRadius={75}
+                        paddingAngle={3}
+                        dataKey="value"
+                        strokeWidth={0}
+                        label={({ cx, cy, midAngle, outerRadius: oR, percent, name, color }: any) => {
+                          const RADIAN = Math.PI / 180;
+                          const sin = Math.sin(-midAngle * RADIAN);
+                          const cos = Math.cos(-midAngle * RADIAN);
+                          const mx = cx + (oR + 12) * cos;
+                          const my = cy + (oR + 12) * sin;
+                          const ex = cx + (oR + 35) * cos;
+                          const ey = cy + (oR + 35) * sin;
+                          const textAnchor = cos >= 0 ? 'start' : 'end';
+                          return (
+                            <g>
+                              <path d={`M${mx},${my}L${ex},${ey}`} stroke={color} strokeWidth={1.5} fill="none" />
+                              <circle cx={ex} cy={ey} r={2} fill={color} />
+                              <text x={ex + (cos >= 0 ? 5 : -5)} y={ey - 6} textAnchor={textAnchor} fontSize={9} fill={color} opacity={0.8}>
+                                {name}
+                              </text>
+                              <text x={ex + (cos >= 0 ? 5 : -5)} y={ey + 6} textAnchor={textAnchor} fontSize={11} fontWeight={700} fill={color}>
+                                {percent}%
+                              </text>
+                            </g>
+                          );
+                        }}
+                        labelLine={false}
+                      >
+                        {filtered.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                    );
+                  })()}
                   <Tooltip
                     formatter={(value: number, name: string) => [`${value}`, name]}
                     contentStyle={{ fontSize: '12px', borderRadius: '8px' }}
@@ -160,57 +157,55 @@ export default function CEODashboard() {
             <div className="w-72 h-72 relative">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie
-                    data={(() => {
-                      const raw = [
-                        { name: language === 'ar' ? 'تم الحل' : 'Resolved', value: findingStats?.resolved || 0, color: 'hsl(142, 76%, 36%)' },
-                        { name: language === 'ar' ? 'جارية' : 'In Progress', value: findingStats?.inProgress || 0, color: 'hsl(45, 93%, 47%)' },
-                        { name: language === 'ar' ? 'مفتوح' : 'Open', value: findingStats?.open || 0, color: 'hsl(0, 84%, 60%)' },
-                        { name: language === 'ar' ? 'متأخر' : 'Overdue', value: findingStats?.overdue || 0, color: 'hsl(25, 95%, 53%)' },
-                      ];
-                      const total = raw.reduce((s, d) => s + d.value, 0);
-                      return raw.filter(d => d.value > 0).map(d => ({ ...d, percent: total > 0 ? Math.round((d.value / total) * 100) : 0 }));
-                    })()}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={52}
-                    outerRadius={75}
-                    paddingAngle={3}
-                    dataKey="value"
-                    strokeWidth={0}
-                    label={({ cx, cy, midAngle, outerRadius: oR, percent, name, color }: any) => {
-                      const RADIAN = Math.PI / 180;
-                      const sin = Math.sin(-midAngle * RADIAN);
-                      const cos = Math.cos(-midAngle * RADIAN);
-                      const mx = cx + (oR + 12) * cos;
-                      const my = cy + (oR + 12) * sin;
-                      const ex = cx + (oR + 35) * cos;
-                      const ey = cy + (oR + 35) * sin;
-                      const textAnchor = cos >= 0 ? 'start' : 'end';
-                      return (
-                        <g>
-                          <path d={`M${mx},${my}L${ex},${ey}`} stroke={color} strokeWidth={1.5} fill="none" />
-                          <circle cx={ex} cy={ey} r={2} fill={color} />
-                          <text x={ex + (cos >= 0 ? 5 : -5)} y={ey - 6} textAnchor={textAnchor} fontSize={9} fill={color} opacity={0.8}>
-                            {name}
-                          </text>
-                          <text x={ex + (cos >= 0 ? 5 : -5)} y={ey + 6} textAnchor={textAnchor} fontSize={11} fontWeight={700} fill={color}>
-                            {percent}%
-                          </text>
-                        </g>
-                      );
-                    }}
-                    labelLine={false}
-                  >
-                    {[
-                      'hsl(142, 76%, 36%)',
-                      'hsl(45, 93%, 47%)',
-                      'hsl(0, 84%, 60%)',
-                      'hsl(25, 95%, 53%)',
-                    ].map((color, index) => (
-                      <Cell key={`cell-${index}`} fill={color} />
-                    ))}
-                  </Pie>
+                {(() => {
+                    const raw = [
+                      { name: language === 'ar' ? 'تم الحل' : 'Resolved', value: findingStats?.resolved || 0, color: 'hsl(142, 76%, 36%)' },
+                      { name: language === 'ar' ? 'جارية' : 'In Progress', value: findingStats?.inProgress || 0, color: 'hsl(45, 93%, 47%)' },
+                      { name: language === 'ar' ? 'مفتوح' : 'Open', value: findingStats?.open || 0, color: 'hsl(0, 84%, 60%)' },
+                      { name: language === 'ar' ? 'متأخر' : 'Overdue', value: findingStats?.overdue || 0, color: 'hsl(25, 95%, 53%)' },
+                    ];
+                    const total = raw.reduce((s, d) => s + d.value, 0);
+                    const filtered = raw.filter(d => d.value > 0).map(d => ({ ...d, percent: total > 0 ? Math.round((d.value / total) * 100) : 0 }));
+                    return (
+                      <Pie
+                        data={filtered}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={52}
+                        outerRadius={75}
+                        paddingAngle={3}
+                        dataKey="value"
+                        strokeWidth={0}
+                        label={({ cx, cy, midAngle, outerRadius: oR, percent, name, color }: any) => {
+                          const RADIAN = Math.PI / 180;
+                          const sin = Math.sin(-midAngle * RADIAN);
+                          const cos = Math.cos(-midAngle * RADIAN);
+                          const mx = cx + (oR + 12) * cos;
+                          const my = cy + (oR + 12) * sin;
+                          const ex = cx + (oR + 35) * cos;
+                          const ey = cy + (oR + 35) * sin;
+                          const textAnchor = cos >= 0 ? 'start' : 'end';
+                          return (
+                            <g>
+                              <path d={`M${mx},${my}L${ex},${ey}`} stroke={color} strokeWidth={1.5} fill="none" />
+                              <circle cx={ex} cy={ey} r={2} fill={color} />
+                              <text x={ex + (cos >= 0 ? 5 : -5)} y={ey - 6} textAnchor={textAnchor} fontSize={9} fill={color} opacity={0.8}>
+                                {name}
+                              </text>
+                              <text x={ex + (cos >= 0 ? 5 : -5)} y={ey + 6} textAnchor={textAnchor} fontSize={11} fontWeight={700} fill={color}>
+                                {percent}%
+                              </text>
+                            </g>
+                          );
+                        }}
+                        labelLine={false}
+                      >
+                        {filtered.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                    );
+                  })()}
                   <Tooltip
                     formatter={(value: number, name: string) => [`${value}`, name]}
                     contentStyle={{ fontSize: '12px', borderRadius: '8px' }}
