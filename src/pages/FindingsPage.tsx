@@ -168,7 +168,7 @@ export default function FindingsPage() {
             {isAr ? 'الملاحظات الحرجة' : 'Critical Findings'}
           </h1>
           <p className="text-muted-foreground mt-1">
-            {isAr ? 'الملاحظات ذات الدرجات من 0 إلى 3 - تتطلب متابعة' : 'Findings scoring 0-3 — requires follow-up & resolution'}
+            {isAr ? 'معايير التقييم التي حصلت على درجات منخفضة (0-3 من 5) وتحتاج إلى إجراءات تصحيحية' : 'Evaluation criteria that scored low (0-3 out of 5) and need corrective action'}
           </p>
         </div>
       </div>
@@ -235,7 +235,7 @@ export default function FindingsPage() {
               </div>
               <p className="text-2xl font-bold text-foreground">{stats?.resolutionRate || 0}%</p>
               <p className="text-xs text-muted-foreground mt-1">
-                {isAr ? 'من الإجمالي' : 'of total'}
+                {stats?.resolved || 0} {isAr ? 'من' : 'of'} {stats?.total || 0} {isAr ? 'تم حلها' : 'resolved'}
               </p>
             </motion.div>
 
