@@ -61,121 +61,102 @@ export default function CEODashboard() {
 
   return (
     <div className="space-y-8">
-      {/* Header with Overall Score Circle */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-        <div className="flex items-center gap-6">
-          {/* Large Overall Score Circle */}
-          {!isLoading && (
-            <>
-              <div className="flex flex-col items-center">
-                <QualityCircle
-                  score={overallScore}
-                  status={overallStatus as any}
-                  size="xl"
-                  showLabel
-                />
-                <span className="text-xs text-muted-foreground mt-1">
-                  {language === 'ar' ? 'التقييم' : 'Evaluation'}
-                </span>
-              </div>
-              <div className="flex flex-col items-center cursor-pointer" onClick={() => navigate('/findings')}>
-                <div className="w-52 h-52 relative">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={(() => {
-                          const raw = [
-                            { name: language === 'ar' ? 'تم الحل' : 'Resolved', value: findingStats?.resolved || 0, color: 'hsl(142, 76%, 36%)' },
-                            { name: language === 'ar' ? 'جارية' : 'In Progress', value: findingStats?.inProgress || 0, color: 'hsl(45, 93%, 47%)' },
-                            { name: language === 'ar' ? 'مفتوح' : 'Open', value: findingStats?.open || 0, color: 'hsl(0, 84%, 60%)' },
-                            { name: language === 'ar' ? 'متأخر' : 'Overdue', value: findingStats?.overdue || 0, color: 'hsl(25, 95%, 53%)' },
-                          ];
-                          const total = raw.reduce((s, d) => s + d.value, 0);
-                          return raw.filter(d => d.value > 0).map(d => ({ ...d, percent: total > 0 ? Math.round((d.value / total) * 100) : 0 }));
-                        })()}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={38}
-                        outerRadius={55}
-                        paddingAngle={3}
-                        dataKey="value"
-                        strokeWidth={0}
-                        label={({ cx, cy, midAngle, outerRadius: oR, percent, color }: any) => {
-                          const RADIAN = Math.PI / 180;
-                          const sin = Math.sin(-midAngle * RADIAN);
-                          const cos = Math.cos(-midAngle * RADIAN);
-                          const mx = cx + (oR + 10) * cos;
-                          const my = cy + (oR + 10) * sin;
-                          const ex = cx + (oR + 28) * cos;
-                          const ey = cy + (oR + 28) * sin;
-                          const textAnchor = cos >= 0 ? 'start' : 'end';
-                          return (
-                            <g>
-                              <path d={`M${mx},${my}L${ex},${ey}`} stroke={color} strokeWidth={1.5} fill="none" />
-                              <circle cx={ex} cy={ey} r={2} fill={color} />
-                              <text x={ex + (cos >= 0 ? 4 : -4)} y={ey} textAnchor={textAnchor} dominantBaseline="central" fontSize={10} fontWeight={600} fill={color}>
-                                {percent}%
-                              </text>
-                            </g>
-                          );
-                        }}
-                        labelLine={false}
-                      >
-                        {[
-                          'hsl(142, 76%, 36%)',
-                          'hsl(45, 93%, 47%)',
-                          'hsl(0, 84%, 60%)',
-                          'hsl(25, 95%, 53%)',
-                        ].map((color, index) => (
-                          <Cell key={`cell-${index}`} fill={color} />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        formatter={(value: number, name: string) => [`${value}`, name]}
-                        contentStyle={{ fontSize: '12px', borderRadius: '8px' }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <span className="text-xl font-bold text-foreground">{findingStats?.resolutionRate || 0}%</span>
-                  </div>
-                </div>
-                <span className="text-xs text-muted-foreground mt-1">
-                  {language === 'ar' ? 'نسبة الحل' : 'Resolution'}
-                </span>
-                <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 mt-2 text-[11px]">
-                  <div className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-score-excellent" />
-                    <span className="text-muted-foreground">{findingStats?.resolved || 0} {language === 'ar' ? 'حُلّت' : 'Resolved'}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-score-average" />
-                    <span className="text-muted-foreground">{findingStats?.inProgress || 0} {language === 'ar' ? 'جارية' : 'In Progress'}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-score-critical" />
-                    <span className="text-muted-foreground">{findingStats?.open || 0} {language === 'ar' ? 'مفتوح' : 'Open'}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: 'hsl(25, 95%, 53%)' }} />
-                    <span className="text-muted-foreground">{findingStats?.overdue || 0} {language === 'ar' ? 'متأخر' : 'Overdue'}</span>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">{t('dashboard.ceo.title')}</h1>
-            <p className="text-muted-foreground mt-1">
-              {t('dashboard.ceo.subtitle')}
-            </p>
-          </div>
+      {/* Header Title */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">{t('dashboard.ceo.title')}</h1>
+          <p className="text-muted-foreground mt-1">
+            {t('dashboard.ceo.subtitle')}
+          </p>
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Clock className="w-4 h-4" />
           {t('common.lastUpdated')}: {format(new Date(), 'MMM d, yyyy h:mm a')}
         </div>
       </div>
+
+      {/* Score Circles */}
+      {!isLoading && (
+        <div className="flex items-center justify-center gap-10">
+          <div className="flex flex-col items-center">
+            <QualityCircle
+              score={overallScore}
+              status={overallStatus as any}
+              size="xl"
+              showLabel
+            />
+            <span className="text-xs text-muted-foreground mt-1">
+              {language === 'ar' ? 'التقييم' : 'Evaluation'}
+            </span>
+          </div>
+          <div className="flex flex-col items-center cursor-pointer" onClick={() => navigate('/findings')}>
+            <div className="w-52 h-52 relative">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={(() => {
+                      const raw = [
+                        { name: language === 'ar' ? 'تم الحل' : 'Resolved', value: findingStats?.resolved || 0, color: 'hsl(142, 76%, 36%)' },
+                        { name: language === 'ar' ? 'جارية' : 'In Progress', value: findingStats?.inProgress || 0, color: 'hsl(45, 93%, 47%)' },
+                        { name: language === 'ar' ? 'مفتوح' : 'Open', value: findingStats?.open || 0, color: 'hsl(0, 84%, 60%)' },
+                        { name: language === 'ar' ? 'متأخر' : 'Overdue', value: findingStats?.overdue || 0, color: 'hsl(25, 95%, 53%)' },
+                      ];
+                      const total = raw.reduce((s, d) => s + d.value, 0);
+                      return raw.filter(d => d.value > 0).map(d => ({ ...d, percent: total > 0 ? Math.round((d.value / total) * 100) : 0 }));
+                    })()}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={38}
+                    outerRadius={55}
+                    paddingAngle={3}
+                    dataKey="value"
+                    strokeWidth={0}
+                    label={({ cx, cy, midAngle, outerRadius: oR, percent, color }: any) => {
+                      const RADIAN = Math.PI / 180;
+                      const sin = Math.sin(-midAngle * RADIAN);
+                      const cos = Math.cos(-midAngle * RADIAN);
+                      const mx = cx + (oR + 10) * cos;
+                      const my = cy + (oR + 10) * sin;
+                      const ex = cx + (oR + 28) * cos;
+                      const ey = cy + (oR + 28) * sin;
+                      const textAnchor = cos >= 0 ? 'start' : 'end';
+                      return (
+                        <g>
+                          <path d={`M${mx},${my}L${ex},${ey}`} stroke={color} strokeWidth={1.5} fill="none" />
+                          <circle cx={ex} cy={ey} r={2} fill={color} />
+                          <text x={ex + (cos >= 0 ? 4 : -4)} y={ey} textAnchor={textAnchor} dominantBaseline="central" fontSize={10} fontWeight={600} fill={color}>
+                            {percent}%
+                          </text>
+                        </g>
+                      );
+                    }}
+                    labelLine={false}
+                  >
+                    {[
+                      'hsl(142, 76%, 36%)',
+                      'hsl(45, 93%, 47%)',
+                      'hsl(0, 84%, 60%)',
+                      'hsl(25, 95%, 53%)',
+                    ].map((color, index) => (
+                      <Cell key={`cell-${index}`} fill={color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value: number, name: string) => [`${value}`, name]}
+                    contentStyle={{ fontSize: '12px', borderRadius: '8px' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-xl font-bold text-foreground">{findingStats?.resolutionRate || 0}%</span>
+              </div>
+            </div>
+            <span className="text-xs text-muted-foreground mt-1">
+              {language === 'ar' ? 'نسبة الحل' : 'Resolution'}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Summary Stats - Now Clickable */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
