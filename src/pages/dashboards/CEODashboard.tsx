@@ -106,10 +106,10 @@ export default function CEODashboard() {
 
       {/* Score Circles */}
       {!isLoading && (
-        <div className="flex items-center justify-center gap-12">
+        <div className="flex items-center justify-center gap-4 flex-wrap">
           {/* Evaluation Pie */}
           <div className="flex flex-col items-center cursor-pointer" onClick={() => navigate('/score-analysis')}>
-            <div className="w-48 h-48 relative">
+            <div className="w-[340px] h-[340px] relative">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   {(() => {
@@ -126,24 +126,35 @@ export default function CEODashboard() {
                         data={filtered}
                         cx="50%"
                         cy="50%"
-                        innerRadius={45}
-                        outerRadius={70}
+                        innerRadius={60}
+                        outerRadius={85}
                         paddingAngle={3}
                         dataKey="value"
                         strokeWidth={0}
-                        labelLine={false}
-                        label={({ cx, cy, midAngle, innerRadius: iR, outerRadius: oR, percent }: any) => {
-                          if (percent < 0.05) return null;
+                        label={({ cx, cy, midAngle, outerRadius: oR, percent, name, color }: any) => {
                           const RADIAN = Math.PI / 180;
-                          const radius = iR + (oR - iR) / 2;
-                          const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                          const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                          const sin = Math.sin(-midAngle * RADIAN);
+                          const cos = Math.cos(-midAngle * RADIAN);
+                          const mx = cx + (oR + 8) * cos;
+                          const my = cy + (oR + 8) * sin;
+                          const lineEndX = cx + (oR + 28) * cos;
+                          const lineEndY = cy + (oR + 28) * sin;
+                          const textX = cx + (oR + 38) * cos;
+                          const textY = cy + (oR + 38) * sin;
+                          const textAnchor = cos >= 0 ? 'start' : 'end';
                           return (
-                            <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={10} fontWeight={700}>
-                              {Math.round(percent * 100)}%
-                            </text>
+                            <g>
+                              <path d={`M${mx},${my}L${lineEndX},${lineEndY}`} stroke={color} strokeWidth={1.5} fill="none" />
+                              <text x={textX} y={textY - 2} textAnchor={textAnchor} fontSize={9} fill={color} opacity={0.8}>
+                                {name}
+                              </text>
+                              <text x={textX} y={textY + 10} textAnchor={textAnchor} fontSize={11} fontWeight={700} fill={color}>
+                                {percent}%
+                              </text>
+                            </g>
                           );
                         }}
+                        labelLine={false}
                       >
                         {filtered.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
@@ -160,30 +171,11 @@ export default function CEODashboard() {
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <span className="text-sm font-bold text-foreground">{language === 'ar' ? 'التقييم' : 'Evaluation'}</span>
               </div>
-            </div>
-            {/* Legend */}
-            <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 mt-2 max-w-[220px]">
-              {[
-                { name: language === 'ar' ? 'ممتاز' : 'Excellent', value: scoreDistribution.excellent, color: 'hsl(142, 76%, 36%)' },
-                { name: language === 'ar' ? 'جيد' : 'Good', value: scoreDistribution.good, color: 'hsl(142, 52%, 50%)' },
-                { name: language === 'ar' ? 'متوسط' : 'Medium', value: scoreDistribution.medium, color: 'hsl(45, 93%, 47%)' },
-                { name: language === 'ar' ? 'سيء' : 'Bad', value: scoreDistribution.bad, color: 'hsl(0, 84%, 50%)' },
-              ].filter(d => d.value > 0).map((d, i) => {
-                const total = scoreDistribution.excellent + scoreDistribution.good + scoreDistribution.medium + scoreDistribution.bad;
-                const pct = total > 0 ? Math.round((d.value / total) * 100) : 0;
-                return (
-                  <div key={i} className="flex items-center gap-1 text-xs">
-                    <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
-                    <span className="text-muted-foreground">{d.name}</span>
-                    <span className="font-semibold text-foreground">{pct}%</span>
-                  </div>
-                );
-              })}
-            </div>
+          </div>
           </div>
           {/* Resolution Pie */}
           <div className="flex flex-col items-center cursor-pointer" onClick={() => navigate('/findings')}>
-            <div className="w-48 h-48 relative">
+            <div className="w-[340px] h-[340px] relative">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                 {(() => {
@@ -200,24 +192,35 @@ export default function CEODashboard() {
                         data={filtered}
                         cx="50%"
                         cy="50%"
-                        innerRadius={45}
-                        outerRadius={70}
+                        innerRadius={60}
+                        outerRadius={85}
                         paddingAngle={3}
                         dataKey="value"
                         strokeWidth={0}
-                        labelLine={false}
-                        label={({ cx, cy, midAngle, innerRadius: iR, outerRadius: oR, percent }: any) => {
-                          if (percent < 0.05) return null;
+                        label={({ cx, cy, midAngle, outerRadius: oR, percent, name, color }: any) => {
                           const RADIAN = Math.PI / 180;
-                          const radius = iR + (oR - iR) / 2;
-                          const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                          const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                          const sin = Math.sin(-midAngle * RADIAN);
+                          const cos = Math.cos(-midAngle * RADIAN);
+                          const mx = cx + (oR + 8) * cos;
+                          const my = cy + (oR + 8) * sin;
+                          const lineEndX = cx + (oR + 28) * cos;
+                          const lineEndY = cy + (oR + 28) * sin;
+                          const textX = cx + (oR + 38) * cos;
+                          const textY = cy + (oR + 38) * sin;
+                          const textAnchor = cos >= 0 ? 'start' : 'end';
                           return (
-                            <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={10} fontWeight={700}>
-                              {Math.round(percent * 100)}%
-                            </text>
+                            <g>
+                              <path d={`M${mx},${my}L${lineEndX},${lineEndY}`} stroke={color} strokeWidth={1.5} fill="none" />
+                              <text x={textX} y={textY - 2} textAnchor={textAnchor} fontSize={9} fill={color} opacity={0.8}>
+                                {name}
+                              </text>
+                              <text x={textX} y={textY + 10} textAnchor={textAnchor} fontSize={11} fontWeight={700} fill={color}>
+                                {percent}%
+                              </text>
+                            </g>
                           );
                         }}
+                        labelLine={false}
                       >
                         {filtered.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
@@ -234,26 +237,7 @@ export default function CEODashboard() {
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <span className="text-sm font-bold text-foreground">{language === 'ar' ? 'نسبة الحل' : 'Resolution'}</span>
               </div>
-            </div>
-            {/* Legend */}
-            <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 mt-2 max-w-[220px]">
-              {[
-                { name: language === 'ar' ? 'تم الحل' : 'Resolved', value: findingStats?.resolved || 0, color: 'hsl(142, 76%, 36%)' },
-                { name: language === 'ar' ? 'جارية' : 'In Progress', value: findingStats?.inProgress || 0, color: 'hsl(45, 93%, 47%)' },
-                { name: language === 'ar' ? 'مفتوح' : 'Open', value: findingStats?.open || 0, color: 'hsl(0, 84%, 60%)' },
-                { name: language === 'ar' ? 'متأخر' : 'Overdue', value: findingStats?.overdue || 0, color: 'hsl(25, 95%, 53%)' },
-              ].filter(d => d.value > 0).map((d, i) => {
-                const total = (findingStats?.resolved || 0) + (findingStats?.inProgress || 0) + (findingStats?.open || 0) + (findingStats?.overdue || 0);
-                const pct = total > 0 ? Math.round((d.value / total) * 100) : 0;
-                return (
-                  <div key={i} className="flex items-center gap-1 text-xs">
-                    <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
-                    <span className="text-muted-foreground">{d.name}</span>
-                    <span className="font-semibold text-foreground">{pct}%</span>
-                  </div>
-                );
-              })}
-            </div>
+          </div>
           </div>
         </div>
       )}
