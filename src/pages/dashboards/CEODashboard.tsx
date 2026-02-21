@@ -135,8 +135,8 @@ export default function CEODashboard() {
                           const RADIAN = Math.PI / 180;
                           const sin = Math.sin(-midAngle * RADIAN);
                           const cos = Math.cos(-midAngle * RADIAN);
-                          const textX = cx + (oR + 20) * cos;
-                          const textY = cy + (oR + 20) * sin;
+                          const textX = cx + (oR + 38) * cos;
+                          const textY = cy + (oR + 38) * sin;
                           const textAnchor = cos >= 0 ? 'start' : 'end';
                           return (
                             <g>
@@ -196,8 +196,8 @@ export default function CEODashboard() {
                           const RADIAN = Math.PI / 180;
                           const sin = Math.sin(-midAngle * RADIAN);
                           const cos = Math.cos(-midAngle * RADIAN);
-                          const textX = cx + (oR + 20) * cos;
-                          const textY = cy + (oR + 20) * sin;
+                          const textX = cx + (oR + 38) * cos;
+                          const textY = cy + (oR + 38) * sin;
                           const textAnchor = cos >= 0 ? 'start' : 'end';
                           return (
                             <g>
