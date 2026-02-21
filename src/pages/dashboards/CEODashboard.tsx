@@ -135,16 +135,11 @@ export default function CEODashboard() {
                           const RADIAN = Math.PI / 180;
                           const sin = Math.sin(-midAngle * RADIAN);
                           const cos = Math.cos(-midAngle * RADIAN);
-                          const mx = cx + (oR + 8) * cos;
-                          const my = cy + (oR + 8) * sin;
-                          const lineEndX = cx + (oR + 28) * cos;
-                          const lineEndY = cy + (oR + 28) * sin;
-                          const textX = cx + (oR + 38) * cos;
-                          const textY = cy + (oR + 38) * sin;
+                          const textX = cx + (oR + 20) * cos;
+                          const textY = cy + (oR + 20) * sin;
                           const textAnchor = cos >= 0 ? 'start' : 'end';
                           return (
                             <g>
-                              <path d={`M${mx},${my}L${lineEndX},${lineEndY}`} stroke={color} strokeWidth={1.5} fill="none" />
                               <text x={textX} y={textY - 2} textAnchor={textAnchor} fontSize={9} fill={color} opacity={0.8}>
                                 {name}
                               </text>
@@ -201,16 +196,11 @@ export default function CEODashboard() {
                           const RADIAN = Math.PI / 180;
                           const sin = Math.sin(-midAngle * RADIAN);
                           const cos = Math.cos(-midAngle * RADIAN);
-                          const mx = cx + (oR + 8) * cos;
-                          const my = cy + (oR + 8) * sin;
-                          const lineEndX = cx + (oR + 28) * cos;
-                          const lineEndY = cy + (oR + 28) * sin;
-                          const textX = cx + (oR + 38) * cos;
-                          const textY = cy + (oR + 38) * sin;
+                          const textX = cx + (oR + 20) * cos;
+                          const textY = cy + (oR + 20) * sin;
                           const textAnchor = cos >= 0 ? 'start' : 'end';
                           return (
                             <g>
-                              <path d={`M${mx},${my}L${lineEndX},${lineEndY}`} stroke={color} strokeWidth={1.5} fill="none" />
                               <text x={textX} y={textY - 2} textAnchor={textAnchor} fontSize={9} fill={color} opacity={0.8}>
                                 {name}
                               </text>
