@@ -106,10 +106,10 @@ export default function CEODashboard() {
 
       {/* Score Circles */}
       {!isLoading && (
-        <div className="flex items-center justify-center gap-16">
+        <div className="flex items-center justify-center gap-4 flex-wrap">
           {/* Evaluation Pie */}
           <div className="flex flex-col items-center cursor-pointer" onClick={() => navigate('/score-analysis')}>
-            <div className="w-72 h-72 relative">
+            <div className="w-[340px] h-[340px] relative">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   {(() => {
@@ -126,28 +126,29 @@ export default function CEODashboard() {
                         data={filtered}
                         cx="50%"
                         cy="50%"
-                        innerRadius={52}
-                        outerRadius={75}
+                        innerRadius={60}
+                        outerRadius={85}
                         paddingAngle={3}
                         dataKey="value"
                         strokeWidth={0}
-                        label={({ cx, cy, midAngle, outerRadius: oR, percent, name, color }: any) => {
+                        label={({ cx, cy, midAngle, outerRadius: oR, percent, name, color, index }: any) => {
                           const RADIAN = Math.PI / 180;
                           const sin = Math.sin(-midAngle * RADIAN);
                           const cos = Math.cos(-midAngle * RADIAN);
-                          const mx = cx + (oR + 14) * cos;
-                          const my = cy + (oR + 14) * sin;
-                          const ex = cx + (oR + 50) * cos;
-                          const ey = cy + (oR + 50) * sin;
+                          const mx = cx + (oR + 10) * cos;
+                          const my = cy + (oR + 10) * sin;
+                          const ex = cx + (oR + 35) * cos;
+                          const ey = cy + (oR + 35) * sin;
+                          const elbowX = ex + (cos >= 0 ? 25 : -25);
                           const textAnchor = cos >= 0 ? 'start' : 'end';
                           return (
                             <g>
-                              <path d={`M${mx},${my}L${ex},${ey}`} stroke={color} strokeWidth={1.5} fill="none" />
-                              <circle cx={ex} cy={ey} r={2} fill={color} />
-                              <text x={ex + (cos >= 0 ? 6 : -6)} y={ey - 6} textAnchor={textAnchor} fontSize={9} fill={color} opacity={0.8}>
+                              <path d={`M${mx},${my}L${ex},${ey}L${elbowX},${ey}`} stroke={color} strokeWidth={1.5} fill="none" />
+                              <circle cx={elbowX} cy={ey} r={2} fill={color} />
+                              <text x={elbowX + (cos >= 0 ? 5 : -5)} y={ey - 4} textAnchor={textAnchor} fontSize={9} fill={color} opacity={0.8}>
                                 {name}
                               </text>
-                              <text x={ex + (cos >= 0 ? 6 : -6)} y={ey + 6} textAnchor={textAnchor} fontSize={11} fontWeight={700} fill={color}>
+                              <text x={elbowX + (cos >= 0 ? 5 : -5)} y={ey + 9} textAnchor={textAnchor} fontSize={11} fontWeight={700} fill={color}>
                                 {percent}%
                               </text>
                             </g>
@@ -174,7 +175,7 @@ export default function CEODashboard() {
           </div>
           {/* Resolution Pie */}
           <div className="flex flex-col items-center cursor-pointer" onClick={() => navigate('/findings')}>
-            <div className="w-72 h-72 relative">
+            <div className="w-[340px] h-[340px] relative">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                 {(() => {
@@ -191,8 +192,8 @@ export default function CEODashboard() {
                         data={filtered}
                         cx="50%"
                         cy="50%"
-                        innerRadius={52}
-                        outerRadius={75}
+                        innerRadius={60}
+                        outerRadius={85}
                         paddingAngle={3}
                         dataKey="value"
                         strokeWidth={0}
@@ -200,19 +201,20 @@ export default function CEODashboard() {
                           const RADIAN = Math.PI / 180;
                           const sin = Math.sin(-midAngle * RADIAN);
                           const cos = Math.cos(-midAngle * RADIAN);
-                          const mx = cx + (oR + 14) * cos;
-                          const my = cy + (oR + 14) * sin;
-                          const ex = cx + (oR + 50) * cos;
-                          const ey = cy + (oR + 50) * sin;
+                          const mx = cx + (oR + 10) * cos;
+                          const my = cy + (oR + 10) * sin;
+                          const ex = cx + (oR + 35) * cos;
+                          const ey = cy + (oR + 35) * sin;
+                          const elbowX = ex + (cos >= 0 ? 25 : -25);
                           const textAnchor = cos >= 0 ? 'start' : 'end';
                           return (
                             <g>
-                              <path d={`M${mx},${my}L${ex},${ey}`} stroke={color} strokeWidth={1.5} fill="none" />
-                              <circle cx={ex} cy={ey} r={2} fill={color} />
-                              <text x={ex + (cos >= 0 ? 6 : -6)} y={ey - 6} textAnchor={textAnchor} fontSize={9} fill={color} opacity={0.8}>
+                              <path d={`M${mx},${my}L${ex},${ey}L${elbowX},${ey}`} stroke={color} strokeWidth={1.5} fill="none" />
+                              <circle cx={elbowX} cy={ey} r={2} fill={color} />
+                              <text x={elbowX + (cos >= 0 ? 5 : -5)} y={ey - 4} textAnchor={textAnchor} fontSize={9} fill={color} opacity={0.8}>
                                 {name}
                               </text>
-                              <text x={ex + (cos >= 0 ? 6 : -6)} y={ey + 6} textAnchor={textAnchor} fontSize={11} fontWeight={700} fill={color}>
+                              <text x={elbowX + (cos >= 0 ? 5 : -5)} y={ey + 9} textAnchor={textAnchor} fontSize={11} fontWeight={700} fill={color}>
                                 {percent}%
                               </text>
                             </g>
