@@ -49,15 +49,14 @@ export function MainLayout() {
         <header className="h-14 border-b bg-background flex items-center justify-end px-4 gap-2">
           {/* Language Toggle - Direct switch */}
           <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-9 w-9"
+            variant="outline" 
+            size="sm" 
+            className="h-9 px-3 gap-1.5 border-primary/30 hover:bg-primary/10 font-semibold text-sm"
             onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
             title={language === 'en' ? 'العربية' : 'English'}
           >
-            <span className="text-sm font-medium">
-              {language === 'en' ? 'ع' : 'En'}
-            </span>
+            🌐
+            <span>{language === 'en' ? 'العربية' : 'English'}</span>
           </Button>
 
           {/* User Profile Dropdown */}
