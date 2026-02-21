@@ -79,23 +79,47 @@ export default function CEODashboard() {
                 </span>
               </div>
               <div className="flex flex-col items-center cursor-pointer" onClick={() => navigate('/findings')}>
-                <div className="w-36 h-36 relative">
+                <div className="w-52 h-52 relative">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
-                        data={[
-                          { name: language === 'ar' ? 'تم الحل' : 'Resolved', value: findingStats?.resolved || 0 },
-                          { name: language === 'ar' ? 'جارية' : 'In Progress', value: findingStats?.inProgress || 0 },
-                          { name: language === 'ar' ? 'مفتوح' : 'Open', value: findingStats?.open || 0 },
-                          { name: language === 'ar' ? 'متأخر' : 'Overdue', value: findingStats?.overdue || 0 },
-                        ].filter(d => d.value > 0)}
+                        data={(() => {
+                          const raw = [
+                            { name: language === 'ar' ? 'تم الحل' : 'Resolved', value: findingStats?.resolved || 0, color: 'hsl(142, 76%, 36%)' },
+                            { name: language === 'ar' ? 'جارية' : 'In Progress', value: findingStats?.inProgress || 0, color: 'hsl(45, 93%, 47%)' },
+                            { name: language === 'ar' ? 'مفتوح' : 'Open', value: findingStats?.open || 0, color: 'hsl(0, 84%, 60%)' },
+                            { name: language === 'ar' ? 'متأخر' : 'Overdue', value: findingStats?.overdue || 0, color: 'hsl(25, 95%, 53%)' },
+                          ];
+                          const total = raw.reduce((s, d) => s + d.value, 0);
+                          return raw.filter(d => d.value > 0).map(d => ({ ...d, percent: total > 0 ? Math.round((d.value / total) * 100) : 0 }));
+                        })()}
                         cx="50%"
                         cy="50%"
-                        innerRadius={42}
-                        outerRadius={62}
+                        innerRadius={38}
+                        outerRadius={55}
                         paddingAngle={3}
                         dataKey="value"
                         strokeWidth={0}
+                        label={({ cx, cy, midAngle, outerRadius: oR, percent, color }: any) => {
+                          const RADIAN = Math.PI / 180;
+                          const sin = Math.sin(-midAngle * RADIAN);
+                          const cos = Math.cos(-midAngle * RADIAN);
+                          const mx = cx + (oR + 10) * cos;
+                          const my = cy + (oR + 10) * sin;
+                          const ex = cx + (oR + 28) * cos;
+                          const ey = cy + (oR + 28) * sin;
+                          const textAnchor = cos >= 0 ? 'start' : 'end';
+                          return (
+                            <g>
+                              <path d={`M${mx},${my}L${ex},${ey}`} stroke={color} strokeWidth={1.5} fill="none" />
+                              <circle cx={ex} cy={ey} r={2} fill={color} />
+                              <text x={ex + (cos >= 0 ? 4 : -4)} y={ey} textAnchor={textAnchor} dominantBaseline="central" fontSize={10} fontWeight={600} fill={color}>
+                                {percent}%
+                              </text>
+                            </g>
+                          );
+                        }}
+                        labelLine={false}
                       >
                         {[
                           'hsl(142, 76%, 36%)',
@@ -112,9 +136,8 @@ export default function CEODashboard() {
                       />
                     </PieChart>
                   </ResponsiveContainer>
-                  {/* Center label */}
                   <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <span className="text-2xl font-bold text-foreground">{findingStats?.resolutionRate || 0}%</span>
+                    <span className="text-xl font-bold text-foreground">{findingStats?.resolutionRate || 0}%</span>
                   </div>
                 </div>
                 <span className="text-xs text-muted-foreground mt-1">
