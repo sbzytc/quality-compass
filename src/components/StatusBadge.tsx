@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils';
 import { ScoreLevel, getScoreLabel } from '@/types';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface StatusBadgeProps {
   status: ScoreLevel;
@@ -16,6 +17,7 @@ const statusStyles: Record<ScoreLevel, string> = {
 };
 
 export function StatusBadge({ status, size = 'md', className }: StatusBadgeProps) {
+  const { language } = useLanguage();
   return (
     <span
       className={cn(
@@ -36,7 +38,7 @@ export function StatusBadge({ status, size = 'md', className }: StatusBadgeProps
           status === 'critical' && 'bg-score-critical'
         )}
       />
-      {getScoreLabel(status)}
+      {getScoreLabel(status, language)}
     </span>
   );
 }
