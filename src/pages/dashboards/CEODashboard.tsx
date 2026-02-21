@@ -78,13 +78,70 @@ export default function CEODashboard() {
       {/* Score Circles */}
       {!isLoading && (
         <div className="flex items-center justify-center gap-10">
-          <div className="flex flex-col items-center">
-            <QualityCircle
-              score={overallScore}
-              status={overallStatus as any}
-              size="xl"
-              showLabel
-            />
+          <div className="flex flex-col items-center cursor-pointer" onClick={() => navigate('/score-analysis')}>
+            <div className="w-52 h-52 relative">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={(() => {
+                      const raw = [
+                        { name: language === 'ar' ? 'ممتاز' : 'Excellent', value: scoreDistribution.excellent, color: 'hsl(142, 76%, 36%)' },
+                        { name: language === 'ar' ? 'جيد' : 'Good', value: scoreDistribution.good, color: 'hsl(200, 80%, 50%)' },
+                        { name: language === 'ar' ? 'متوسط' : 'Average', value: scoreDistribution.average, color: 'hsl(45, 93%, 47%)' },
+                        { name: language === 'ar' ? 'ضعيف' : 'Weak', value: scoreDistribution.weak, color: 'hsl(25, 95%, 53%)' },
+                        { name: language === 'ar' ? 'حرج' : 'Critical', value: scoreDistribution.critical, color: 'hsl(0, 84%, 60%)' },
+                      ];
+                      const total = raw.reduce((s, d) => s + d.value, 0);
+                      return raw.filter(d => d.value > 0).map(d => ({ ...d, percent: total > 0 ? Math.round((d.value / total) * 100) : 0 }));
+                    })()}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={38}
+                    outerRadius={55}
+                    paddingAngle={3}
+                    dataKey="value"
+                    strokeWidth={0}
+                    label={({ cx, cy, midAngle, outerRadius: oR, percent, color }: any) => {
+                      const RADIAN = Math.PI / 180;
+                      const sin = Math.sin(-midAngle * RADIAN);
+                      const cos = Math.cos(-midAngle * RADIAN);
+                      const mx = cx + (oR + 10) * cos;
+                      const my = cy + (oR + 10) * sin;
+                      const ex = cx + (oR + 28) * cos;
+                      const ey = cy + (oR + 28) * sin;
+                      const textAnchor = cos >= 0 ? 'start' : 'end';
+                      return (
+                        <g>
+                          <path d={`M${mx},${my}L${ex},${ey}`} stroke={color} strokeWidth={1.5} fill="none" />
+                          <circle cx={ex} cy={ey} r={2} fill={color} />
+                          <text x={ex + (cos >= 0 ? 4 : -4)} y={ey} textAnchor={textAnchor} dominantBaseline="central" fontSize={10} fontWeight={600} fill={color}>
+                            {percent}%
+                          </text>
+                        </g>
+                      );
+                    }}
+                    labelLine={false}
+                  >
+                    {[
+                      'hsl(142, 76%, 36%)',
+                      'hsl(200, 80%, 50%)',
+                      'hsl(45, 93%, 47%)',
+                      'hsl(25, 95%, 53%)',
+                      'hsl(0, 84%, 60%)',
+                    ].map((color, index) => (
+                      <Cell key={`cell-${index}`} fill={color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value: number, name: string) => [`${value}`, name]}
+                    contentStyle={{ fontSize: '12px', borderRadius: '8px' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-xl font-bold text-foreground">{overallScore}%</span>
+              </div>
+            </div>
             <span className="text-xs text-muted-foreground mt-1">
               {language === 'ar' ? 'التقييم' : 'Evaluation'}
             </span>
