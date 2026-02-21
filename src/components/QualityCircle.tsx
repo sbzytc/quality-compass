@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { ScoreLevel, getScoreLabel } from '@/types';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface QualityCircleProps {
   score: number;
@@ -44,6 +45,7 @@ export function QualityCircle({
   onClick,
   className,
 }: QualityCircleProps) {
+  const { language } = useLanguage();
   const Component = animate ? motion.div : 'div';
   const animationProps = animate
     ? {
@@ -79,7 +81,7 @@ export function QualityCircle({
           status === 'weak' && 'text-score-weak',
           status === 'critical' && 'text-score-critical'
         )}>
-          {getScoreLabel(status)}
+          {getScoreLabel(status, language)}
         </span>
       )}
     </div>

@@ -153,13 +153,13 @@ export function getScoreCategoryColor(category: ScoreCategory): string {
   return colors[category];
 }
 
-export function getScoreLabel(level: ScoreLevel): string {
-  const labels: Record<ScoreLevel, string> = {
-    excellent: 'Excellent',
-    good: 'Good',
-    average: 'Average',
-    weak: 'Weak',
-    critical: 'Very Weak',
+export function getScoreLabel(level: ScoreLevel, language: 'en' | 'ar' = 'en'): string {
+  const labels: Record<ScoreLevel, Record<'en' | 'ar', string>> = {
+    excellent: { en: 'Excellent', ar: 'ممتاز' },
+    good: { en: 'Good', ar: 'جيد' },
+    average: { en: 'Average', ar: 'متوسط' },
+    weak: { en: 'Weak', ar: 'ضعيف' },
+    critical: { en: 'Very Weak', ar: 'ضعيف جداً' },
   };
-  return labels[level];
+  return labels[level][language];
 }

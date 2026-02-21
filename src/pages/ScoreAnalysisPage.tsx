@@ -18,15 +18,21 @@ export default function ScoreAnalysisPage() {
 
   const isLoading = branchesLoading || statsLoading;
 
-  // Calculate overall score
-  const overallScore = stats?.averageScore || 0;
+  // Separate evaluated vs unevaluated branches
+  const evaluatedBranches = branches?.filter(b => b.lastEvaluationDate !== null) || [];
+  const unevaluatedBranches = branches?.filter(b => b.lastEvaluationDate === null) || [];
+
+  // Calculate overall score only from evaluated branches
+  const overallScore = evaluatedBranches.length > 0
+    ? Math.round(evaluatedBranches.reduce((sum, b) => sum + b.overallScore, 0) / evaluatedBranches.length)
+    : 0;
   const overallStatus = overallScore >= 90 ? 'excellent' : 
                         overallScore >= 75 ? 'good' : 
                         overallScore >= 60 ? 'average' : 
                         overallScore >= 40 ? 'weak' : 'critical';
 
-  // Sort branches by score descending
-  const sortedBranches = branches?.slice().sort((a, b) => b.overallScore - a.overallScore) || [];
+  // Sort evaluated branches by score descending
+  const sortedBranches = evaluatedBranches.slice().sort((a, b) => b.overallScore - a.overallScore);
 
   return (
     <div className="space-y-8">
@@ -69,8 +75,8 @@ export default function ScoreAnalysisPage() {
             </h2>
             <p className="text-muted-foreground mb-4">
               {language === 'ar' 
-                ? `محسوب من ${sortedBranches.length} فرع`
-                : `Calculated from ${sortedBranches.length} branches`}
+                ? `محسوب من ${evaluatedBranches.length} فرع مُقيّم`
+                : `Calculated from ${evaluatedBranches.length} evaluated branches`}
             </p>
             <div className="flex items-center gap-2 justify-center md:justify-start">
               <TrendingUp className="w-5 h-5 text-primary" />
@@ -147,6 +153,39 @@ export default function ScoreAnalysisPage() {
           </div>
         )}
       </div>
+
+      {/* Unevaluated Branches */}
+      {!isLoading && unevaluatedBranches.length > 0 && (
+        <div className="bg-card rounded-xl border border-border p-6">
+          <h2 className="text-lg font-semibold text-foreground mb-6">
+            {language === 'ar' ? 'فروع غير مُقيّمة' : 'Unevaluated Branches'}
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {unevaluatedBranches.map((branch) => (
+              <div
+                key={branch.id}
+                onClick={() => navigate(`/branches/${branch.id}`)}
+                className="bg-muted/30 rounded-xl p-6 cursor-pointer border border-dashed border-border hover:border-primary/50 transition-all"
+              >
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-28 h-28 rounded-full bg-muted flex items-center justify-center">
+                    <span className="text-sm font-medium text-muted-foreground">
+                      {language === 'ar' ? 'غير مُقيّم' : 'N/A'}
+                    </span>
+                  </div>
+                  <h3 className="mt-4 text-base font-semibold text-foreground line-clamp-1">
+                    {language === 'ar' ? branch.nameAr || branch.name : branch.name}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">{branch.city}</p>
+                  <span className="mt-3 inline-flex items-center px-2 py-0.5 text-xs font-medium border rounded-full bg-muted text-muted-foreground border-border">
+                    {language === 'ar' ? 'غير مُقيّم' : 'Unevaluated'}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Score Legend */}
       <div className="bg-card rounded-xl border border-border p-6">
