@@ -148,7 +148,7 @@ export default function CEODashboard() {
                 }`}>{overallScore}%</span>
               </div>
             </div>
-            <span className="text-xs text-muted-foreground mt-1">
+            <span className="text-sm font-bold text-foreground mt-2">
               {language === 'ar' ? 'التقييم' : 'Evaluation'}
             </span>
           </div>
@@ -216,7 +216,7 @@ export default function CEODashboard() {
                 <span className="text-2xl font-bold text-foreground">{findingStats?.resolutionRate || 0}%</span>
               </div>
             </div>
-            <span className="text-xs text-muted-foreground mt-1">
+            <span className="text-sm font-bold text-foreground mt-2">
               {language === 'ar' ? 'نسبة الحل' : 'Resolution'}
             </span>
           </div>
