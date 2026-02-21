@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, AlertTriangle, Clock, CheckCircle2, Target,
   UserPlus, Calendar, TrendingUp, Building2, ChevronDown,
-  ChevronRight, AlertCircle, Timer, BarChart3, Camera, X
+  ChevronRight, AlertCircle, Timer, BarChart3, Camera, X, Eye, XCircle, ThumbsUp, ThumbsDown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -14,7 +14,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useCriticalFindings, useFindingStats, useAssignFinding, useResolveFinding, Finding } from '@/hooks/useFindings';
+import { useCriticalFindings, useFindingStats, useAssignFinding, useResolveFinding, useApproveFinding, useRejectFinding, Finding } from '@/hooks/useFindings';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useUsers } from '@/hooks/useUsers';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -40,6 +41,14 @@ export default function FindingsPage() {
   const [resolveImagePreviews, setResolveImagePreviews] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const resolveFileInputRef = useRef<HTMLInputElement>(null);
+  const reviewFileInputRef = useRef<HTMLInputElement>(null);
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [reviewAction, setReviewAction] = useState<'approve' | 'reject'>('approve');
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [reviewImages, setReviewImages] = useState<File[]>([]);
+  const [reviewImagePreviews, setReviewImagePreviews] = useState<string[]>([]);
+
+  const { user } = useAuth();
   const statusFilter = activeTab !== 'all' ? activeTab : undefined;
   const { data: findings, isLoading: findingsLoading } = useCriticalFindings(
     statusFilter ? { status: statusFilter } : undefined
@@ -48,6 +57,8 @@ export default function FindingsPage() {
   const { data: users } = useUsers();
   const assignMutation = useAssignFinding();
   const resolveMutation = useResolveFinding();
+  const approveMutation = useApproveFinding();
+  const rejectMutation = useRejectFinding();
 
   const isLoading = findingsLoading || statsLoading;
 
@@ -154,17 +165,94 @@ export default function FindingsPage() {
 
       await resolveMutation.mutateAsync({
         findingId: selectedFinding.id,
-        assignedTo: selectedFinding.assignedTo,
+        assessorId: selectedFinding.assessorId,
         resolution: resolveNotes.trim(),
         attachments: uploadedUrls.length > 0 ? uploadedUrls : undefined,
       });
-      toast.success(isAr ? 'تم حل الملاحظة بنجاح' : 'Finding resolved successfully');
+      toast.success(isAr ? 'تم إرسال الإصلاح للمراجعة' : 'Fix submitted for review');
       setResolveDialogOpen(false);
     } catch {
       toast.error(isAr ? 'حدث خطأ' : 'Failed to resolve finding');
     } finally {
       setIsUploading(false);
     }
+  };
+
+  // Review handlers
+  const handleReview = (finding: Finding, action: 'approve' | 'reject') => {
+    setSelectedFinding(finding);
+    setReviewAction(action);
+    setRejectionReason('');
+    setReviewImages([]);
+    setReviewImagePreviews([]);
+    setReviewDialogOpen(true);
+  };
+
+  const handleReviewImageAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const validFiles = files.filter(f => f.size <= 5 * 1024 * 1024);
+    if (validFiles.length < files.length) {
+      toast.error(isAr ? 'بعض الملفات تجاوزت 5MB' : 'Some files exceed 5MB limit');
+    }
+    setReviewImages(prev => [...prev, ...validFiles]);
+    validFiles.forEach(f => {
+      const reader = new FileReader();
+      reader.onloadend = () => setReviewImagePreviews(prev => [...prev, reader.result as string]);
+      reader.readAsDataURL(f);
+    });
+    if (reviewFileInputRef.current) reviewFileInputRef.current.value = '';
+  };
+
+  const removeReviewImage = (index: number) => {
+    setReviewImages(prev => prev.filter((_, i) => i !== index));
+    setReviewImagePreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const submitReview = async () => {
+    if (!selectedFinding) return;
+    if (reviewAction === 'reject' && !rejectionReason.trim()) return;
+
+    try {
+      setIsUploading(true);
+      const uploadedUrls: string[] = [];
+      for (const file of reviewImages) {
+        const ext = file.name.split('.').pop();
+        const path = `findings/${selectedFinding.id}/review-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from('evaluation-attachments')
+          .upload(path, file);
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage
+          .from('evaluation-attachments')
+          .getPublicUrl(path);
+        uploadedUrls.push(urlData.publicUrl);
+      }
+
+      if (reviewAction === 'approve') {
+        await approveMutation.mutateAsync({
+          findingId: selectedFinding.id,
+          attachments: uploadedUrls.length > 0 ? uploadedUrls : undefined,
+        });
+        toast.success(isAr ? 'تم اعتماد الإصلاح' : 'Fix approved successfully');
+      } else {
+        await rejectMutation.mutateAsync({
+          findingId: selectedFinding.id,
+          reason: rejectionReason.trim(),
+          attachments: uploadedUrls.length > 0 ? uploadedUrls : undefined,
+          assignedTo: selectedFinding.assignedTo,
+        });
+        toast.success(isAr ? 'تم رفض الإصلاح' : 'Fix rejected');
+      }
+      setReviewDialogOpen(false);
+    } catch {
+      toast.error(isAr ? 'حدث خطأ' : 'Failed to submit review');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const isCurrentUserAssessor = (finding: Finding) => {
+    return finding.assessorId === user?.id;
   };
 
   const getScoreSeverity = (score: number) => {
@@ -186,10 +274,20 @@ export default function FindingsPage() {
         color: 'bg-primary/10 text-primary border-primary/20',
         icon: <Timer className="w-3.5 h-3.5" />,
       };
+      case 'pending_review': return {
+        label: isAr ? 'بانتظار المراجعة' : 'Pending Review',
+        color: 'bg-score-average/10 text-score-average border-score-average/20',
+        icon: <Eye className="w-3.5 h-3.5" />,
+      };
       case 'resolved': return {
-        label: isAr ? 'تم الحل' : 'Resolved',
+        label: isAr ? 'تم الاعتماد' : 'Approved',
         color: 'bg-score-excellent/10 text-score-excellent border-score-excellent/20',
         icon: <CheckCircle2 className="w-3.5 h-3.5" />,
+      };
+      case 'rejected': return {
+        label: isAr ? 'مرفوض' : 'Rejected',
+        color: 'bg-score-critical/10 text-score-critical border-score-critical/20',
+        icon: <XCircle className="w-3.5 h-3.5" />,
       };
       default: return { label: status, color: 'bg-muted text-muted-foreground', icon: null };
     }
@@ -313,8 +411,14 @@ export default function FindingsPage() {
               <TabsTrigger value="in_progress" className="whitespace-nowrap text-xs sm:text-sm px-3">
                 {isAr ? 'قيد المعالجة' : 'In Progress'} ({stats?.inProgress || 0})
               </TabsTrigger>
+              <TabsTrigger value="pending_review" className="whitespace-nowrap text-xs sm:text-sm px-3">
+                {isAr ? 'بانتظار المراجعة' : 'Pending Review'} ({stats?.pendingReview || 0})
+              </TabsTrigger>
+              <TabsTrigger value="rejected" className="whitespace-nowrap text-xs sm:text-sm px-3">
+                {isAr ? 'مرفوض' : 'Rejected'} ({stats?.rejected || 0})
+              </TabsTrigger>
               <TabsTrigger value="resolved" className="whitespace-nowrap text-xs sm:text-sm px-3">
-                {isAr ? 'تم الحل' : 'Resolved'} ({stats?.resolved || 0})
+                {isAr ? 'تم الاعتماد' : 'Approved'} ({stats?.resolved || 0})
               </TabsTrigger>
             </TabsList>
           </div>
@@ -454,11 +558,39 @@ export default function FindingsPage() {
                                         "{finding.assessorNotes}"
                                       </p>
                                     )}
+
+                                    {/* Show resolution notes for pending_review/rejected */}
+                                    {finding.resolutionNotes && (finding.status === 'pending_review' || finding.status === 'resolved') && (
+                                      <div className="mt-2 p-2 bg-score-excellent/5 border border-score-excellent/10 rounded text-xs">
+                                        <span className="font-medium text-score-excellent">{isAr ? 'ملاحظات الإصلاح:' : 'Fix Notes:'}</span>{' '}
+                                        {finding.resolutionNotes}
+                                      </div>
+                                    )}
+
+                                    {/* Show rejection reason */}
+                                    {finding.rejectionReason && finding.status === 'rejected' && (
+                                      <div className="mt-2 p-2 bg-score-critical/5 border border-score-critical/10 rounded text-xs">
+                                        <span className="font-medium text-score-critical">{isAr ? 'سبب الرفض:' : 'Rejection Reason:'}</span>{' '}
+                                        {finding.rejectionReason}
+                                      </div>
+                                    )}
+
+                                    {/* Show resolution attachments */}
+                                    {finding.resolutionAttachments && finding.resolutionAttachments.length > 0 && (finding.status === 'pending_review' || finding.status === 'resolved') && (
+                                      <div className="flex flex-wrap gap-1 mt-2">
+                                        {finding.resolutionAttachments.map((url, i) => (
+                                          <a key={i} href={url} target="_blank" rel="noopener noreferrer">
+                                            <img src={url} alt="" className="w-10 h-10 rounded border border-border object-cover" />
+                                          </a>
+                                        ))}
+                                      </div>
+                                    )}
                                   </div>
 
                                   {/* Actions */}
                                   <div className="flex flex-col gap-1.5 shrink-0">
-                                    {finding.status !== 'resolved' && (
+                                    {/* Open/In Progress/Rejected: show assign + resolve */}
+                                    {['open', 'in_progress', 'rejected'].includes(finding.status) && (
                                       <>
                                         <Button
                                           size="sm"
@@ -476,9 +608,40 @@ export default function FindingsPage() {
                                           onClick={() => handleResolve(finding)}
                                         >
                                           <CheckCircle2 className="w-3 h-3 mr-1" />
-                                          {isAr ? 'حل' : 'Resolve'}
+                                          {finding.status === 'rejected' ? (isAr ? 'إعادة الإصلاح' : 'Re-fix') : (isAr ? 'حل' : 'Resolve')}
                                         </Button>
                                       </>
+                                    )}
+
+                                    {/* Pending Review: show approve/reject only for the assessor */}
+                                    {finding.status === 'pending_review' && isCurrentUserAssessor(finding) && (
+                                      <>
+                                        <Button
+                                          size="sm"
+                                          variant="default"
+                                          className="text-xs h-7 bg-score-excellent hover:bg-score-excellent/90"
+                                          onClick={() => handleReview(finding, 'approve')}
+                                        >
+                                          <ThumbsUp className="w-3 h-3 mr-1" />
+                                          {isAr ? 'اعتماد' : 'Approve'}
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          className="text-xs h-7 border-score-critical/30 text-score-critical hover:bg-score-critical/10"
+                                          onClick={() => handleReview(finding, 'reject')}
+                                        >
+                                          <ThumbsDown className="w-3 h-3 mr-1" />
+                                          {isAr ? 'رفض' : 'Reject'}
+                                        </Button>
+                                      </>
+                                    )}
+
+                                    {finding.status === 'pending_review' && !isCurrentUserAssessor(finding) && (
+                                      <Badge variant="outline" className="text-xs bg-score-average/10 text-score-average">
+                                        <Eye className="w-3 h-3 mr-1" />
+                                        {isAr ? 'بانتظار المراجعة' : 'Awaiting Review'}
+                                      </Badge>
                                     )}
                                   </div>
                                 </div>
@@ -641,6 +804,118 @@ export default function FindingsPage() {
               {resolveMutation.isPending
                 ? (isAr ? 'جاري الحل...' : 'Resolving...')
                 : (isAr ? 'حل' : 'Resolve')
+              }
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Review Dialog */}
+      <Dialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {reviewAction === 'approve'
+                ? (isAr ? 'اعتماد الإصلاح' : 'Approve Fix')
+                : (isAr ? 'رفض الإصلاح' : 'Reject Fix')
+              }
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {selectedFinding && (
+              <div className="p-3 bg-muted/50 rounded-lg text-sm space-y-2">
+                <p className="font-medium">{isAr ? (selectedFinding.criterionNameAr || selectedFinding.criterionName) : selectedFinding.criterionName}</p>
+                <p className="text-xs text-muted-foreground">
+                  {isAr ? 'الدرجة:' : 'Score:'} {selectedFinding.score}/{selectedFinding.maxScore}
+                </p>
+                {selectedFinding.resolutionNotes && (
+                  <div className="p-2 bg-score-excellent/5 border border-score-excellent/10 rounded text-xs">
+                    <span className="font-medium text-score-excellent">{isAr ? 'ملاحظات الإصلاح:' : 'Fix Notes:'}</span>{' '}
+                    {selectedFinding.resolutionNotes}
+                  </div>
+                )}
+                {selectedFinding.resolutionAttachments && selectedFinding.resolutionAttachments.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {selectedFinding.resolutionAttachments.map((url, i) => (
+                      <a key={i} href={url} target="_blank" rel="noopener noreferrer">
+                        <img src={url} alt="" className="w-12 h-12 rounded border border-border object-cover" />
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {reviewAction === 'reject' && (
+              <div className="space-y-2">
+                <Label>{isAr ? 'سبب الرفض (إلزامي)' : 'Rejection Reason (required)'}</Label>
+                <textarea
+                  className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  placeholder={isAr ? 'اكتب سبب رفض الإصلاح...' : 'Explain why this fix is being rejected...'}
+                  value={rejectionReason}
+                  onChange={e => setRejectionReason(e.target.value)}
+                />
+                {rejectionReason.length === 0 && (
+                  <p className="text-xs text-score-critical">{isAr ? 'هذا الحقل إلزامي' : 'This field is required'}</p>
+                )}
+              </div>
+            )}
+
+            {/* Image Upload */}
+            <div className="space-y-2">
+              <Label>{isAr ? 'إرفاق صورة (اختياري)' : 'Attach Photo (optional)'}</Label>
+              <input
+                ref={reviewFileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={handleReviewImageAdd}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={() => reviewFileInputRef.current?.click()}
+              >
+                <Camera className="w-4 h-4 mr-2" />
+                {isAr ? 'إضافة صورة' : 'Add Photo'}
+              </Button>
+              {reviewImagePreviews.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {reviewImagePreviews.map((src, i) => (
+                    <div key={i} className="relative w-16 h-16 rounded-md overflow-hidden border border-border">
+                      <img src={src} alt="" className="w-full h-full object-cover" />
+                      <button
+                        onClick={() => removeReviewImage(i)}
+                        className="absolute top-0.5 right-0.5 bg-background/80 rounded-full p-0.5"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReviewDialogOpen(false)}>
+              {isAr ? 'إلغاء' : 'Cancel'}
+            </Button>
+            <Button
+              onClick={submitReview}
+              disabled={
+                (reviewAction === 'reject' && !rejectionReason.trim()) ||
+                approveMutation.isPending || rejectMutation.isPending || isUploading
+              }
+              className={reviewAction === 'approve' ? 'bg-score-excellent hover:bg-score-excellent/90' : 'bg-score-critical hover:bg-score-critical/90'}
+            >
+              {(approveMutation.isPending || rejectMutation.isPending)
+                ? (isAr ? 'جاري المعالجة...' : 'Processing...')
+                : reviewAction === 'approve'
+                  ? (isAr ? 'اعتماد' : 'Approve')
+                  : (isAr ? 'رفض' : 'Reject')
               }
             </Button>
           </DialogFooter>
