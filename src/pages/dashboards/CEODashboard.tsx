@@ -77,9 +77,10 @@ export default function CEODashboard() {
 
       {/* Score Circles */}
       {!isLoading && (
-        <div className="flex items-center justify-center gap-10">
+        <div className="flex items-center justify-center gap-16">
+          {/* Evaluation Pie */}
           <div className="flex flex-col items-center cursor-pointer" onClick={() => navigate('/score-analysis')}>
-            <div className="w-52 h-52 relative">
+            <div className="w-72 h-72 relative">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -96,25 +97,28 @@ export default function CEODashboard() {
                     })()}
                     cx="50%"
                     cy="50%"
-                    innerRadius={38}
-                    outerRadius={55}
+                    innerRadius={52}
+                    outerRadius={75}
                     paddingAngle={3}
                     dataKey="value"
                     strokeWidth={0}
-                    label={({ cx, cy, midAngle, outerRadius: oR, percent, color }: any) => {
+                    label={({ cx, cy, midAngle, outerRadius: oR, percent, name, color }: any) => {
                       const RADIAN = Math.PI / 180;
                       const sin = Math.sin(-midAngle * RADIAN);
                       const cos = Math.cos(-midAngle * RADIAN);
-                      const mx = cx + (oR + 10) * cos;
-                      const my = cy + (oR + 10) * sin;
-                      const ex = cx + (oR + 28) * cos;
-                      const ey = cy + (oR + 28) * sin;
+                      const mx = cx + (oR + 12) * cos;
+                      const my = cy + (oR + 12) * sin;
+                      const ex = cx + (oR + 35) * cos;
+                      const ey = cy + (oR + 35) * sin;
                       const textAnchor = cos >= 0 ? 'start' : 'end';
                       return (
                         <g>
                           <path d={`M${mx},${my}L${ex},${ey}`} stroke={color} strokeWidth={1.5} fill="none" />
                           <circle cx={ex} cy={ey} r={2} fill={color} />
-                          <text x={ex + (cos >= 0 ? 4 : -4)} y={ey} textAnchor={textAnchor} dominantBaseline="central" fontSize={10} fontWeight={600} fill={color}>
+                          <text x={ex + (cos >= 0 ? 5 : -5)} y={ey - 6} textAnchor={textAnchor} fontSize={9} fill={color} opacity={0.8}>
+                            {name}
+                          </text>
+                          <text x={ex + (cos >= 0 ? 5 : -5)} y={ey + 6} textAnchor={textAnchor} fontSize={11} fontWeight={700} fill={color}>
                             {percent}%
                           </text>
                         </g>
@@ -139,15 +143,21 @@ export default function CEODashboard() {
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-xl font-bold text-foreground">{overallScore}%</span>
+                <span className={`text-2xl font-bold ${
+                  overallScore >= 90 ? 'text-score-excellent' :
+                  overallScore >= 75 ? 'text-[hsl(200,80%,50%)]' :
+                  overallScore >= 60 ? 'text-score-average' :
+                  overallScore >= 40 ? 'text-[hsl(25,95%,53%)]' : 'text-score-critical'
+                }`}>{overallScore}%</span>
               </div>
             </div>
             <span className="text-xs text-muted-foreground mt-1">
               {language === 'ar' ? 'التقييم' : 'Evaluation'}
             </span>
           </div>
+          {/* Resolution Pie */}
           <div className="flex flex-col items-center cursor-pointer" onClick={() => navigate('/findings')}>
-            <div className="w-52 h-52 relative">
+            <div className="w-72 h-72 relative">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -163,25 +173,28 @@ export default function CEODashboard() {
                     })()}
                     cx="50%"
                     cy="50%"
-                    innerRadius={38}
-                    outerRadius={55}
+                    innerRadius={52}
+                    outerRadius={75}
                     paddingAngle={3}
                     dataKey="value"
                     strokeWidth={0}
-                    label={({ cx, cy, midAngle, outerRadius: oR, percent, color }: any) => {
+                    label={({ cx, cy, midAngle, outerRadius: oR, percent, name, color }: any) => {
                       const RADIAN = Math.PI / 180;
                       const sin = Math.sin(-midAngle * RADIAN);
                       const cos = Math.cos(-midAngle * RADIAN);
-                      const mx = cx + (oR + 10) * cos;
-                      const my = cy + (oR + 10) * sin;
-                      const ex = cx + (oR + 28) * cos;
-                      const ey = cy + (oR + 28) * sin;
+                      const mx = cx + (oR + 12) * cos;
+                      const my = cy + (oR + 12) * sin;
+                      const ex = cx + (oR + 35) * cos;
+                      const ey = cy + (oR + 35) * sin;
                       const textAnchor = cos >= 0 ? 'start' : 'end';
                       return (
                         <g>
                           <path d={`M${mx},${my}L${ex},${ey}`} stroke={color} strokeWidth={1.5} fill="none" />
                           <circle cx={ex} cy={ey} r={2} fill={color} />
-                          <text x={ex + (cos >= 0 ? 4 : -4)} y={ey} textAnchor={textAnchor} dominantBaseline="central" fontSize={10} fontWeight={600} fill={color}>
+                          <text x={ex + (cos >= 0 ? 5 : -5)} y={ey - 6} textAnchor={textAnchor} fontSize={9} fill={color} opacity={0.8}>
+                            {name}
+                          </text>
+                          <text x={ex + (cos >= 0 ? 5 : -5)} y={ey + 6} textAnchor={textAnchor} fontSize={11} fontWeight={700} fill={color}>
                             {percent}%
                           </text>
                         </g>
@@ -205,7 +218,7 @@ export default function CEODashboard() {
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-xl font-bold text-foreground">{findingStats?.resolutionRate || 0}%</span>
+                <span className="text-2xl font-bold text-foreground">{findingStats?.resolutionRate || 0}%</span>
               </div>
             </div>
             <span className="text-xs text-muted-foreground mt-1">
