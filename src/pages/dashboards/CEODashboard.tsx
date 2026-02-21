@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Building2, TrendingUp, AlertTriangle, CheckCircle2, Clock, ShieldCheck } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { QualityCircle } from '@/components/QualityCircle';
 import { StatCard } from '@/components/StatCard';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -77,23 +78,49 @@ export default function CEODashboard() {
                   {language === 'ar' ? 'التقييم' : 'Evaluation'}
                 </span>
               </div>
-              <div className="flex flex-col items-center">
-                <QualityCircle
-                  score={findingStats?.resolutionRate || 0}
-                  status={
-                    (findingStats?.resolutionRate || 0) >= 90 ? 'excellent' :
-                    (findingStats?.resolutionRate || 0) >= 70 ? 'good' :
-                    (findingStats?.resolutionRate || 0) >= 50 ? 'average' :
-                    (findingStats?.resolutionRate || 0) >= 30 ? 'weak' : 'critical'
-                  }
-                  size="xl"
-                  showLabel
-                  onClick={() => navigate('/findings')}
-                />
+              <div className="flex flex-col items-center cursor-pointer" onClick={() => navigate('/findings')}>
+                <div className="w-36 h-36 relative">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: language === 'ar' ? 'تم الحل' : 'Resolved', value: findingStats?.resolved || 0 },
+                          { name: language === 'ar' ? 'جارية' : 'In Progress', value: findingStats?.inProgress || 0 },
+                          { name: language === 'ar' ? 'مفتوح' : 'Open', value: findingStats?.open || 0 },
+                          { name: language === 'ar' ? 'متأخر' : 'Overdue', value: findingStats?.overdue || 0 },
+                        ].filter(d => d.value > 0)}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={42}
+                        outerRadius={62}
+                        paddingAngle={3}
+                        dataKey="value"
+                        strokeWidth={0}
+                      >
+                        {[
+                          'hsl(142, 76%, 36%)',
+                          'hsl(45, 93%, 47%)',
+                          'hsl(0, 84%, 60%)',
+                          'hsl(25, 95%, 53%)',
+                        ].map((color, index) => (
+                          <Cell key={`cell-${index}`} fill={color} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        formatter={(value: number, name: string) => [`${value}`, name]}
+                        contentStyle={{ fontSize: '12px', borderRadius: '8px' }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  {/* Center label */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span className="text-2xl font-bold text-foreground">{findingStats?.resolutionRate || 0}%</span>
+                  </div>
+                </div>
                 <span className="text-xs text-muted-foreground mt-1">
                   {language === 'ar' ? 'نسبة الحل' : 'Resolution'}
                 </span>
-                <div className="flex gap-3 mt-2 text-[11px]">
+                <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 mt-2 text-[11px]">
                   <div className="flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-score-excellent" />
                     <span className="text-muted-foreground">{findingStats?.resolved || 0} {language === 'ar' ? 'حُلّت' : 'Resolved'}</span>
@@ -107,7 +134,7 @@ export default function CEODashboard() {
                     <span className="text-muted-foreground">{findingStats?.open || 0} {language === 'ar' ? 'مفتوح' : 'Open'}</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-score-weak" />
+                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: 'hsl(25, 95%, 53%)' }} />
                     <span className="text-muted-foreground">{findingStats?.overdue || 0} {language === 'ar' ? 'متأخر' : 'Overdue'}</span>
                   </div>
                 </div>
