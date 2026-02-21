@@ -93,6 +93,24 @@ export default function CEODashboard() {
                 <span className="text-xs text-muted-foreground mt-1">
                   {language === 'ar' ? 'نسبة الحل' : 'Resolution'}
                 </span>
+                <div className="flex gap-3 mt-2 text-[11px]">
+                  <div className="flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-score-excellent" />
+                    <span className="text-muted-foreground">{findingStats?.resolved || 0} {language === 'ar' ? 'حُلّت' : 'Resolved'}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-score-average" />
+                    <span className="text-muted-foreground">{findingStats?.inProgress || 0} {language === 'ar' ? 'جارية' : 'In Progress'}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-score-critical" />
+                    <span className="text-muted-foreground">{findingStats?.open || 0} {language === 'ar' ? 'مفتوح' : 'Open'}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-score-weak" />
+                    <span className="text-muted-foreground">{findingStats?.overdue || 0} {language === 'ar' ? 'متأخر' : 'Overdue'}</span>
+                  </div>
+                </div>
               </div>
             </>
           )}
