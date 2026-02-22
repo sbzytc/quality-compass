@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, forwardRef } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { LucideIcon } from 'lucide-react';
@@ -44,7 +44,7 @@ const variantStyles = {
   },
 };
 
-export function StatCard({
+export const StatCard = forwardRef<HTMLDivElement, StatCardProps>(({
   title,
   value,
   subtitle,
@@ -53,11 +53,12 @@ export function StatCard({
   variant = 'default',
   onClick,
   className,
-}: StatCardProps) {
+}, ref) => {
   const styles = variantStyles[variant];
 
   return (
     <motion.div
+      ref={ref}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -2, scale: onClick ? 1.02 : 1 }}
@@ -95,4 +96,5 @@ export function StatCard({
       </div>
     </motion.div>
   );
-}
+});
+StatCard.displayName = 'StatCard';
