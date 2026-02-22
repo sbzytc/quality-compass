@@ -48,7 +48,7 @@ export default function FindingsPage() {
   const [reviewImages, setReviewImages] = useState<File[]>([]);
   const [reviewImagePreviews, setReviewImagePreviews] = useState<string[]>([]);
 
-  const { user } = useAuth();
+  const { user, roles } = useAuth();
   const statusFilter = activeTab !== 'all' ? activeTab : undefined;
   const { data: findings, isLoading: findingsLoading } = useCriticalFindings(
     statusFilter ? { status: statusFilter } : undefined
@@ -251,8 +251,10 @@ export default function FindingsPage() {
     }
   };
 
-  const isCurrentUserAssessor = (finding: Finding) => {
-    return finding.assessorId === user?.id;
+  const isAdmin = roles.includes('admin');
+
+  const canReviewFinding = (finding: Finding) => {
+    return finding.assessorId === user?.id || isAdmin;
   };
 
   const getScoreSeverity = (score: number) => {
@@ -614,7 +616,7 @@ export default function FindingsPage() {
                                     )}
 
                                     {/* Pending Review: show approve/reject only for the assessor */}
-                                    {finding.status === 'pending_review' && isCurrentUserAssessor(finding) && (
+                                    {finding.status === 'pending_review' && canReviewFinding(finding) && (
                                       <>
                                         <Button
                                           size="sm"
@@ -637,7 +639,7 @@ export default function FindingsPage() {
                                       </>
                                     )}
 
-                                    {finding.status === 'pending_review' && !isCurrentUserAssessor(finding) && (
+                                    {finding.status === 'pending_review' && !canReviewFinding(finding) && (
                                       <Badge variant="outline" className="text-xs bg-score-average/10 text-score-average">
                                         <Eye className="w-3 h-3 mr-1" />
                                         {isAr ? 'بانتظار المراجعة' : 'Awaiting Review'}
