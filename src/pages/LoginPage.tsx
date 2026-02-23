@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { toast } from 'sonner';
 import { Loader2, Mail, Lock, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import rasdaLogo from '@/assets/rasda-logo.png';
 import { getDefaultDashboard } from '@/components/ProtectedRoute';
 
 export default function LoginPage() {
@@ -107,9 +108,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 rounded-2xl bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-2xl">Q</span>
-          </div>
+          <img src={rasdaLogo} alt="Rasda Logo" className="mx-auto w-28 h-28 object-contain" />
           <div>
             <CardTitle className="text-2xl font-bold">
               {direction === 'rtl' ? 'نظام جودة الخدمة' : 'SQCS'}
