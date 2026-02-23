@@ -2,111 +2,109 @@
 @tailwind components;
 @tailwind utilities;
 
-/* SQCS Design System - Smart Branch Quality Color System
-   Clean enterprise dashboard with quality-themed color coding
-*/
+/* Rasda Design System - Navy & Gold Quality Theme */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 @layer base {
   :root {
-    /* Core brand colors */
-    --background: 220 20% 97%;
-    --foreground: 222 47% 11%;
+    /* Core brand colors - Navy blue & Gold from Rasda logo */
+    --background: 216 25% 97%;
+    --foreground: 217 45% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 217 45% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 217 45% 15%;
 
-    --primary: 215 80% 48%;
+    --primary: 214 65% 28%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 210 30% 94%;
+    --secondary-foreground: 217 45% 15%;
 
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 210 25% 95%;
+    --muted-foreground: 215 15% 47%;
 
-    --accent: 215 80% 48%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 43 90% 55%;
+    --accent-foreground: 217 45% 15%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 215 80% 48%;
+    --border: 214 20% 90%;
+    --input: 214 20% 90%;
+    --ring: 214 65% 28%;
 
     --radius: 0.75rem;
 
-    /* Quality Score Colors - The Heart of SQCS */
+    /* Quality Score Colors */
     --score-excellent: 142 76% 36%;
     --score-excellent-bg: 142 76% 95%;
     --score-good: 142 52% 50%;
     --score-good-bg: 142 52% 95%;
-    --score-average: 45 93% 47%;
-    --score-average-bg: 45 93% 95%;
+    --score-average: 43 90% 50%;
+    --score-average-bg: 43 90% 95%;
     --score-weak: 14 89% 57%;
     --score-weak-bg: 14 89% 95%;
     --score-critical: 0 84% 50%;
     --score-critical-bg: 0 84% 95%;
 
-    /* Sidebar */
-    --sidebar-background: 222 47% 11%;
-    --sidebar-foreground: 220 14% 96%;
-    --sidebar-primary: 215 80% 55%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 47% 18%;
-    --sidebar-accent-foreground: 220 14% 96%;
-    --sidebar-border: 222 47% 18%;
-    --sidebar-ring: 215 80% 55%;
+    /* Sidebar - Deep navy */
+    --sidebar-background: 214 65% 15%;
+    --sidebar-foreground: 210 25% 92%;
+    --sidebar-primary: 43 90% 55%;
+    --sidebar-primary-foreground: 217 45% 15%;
+    --sidebar-accent: 214 55% 22%;
+    --sidebar-accent-foreground: 210 25% 92%;
+    --sidebar-border: 214 55% 22%;
+    --sidebar-ring: 43 90% 55%;
 
     /* Custom shadows */
-    --shadow-sm: 0 1px 2px 0 hsl(222 47% 11% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(222 47% 11% / 0.08), 0 2px 4px -2px hsl(222 47% 11% / 0.05);
-    --shadow-lg: 0 10px 15px -3px hsl(222 47% 11% / 0.08), 0 4px 6px -4px hsl(222 47% 11% / 0.05);
-    --shadow-xl: 0 20px 25px -5px hsl(222 47% 11% / 0.1), 0 8px 10px -6px hsl(222 47% 11% / 0.05);
+    --shadow-sm: 0 1px 2px 0 hsl(214 65% 15% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(214 65% 15% / 0.08), 0 2px 4px -2px hsl(214 65% 15% / 0.05);
+    --shadow-lg: 0 10px 15px -3px hsl(214 65% 15% / 0.08), 0 4px 6px -4px hsl(214 65% 15% / 0.05);
+    --shadow-xl: 0 20px 25px -5px hsl(214 65% 15% / 0.1), 0 8px 10px -6px hsl(214 65% 15% / 0.05);
     --shadow-glow: 0 0 40px -10px hsl(var(--primary) / 0.3);
   }
 
   .dark {
-    --background: 222 47% 7%;
-    --foreground: 220 14% 96%;
+    --background: 217 45% 7%;
+    --foreground: 210 25% 95%;
 
-    --card: 222 47% 11%;
-    --card-foreground: 220 14% 96%;
+    --card: 217 40% 12%;
+    --card-foreground: 210 25% 95%;
 
-    --popover: 222 47% 11%;
-    --popover-foreground: 220 14% 96%;
+    --popover: 217 40% 12%;
+    --popover-foreground: 210 25% 95%;
 
-    --primary: 215 80% 55%;
+    --primary: 210 55% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 222 47% 15%;
-    --secondary-foreground: 220 14% 96%;
+    --secondary: 217 40% 16%;
+    --secondary-foreground: 210 25% 95%;
 
-    --muted: 222 47% 15%;
-    --muted-foreground: 220 9% 60%;
+    --muted: 217 40% 16%;
+    --muted-foreground: 215 15% 60%;
 
-    --accent: 215 80% 55%;
+    --accent: 43 85% 50%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62% 40%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 222 47% 18%;
-    --input: 222 47% 18%;
-    --ring: 215 80% 55%;
+    --border: 217 40% 20%;
+    --input: 217 40% 20%;
+    --ring: 210 55% 50%;
 
-    /* Dark mode score colors - slightly brighter */
+    /* Dark mode score colors */
     --score-excellent: 142 76% 42%;
     --score-excellent-bg: 142 76% 12%;
     --score-good: 142 52% 55%;
     --score-good-bg: 142 52% 12%;
-    --score-average: 45 93% 55%;
-    --score-average-bg: 45 93% 12%;
+    --score-average: 43 90% 55%;
+    --score-average-bg: 43 90% 12%;
     --score-weak: 14 89% 62%;
     --score-weak-bg: 14 89% 12%;
     --score-critical: 0 84% 55%;
