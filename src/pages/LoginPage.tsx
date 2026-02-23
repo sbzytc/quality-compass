@@ -108,7 +108,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-1">
-          <img src={rasdaLogo} alt="Rasda" className="mx-auto w-64 h-64 object-contain" />
+          <img src={rasdaLogo} alt="Rasda" className="mx-auto w-52 h-52 object-contain" />
           <div>
             <CardDescription>
               {isSignUp
