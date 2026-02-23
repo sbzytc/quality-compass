@@ -577,6 +577,27 @@ export default function FindingsPage() {
                                       </div>
                                     )}
 
+                                    {/* Show reviewer indicator for resolved/rejected findings */}
+                                    {finding.reviewedBy && ['resolved', 'rejected'].includes(finding.status) && (
+                                      <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                                        <CheckCircle2 className="w-3 h-3" />
+                                        <span>
+                                          {isAr ? 'تمت المراجعة بواسطة' : 'Reviewed by'}{' '}
+                                          <span className="font-medium text-foreground">{getUserName(finding.reviewedBy)}</span>
+                                          {finding.reviewedBy !== finding.assessorId && (
+                                            <Badge variant="outline" className="ml-1.5 text-[10px] px-1.5 py-0 h-4 bg-primary/10 text-primary border-primary/20">
+                                              {isAr ? 'مشرف' : 'Admin'}
+                                            </Badge>
+                                          )}
+                                        </span>
+                                        {finding.reviewedAt && (
+                                          <span className="text-muted-foreground">
+                                            · {format(new Date(finding.reviewedAt), 'MMM d, yyyy')}
+                                          </span>
+                                        )}
+                                      </div>
+                                    )}
+
                                     {/* Show resolution attachments */}
                                     {finding.resolutionAttachments && finding.resolutionAttachments.length > 0 && (finding.status === 'pending_review' || finding.status === 'resolved') && (
                                       <div className="flex flex-wrap gap-1 mt-2">
