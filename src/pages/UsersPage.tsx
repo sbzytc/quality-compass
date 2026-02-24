@@ -68,6 +68,7 @@ import {
   useResendInvitation,
   useUpdateUserStatus,
   useUpdateUserRole,
+  useAssignBranch,
   UserWithRole
 } from '@/hooks/useUsers';
 import { AppRole } from '@/contexts/AuthContext';
@@ -100,6 +101,7 @@ export default function UsersPage() {
   const resendInvitation = useResendInvitation();
   const updateStatus = useUpdateUserStatus();
   const updateRole = useUpdateUserRole();
+  const assignBranch = useAssignBranch();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<AppRole | 'all'>('all');
@@ -112,6 +114,9 @@ export default function UsersPage() {
   const [resetResult, setResetResult] = useState<{ tempPassword?: string; emailSent?: boolean } | null>(null);
   const [selectedUser, setSelectedUser] = useState<UserWithRole | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [isAssignBranchDialogOpen, setIsAssignBranchDialogOpen] = useState(false);
+  const [assignBranchUser, setAssignBranchUser] = useState<UserWithRole | null>(null);
+  const [selectedBranchId, setSelectedBranchId] = useState('');
   const [inviteForm, setInviteForm] = useState({
     email: '',
     fullName: '',
@@ -276,6 +281,21 @@ export default function UsersPage() {
       );
     } catch (error) {
       toast.error(language === 'ar' ? 'فشل تحديث الدور' : 'Failed to update role');
+    }
+  };
+
+  const handleAssignBranch = async () => {
+    if (!assignBranchUser || !selectedBranchId) return;
+    try {
+      await assignBranch.mutateAsync({ userId: assignBranchUser.user_id, branchId: selectedBranchId });
+      toast.success(
+        language === 'ar' ? 'تم تعيين الفرع بنجاح' : 'Branch assigned successfully'
+      );
+      setIsAssignBranchDialogOpen(false);
+      setAssignBranchUser(null);
+      setSelectedBranchId('');
+    } catch (error) {
+      toast.error(language === 'ar' ? 'فشل تعيين الفرع' : 'Failed to assign branch');
     }
   };
 
@@ -448,6 +468,21 @@ export default function UsersPage() {
                               <Send className="w-4 h-4 me-2" />
                               {language === 'ar' ? 'إعادة إرسال الدعوة' : 'Resend Invitation'}
                             </DropdownMenuItem>
+                            {primaryRole === 'branch_manager' && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setAssignBranchUser(user);
+                                    setSelectedBranchId(user.branch_id || '');
+                                    setIsAssignBranchDialogOpen(true);
+                                  }}
+                                >
+                                  <Building className="w-4 h-4 me-2" />
+                                  {language === 'ar' ? 'تعيين / تغيير الفرع' : 'Assign / Change Branch'}
+                                </DropdownMenuItem>
+                              </>
+                            )}
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => handleChangeRole(user, 'admin')}>
                               <Shield className="w-4 h-4 me-2" />
@@ -890,6 +925,74 @@ export default function UsersPage() {
                 )}
               </div>
             )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign Branch Dialog */}
+      <Dialog open={isAssignBranchDialogOpen} onOpenChange={(open) => {
+        setIsAssignBranchDialogOpen(open);
+        if (!open) {
+          setAssignBranchUser(null);
+          setSelectedBranchId('');
+        }
+      }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{language === 'ar' ? 'تعيين / تغيير الفرع' : 'Assign / Change Branch'}</DialogTitle>
+            <DialogDescription>
+              {language === 'ar'
+                ? 'اختر الفرع الذي سيكون هذا المستخدم مديراً له'
+                : 'Select the branch this user will manage'
+              }
+            </DialogDescription>
+          </DialogHeader>
+          {assignBranchUser && (
+            <div className="py-4 space-y-4">
+              <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
+                <Avatar>
+                  <AvatarImage src={assignBranchUser.avatar_url || undefined} />
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    {getInitials(assignBranchUser.full_name)}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-medium">{assignBranchUser.full_name}</p>
+                  <p className="text-sm text-muted-foreground">{assignBranchUser.email}</p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>{language === 'ar' ? 'الفرع' : 'Branch'}</Label>
+                <Select
+                  value={selectedBranchId}
+                  onValueChange={setSelectedBranchId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={language === 'ar' ? 'اختر الفرع' : 'Select a branch'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {branches?.map((branch) => (
+                      <SelectItem key={branch.id} value={branch.id}>
+                        {language === 'ar' && branch.nameAr ? branch.nameAr : branch.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAssignBranchDialogOpen(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button
+              onClick={handleAssignBranch}
+              disabled={!selectedBranchId || assignBranch.isPending}
+            >
+              {assignBranch.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
+              <Building className="w-4 h-4 me-2" />
+              {language === 'ar' ? 'تعيين الفرع' : 'Assign Branch'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
