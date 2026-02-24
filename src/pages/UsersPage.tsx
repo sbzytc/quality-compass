@@ -15,6 +15,9 @@ import {
   Loader2,
   ArrowLeft,
   Send,
+  UserPlus,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -52,13 +55,15 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useGoBack } from '@/hooks/useGoBack';
 import { 
   useUsers, 
   useUserStats, 
-  useInviteUser, 
+  useInviteUser,
+  useCreateUser,
   useResetPassword,
   useResendInvitation,
   useUpdateUserStatus,
@@ -88,6 +93,7 @@ export default function UsersPage() {
   const { data: users, isLoading } = useUsers();
   const stats = useUserStats();
   const inviteUser = useInviteUser();
+  const createUser = useCreateUser();
   const resetPassword = useResetPassword();
   const resendInvitation = useResendInvitation();
   const updateStatus = useUpdateUserStatus();
@@ -95,17 +101,27 @@ export default function UsersPage() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<AppRole | 'all'>('all');
-  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
+  const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
+  const [addUserMode, setAddUserMode] = useState<'choose' | 'invite' | 'create'>('choose');
   const [isResetPasswordDialogOpen, setIsResetPasswordDialogOpen] = useState(false);
   const [resetMode, setResetMode] = useState<'choose' | 'email' | 'manual' | 'done'>('choose');
   const [manualPassword, setManualPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [resetResult, setResetResult] = useState<{ tempPassword?: string; emailSent?: boolean } | null>(null);
   const [selectedUser, setSelectedUser] = useState<UserWithRole | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const [inviteForm, setInviteForm] = useState({
     email: '',
     fullName: '',
     role: 'assessor' as AppRole,
+  });
+  const [createForm, setCreateForm] = useState({
+    email: '',
+    fullName: '',
+    password: '',
+    confirmPassword: '',
+    role: 'assessor' as AppRole,
+    forcePasswordChange: true,
   });
 
   const filteredUsers = (users || []).filter((user) => {
@@ -135,13 +151,48 @@ export default function UsersPage() {
           ? `تم إرسال الدعوة إلى ${inviteForm.email}`
           : `Invitation sent to ${inviteForm.email}`
       );
-      setIsInviteDialogOpen(false);
+      setIsAddUserDialogOpen(false);
+      setAddUserMode('choose');
       setInviteForm({ email: '', fullName: '', role: 'assessor' });
     } catch (error) {
       toast.error(
         language === 'ar'
           ? 'فشل إرسال الدعوة'
           : 'Failed to send invitation'
+      );
+    }
+  };
+
+  const handleCreateUser = async () => {
+    if (createForm.password !== createForm.confirmPassword) {
+      toast.error(language === 'ar' ? 'كلمات المرور غير متطابقة' : 'Passwords do not match');
+      return;
+    }
+    if (createForm.password.length < 6) {
+      toast.error(language === 'ar' ? 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' : 'Password must be at least 6 characters');
+      return;
+    }
+    try {
+      await createUser.mutateAsync({
+        email: createForm.email,
+        fullName: createForm.fullName,
+        password: createForm.password,
+        role: createForm.role,
+        forcePasswordChange: createForm.forcePasswordChange,
+      });
+      toast.success(
+        language === 'ar'
+          ? `تم إنشاء المستخدم ${createForm.fullName} بنجاح`
+          : `User ${createForm.fullName} created successfully`
+      );
+      setIsAddUserDialogOpen(false);
+      setAddUserMode('choose');
+      setCreateForm({ email: '', fullName: '', password: '', confirmPassword: '', role: 'assessor', forcePasswordChange: true });
+    } catch (error) {
+      toast.error(
+        language === 'ar'
+          ? 'فشل إنشاء المستخدم'
+          : 'Failed to create user'
       );
     }
   };
@@ -246,9 +297,9 @@ export default function UsersPage() {
             <p className="text-muted-foreground mt-1">{t('users.subtitle')}</p>
           </div>
         </div>
-        <Button onClick={() => setIsInviteDialogOpen(true)} className="gap-2">
+        <Button onClick={() => setIsAddUserDialogOpen(true)} className="gap-2">
           <Plus className="w-4 h-4" />
-          {t('users.invite')}
+          {language === 'ar' ? 'إضافة مستخدم' : 'Add User'}
         </Button>
       </div>
 
@@ -439,68 +490,203 @@ export default function UsersPage() {
         )}
       </motion.div>
 
-      {/* Invite User Dialog */}
-      <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
-        <DialogContent>
+      {/* Add User Dialog */}
+      <Dialog open={isAddUserDialogOpen} onOpenChange={(open) => {
+        setIsAddUserDialogOpen(open);
+        if (!open) {
+          setAddUserMode('choose');
+          setInviteForm({ email: '', fullName: '', role: 'assessor' });
+          setCreateForm({ email: '', fullName: '', password: '', confirmPassword: '', role: 'assessor', forcePasswordChange: true });
+          setShowPassword(false);
+        }
+      }}>
+        <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{language === 'ar' ? 'دعوة مستخدم جديد' : 'Invite New User'}</DialogTitle>
+            <DialogTitle>{language === 'ar' ? 'إضافة مستخدم جديد' : 'Add New User'}</DialogTitle>
             <DialogDescription>
               {language === 'ar' 
-                ? 'سيتم إرسال بريد إلكتروني للدعوة مع كلمة مرور مؤقتة'
-                : 'Send an invitation email with a temporary password'
+                ? 'اختر طريقة إضافة المستخدم'
+                : 'Choose how to add the user'
               }
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="fullName">{language === 'ar' ? 'الاسم الكامل' : 'Full Name'}</Label>
-              <Input
-                id="fullName"
-                placeholder={language === 'ar' ? 'أدخل الاسم الكامل' : 'Enter full name'}
-                value={inviteForm.fullName}
-                onChange={(e) => setInviteForm((prev) => ({ ...prev, fullName: e.target.value }))}
-              />
+
+          {/* Method selection */}
+          {addUserMode === 'choose' && (
+            <div className="flex flex-col gap-3 py-4">
+              <Button variant="outline" className="justify-start gap-3 h-auto py-3" onClick={() => setAddUserMode('invite')}>
+                <Mail className="w-5 h-5 text-primary" />
+                <div className="text-start">
+                  <p className="font-medium">{language === 'ar' ? 'دعوة عبر البريد الإلكتروني' : 'Invite via Email'}</p>
+                  <p className="text-xs text-muted-foreground">{language === 'ar' ? 'إرسال دعوة مع كلمة مرور مؤقتة' : 'Send an invitation with a temporary password'}</p>
+                </div>
+              </Button>
+              <Button variant="outline" className="justify-start gap-3 h-auto py-3" onClick={() => setAddUserMode('create')}>
+                <UserPlus className="w-5 h-5 text-primary" />
+                <div className="text-start">
+                  <p className="font-medium">{language === 'ar' ? 'إنشاء مباشر' : 'Create Directly'}</p>
+                  <p className="text-xs text-muted-foreground">{language === 'ar' ? 'إنشاء المستخدم وتعيين كلمة المرور مباشرة' : 'Create user and set password directly'}</p>
+                </div>
+              </Button>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">{language === 'ar' ? 'البريد الإلكتروني' : 'Email Address'}</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder={language === 'ar' ? 'أدخل البريد الإلكتروني' : 'Enter email address'}
-                value={inviteForm.email}
-                onChange={(e) => setInviteForm((prev) => ({ ...prev, email: e.target.value }))}
-              />
+          )}
+
+          {/* Invite form */}
+          {addUserMode === 'invite' && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>{language === 'ar' ? 'الاسم الكامل' : 'Full Name'}</Label>
+                <Input
+                  placeholder={language === 'ar' ? 'أدخل الاسم الكامل' : 'Enter full name'}
+                  value={inviteForm.fullName}
+                  onChange={(e) => setInviteForm((prev) => ({ ...prev, fullName: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{language === 'ar' ? 'البريد الإلكتروني' : 'Email Address'}</Label>
+                <Input
+                  type="email"
+                  placeholder={language === 'ar' ? 'أدخل البريد الإلكتروني' : 'Enter email address'}
+                  value={inviteForm.email}
+                  onChange={(e) => setInviteForm((prev) => ({ ...prev, email: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{language === 'ar' ? 'الدور' : 'Role'}</Label>
+                <Select
+                  value={inviteForm.role}
+                  onValueChange={(v) => setInviteForm((prev) => ({ ...prev, role: v as AppRole }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">{roleLabels.admin[language]}</SelectItem>
+                    <SelectItem value="executive">{roleLabels.executive[language]}</SelectItem>
+                    <SelectItem value="branch_manager">{roleLabels.branch_manager[language]}</SelectItem>
+                    <SelectItem value="assessor">{roleLabels.assessor[language]}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="role">{language === 'ar' ? 'الدور' : 'Role'}</Label>
-              <Select
-                value={inviteForm.role}
-                onValueChange={(v) => setInviteForm((prev) => ({ ...prev, role: v as AppRole }))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="admin">{roleLabels.admin[language]}</SelectItem>
-                  <SelectItem value="executive">{roleLabels.executive[language]}</SelectItem>
-                  <SelectItem value="branch_manager">{roleLabels.branch_manager[language]}</SelectItem>
-                  <SelectItem value="assessor">{roleLabels.assessor[language]}</SelectItem>
-                </SelectContent>
-              </Select>
+          )}
+
+          {/* Create form */}
+          {addUserMode === 'create' && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>{language === 'ar' ? 'الاسم الكامل' : 'Full Name'}</Label>
+                <Input
+                  placeholder={language === 'ar' ? 'أدخل الاسم الكامل' : 'Enter full name'}
+                  value={createForm.fullName}
+                  onChange={(e) => setCreateForm((prev) => ({ ...prev, fullName: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{language === 'ar' ? 'البريد الإلكتروني' : 'Email Address'}</Label>
+                <Input
+                  type="email"
+                  placeholder={language === 'ar' ? 'أدخل البريد الإلكتروني' : 'Enter email address'}
+                  value={createForm.email}
+                  onChange={(e) => setCreateForm((prev) => ({ ...prev, email: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{language === 'ar' ? 'كلمة المرور' : 'Password'}</Label>
+                <div className="relative">
+                  <Input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder={language === 'ar' ? 'أدخل كلمة المرور' : 'Enter password'}
+                    value={createForm.password}
+                    onChange={(e) => setCreateForm((prev) => ({ ...prev, password: e.target.value }))}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute end-0 top-0 h-full px-3"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>{language === 'ar' ? 'تأكيد كلمة المرور' : 'Confirm Password'}</Label>
+                <Input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder={language === 'ar' ? 'أعد إدخال كلمة المرور' : 'Re-enter password'}
+                  value={createForm.confirmPassword}
+                  onChange={(e) => setCreateForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
+                />
+                {createForm.password && createForm.confirmPassword && createForm.password !== createForm.confirmPassword && (
+                  <p className="text-xs text-destructive">
+                    {language === 'ar' ? 'كلمات المرور غير متطابقة' : 'Passwords do not match'}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>{language === 'ar' ? 'الدور' : 'Role'}</Label>
+                <Select
+                  value={createForm.role}
+                  onValueChange={(v) => setCreateForm((prev) => ({ ...prev, role: v as AppRole }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">{roleLabels.admin[language]}</SelectItem>
+                    <SelectItem value="executive">{roleLabels.executive[language]}</SelectItem>
+                    <SelectItem value="branch_manager">{roleLabels.branch_manager[language]}</SelectItem>
+                    <SelectItem value="assessor">{roleLabels.assessor[language]}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                <div>
+                  <p className="text-sm font-medium">{language === 'ar' ? 'تغيير كلمة المرور عند أول تسجيل دخول' : 'Force password change on first login'}</p>
+                  <p className="text-xs text-muted-foreground">{language === 'ar' ? 'سيُطلب من المستخدم تغيير كلمة المرور' : 'User will be prompted to change their password'}</p>
+                </div>
+                <Switch
+                  checked={createForm.forcePasswordChange}
+                  onCheckedChange={(checked) => setCreateForm((prev) => ({ ...prev, forcePasswordChange: checked }))}
+                />
+              </div>
             </div>
-          </div>
+          )}
+
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsInviteDialogOpen(false)}>
-              {t('common.cancel')}
-            </Button>
-            <Button 
-              onClick={handleInviteUser} 
-              disabled={!inviteForm.email || !inviteForm.fullName || inviteUser.isPending}
-            >
-              {inviteUser.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
-              <Mail className="w-4 h-4 me-2" />
-              {language === 'ar' ? 'إرسال الدعوة' : 'Send Invitation'}
-            </Button>
+            {addUserMode === 'choose' ? (
+              <Button variant="outline" onClick={() => setIsAddUserDialogOpen(false)}>
+                {t('common.cancel')}
+              </Button>
+            ) : (
+              <div className="flex gap-2 w-full justify-end">
+                <Button variant="outline" onClick={() => setAddUserMode('choose')}>
+                  {language === 'ar' ? 'رجوع' : 'Back'}
+                </Button>
+                {addUserMode === 'invite' && (
+                  <Button 
+                    onClick={handleInviteUser} 
+                    disabled={!inviteForm.email || !inviteForm.fullName || inviteUser.isPending}
+                  >
+                    {inviteUser.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
+                    <Mail className="w-4 h-4 me-2" />
+                    {language === 'ar' ? 'إرسال الدعوة' : 'Send Invitation'}
+                  </Button>
+                )}
+                {addUserMode === 'create' && (
+                  <Button
+                    onClick={handleCreateUser}
+                    disabled={!createForm.email || !createForm.fullName || !createForm.password || createForm.password !== createForm.confirmPassword || createUser.isPending}
+                  >
+                    {createUser.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
+                    <UserPlus className="w-4 h-4 me-2" />
+                    {language === 'ar' ? 'إنشاء المستخدم' : 'Create User'}
+                  </Button>
+                )}
+              </div>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

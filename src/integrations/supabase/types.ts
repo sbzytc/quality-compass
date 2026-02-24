@@ -436,6 +436,7 @@ export type Database = {
           branch_id: string | null
           created_at: string
           email: string
+          force_password_change: boolean
           full_name: string
           id: string
           is_active: boolean
@@ -449,6 +450,7 @@ export type Database = {
           branch_id?: string | null
           created_at?: string
           email: string
+          force_password_change?: boolean
           full_name: string
           id?: string
           is_active?: boolean
@@ -462,6 +464,7 @@ export type Database = {
           branch_id?: string | null
           created_at?: string
           email?: string
+          force_password_change?: boolean
           full_name?: string
           id?: string
           is_active?: boolean
