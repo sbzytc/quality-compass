@@ -13,6 +13,7 @@ interface CreateUserRequest {
   password: string;
   role: "admin" | "executive" | "branch_manager" | "assessor";
   forcePasswordChange: boolean;
+  branchId?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -63,7 +64,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { email, fullName, password, role, forcePasswordChange }: CreateUserRequest = await req.json();
+    const { email, fullName, password, role, forcePasswordChange, branchId }: CreateUserRequest = await req.json();
 
     if (!email || !fullName || !password || !role) {
       return new Response(
@@ -96,12 +97,17 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Create profile
-    const { error: profileError } = await supabaseAdmin.from("profiles").insert({
+    const profileData: Record<string, unknown> = {
       user_id: newUser.user.id,
       email,
       full_name: fullName,
       force_password_change: forcePasswordChange ?? false,
-    });
+    };
+    if (role === "branch_manager" && branchId) {
+      profileData.branch_id = branchId;
+    }
+
+    const { error: profileError } = await supabaseAdmin.from("profiles").insert(profileData);
 
     if (profileError) {
       console.error("Error creating profile:", profileError);
@@ -115,6 +121,18 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (roleError) {
       console.error("Error assigning role:", roleError);
+    }
+
+    // If branch_manager, update the branch's manager_id
+    if (role === "branch_manager" && branchId) {
+      const { error: branchError } = await supabaseAdmin
+        .from("branches")
+        .update({ manager_id: newUser.user.id })
+        .eq("id", branchId);
+
+      if (branchError) {
+        console.error("Error updating branch manager:", branchError);
+      }
     }
 
     return new Response(

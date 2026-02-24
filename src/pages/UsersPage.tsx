@@ -71,6 +71,7 @@ import {
   UserWithRole
 } from '@/hooks/useUsers';
 import { AppRole } from '@/contexts/AuthContext';
+import { useBranches } from '@/hooks/useBranches';
 
 const roleLabels: Record<AppRole, { en: string; ar: string }> = {
   admin: { en: 'Admin', ar: 'مدير النظام' },
@@ -91,6 +92,7 @@ export default function UsersPage() {
   const goBack = useGoBack('/dashboard/ceo');
   const { t, language } = useLanguage();
   const { data: users, isLoading } = useUsers();
+  const { data: branches } = useBranches();
   const stats = useUserStats();
   const inviteUser = useInviteUser();
   const createUser = useCreateUser();
@@ -122,6 +124,7 @@ export default function UsersPage() {
     confirmPassword: '',
     role: 'assessor' as AppRole,
     forcePasswordChange: true,
+    branchId: '',
   });
 
   const filteredUsers = (users || []).filter((user) => {
@@ -179,6 +182,7 @@ export default function UsersPage() {
         password: createForm.password,
         role: createForm.role,
         forcePasswordChange: createForm.forcePasswordChange,
+        branchId: createForm.role === 'branch_manager' ? createForm.branchId : undefined,
       });
       toast.success(
         language === 'ar'
@@ -187,7 +191,7 @@ export default function UsersPage() {
       );
       setIsAddUserDialogOpen(false);
       setAddUserMode('choose');
-      setCreateForm({ email: '', fullName: '', password: '', confirmPassword: '', role: 'assessor', forcePasswordChange: true });
+      setCreateForm({ email: '', fullName: '', password: '', confirmPassword: '', role: 'assessor', forcePasswordChange: true, branchId: '' });
     } catch (error) {
       toast.error(
         language === 'ar'
@@ -496,7 +500,7 @@ export default function UsersPage() {
         if (!open) {
           setAddUserMode('choose');
           setInviteForm({ email: '', fullName: '', role: 'assessor' });
-          setCreateForm({ email: '', fullName: '', password: '', confirmPassword: '', role: 'assessor', forcePasswordChange: true });
+          setCreateForm({ email: '', fullName: '', password: '', confirmPassword: '', role: 'assessor', forcePasswordChange: true, branchId: '' });
           setShowPassword(false);
         }
       }}>
@@ -629,7 +633,7 @@ export default function UsersPage() {
                 <Label>{language === 'ar' ? 'الدور' : 'Role'}</Label>
                 <Select
                   value={createForm.role}
-                  onValueChange={(v) => setCreateForm((prev) => ({ ...prev, role: v as AppRole }))}
+                  onValueChange={(v) => setCreateForm((prev) => ({ ...prev, role: v as AppRole, branchId: '' }))}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -642,6 +646,26 @@ export default function UsersPage() {
                   </SelectContent>
                 </Select>
               </div>
+              {createForm.role === 'branch_manager' && (
+                <div className="space-y-2">
+                  <Label>{language === 'ar' ? 'الفرع' : 'Assign to Branch'}</Label>
+                  <Select
+                    value={createForm.branchId}
+                    onValueChange={(v) => setCreateForm((prev) => ({ ...prev, branchId: v }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={language === 'ar' ? 'اختر الفرع' : 'Select a branch'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {branches?.map((branch) => (
+                        <SelectItem key={branch.id} value={branch.id}>
+                          {language === 'ar' && branch.nameAr ? branch.nameAr : branch.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                 <div>
                   <p className="text-sm font-medium">{language === 'ar' ? 'تغيير كلمة المرور عند أول تسجيل دخول' : 'Force password change on first login'}</p>
@@ -678,7 +702,7 @@ export default function UsersPage() {
                 {addUserMode === 'create' && (
                   <Button
                     onClick={handleCreateUser}
-                    disabled={!createForm.email || !createForm.fullName || !createForm.password || createForm.password !== createForm.confirmPassword || createUser.isPending}
+                    disabled={!createForm.email || !createForm.fullName || !createForm.password || createForm.password !== createForm.confirmPassword || (createForm.role === 'branch_manager' && !createForm.branchId) || createUser.isPending}
                   >
                     {createUser.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
                     <UserPlus className="w-4 h-4 me-2" />

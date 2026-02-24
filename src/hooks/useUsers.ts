@@ -93,11 +93,11 @@ export function useCreateUser() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ email, fullName, password, role, forcePasswordChange }: { 
-      email: string; fullName: string; password: string; role: AppRole; forcePasswordChange: boolean 
+    mutationFn: async ({ email, fullName, password, role, forcePasswordChange, branchId }: { 
+      email: string; fullName: string; password: string; role: AppRole; forcePasswordChange: boolean; branchId?: string 
     }) => {
       const response = await supabase.functions.invoke('create-user', {
-        body: { email, fullName, password, role, forcePasswordChange },
+        body: { email, fullName, password, role, forcePasswordChange, branchId },
       });
 
       if (response.error) throw response.error;
