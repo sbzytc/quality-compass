@@ -71,7 +71,7 @@ import {
   useAssignBranch,
   UserWithRole
 } from '@/hooks/useUsers';
-import { AppRole } from '@/contexts/AuthContext';
+import { AppRole, useAuth } from '@/contexts/AuthContext';
 import { useBranches } from '@/hooks/useBranches';
 
 const roleLabels: Record<AppRole, { en: string; ar: string }> = {
@@ -90,6 +90,7 @@ const roleColors: Record<AppRole, string> = {
 
 export default function UsersPage() {
   const navigate = useNavigate();
+  const { roles } = useAuth();
   const goBack = useGoBack('/dashboard/ceo');
   const { t, language } = useLanguage();
   const { data: users, isLoading } = useUsers();
@@ -117,6 +118,10 @@ export default function UsersPage() {
   const [isAssignBranchDialogOpen, setIsAssignBranchDialogOpen] = useState(false);
   const [assignBranchUser, setAssignBranchUser] = useState<UserWithRole | null>(null);
   const [selectedBranchId, setSelectedBranchId] = useState('');
+  const [isChangeRoleDialogOpen, setIsChangeRoleDialogOpen] = useState(false);
+  const [changeRoleUser, setChangeRoleUser] = useState<UserWithRole | null>(null);
+  const [newRole, setNewRole] = useState<AppRole>('assessor');
+  const isAdmin = roles.includes('admin');
   const [inviteForm, setInviteForm] = useState({
     email: '',
     fullName: '',
@@ -483,23 +488,21 @@ export default function UsersPage() {
                                 </DropdownMenuItem>
                               </>
                             )}
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => handleChangeRole(user, 'admin')}>
-                              <Shield className="w-4 h-4 me-2" />
-                              {language === 'ar' ? 'جعله مدير' : 'Make Admin'}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleChangeRole(user, 'executive')}>
-                              <Users className="w-4 h-4 me-2" />
-                              {language === 'ar' ? 'جعله تنفيذي' : 'Make Executive'}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleChangeRole(user, 'branch_manager')}>
-                              <Building className="w-4 h-4 me-2" />
-                              {language === 'ar' ? 'جعله مدير فرع' : 'Make Branch Manager'}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleChangeRole(user, 'assessor')}>
-                              <Users className="w-4 h-4 me-2" />
-                              {language === 'ar' ? 'جعله مقيّم' : 'Make Assessor'}
-                            </DropdownMenuItem>
+                            {isAdmin && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setChangeRoleUser(user);
+                                    setNewRole(primaryRole);
+                                    setIsChangeRoleDialogOpen(true);
+                                  }}
+                                >
+                                  <Shield className="w-4 h-4 me-2" />
+                                  {language === 'ar' ? 'تغيير الدور' : 'Change Role'}
+                                </DropdownMenuItem>
+                              </>
+                            )}
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                               onClick={() => handleToggleActive(user)}
@@ -992,6 +995,78 @@ export default function UsersPage() {
               {assignBranch.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
               <Building className="w-4 h-4 me-2" />
               {language === 'ar' ? 'تعيين الفرع' : 'Assign Branch'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Change Role Dialog */}
+      <Dialog open={isChangeRoleDialogOpen} onOpenChange={(open) => {
+        setIsChangeRoleDialogOpen(open);
+        if (!open) {
+          setChangeRoleUser(null);
+          setNewRole('assessor');
+        }
+      }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{language === 'ar' ? 'تغيير الدور' : 'Change Role'}</DialogTitle>
+            <DialogDescription>
+              {language === 'ar'
+                ? 'اختر الدور الجديد لهذا المستخدم'
+                : 'Select the new role for this user'
+              }
+            </DialogDescription>
+          </DialogHeader>
+          {changeRoleUser && (
+            <div className="py-4 space-y-4">
+              <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
+                <Avatar>
+                  <AvatarImage src={changeRoleUser.avatar_url || undefined} />
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    {getInitials(changeRoleUser.full_name)}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-medium">{changeRoleUser.full_name}</p>
+                  <p className="text-sm text-muted-foreground">{changeRoleUser.email}</p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>{language === 'ar' ? 'الدور' : 'Role'}</Label>
+                <Select
+                  value={newRole}
+                  onValueChange={(v) => setNewRole(v as AppRole)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">{roleLabels.admin[language]}</SelectItem>
+                    <SelectItem value="executive">{roleLabels.executive[language]}</SelectItem>
+                    <SelectItem value="branch_manager">{roleLabels.branch_manager[language]}</SelectItem>
+                    <SelectItem value="assessor">{roleLabels.assessor[language]}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsChangeRoleDialogOpen(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button
+              onClick={async () => {
+                if (!changeRoleUser) return;
+                await handleChangeRole(changeRoleUser, newRole);
+                setIsChangeRoleDialogOpen(false);
+                setChangeRoleUser(null);
+              }}
+              disabled={updateRole.isPending}
+            >
+              {updateRole.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
+              <Shield className="w-4 h-4 me-2" />
+              {language === 'ar' ? 'تغيير الدور' : 'Change Role'}
             </Button>
           </DialogFooter>
         </DialogContent>
