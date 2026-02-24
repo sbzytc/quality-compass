@@ -89,6 +89,26 @@ export function useInviteUser() {
   });
 }
 
+export function useCreateUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ email, fullName, password, role, forcePasswordChange }: { 
+      email: string; fullName: string; password: string; role: AppRole; forcePasswordChange: boolean 
+    }) => {
+      const response = await supabase.functions.invoke('create-user', {
+        body: { email, fullName, password, role, forcePasswordChange },
+      });
+
+      if (response.error) throw response.error;
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+  });
+}
+
 export function useResendInvitation() {
   return useMutation({
     mutationFn: async (userId: string) => {
