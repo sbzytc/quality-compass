@@ -178,3 +178,39 @@ export function useUpdateUserRole() {
     },
   });
 }
+
+export function useAssignBranch() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ userId, branchId }: { userId: string; branchId: string }) => {
+      // Update profile's branch_id
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ branch_id: branchId })
+        .eq('user_id', userId);
+
+      if (profileError) throw profileError;
+
+      // Clear old branch manager_id if user was assigned to another branch
+      const { error: clearError } = await supabase
+        .from('branches')
+        .update({ manager_id: null })
+        .eq('manager_id', userId);
+
+      if (clearError) throw clearError;
+
+      // Set new branch's manager_id
+      const { error: branchError } = await supabase
+        .from('branches')
+        .update({ manager_id: userId })
+        .eq('id', branchId);
+
+      if (branchError) throw branchError;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['branches'] });
+    },
+  });
+}
