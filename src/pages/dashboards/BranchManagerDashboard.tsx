@@ -90,7 +90,7 @@ export default function BranchManagerDashboard() {
           {myBranch.categoryScores.map((cat) => (
             <CategoryProgressBar
               key={cat.id}
-              name={cat.name}
+              name={direction === 'rtl' && cat.nameAr ? cat.nameAr : cat.name}
               percentage={cat.percentage}
               status={cat.status}
               failedCriteria={cat.failedCriteria}

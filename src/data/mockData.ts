@@ -1,25 +1,26 @@
 import { Branch, CategoryScore, NonConformity, CorrectiveAction, getScoreLevel } from '@/types';
 
 // Mock category names for restaurant evaluations
-const categoryNames = [
-  'Building Condition',
-  'Customer Area',
-  'Overall Appearance',
-  'Cashier Area',
-  'Food Quality',
-  'Administration',
-  'Dining Hall',
-  'Kitchen & Back Area',
-  'Storage & Receiving',
-  'Delivery Vehicles',
+const categoryData = [
+  { name: 'Building Condition', nameAr: 'حالة المبنى' },
+  { name: 'Customer Area', nameAr: 'منطقة العملاء' },
+  { name: 'Overall Appearance', nameAr: 'المظهر العام' },
+  { name: 'Cashier Area', nameAr: 'منطقة الكاشير' },
+  { name: 'Food Quality', nameAr: 'جودة الطعام' },
+  { name: 'Administration', nameAr: 'الإدارة' },
+  { name: 'Dining Hall', nameAr: 'صالة الطعام' },
+  { name: 'Kitchen & Back Area', nameAr: 'المطبخ والمنطقة الخلفية' },
+  { name: 'Storage & Receiving', nameAr: 'التخزين والاستلام' },
+  { name: 'Delivery Vehicles', nameAr: 'مركبات التوصيل' },
 ];
 
 function generateCategoryScores(): CategoryScore[] {
-  return categoryNames.map((name, index) => {
+  return categoryData.map((cat, index) => {
     const percentage = Math.floor(Math.random() * 40) + 60; // 60-100
     return {
       id: `cat-${index + 1}`,
-      name,
+      name: cat.name,
+      nameAr: cat.nameAr,
       score: Math.floor((percentage / 100) * 100),
       maxScore: 100,
       percentage,
