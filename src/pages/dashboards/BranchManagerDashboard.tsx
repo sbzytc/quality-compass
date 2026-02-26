@@ -7,20 +7,29 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { CategoryProgressBar } from '@/components/CategoryProgressBar';
 import { mockBranches } from '@/data/mockData';
 import { format } from 'date-fns';
+import { ar } from 'date-fns/locale';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function BranchManagerDashboard() {
   const navigate = useNavigate();
-  const { t, direction } = useLanguage();
+  const { t, direction, language } = useLanguage();
+  const isAr = language === 'ar';
+  const dateLocale = isAr ? { locale: ar } : {};
   
   // Simulating the manager's branch data
   const myBranch = mockBranches[0];
   
   const pendingActions = [
-    { id: 1, title: 'Fix temperature control unit', dueDate: '2026-02-10', priority: 'high' },
-    { id: 2, title: 'Staff training on hygiene protocols', dueDate: '2026-02-15', priority: 'medium' },
-    { id: 3, title: 'Update safety signage', dueDate: '2026-02-20', priority: 'low' },
+    { id: 1, title: 'Fix temperature control unit', titleAr: 'إصلاح وحدة التحكم بالحرارة', dueDate: '2026-02-10', priority: 'high' },
+    { id: 2, title: 'Staff training on hygiene protocols', titleAr: 'تدريب الموظفين على بروتوكولات النظافة', dueDate: '2026-02-15', priority: 'medium' },
+    { id: 3, title: 'Update safety signage', titleAr: 'تحديث لوحات السلامة', dueDate: '2026-02-20', priority: 'low' },
   ];
+
+  const priorityLabels: Record<string, { en: string; ar: string }> = {
+    high: { en: 'High', ar: 'عالي' },
+    medium: { en: 'Medium', ar: 'متوسط' },
+    low: { en: 'Low', ar: 'منخفض' },
+  };
 
   return (
     <div className="space-y-8">
@@ -34,7 +43,7 @@ export default function BranchManagerDashboard() {
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Clock className="w-4 h-4" />
-          {t('common.lastUpdated')}: {format(new Date(), 'MMM d, yyyy h:mm a')}
+          {t('common.lastUpdated')}: {format(new Date(), 'd MMM yyyy h:mm a', dateLocale)}
         </div>
       </div>
 
@@ -49,7 +58,7 @@ export default function BranchManagerDashboard() {
           <h3 className="mt-4 text-lg font-semibold text-foreground">{t('dashboard.currentScore')}</h3>
           <StatusBadge status={myBranch.status} className="mt-2" />
           <p className="text-sm text-muted-foreground mt-2">
-            {t('dashboard.lastEvaluation')}: {format(new Date(myBranch.lastEvaluationDate), 'MMM d, yyyy')}
+            {t('dashboard.lastEvaluation')}: {format(new Date(myBranch.lastEvaluationDate), 'd MMM yyyy', dateLocale)}
           </p>
         </div>
         
@@ -76,7 +85,7 @@ export default function BranchManagerDashboard() {
           />
           <StatCard
             title={t('dashboard.nextEvaluation')}
-            value="Feb 28"
+            value={isAr ? '٢٨ فبراير' : 'Feb 28'}
             subtitle={t('dashboard.scheduled')}
             icon={ClipboardCheck}
           />
@@ -112,9 +121,9 @@ export default function BranchManagerDashboard() {
             <div key={action.id} className="p-4 hover:bg-muted/30 transition-colors">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
-                  <h4 className="font-medium text-foreground">{action.title}</h4>
+                  <h4 className="font-medium text-foreground">{isAr ? action.titleAr : action.title}</h4>
                   <p className="text-sm text-muted-foreground mt-1">
-                    {t('common.dueDate')}: {format(new Date(action.dueDate), 'MMM d, yyyy')}
+                    {t('common.dueDate')}: {format(new Date(action.dueDate), 'd MMM yyyy', dateLocale)}
                   </p>
                 </div>
                 <span className={`px-2 py-1 text-xs font-medium rounded-full ${
@@ -124,7 +133,7 @@ export default function BranchManagerDashboard() {
                     ? 'bg-score-average/10 text-score-average'
                     : 'bg-muted text-muted-foreground'
                 }`}>
-                  {action.priority}
+                  {isAr ? priorityLabels[action.priority].ar : priorityLabels[action.priority].en}
                 </span>
               </div>
             </div>
