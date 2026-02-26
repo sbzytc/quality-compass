@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { ScoreLevel } from '@/types';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface CategoryProgressBarProps {
   name: string;
@@ -35,6 +36,9 @@ export function CategoryProgressBar({
   showPercentage = true,
   className,
 }: CategoryProgressBarProps) {
+  const { language } = useLanguage();
+  const isAr = language === 'ar';
+
   return (
     <div className={cn('space-y-2', className)}>
       <div className="flex justify-between items-center">
@@ -42,7 +46,9 @@ export function CategoryProgressBar({
         <div className="flex items-center gap-2">
           {failedCriteria > 0 && (
             <span className="text-xs px-2 py-0.5 rounded-full bg-score-critical/10 text-score-critical font-medium">
-              {failedCriteria} issue{failedCriteria > 1 ? 's' : ''}
+              {isAr
+                ? `${failedCriteria} ${failedCriteria === 1 ? 'مشكلة' : 'مشاكل'}`
+                : `${failedCriteria} issue${failedCriteria > 1 ? 's' : ''}`}
             </span>
           )}
           {showPercentage && (
