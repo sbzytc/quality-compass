@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -272,6 +272,7 @@ export default function OperationsDashboard() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{isAr ? 'إضافة مهمة جديدة' : 'Add New Task'}</DialogTitle>
+            <DialogDescription>{isAr ? 'أدخل تفاصيل المهمة الجديدة' : 'Enter the details for the new task'}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
