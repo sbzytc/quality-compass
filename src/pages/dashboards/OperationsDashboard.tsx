@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   AlertTriangle, CheckCircle2, Clock, Wrench, Calendar, Plus,
-  Trash2, ChevronDown, Building2, UserPlus, Target, Timer
+  Trash2, ChevronDown, Building2, UserPlus, Target, Timer,
+  AlertCircle, TrendingUp, TrendingDown, BarChart3
 } from 'lucide-react';
 import { StatCard } from '@/components/StatCard';
 import { Badge } from '@/components/ui/badge';
@@ -12,9 +13,16 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import { QualityCircle } from '@/components/QualityCircle';
+import { CategoryProgressBar } from '@/components/CategoryProgressBar';
+import { StatusBadge } from '@/components/StatusBadge';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { getScoreLevel } from '@/types';
 import { useOperationsTasks, useOperationsTaskStats, useCreateTask, useUpdateTaskStatus, useDeleteTask } from '@/hooks/useOperationsTasks';
 import { useBranches } from '@/hooks/useBranches';
 import { useUsers } from '@/hooks/useUsers';
@@ -22,7 +30,9 @@ import { toast } from 'sonner';
 
 export default function OperationsDashboard() {
   const { t, direction, language } = useLanguage();
+  const { profile } = useAuth();
   const isAr = language === 'ar';
+  const branchId = profile?.branch_id;
 
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -43,6 +53,104 @@ export default function OperationsDashboard() {
   const deleteMutation = useDeleteTask();
 
   const isLoading = tasksLoading || statsLoading;
+
+  // === Branch Performance Data ===
+  const { data: branch } = useQuery({
+    queryKey: ['ops-branch', branchId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('branches')
+        .select('id, name, name_ar, city')
+        .eq('id', branchId!)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!branchId,
+  });
+
+  const { data: latestEval } = useQuery({
+    queryKey: ['ops-latest-eval', branchId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('evaluations')
+        .select('id, overall_percentage, submitted_at, created_at')
+        .eq('branch_id', branchId!)
+        .in('status', ['submitted', 'approved'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!branchId,
+  });
+
+  const { data: previousEval } = useQuery({
+    queryKey: ['ops-prev-eval', branchId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('evaluations')
+        .select('overall_percentage')
+        .eq('branch_id', branchId!)
+        .in('status', ['submitted', 'approved'])
+        .order('created_at', { ascending: false })
+        .range(1, 1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!branchId,
+  });
+
+  const { data: categoryScores = [] } = useQuery({
+    queryKey: ['ops-category-scores', latestEval?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('evaluation_category_scores')
+        .select(`
+          score, max_score, percentage,
+          template_categories:category_id (name, name_ar, sort_order)
+        `)
+        .eq('evaluation_id', latestEval!.id)
+        .order('created_at');
+      if (error) throw error;
+      return (data || [])
+        .sort((a: any, b: any) => (a.template_categories?.sort_order || 0) - (b.template_categories?.sort_order || 0))
+        .map((cs: any) => ({
+          name: cs.template_categories?.name || '',
+          nameAr: cs.template_categories?.name_ar || '',
+          percentage: Number(cs.percentage),
+          score: Number(cs.score),
+          maxScore: Number(cs.max_score),
+          status: getScoreLevel(Number(cs.percentage)),
+        }));
+    },
+    enabled: !!latestEval?.id,
+  });
+
+  const { data: findingsStats } = useQuery({
+    queryKey: ['ops-findings-stats', branchId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('non_conformities')
+        .select('status')
+        .eq('branch_id', branchId!);
+      if (error) throw error;
+      const open = data?.filter(f => f.status === 'open').length || 0;
+      const inProgress = data?.filter(f => f.status === 'in_progress').length || 0;
+      const pendingReview = data?.filter(f => f.status === 'pending_review').length || 0;
+      const resolved = data?.filter(f => f.status === 'resolved').length || 0;
+      return { open, inProgress, pendingReview, resolved, total: data?.length || 0 };
+    },
+    enabled: !!branchId,
+  });
+
+  const currentScore = latestEval?.overall_percentage ? Number(latestEval.overall_percentage) : null;
+  const prevScore = previousEval?.overall_percentage ? Number(previousEval.overall_percentage) : null;
+  const scoreDiff = currentScore != null && prevScore != null ? +(currentScore - prevScore).toFixed(1) : null;
+  const scoreStatus = currentScore != null ? getScoreLevel(currentScore) : 'unrated' as const;
+  const branchName = isAr ? (branch?.name_ar || branch?.name) : branch?.name;
 
   const handleCreate = async () => {
     if (!newTitle.trim()) return;
@@ -154,6 +262,121 @@ export default function OperationsDashboard() {
           ))
         )}
       </div>
+
+      {/* Branch Performance Section */}
+      {branchId && (
+        <div className="bg-card rounded-xl border border-border overflow-hidden">
+          <div className="p-4 border-b border-border flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-semibold text-foreground">
+              {isAr ? 'أداء الفرع' : 'Branch Performance'}
+            </h2>
+            {branchName && (
+              <span className="text-sm text-muted-foreground">— {branchName}</span>
+            )}
+          </div>
+
+          <div className="p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Score Circle + Trend */}
+              <div className="flex flex-col items-center justify-center gap-4">
+                <QualityCircle
+                  score={currentScore ?? 0}
+                  status={scoreStatus}
+                  size="xl"
+                />
+                <StatusBadge status={scoreStatus} />
+                {latestEval?.submitted_at && (
+                  <p className="text-xs text-muted-foreground text-center">
+                    {isAr ? 'آخر تقييم' : 'Last evaluation'}: {format(new Date(latestEval.submitted_at), 'd MMM yyyy', { locale: isAr ? ar : undefined })}
+                  </p>
+                )}
+                {scoreDiff !== null && (
+                  <div className="flex items-center gap-2 mt-1">
+                    {scoreDiff >= 0 ? (
+                      <TrendingUp className="w-4 h-4 text-score-good" />
+                    ) : (
+                      <TrendingDown className="w-4 h-4 text-score-critical" />
+                    )}
+                    <span className={`text-sm font-bold ${scoreDiff >= 0 ? 'text-score-good' : 'text-score-critical'}`}>
+                      {scoreDiff >= 0 ? '+' : ''}{scoreDiff}%
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {isAr ? 'عن السابق' : 'vs prev'}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Category Breakdown */}
+              <div className="lg:col-span-1 space-y-4">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                  {isAr ? 'الفئات' : 'Categories'}
+                </h3>
+                {categoryScores.length > 0 ? (
+                  categoryScores.map((cat: any, i: number) => (
+                    <CategoryProgressBar
+                      key={i}
+                      name={isAr ? (cat.nameAr || cat.name) : cat.name}
+                      percentage={Math.round(cat.percentage)}
+                      status={cat.status}
+                    />
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    {isAr ? 'لا يوجد تقييم بعد' : 'No evaluation yet'}
+                  </p>
+                )}
+              </div>
+
+              {/* Findings Summary */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                  {isAr ? 'الملاحظات' : 'Findings'}
+                </h3>
+                {findingsStats ? (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-lg border border-score-critical/20 bg-score-critical/5 p-3 text-center">
+                      <p className="text-2xl font-bold text-score-critical">{findingsStats.open}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{isAr ? 'مفتوحة' : 'Open'}</p>
+                    </div>
+                    <div className="rounded-lg border border-score-average/20 bg-score-average/5 p-3 text-center">
+                      <p className="text-2xl font-bold text-score-average">{findingsStats.inProgress}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{isAr ? 'قيد المعالجة' : 'In Progress'}</p>
+                    </div>
+                    <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-center">
+                      <p className="text-2xl font-bold text-primary">{findingsStats.pendingReview}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{isAr ? 'بانتظار المراجعة' : 'Pending Review'}</p>
+                    </div>
+                    <div className="rounded-lg border border-score-excellent/20 bg-score-excellent/5 p-3 text-center">
+                      <p className="text-2xl font-bold text-score-excellent">{findingsStats.resolved}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{isAr ? 'تم الحل' : 'Resolved'}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <Skeleton className="h-32 rounded-lg" />
+                )}
+                {findingsStats && findingsStats.total > 0 && (
+                  <div className="mt-3">
+                    <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                      <span>{isAr ? 'نسبة الحل' : 'Resolution Rate'}</span>
+                      <span className="font-medium">{Math.round((findingsStats.resolved / findingsStats.total) * 100)}%</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-muted overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${(findingsStats.resolved / findingsStats.total) * 100}%` }}
+                        transition={{ duration: 0.8, ease: 'easeOut' }}
+                        className="h-full rounded-full bg-score-excellent"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Task List */}
       <div className="bg-card rounded-xl border border-border overflow-hidden">
