@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, AlertTriangle, Clock, CheckCircle2, Target,
   UserPlus, Calendar, TrendingUp, Building2, ChevronDown,
-  ChevronRight, AlertCircle, Timer, BarChart3, Camera, X, Eye, XCircle, ThumbsUp, ThumbsDown
+  ChevronRight, AlertCircle, Timer, BarChart3, Camera, X, Eye, XCircle, ThumbsUp, ThumbsDown,
+  History
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -14,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useCriticalFindings, useFindingStats, useAssignFinding, useResolveFinding, useApproveFinding, useRejectFinding, Finding } from '@/hooks/useFindings';
+import { useCriticalFindings, useFindingStats, useAssignFinding, useResolveFinding, useApproveFinding, useRejectFinding, useFindingHistory, Finding } from '@/hooks/useFindings';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useUsers } from '@/hooks/useUsers';
@@ -61,7 +62,9 @@ export default function FindingsPage() {
   const resolveMutation = useResolveFinding();
   const approveMutation = useApproveFinding();
   const rejectMutation = useRejectFinding();
-
+  const { data: findingHistory, isLoading: historyLoading } = useFindingHistory(
+    (viewDialogOpen && viewFinding?.id) || (resolveDialogOpen && selectedFinding?.id) || undefined
+  );
   const isLoading = findingsLoading || statsLoading;
 
   // Group findings by branch
@@ -761,6 +764,34 @@ export default function FindingsPage() {
                       <p className="text-foreground">{selectedFinding.rejectionReason}</p>
                     </div>
                   )}
+
+                  {/* History Timeline in resolve dialog */}
+                  {findingHistory && findingHistory.length > 0 && (
+                    <div className="space-y-1.5 pt-1 border-t border-border">
+                      <span className="text-xs font-medium text-foreground flex items-center gap-1">
+                        <History className="w-3 h-3 text-primary" />
+                        {isAr ? 'سجل المشكلة:' : 'History:'}
+                      </span>
+                      {findingHistory.map((entry) => {
+                        const actionLabels: Record<string, string> = isAr
+                          ? { assigned: 'تعيين', resolved: 'حل', approved: 'اعتماد', rejected: 'رفض' }
+                          : { assigned: 'Assigned', resolved: 'Resolved', approved: 'Approved', rejected: 'Rejected' };
+                        const actionColors: Record<string, string> = {
+                          assigned: 'text-primary', resolved: 'text-score-average', approved: 'text-score-excellent', rejected: 'text-score-critical',
+                        };
+                        return (
+                          <div key={entry.id} className="text-[11px] flex items-start gap-2 ps-2 border-s-2 border-border">
+                            <span className={`font-semibold shrink-0 ${actionColors[entry.action] || 'text-muted-foreground'}`}>
+                              {actionLabels[entry.action] || entry.action}
+                            </span>
+                            <span className="text-muted-foreground truncate">
+                              {getUserName(entry.performedBy)} • {format(new Date(entry.createdAt), 'MMM d HH:mm')}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               );
             })()}
@@ -1094,6 +1125,64 @@ export default function FindingsPage() {
                     {viewFinding.reviewedAt && (
                       <span className="text-muted-foreground">• {format(new Date(viewFinding.reviewedAt), 'MMM d, yyyy')}</span>
                     )}
+                  </div>
+                )}
+
+                {/* History Timeline */}
+                {findingHistory && findingHistory.length > 0 && (
+                  <div className="space-y-2 pt-2 border-t border-border">
+                    <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                      <History className="w-4 h-4 text-primary" />
+                      {isAr ? 'مسار المشكلة' : 'Finding Timeline'}
+                    </div>
+                    <div className="relative ps-4 space-y-3">
+                      {/* Timeline line */}
+                      <div className="absolute start-[7px] top-2 bottom-2 w-px bg-border" />
+                      {findingHistory.map((entry) => {
+                        const actionConfig: Record<string, { label: string; labelAr: string; color: string; icon: React.ReactNode }> = {
+                          assigned: { label: 'Assigned', labelAr: 'تم التعيين', color: 'text-primary', icon: <UserPlus className="w-3 h-3" /> },
+                          resolved: { label: 'Resolved', labelAr: 'تم الحل', color: 'text-score-excellent', icon: <CheckCircle2 className="w-3 h-3" /> },
+                          approved: { label: 'Approved', labelAr: 'تم الاعتماد', color: 'text-score-excellent', icon: <ThumbsUp className="w-3 h-3" /> },
+                          rejected: { label: 'Rejected', labelAr: 'تم الرفض', color: 'text-score-critical', icon: <XCircle className="w-3 h-3" /> },
+                        };
+                        const config = actionConfig[entry.action] || { label: entry.action, labelAr: entry.action, color: 'text-muted-foreground', icon: <Clock className="w-3 h-3" /> };
+                        return (
+                          <div key={entry.id} className="relative">
+                            <div className={`absolute start-[-13px] top-1 w-3 h-3 rounded-full border-2 border-background ${
+                              entry.action === 'rejected' ? 'bg-score-critical' : entry.action === 'approved' ? 'bg-score-excellent' : entry.action === 'resolved' ? 'bg-score-average' : 'bg-primary'
+                            }`} />
+                            <div className="text-xs space-y-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className={`font-semibold ${config.color} flex items-center gap-1`}>
+                                  {config.icon} {isAr ? config.labelAr : config.label}
+                                </span>
+                                <span className="text-muted-foreground">•</span>
+                                <span className="font-medium text-foreground">{getUserName(entry.performedBy)}</span>
+                                <span className="text-muted-foreground">{format(new Date(entry.createdAt), 'MMM d, yyyy HH:mm')}</span>
+                              </div>
+                              {entry.notes && (
+                                <p className="text-muted-foreground ps-1">{entry.notes}</p>
+                              )}
+                              {entry.attachments && entry.attachments.length > 0 && (
+                                <div className="flex flex-wrap gap-1 ps-1">
+                                  {entry.attachments.map((url, i) => (
+                                    <a key={i} href={url} target="_blank" rel="noopener noreferrer">
+                                      <img src={url} alt="" className="w-12 h-12 rounded border border-border object-cover hover:opacity-80" />
+                                    </a>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                {historyLoading && (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Skeleton className="h-4 w-4 rounded-full" />
+                    <Skeleton className="h-3 w-32" />
                   </div>
                 )}
               </div>

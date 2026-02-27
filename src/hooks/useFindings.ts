@@ -220,6 +220,13 @@ export function useAssignFinding() {
 
       if (error) throw error;
 
+      // Log history
+      await supabase.from('non_conformity_history').insert({
+        non_conformity_id: findingId,
+        action: 'assigned',
+        performed_by: user!.id,
+        notes: `Assigned to user, due: ${dueDate}`,
+      });
       // Auto-create corrective action
       const { data: finding } = await supabase
         .from('non_conformities')
@@ -285,7 +292,14 @@ export function useResolveFinding() {
 
       if (error) throw error;
 
-      // Update or create corrective action → in_progress
+      // Log history
+      await supabase.from('non_conformity_history').insert({
+        non_conformity_id: findingId,
+        action: 'resolved',
+        performed_by: user!.id,
+        notes: resolution,
+        attachments: attachments || null,
+      });
       const { data: existingCA } = await supabase
         .from('corrective_actions')
         .select('id')
@@ -357,7 +371,14 @@ export function useApproveFinding() {
 
       if (error) throw error;
 
-      // Mark corrective action as completed
+      // Log history
+      await supabase.from('non_conformity_history').insert({
+        non_conformity_id: findingId,
+        action: 'approved',
+        performed_by: user!.id,
+        notes: notes || null,
+        attachments: attachments || null,
+      });
       const { data: existingCA } = await supabase
         .from('corrective_actions')
         .select('id')
@@ -405,6 +426,15 @@ export function useRejectFinding() {
         .eq('id', findingId);
 
       if (error) throw error;
+
+      // Log history
+      await supabase.from('non_conformity_history').insert({
+        non_conformity_id: findingId,
+        action: 'rejected',
+        performed_by: user!.id,
+        notes: reason,
+        attachments: attachments || null,
+      });
 
       // Notify the branch manager about the rejection
       if (assignedTo) {
@@ -522,5 +552,38 @@ export function usePendingActions() {
       return data;
     },
     enabled: !!user?.id,
+  });
+}
+
+export interface FindingHistoryEntry {
+  id: string;
+  action: string;
+  performedBy: string;
+  notes?: string;
+  attachments?: string[];
+  createdAt: string;
+}
+
+export function useFindingHistory(findingId?: string) {
+  return useQuery({
+    queryKey: ['finding-history', findingId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('non_conformity_history')
+        .select('*')
+        .eq('non_conformity_id', findingId!)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      return data.map((h: any) => ({
+        id: h.id,
+        action: h.action,
+        performedBy: h.performed_by,
+        notes: h.notes,
+        attachments: h.attachments,
+        createdAt: h.created_at,
+      })) as FindingHistoryEntry[];
+    },
+    enabled: !!findingId,
   });
 }

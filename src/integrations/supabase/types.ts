@@ -394,6 +394,44 @@ export type Database = {
           },
         ]
       }
+      non_conformity_history: {
+        Row: {
+          action: string
+          attachments: string[] | null
+          created_at: string
+          id: string
+          non_conformity_id: string
+          notes: string | null
+          performed_by: string
+        }
+        Insert: {
+          action: string
+          attachments?: string[] | null
+          created_at?: string
+          id?: string
+          non_conformity_id: string
+          notes?: string | null
+          performed_by: string
+        }
+        Update: {
+          action?: string
+          attachments?: string[] | null
+          created_at?: string
+          id?: string
+          non_conformity_id?: string
+          notes?: string | null
+          performed_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "non_conformity_history_non_conformity_id_fkey"
+            columns: ["non_conformity_id"]
+            isOneToOne: false
+            referencedRelation: "non_conformities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
