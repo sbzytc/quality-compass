@@ -90,11 +90,8 @@ export default function OperationsDashboard() {
 
       {/* Task List */}
       <div className="bg-card rounded-xl border border-border overflow-hidden">
-        <div className="p-6 border-b border-border flex items-center justify-between">
+        <div className="p-6 border-b border-border">
           <h2 className="text-lg font-semibold text-foreground">{t('dashboard.operations.taskList')}</h2>
-          <button className="px-4 py-2 bg-primary text-primary-foreground text-sm rounded-lg hover:bg-primary/90 transition-colors">
-            + {t('dashboard.operations.addTask')}
-          </button>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
