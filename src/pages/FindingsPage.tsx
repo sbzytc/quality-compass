@@ -502,6 +502,17 @@ export default function FindingsPage() {
                                     </p>
                                   )}
 
+                                  {/* Show resolved by indicator */}
+                                  {finding.resolvedBy && (finding.status === 'pending_review' || finding.status === 'resolved') && (
+                                    <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                                      <CheckCircle2 className="w-3 h-3 text-score-excellent" />
+                                      <span>{isAr ? 'حُل بواسطة:' : 'Resolved by:'} <span className="font-medium text-foreground">{getUserName(finding.resolvedBy)}</span></span>
+                                      {finding.resolvedAt && (
+                                        <span>• {format(new Date(finding.resolvedAt), 'MMM d, yyyy')}</span>
+                                      )}
+                                    </div>
+                                  )}
+
                                   {/* Show resolution notes for pending_review/resolved */}
                                   {finding.resolutionNotes && (finding.status === 'pending_review' || finding.status === 'resolved') && (
                                     <div className="mt-2 p-2 bg-score-excellent/5 border border-score-excellent/10 rounded text-xs">
