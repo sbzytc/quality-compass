@@ -38,6 +38,7 @@ export default function BranchesList() {
     { value: 'average', label: t('status.average') },
     { value: 'weak', label: t('status.weak') },
     { value: 'critical', label: t('status.critical') },
+    { value: 'unrated', label: language === 'ar' ? 'لم يُقيّم' : 'Not Evaluated' },
   ];
 
   return (

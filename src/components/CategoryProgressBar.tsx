@@ -18,6 +18,7 @@ const barColors: Record<ScoreLevel, string> = {
   average: 'bg-score-average',
   weak: 'bg-score-weak',
   critical: 'bg-score-critical',
+  unrated: 'bg-muted-foreground',
 };
 
 const bgColors: Record<ScoreLevel, string> = {
@@ -26,6 +27,7 @@ const bgColors: Record<ScoreLevel, string> = {
   average: 'bg-score-average/20',
   weak: 'bg-score-weak/20',
   critical: 'bg-score-critical/20',
+  unrated: 'bg-muted/20',
 };
 
 export function CategoryProgressBar({

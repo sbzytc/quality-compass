@@ -14,6 +14,7 @@ const statusStyles: Record<ScoreLevel, string> = {
   average: 'bg-score-average/10 text-score-average border-score-average/30',
   weak: 'bg-score-weak/10 text-score-weak border-score-weak/30',
   critical: 'bg-score-critical/10 text-score-critical border-score-critical/30',
+  unrated: 'bg-muted text-muted-foreground border-border',
 };
 
 export function StatusBadge({ status, size = 'md', className }: StatusBadgeProps) {
@@ -35,7 +36,8 @@ export function StatusBadge({ status, size = 'md', className }: StatusBadgeProps
           status === 'good' && 'bg-score-good',
           status === 'average' && 'bg-score-average',
           status === 'weak' && 'bg-score-weak',
-          status === 'critical' && 'bg-score-critical'
+          status === 'critical' && 'bg-score-critical',
+          status === 'unrated' && 'bg-muted-foreground'
         )}
       />
       {getScoreLabel(status, language)}

@@ -57,6 +57,7 @@ export function useBranches() {
 
       return branches.map(branch => {
         const evaluation = latestEvalMap.get(branch.id);
+        const hasEvaluation = !!evaluation;
         const score = evaluation?.score || 0;
         
         return {
@@ -68,7 +69,7 @@ export function useBranches() {
           city: branch.city || '',
           overallScore: score,
           lastEvaluationDate: evaluation?.date || null,
-          status: getScoreLevel(score),
+          status: hasEvaluation ? getScoreLevel(score) : 'unrated' as ScoreLevel,
           isActive: branch.is_active,
         } as BranchWithScore;
       });
