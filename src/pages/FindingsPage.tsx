@@ -319,387 +319,263 @@ export default function FindingsPage() {
       </div>
 
       {/* KPI Dashboard */}
-      <div className="grid grid-cols-2 lg:grid-cols-7 gap-4">
+      {/* KPI Cards - Clickable filters */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {isLoading ? (
           [...Array(5)].map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)
         ) : (
           <>
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-              className="bg-card border border-border rounded-xl p-4 flex flex-col">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                <Target className="w-4 h-4" />
-                {isAr ? 'الإجمالي' : 'Total'}
-              </div>
-              <p className="text-2xl font-bold text-foreground">{stats?.total || 0}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {isAr ? 'ملاحظة حرجة' : 'critical findings'}
-              </p>
-            </motion.div>
-
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-              className="bg-score-critical/5 border border-score-critical/20 rounded-xl p-4 flex flex-col">
-              <div className="flex items-center gap-2 text-sm text-score-critical mb-1">
-                <AlertTriangle className="w-4 h-4" />
-                {isAr ? 'مفتوح' : 'Open'}
-              </div>
-              <p className="text-2xl font-bold text-foreground">{stats?.open || 0}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {isAr ? 'غير معيّن' : 'unassigned'}: {stats?.unassigned || 0}
-              </p>
-            </motion.div>
-
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-              className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex flex-col">
-              <div className="flex items-center gap-2 text-sm text-primary mb-1">
-                <Timer className="w-4 h-4" />
-                {isAr ? 'قيد المعالجة' : 'In Progress'}
-              </div>
-              <p className="text-2xl font-bold text-foreground">{stats?.inProgress || 0}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {isAr ? 'ملاحظة جاري حلها' : 'being worked on'}
-              </p>
-            </motion.div>
-
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-              className="bg-score-weak/5 border border-score-weak/20 rounded-xl p-4 flex flex-col">
-              <div className="flex items-center gap-2 text-sm text-score-weak mb-1">
-                <Clock className="w-4 h-4" />
-                {isAr ? 'متأخر' : 'Overdue'}
-              </div>
-              <p className="text-2xl font-bold text-foreground">{stats?.overdue || 0}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {isAr ? 'تجاوز الموعد' : 'past due date'}
-              </p>
-            </motion.div>
-
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-              className="bg-score-excellent/5 border border-score-excellent/20 rounded-xl p-4 flex flex-col">
-              <div className="flex items-center gap-2 text-sm text-score-excellent mb-1">
-                <CheckCircle2 className="w-4 h-4" />
-                {isAr ? 'تم الحل' : 'Resolved'}
-              </div>
-              <p className="text-2xl font-bold text-foreground">{stats?.resolved || 0}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {isAr ? 'ملاحظة محلولة' : 'issues resolved'}
-              </p>
-            </motion.div>
-
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
-              className="bg-score-excellent/5 border border-score-excellent/20 rounded-xl p-4 flex flex-col">
-              <div className="flex items-center gap-2 text-sm text-score-excellent mb-1">
-                <TrendingUp className="w-4 h-4" />
-                {isAr ? 'نسبة الحل' : 'Resolution Rate'}
-              </div>
-              <p className="text-2xl font-bold text-foreground">{stats?.resolutionRate || 0}%</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {stats?.resolved || 0} {isAr ? 'من' : 'of'} {stats?.total || 0} {isAr ? 'تم حلها' : 'resolved'}
-              </p>
-            </motion.div>
-
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-              className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex flex-col">
-              <div className="flex items-center gap-2 text-sm text-primary mb-1">
-                <BarChart3 className="w-4 h-4" />
-                {isAr ? 'متوسط وقت الحل' : 'Avg Resolution'}
-              </div>
-              <p className="text-2xl font-bold text-foreground">{stats?.avgResolutionDays || 0}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {isAr ? 'يوم' : 'days'}
-              </p>
-            </motion.div>
+            {[
+              { key: 'all', label: isAr ? 'الإجمالي' : 'Total', value: stats?.total || 0, sub: isAr ? 'ملاحظة حرجة' : 'critical findings', icon: <Target className="w-4 h-4" />, style: 'bg-card border-border text-muted-foreground' },
+              { key: 'open', label: isAr ? 'مفتوح' : 'Open', value: stats?.open || 0, sub: `${isAr ? 'غير معيّن' : 'unassigned'}: ${stats?.unassigned || 0}`, icon: <AlertTriangle className="w-4 h-4" />, style: 'bg-score-critical/5 border-score-critical/20 text-score-critical' },
+              { key: 'in_progress', label: isAr ? 'قيد المعالجة' : 'In Progress', value: stats?.inProgress || 0, sub: isAr ? 'تم تعيينها' : 'assigned', icon: <Timer className="w-4 h-4" />, style: 'bg-primary/5 border-primary/20 text-primary' },
+              { key: 'pending_review', label: isAr ? 'بانتظار المراجعة' : 'Pending Review', value: stats?.pendingReview || 0, sub: isAr ? 'بانتظار الاعتماد' : 'awaiting approval', icon: <Eye className="w-4 h-4" />, style: 'bg-score-average/5 border-score-average/20 text-score-average' },
+              { key: 'resolved', label: isAr ? 'تم الاعتماد' : 'Approved', value: stats?.resolved || 0, sub: `${stats?.resolutionRate || 0}% ${isAr ? 'نسبة الحل' : 'resolution rate'}`, icon: <CheckCircle2 className="w-4 h-4" />, style: 'bg-score-excellent/5 border-score-excellent/20 text-score-excellent' },
+            ].map((card, i) => (
+              <motion.button
+                key={card.key}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                onClick={() => setActiveTab(card.key)}
+                className={`border rounded-xl p-4 flex flex-col text-start transition-all ${card.style} ${activeTab === card.key ? 'ring-2 ring-primary shadow-md' : 'hover:shadow-sm'}`}
+              >
+                <div className="flex items-center gap-2 text-sm mb-1">
+                  {card.icon}
+                  {card.label}
+                </div>
+                <p className="text-2xl font-bold text-foreground">{card.value}</p>
+                <p className="text-xs text-muted-foreground mt-1">{card.sub}</p>
+              </motion.button>
+            ))}
           </>
         )}
       </div>
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="flex items-center justify-between mb-4 gap-4 flex-wrap">
-          <div className="overflow-x-auto">
-            <TabsList className="inline-flex min-w-max">
-              <TabsTrigger value="all" className="whitespace-nowrap text-xs sm:text-sm px-3">
-                {isAr ? 'الكل' : 'All'} ({stats?.total || 0})
-              </TabsTrigger>
-              <TabsTrigger value="open" className="whitespace-nowrap text-xs sm:text-sm px-3">
-                {isAr ? 'مفتوح' : 'Open'} ({stats?.open || 0})
-              </TabsTrigger>
-              <TabsTrigger value="in_progress" className="whitespace-nowrap text-xs sm:text-sm px-3">
-                {isAr ? 'قيد المعالجة' : 'In Progress'} ({stats?.inProgress || 0})
-              </TabsTrigger>
-              <TabsTrigger value="pending_review" className="whitespace-nowrap text-xs sm:text-sm px-3">
-                {isAr ? 'بانتظار المراجعة' : 'Pending Review'} ({stats?.pendingReview || 0})
-              </TabsTrigger>
-              <TabsTrigger value="rejected" className="whitespace-nowrap text-xs sm:text-sm px-3">
-                {isAr ? 'مرفوض' : 'Rejected'} ({stats?.rejected || 0})
-              </TabsTrigger>
-              <TabsTrigger value="resolved" className="whitespace-nowrap text-xs sm:text-sm px-3">
-                {isAr ? 'تم الاعتماد' : 'Approved'} ({stats?.resolved || 0})
-              </TabsTrigger>
-            </TabsList>
+      {/* Additional stats row */}
+      {!isLoading && (
+        <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Clock className="w-4 h-4 text-score-weak" />
+            <span className="font-medium text-foreground">{stats?.overdue || 0}</span> {isAr ? 'متأخر' : 'overdue'}
           </div>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <XCircle className="w-4 h-4 text-score-critical" />
+            <span className="font-medium text-foreground">{stats?.rejected || 0}</span> {isAr ? 'مرفوض' : 'rejected'}
+          </div>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <BarChart3 className="w-4 h-4 text-primary" />
+            {isAr ? 'متوسط وقت الحل:' : 'Avg resolution:'} <span className="font-medium text-foreground">{stats?.avgResolutionDays || 0}</span> {isAr ? 'يوم' : 'days'}
+          </div>
+          <div className="flex-1" />
           <Button variant="outline" size="sm" onClick={expandAll}>
             {isAr ? 'توسيع الكل' : 'Expand All'}
           </Button>
         </div>
+      )}
 
-        <TabsContent value={activeTab} className="mt-0 space-y-3">
-          {findingsLoading ? (
-            <div className="space-y-4">
-              {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-32 rounded-xl" />)}
-            </div>
-          ) : branchGroups.length > 0 ? (
-            branchGroups.map((group) => {
-              const isExpanded = expandedBranches.has(group.branchId);
-              const openCount = group.findings.filter(f => f.status === 'open').length;
-              const inProgressCount = group.findings.filter(f => f.status === 'in_progress').length;
-              const overdueCount = group.findings.filter(f =>
-                f.dueDate && new Date(f.dueDate) < new Date() && f.status !== 'resolved'
-              ).length;
-              const daysSince = differenceInDays(new Date(), new Date(group.earliestDate));
+      {/* Findings List */}
+      <div className="space-y-3">
+        {findingsLoading ? (
+          <div className="space-y-4">
+            {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-32 rounded-xl" />)}
+          </div>
+        ) : branchGroups.length > 0 ? (
+          branchGroups.map((group) => {
+            const isExpanded = expandedBranches.has(group.branchId);
+            const openCount = group.findings.filter(f => f.status === 'open').length;
+            const inProgressCount = group.findings.filter(f => f.status === 'in_progress').length;
+            const overdueCount = group.findings.filter(f =>
+              f.dueDate && new Date(f.dueDate) < new Date() && f.status !== 'resolved'
+            ).length;
+            const daysSince = differenceInDays(new Date(), new Date(group.earliestDate));
 
-              return (
-                <motion.div
-                  key={group.branchId}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-card border border-border rounded-xl overflow-hidden"
+            return (
+              <motion.div
+                key={group.branchId}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-card border border-border rounded-xl overflow-hidden"
+              >
+                {/* Branch Header */}
+                <button
+                  onClick={() => toggleBranch(group.branchId)}
+                  className="w-full p-4 flex items-center justify-between hover:bg-muted/30 transition-colors"
                 >
-                  {/* Branch Header */}
-                  <button
-                    onClick={() => toggleBranch(group.branchId)}
-                    className="w-full p-4 flex items-center justify-between hover:bg-muted/30 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Building2 className="w-5 h-5 text-primary" />
-                      <div className={`text-${direction === 'rtl' ? 'right' : 'left'}`}>
-                        <h3 className="font-semibold text-foreground">{group.branchName}</h3>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <span>{group.findings.length} {isAr ? 'ملاحظة' : 'findings'}</span>
-                          <span>•</span>
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            {format(new Date(group.earliestDate), 'MMM d, yyyy')}
+                  <div className="flex items-center gap-3">
+                    <Building2 className="w-5 h-5 text-muted-foreground" />
+                    <div className="text-start">
+                      <h3 className="font-semibold text-foreground">{group.branchName}</h3>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <span className="text-xs text-muted-foreground">
+                          {group.findings.length} {isAr ? 'ملاحظة' : 'findings'}
+                        </span>
+                        {openCount > 0 && (
+                          <span className="text-xs px-1.5 py-0.5 rounded bg-score-critical/10 text-score-critical">
+                            {openCount} {isAr ? 'مفتوح' : 'open'}
                           </span>
-                          <span>•</span>
-                          <span className={`font-medium ${daysSince > 30 ? 'text-score-critical' : daysSince > 14 ? 'text-score-weak' : 'text-muted-foreground'}`}>
-                            {daysSince} {isAr ? 'يوم' : daysSince === 1 ? 'day' : 'days'}
+                        )}
+                        {overdueCount > 0 && (
+                          <span className="text-xs px-1.5 py-0.5 rounded bg-score-weak/10 text-score-weak">
+                            {overdueCount} {isAr ? 'متأخر' : 'overdue'}
                           </span>
-                        </div>
+                        )}
+                        {daysSince > 30 && (
+                          <span className="text-xs px-1.5 py-0.5 rounded bg-score-critical/10 text-score-critical">
+                            {daysSince} {isAr ? 'يوم' : 'days'}
+                          </span>
+                        )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {overdueCount > 0 && (
-                        <Badge variant="outline" className="bg-score-critical/10 text-score-critical border-score-critical/20 text-xs">
-                          {overdueCount} {isAr ? 'متأخر' : 'overdue'}
-                        </Badge>
-                      )}
-                      {openCount > 0 && (
-                        <Badge variant="outline" className="bg-score-weak/10 text-score-weak border-score-weak/20 text-xs">
-                          {openCount} {isAr ? 'مفتوح' : 'open'}
-                        </Badge>
-                      )}
-                      {inProgressCount > 0 && (
-                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-xs">
-                          {inProgressCount} {isAr ? 'قيد المعالجة' : 'in progress'}
-                        </Badge>
-                      )}
-                      {isExpanded ? <ChevronDown className="w-5 h-5 text-muted-foreground" /> : <ChevronRight className="w-5 h-5 text-muted-foreground" />}
-                    </div>
-                  </button>
+                  </div>
+                  {isExpanded ? <ChevronDown className="w-5 h-5 text-muted-foreground" /> : <ChevronRight className="w-5 h-5 text-muted-foreground" />}
+                </button>
 
-                  {/* Findings List */}
-                  <AnimatePresence>
-                    {isExpanded && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="divide-y divide-border border-t border-border">
-                          {group.findings.map((finding) => {
-                            const severity = getScoreSeverity(finding.score);
-                            const statusInfo = getStatusInfo(finding.status);
-                            const isOverdue = finding.dueDate && new Date(finding.dueDate) < new Date() && finding.status !== 'resolved';
+                {/* Findings List */}
+                <AnimatePresence>
+                  {isExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="border-t border-border divide-y divide-border">
+                        {group.findings.map(finding => {
+                          const severity = getScoreSeverity(finding.score);
+                          const statusInfo = getStatusInfo(finding.status);
+                          const isOverdue = finding.dueDate && new Date(finding.dueDate) < new Date() && finding.status !== 'resolved';
+                          const isBranchManager = roles.includes('branch_manager');
+                          const canResolve = isBranchManager && (finding.status === 'in_progress' || finding.status === 'rejected');
+                          const canAssign = (isAdmin || roles.includes('assessor')) && (finding.status === 'open' || finding.status === 'in_progress');
+                          const showReview = finding.status === 'pending_review' && canReviewFinding(finding);
 
-                            return (
-                              <div key={finding.id} className="p-4 hover:bg-muted/20 transition-colors">
-                                <div className="flex items-start justify-between gap-3">
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                                      <h4 className="font-medium text-foreground text-sm">
-                                        {isAr ? (finding.criterionNameAr || finding.criterionName) : finding.criterionName}
-                                      </h4>
-                                      <Badge variant="outline" className={`text-xs ${severity.color}`}>
-                                        {finding.score}/{finding.maxScore} — {severity.label}
+                          return (
+                            <div key={finding.id} className="p-4 hover:bg-muted/20 transition-colors">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                                    <h4 className="font-medium text-foreground">
+                                      {isAr ? (finding.criterionNameAr || finding.criterionName) : finding.criterionName}
+                                    </h4>
+                                    <Badge variant="outline" className={`text-xs ${severity.color}`}>
+                                      {finding.score}/{finding.maxScore} - {severity.label}
+                                    </Badge>
+                                    <Badge variant="outline" className={`text-xs ${statusInfo.color} flex items-center gap-1`}>
+                                      {statusInfo.icon} {statusInfo.label}
+                                    </Badge>
+                                    {isOverdue && (
+                                      <Badge variant="outline" className="text-xs bg-score-weak/10 text-score-weak border-score-weak/20">
+                                        {isAr ? 'متأخر' : 'Overdue'}
                                       </Badge>
-                                      <Badge variant="outline" className={`text-xs ${statusInfo.color}`}>
-                                        <span className="flex items-center gap-1">
-                                          {statusInfo.icon}
-                                          {statusInfo.label}
-                                        </span>
-                                      </Badge>
-                                      {isOverdue && (
-                                        <Badge variant="outline" className="text-xs bg-score-critical/10 text-score-critical border-score-critical/20">
-                                          <AlertCircle className="w-3 h-3 mr-1" />
-                                          {isAr ? 'متأخر' : 'Overdue'}
-                                        </Badge>
-                                      )}
-                                    </div>
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-muted-foreground mb-2">
+                                    {isAr ? (finding.categoryNameAr || finding.categoryName) : finding.categoryName}
+                                  </p>
 
-                                    <p className="text-xs text-muted-foreground mb-2">
-                                      {isAr ? (finding.categoryNameAr || finding.categoryName) : finding.categoryName}
+                                  <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
+                                    <span className="flex items-center gap-1">
+                                      <UserPlus className="w-3 h-3" />
+                                      {getUserName(finding.assignedTo)}
+                                    </span>
+                                    {finding.dueDate && (
+                                      <span className={`flex items-center gap-1 ${isOverdue ? 'text-score-critical font-medium' : ''}`}>
+                                        <Calendar className="w-3 h-3" />
+                                        {format(new Date(finding.dueDate), 'MMM d, yyyy')}
+                                      </span>
+                                    )}
+                                    <span>
+                                      {format(new Date(finding.createdAt), 'MMM d, yyyy')}
+                                    </span>
+                                  </div>
+
+                                  {finding.assessorNotes && (
+                                    <p className="mt-2 text-xs text-muted-foreground italic line-clamp-2">
+                                      "{finding.assessorNotes}"
                                     </p>
+                                  )}
 
-                                    <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
-                                      <span className="flex items-center gap-1">
-                                        <UserPlus className="w-3 h-3" />
-                                        {getUserName(finding.assignedTo)}
-                                      </span>
-                                      {finding.dueDate && (
-                                        <span className={`flex items-center gap-1 ${isOverdue ? 'text-score-critical font-medium' : ''}`}>
-                                          <Calendar className="w-3 h-3" />
-                                          {format(new Date(finding.dueDate), 'MMM d, yyyy')}
-                                        </span>
-                                      )}
-                                      <span>
-                                        {format(new Date(finding.createdAt), 'MMM d, yyyy')}
-                                      </span>
+                                  {/* Show resolution notes for pending_review/resolved */}
+                                  {finding.resolutionNotes && (finding.status === 'pending_review' || finding.status === 'resolved') && (
+                                    <div className="mt-2 p-2 bg-score-excellent/5 border border-score-excellent/10 rounded text-xs">
+                                      <span className="font-medium text-score-excellent">{isAr ? 'ملاحظات الإصلاح:' : 'Fix Notes:'}</span>{' '}
+                                      {finding.resolutionNotes}
                                     </div>
+                                  )}
 
-                                    {finding.assessorNotes && (
-                                      <p className="mt-2 text-xs text-muted-foreground italic line-clamp-2">
-                                        "{finding.assessorNotes}"
-                                      </p>
-                                    )}
+                                  {/* Show rejection reason */}
+                                  {finding.rejectionReason && finding.status === 'rejected' && (
+                                    <div className="mt-2 p-2 bg-score-critical/5 border border-score-critical/10 rounded text-xs">
+                                      <span className="font-medium text-score-critical">{isAr ? 'سبب الرفض:' : 'Rejection Reason:'}</span>{' '}
+                                      {finding.rejectionReason}
+                                    </div>
+                                  )}
 
-                                    {/* Show resolution notes for pending_review/rejected */}
-                                    {finding.resolutionNotes && (finding.status === 'pending_review' || finding.status === 'resolved') && (
-                                      <div className="mt-2 p-2 bg-score-excellent/5 border border-score-excellent/10 rounded text-xs">
-                                        <span className="font-medium text-score-excellent">{isAr ? 'ملاحظات الإصلاح:' : 'Fix Notes:'}</span>{' '}
-                                        {finding.resolutionNotes}
-                                      </div>
-                                    )}
+                                  {/* Reviewed by indicator */}
+                                  {finding.reviewedBy && (finding.status === 'resolved' || finding.status === 'rejected') && (
+                                    <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                                      <Eye className="w-3 h-3" />
+                                      <span>{isAr ? 'راجع بواسطة:' : 'Reviewed by:'} {getUserName(finding.reviewedBy)}</span>
+                                      {isAdmin && <Badge variant="outline" className="text-[10px] px-1 py-0">Admin</Badge>}
+                                      {finding.reviewedAt && (
+                                        <span>• {format(new Date(finding.reviewedAt), 'MMM d, yyyy')}</span>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
 
-                                    {/* Show rejection reason */}
-                                    {finding.rejectionReason && finding.status === 'rejected' && (
-                                      <div className="mt-2 p-2 bg-score-critical/5 border border-score-critical/10 rounded text-xs">
-                                        <span className="font-medium text-score-critical">{isAr ? 'سبب الرفض:' : 'Rejection Reason:'}</span>{' '}
-                                        {finding.rejectionReason}
-                                      </div>
-                                    )}
-
-                                    {/* Show reviewer indicator for resolved/rejected findings */}
-                                    {finding.reviewedBy && ['resolved', 'rejected'].includes(finding.status) && (
-                                      <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-                                        <CheckCircle2 className="w-3 h-3" />
-                                        <span>
-                                          {isAr ? 'تمت المراجعة بواسطة' : 'Reviewed by'}{' '}
-                                          <span className="font-medium text-foreground">{getUserName(finding.reviewedBy)}</span>
-                                          {finding.reviewedBy !== finding.assessorId && (
-                                            <Badge variant="outline" className="ml-1.5 text-[10px] px-1.5 py-0 h-4 bg-primary/10 text-primary border-primary/20">
-                                              {isAr ? 'مشرف' : 'Admin'}
-                                            </Badge>
-                                          )}
-                                        </span>
-                                        {finding.reviewedAt && (
-                                          <span className="text-muted-foreground">
-                                            · {format(new Date(finding.reviewedAt), 'MMM d, yyyy')}
-                                          </span>
-                                        )}
-                                      </div>
-                                    )}
-
-                                    {/* Show resolution attachments */}
-                                    {finding.resolutionAttachments && finding.resolutionAttachments.length > 0 && (finding.status === 'pending_review' || finding.status === 'resolved') && (
-                                      <div className="flex flex-wrap gap-1 mt-2">
-                                        {finding.resolutionAttachments.map((url, i) => (
-                                          <a key={i} href={url} target="_blank" rel="noopener noreferrer">
-                                            <img src={url} alt="" className="w-10 h-10 rounded border border-border object-cover" />
-                                          </a>
-                                        ))}
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  {/* Actions */}
-                                  <div className="flex flex-col gap-1.5 shrink-0">
-                                    {/* Open/In Progress/Rejected: show assign + resolve */}
-                                    {['open', 'in_progress', 'rejected'].includes(finding.status) && (
-                                      <>
-                                        <Button
-                                          size="sm"
-                                          variant="outline"
-                                          className="text-xs h-7"
-                                          onClick={() => handleAssign(finding)}
-                                        >
-                                          <UserPlus className="w-3 h-3 mr-1" />
-                                          {isAr ? 'تعيين' : 'Assign'}
-                                        </Button>
-                                        <Button
-                                          size="sm"
-                                          variant="default"
-                                          className="text-xs h-7"
-                                          onClick={() => handleResolve(finding)}
-                                        >
-                                          <CheckCircle2 className="w-3 h-3 mr-1" />
-                                          {finding.status === 'rejected' ? (isAr ? 'إعادة الإصلاح' : 'Re-fix') : (isAr ? 'حل' : 'Resolve')}
-                                        </Button>
-                                      </>
-                                    )}
-
-                                    {/* Pending Review: show approve/reject only for the assessor */}
-                                    {finding.status === 'pending_review' && canReviewFinding(finding) && (
-                                      <>
-                                        <Button
-                                          size="sm"
-                                          variant="default"
-                                          className="text-xs h-7 bg-score-excellent hover:bg-score-excellent/90"
-                                          onClick={() => handleReview(finding, 'approve')}
-                                        >
-                                          <ThumbsUp className="w-3 h-3 mr-1" />
-                                          {isAr ? 'اعتماد' : 'Approve'}
-                                        </Button>
-                                        <Button
-                                          size="sm"
-                                          variant="outline"
-                                          className="text-xs h-7 border-score-critical/30 text-score-critical hover:bg-score-critical/10"
-                                          onClick={() => handleReview(finding, 'reject')}
-                                        >
-                                          <ThumbsDown className="w-3 h-3 mr-1" />
-                                          {isAr ? 'رفض' : 'Reject'}
-                                        </Button>
-                                      </>
-                                    )}
-
-                                    {finding.status === 'pending_review' && !canReviewFinding(finding) && (
-                                      <Badge variant="outline" className="text-xs bg-score-average/10 text-score-average">
-                                        <Eye className="w-3 h-3 mr-1" />
-                                        {isAr ? 'بانتظار المراجعة' : 'Awaiting Review'}
-                                      </Badge>
-                                    )}
-                                  </div>
+                                {/* Actions */}
+                                <div className="flex flex-col gap-1 shrink-0">
+                                  {canAssign && (
+                                    <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => handleAssign(finding)}>
+                                      <UserPlus className="w-3 h-3 mr-1" />
+                                      {isAr ? 'تعيين' : 'Assign'}
+                                    </Button>
+                                  )}
+                                  {canResolve && (
+                                    <Button size="sm" variant="outline" className="text-xs h-7 border-score-excellent/30 text-score-excellent hover:bg-score-excellent/10" onClick={() => handleResolve(finding)}>
+                                      <CheckCircle2 className="w-3 h-3 mr-1" />
+                                      {isAr ? 'حل' : 'Resolve'}
+                                    </Button>
+                                  )}
+                                  {showReview && (
+                                    <>
+                                      <Button size="sm" variant="outline" className="text-xs h-7 border-score-excellent/30 text-score-excellent hover:bg-score-excellent/10" onClick={() => handleReview(finding, 'approve')}>
+                                        <ThumbsUp className="w-3 h-3 mr-1" />
+                                        {isAr ? 'اعتماد' : 'Approve'}
+                                      </Button>
+                                      <Button size="sm" variant="outline" className="text-xs h-7 border-score-critical/30 text-score-critical hover:bg-score-critical/10" onClick={() => handleReview(finding, 'reject')}>
+                                        <ThumbsDown className="w-3 h-3 mr-1" />
+                                        {isAr ? 'رفض' : 'Reject'}
+                                      </Button>
+                                    </>
+                                  )}
                                 </div>
                               </div>
-                            );
-                          })}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              );
-            })
-          ) : (
-            <div className="p-12 text-center text-muted-foreground bg-card rounded-xl border border-border">
-              <CheckCircle2 className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>{isAr ? 'لا توجد ملاحظات حرجة' : 'No critical findings'}</p>
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
-
-      {/* Assign Dialog */}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            );
+          })
+        ) : (
+          <div className="text-center py-12 bg-card border border-border rounded-xl">
+            <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+            <p className="text-lg font-medium text-foreground">
+              {isAr ? 'لا توجد ملاحظات' : 'No findings found'}
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {isAr ? 'لا توجد ملاحظات حرجة تطابق الفلتر الحالي' : 'No critical findings match the current filter'}
+            </p>
+          </div>
+        )}
+      </div>
       <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
