@@ -319,7 +319,7 @@ export default function FindingsPage() {
       </div>
 
       {/* KPI Dashboard */}
-      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-7 gap-4">
         {isLoading ? (
           [...Array(5)].map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)
         ) : (
@@ -349,6 +349,18 @@ export default function FindingsPage() {
             </motion.div>
 
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+              className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex flex-col">
+              <div className="flex items-center gap-2 text-sm text-primary mb-1">
+                <Timer className="w-4 h-4" />
+                {isAr ? 'جاري حلها' : 'In Progress'}
+              </div>
+              <p className="text-2xl font-bold text-foreground">{stats?.inProgress || 0}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {isAr ? 'قيد المعالجة' : 'being worked on'}
+              </p>
+            </motion.div>
+
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
               className="bg-score-weak/5 border border-score-weak/20 rounded-xl p-4 flex flex-col">
               <div className="flex items-center gap-2 text-sm text-score-weak mb-1">
                 <Clock className="w-4 h-4" />
@@ -360,7 +372,7 @@ export default function FindingsPage() {
               </p>
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
               className="bg-score-excellent/5 border border-score-excellent/20 rounded-xl p-4 flex flex-col">
               <div className="flex items-center gap-2 text-sm text-score-excellent mb-1">
                 <CheckCircle2 className="w-4 h-4" />
@@ -372,7 +384,7 @@ export default function FindingsPage() {
               </p>
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
               className="bg-score-excellent/5 border border-score-excellent/20 rounded-xl p-4 flex flex-col">
               <div className="flex items-center gap-2 text-sm text-score-excellent mb-1">
                 <TrendingUp className="w-4 h-4" />
@@ -384,7 +396,7 @@ export default function FindingsPage() {
               </p>
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
               className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex flex-col">
               <div className="flex items-center gap-2 text-sm text-primary mb-1">
                 <BarChart3 className="w-4 h-4" />
