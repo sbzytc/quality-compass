@@ -451,9 +451,10 @@ export default function FindingsPage() {
                           const statusInfo = getStatusInfo(finding.status);
                           const isOverdue = finding.dueDate && new Date(finding.dueDate) < new Date() && finding.status !== 'resolved';
                           const isBranchManager = roles.includes('branch_manager');
-                          const canResolve = isBranchManager && (finding.status === 'in_progress' || finding.status === 'rejected');
+                          const canResolve = isBranchManager && (finding.status === 'open' || finding.status === 'in_progress' || finding.status === 'rejected');
                           const canAssign = (isAdmin || roles.includes('assessor')) && (finding.status === 'open' || finding.status === 'in_progress');
                           const showReview = finding.status === 'pending_review' && canReviewFinding(finding);
+                          const showView = isBranchManager && (finding.status === 'in_progress' || finding.status === 'pending_review') && !canResolve && !showReview;
 
                           return (
                             <div key={finding.id} className="p-4 hover:bg-muted/20 transition-colors">
@@ -542,6 +543,14 @@ export default function FindingsPage() {
                                     <Button size="sm" variant="outline" className="text-xs h-7 border-score-excellent/30 text-score-excellent hover:bg-score-excellent/10" onClick={() => handleResolve(finding)}>
                                       <CheckCircle2 className="w-3 h-3 mr-1" />
                                       {isAr ? 'حل' : 'Resolve'}
+                                    </Button>
+                                  )}
+                                  {showView && (
+                                    <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => {
+                                      toast.info(isAr ? 'الملاحظة قيد المعالجة حالياً' : 'Finding is currently being processed');
+                                    }}>
+                                      <Eye className="w-3 h-3 mr-1" />
+                                      {isAr ? 'عرض' : 'View'}
                                     </Button>
                                   )}
                                   {showReview && (
