@@ -75,48 +75,26 @@ export default function BranchManagerDashboard() {
     enabled: !!branchId,
   });
 
-  // Fetch corrective actions stats
-  const { data: actionsStats } = useQuery({
-    queryKey: ['manager-actions-stats', branchId],
+  // Fetch active findings (in_progress + pending_review) for the list
+  const { data: activeFindings = [] } = useQuery({
+    queryKey: ['manager-active-findings', branchId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('corrective_actions')
+        .from('non_conformities')
         .select(`
+          id,
           status,
-          non_conformities!inner(branch_id)
+          score,
+          max_score,
+          assigned_to,
+          due_date,
+          resolved_at,
+          resolved_by,
+          template_criteria:criterion_id(name, name_ar),
+          profiles:assigned_to(full_name)
         `)
-        .eq('non_conformities.branch_id', branchId!);
-      if (error) throw error;
-
-      const pending = data?.filter(a => a.status === 'pending').length || 0;
-      const inProgress = data?.filter(a => a.status === 'in_progress').length || 0;
-      const completed = data?.filter(a => a.status === 'completed').length || 0;
-
-      return { pending, inProgress, completed, total: pending + inProgress + completed };
-    },
-    enabled: !!branchId,
-  });
-
-  // Fetch pending corrective actions for list
-  const { data: pendingActions = [] } = useQuery({
-    queryKey: ['pending-corrective-actions', branchId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('corrective_actions')
-        .select(`
-          *,
-          non_conformities!inner(
-            branch_id,
-            criterion_id,
-            score,
-            max_score,
-            status,
-            branches:branch_id(name, name_ar),
-            template_criteria:criterion_id(name, name_ar)
-          )
-        `)
-        .eq('non_conformities.branch_id', branchId!)
-        .in('status', ['pending', 'in_progress'])
+        .eq('branch_id', branchId!)
+        .in('status', ['in_progress', 'pending_review'])
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -200,12 +178,12 @@ export default function BranchManagerDashboard() {
             onClick={() => navigate('/findings')}
           />
           <StatCard
-            title={t('dashboard.pendingActions')}
-            value={(actionsStats?.pending ?? 0) + (actionsStats?.inProgress ?? 0)}
-            subtitle={isAr ? 'إجراءات تصحيحية' : 'Corrective actions'}
+            title={isAr ? 'معلّقة' : 'Pending'}
+            value={findingsStats?.inProgress ?? '...'}
+            subtitle={isAr ? 'معيّنة لشخص ولم تُحل' : 'Assigned, not resolved'}
             icon={AlertTriangle}
             variant="average"
-            onClick={() => navigate('/corrective-actions')}
+            onClick={() => navigate('/findings')}
           />
           <StatCard
             title={isAr ? 'قيد المراجعة' : 'Pending Review'}
@@ -226,52 +204,66 @@ export default function BranchManagerDashboard() {
         </div>
       </div>
 
-      {/* Pending Actions */}
+      {/* Active Findings List */}
       <div className="bg-card rounded-xl border border-border overflow-hidden">
         <div className="p-6 border-b border-border flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-foreground">{t('dashboard.pendingActions')}</h2>
+          <h2 className="text-lg font-semibold text-foreground">
+            {isAr ? 'الملاحظات النشطة' : 'Active Findings'}
+          </h2>
           <button
-            onClick={() => navigate('/corrective-actions')}
+            onClick={() => navigate('/findings')}
             className="text-sm text-primary hover:underline"
           >
             {t('common.viewAll')} →
           </button>
         </div>
         <div className="divide-y divide-border">
-          {pendingActions.length === 0 ? (
+          {activeFindings.length === 0 ? (
             <div className="p-6 text-center text-muted-foreground">
-              {isAr ? 'لا توجد إجراءات معلقة' : 'No pending actions'}
+              {isAr ? 'لا توجد ملاحظات نشطة' : 'No active findings'}
             </div>
           ) : (
-            pendingActions.map((action) => {
-              const nc = action.non_conformities as any;
-              const criterionName = isAr ? (nc?.template_criteria?.name_ar || nc?.template_criteria?.name) : nc?.template_criteria?.name;
+            activeFindings.map((finding: any) => {
+              const criterionName = isAr
+                ? (finding.template_criteria?.name_ar || finding.template_criteria?.name)
+                : finding.template_criteria?.name;
+              const assigneeName = finding.profiles?.full_name;
+              const isInProgress = finding.status === 'in_progress';
+              const isPendingReview = finding.status === 'pending_review';
+
               return (
                 <div
-                  key={action.id}
+                  key={finding.id}
                   className="p-4 hover:bg-muted/30 transition-colors cursor-pointer"
-                  onClick={() => navigate('/corrective-actions')}
+                  onClick={() => navigate('/findings')}
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
                       <h4 className="font-medium text-foreground flex items-center gap-2">
-                        {criterionName || action.description}
+                        {criterionName || '—'}
                         <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
                       </h4>
-                      {action.due_date && (
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {t('common.dueDate')}: {format(new Date(action.due_date), 'd MMM yyyy', dateLocale)}
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {finding.score}/{finding.max_score}
+                        {assigneeName && isInProgress && (
+                          <> • {isAr ? 'معيّنة لـ' : 'Assigned to'}: {assigneeName}</>
+                        )}
+                      </p>
+                      {finding.due_date && (
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {t('common.dueDate')}: {format(new Date(finding.due_date), 'd MMM yyyy', dateLocale)}
                         </p>
                       )}
                     </div>
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      action.priority === 'critical' || action.priority === 'high'
-                        ? 'bg-score-critical/10 text-score-critical'
-                        : action.priority === 'medium'
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full shrink-0 ${
+                      isInProgress
                         ? 'bg-score-average/10 text-score-average'
-                        : 'bg-muted text-muted-foreground'
+                        : 'bg-primary/10 text-primary'
                     }`}>
-                      {isAr ? priorityLabels[action.priority]?.ar || action.priority : priorityLabels[action.priority]?.en || action.priority}
+                      {isInProgress
+                        ? (isAr ? 'معلّقة' : 'Pending')
+                        : (isAr ? 'قيد المراجعة' : 'Under Review')
+                      }
                     </span>
                   </div>
                 </div>
