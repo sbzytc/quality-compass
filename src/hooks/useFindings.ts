@@ -220,6 +220,25 @@ export function useAssignFinding() {
 
       if (error) throw error;
 
+      // Auto-create corrective action
+      const { data: finding } = await supabase
+        .from('non_conformities')
+        .select('score, template_criteria:criterion_id (name)')
+        .eq('id', findingId)
+        .single();
+
+      const priority = finding?.score === 0 ? 'critical' : finding?.score === 1 ? 'high' : finding?.score === 2 ? 'medium' : 'low';
+      const criterionName = (finding?.template_criteria as any)?.name || 'Finding';
+
+      await supabase.from('corrective_actions').insert({
+        non_conformity_id: findingId,
+        description: `Corrective action for: ${criterionName}`,
+        owner_id: assignedTo,
+        due_date: dueDate,
+        priority,
+        status: 'pending',
+      });
+
       // Create notification for assigned user
       const { error: notifError } = await supabase
         .from('notifications')
@@ -238,6 +257,8 @@ export function useAssignFinding() {
       queryClient.invalidateQueries({ queryKey: ['findings'] });
       queryClient.invalidateQueries({ queryKey: ['critical-findings'] });
       queryClient.invalidateQueries({ queryKey: ['finding-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['all-corrective-actions'] });
+      queryClient.invalidateQueries({ queryKey: ['corrective-action-stats'] });
     },
   });
 }
@@ -264,6 +285,34 @@ export function useResolveFinding() {
 
       if (error) throw error;
 
+      // Update or create corrective action → in_progress
+      const { data: existingCA } = await supabase
+        .from('corrective_actions')
+        .select('id')
+        .eq('non_conformity_id', findingId)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (existingCA && existingCA.length > 0) {
+        await supabase.from('corrective_actions').update({ status: 'in_progress' }).eq('id', existingCA[0].id);
+      } else {
+        // Direct resolve without assignment — create corrective action
+        const { data: finding } = await supabase
+          .from('non_conformities')
+          .select('score, template_criteria:criterion_id (name)')
+          .eq('id', findingId)
+          .single();
+        const priority = finding?.score === 0 ? 'critical' : finding?.score === 1 ? 'high' : finding?.score === 2 ? 'medium' : 'low';
+        const criterionName = (finding?.template_criteria as any)?.name || 'Finding';
+        await supabase.from('corrective_actions').insert({
+          non_conformity_id: findingId,
+          description: `Corrective action for: ${criterionName}`,
+          owner_id: user?.id,
+          priority,
+          status: 'in_progress',
+        });
+      }
+
       // Notify the assessor (evaluator) that a finding is ready for review
       if (assessorId) {
         await supabase.from('notifications').insert({
@@ -281,6 +330,8 @@ export function useResolveFinding() {
       queryClient.invalidateQueries({ queryKey: ['critical-findings'] });
       queryClient.invalidateQueries({ queryKey: ['finding-stats'] });
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['all-corrective-actions'] });
+      queryClient.invalidateQueries({ queryKey: ['corrective-action-stats'] });
     },
   });
 }
@@ -305,12 +356,29 @@ export function useApproveFinding() {
         .eq('id', findingId);
 
       if (error) throw error;
+
+      // Mark corrective action as completed
+      const { data: existingCA } = await supabase
+        .from('corrective_actions')
+        .select('id')
+        .eq('non_conformity_id', findingId)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (existingCA && existingCA.length > 0) {
+        await supabase.from('corrective_actions').update({
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+        }).eq('id', existingCA[0].id);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['findings'] });
       queryClient.invalidateQueries({ queryKey: ['critical-findings'] });
       queryClient.invalidateQueries({ queryKey: ['finding-stats'] });
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['all-corrective-actions'] });
+      queryClient.invalidateQueries({ queryKey: ['corrective-action-stats'] });
     },
   });
 }
@@ -355,6 +423,8 @@ export function useRejectFinding() {
       queryClient.invalidateQueries({ queryKey: ['critical-findings'] });
       queryClient.invalidateQueries({ queryKey: ['finding-stats'] });
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['all-corrective-actions'] });
+      queryClient.invalidateQueries({ queryKey: ['corrective-action-stats'] });
     },
   });
 }

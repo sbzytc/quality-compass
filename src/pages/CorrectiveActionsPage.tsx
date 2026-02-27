@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Clock, CheckCircle2, AlertTriangle, Timer, Filter } from 'lucide-react';
+import { ArrowLeft, Clock, CheckCircle2, AlertTriangle, Timer, Filter, Building2, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +25,12 @@ interface CorrectiveActionRow {
   non_conformities: {
     branch_id: string;
     criterion_id: string;
+    score: number;
+    max_score: number;
+    status: string;
+    resolved_by: string | null;
+    resolved_at: string | null;
+    resolution_notes: string | null;
     branches: { name: string; name_ar: string | null } | null;
     template_criteria: { name: string; name_ar: string | null } | null;
   } | null;
@@ -41,6 +47,12 @@ function useAllCorrectiveActions(statusFilter?: string) {
           non_conformities!inner (
             branch_id,
             criterion_id,
+            score,
+            max_score,
+            status,
+            resolved_by,
+            resolved_at,
+            resolution_notes,
             branches:branch_id (name, name_ar),
             template_criteria:criterion_id (name, name_ar)
           )
@@ -302,11 +314,15 @@ export default function CorrectiveActionsPage() {
                     transition={{ delay: index * 0.03 }}
                     className="p-4 hover:bg-muted/30 transition-colors"
                   >
-                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <h3 className="font-medium text-foreground">
-                            {action.description}
+                            {action.non_conformities?.template_criteria
+                              ? (language === 'ar'
+                                ? action.non_conformities.template_criteria.name_ar || action.non_conformities.template_criteria.name
+                                : action.non_conformities.template_criteria.name)
+                              : action.description}
                           </h3>
                           <Badge variant="outline" className={`shrink-0 ${getStatusColor(action.status)}`}>
                             <span className="flex items-center gap-1">
@@ -317,27 +333,25 @@ export default function CorrectiveActionsPage() {
                           <Badge variant="outline" className={`shrink-0 ${getPriorityColor(action.priority)}`}>
                             {getPriorityLabel(action.priority)}
                           </Badge>
+                          {action.non_conformities && (
+                            <Badge variant="outline" className="shrink-0 text-xs">
+                              <Target className="w-3 h-3 mr-1" />
+                              {action.non_conformities.score}/{action.non_conformities.max_score}
+                            </Badge>
+                          )}
                         </div>
                         <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2 flex-wrap">
                           {action.non_conformities?.branches && (
                             <span className="flex items-center gap-1">
-                              <span className="font-medium">{language === 'ar' ? 'الفرع:' : 'Branch:'}</span>
+                              <Building2 className="w-3 h-3" />
                               {language === 'ar'
                                 ? action.non_conformities.branches.name_ar || action.non_conformities.branches.name
                                 : action.non_conformities.branches.name}
                             </span>
                           )}
-                          {action.non_conformities?.template_criteria && (
-                            <span className="flex items-center gap-1">
-                              <span className="font-medium">{language === 'ar' ? 'المعيار:' : 'Criterion:'}</span>
-                              {language === 'ar'
-                                ? action.non_conformities.template_criteria.name_ar || action.non_conformities.template_criteria.name
-                                : action.non_conformities.template_criteria.name}
-                            </span>
-                          )}
                           {action.due_date && (
                             <span className="flex items-center gap-1">
-                              <span className="font-medium">{language === 'ar' ? 'الاستحقاق:' : 'Due:'}</span>
+                              <Clock className="w-3 h-3" />
                               {format(new Date(action.due_date), 'MMM d, yyyy')}
                             </span>
                           )}
@@ -345,6 +359,12 @@ export default function CorrectiveActionsPage() {
                             {format(new Date(action.created_at), 'MMM d, yyyy')}
                           </span>
                         </div>
+                        {action.non_conformities?.resolution_notes && action.status === 'completed' && (
+                          <div className="mt-2 p-2 bg-score-excellent/5 border border-score-excellent/10 rounded text-xs">
+                            <span className="font-medium text-score-excellent">{language === 'ar' ? 'ملاحظات الحل:' : 'Resolution:'}</span>{' '}
+                            {action.non_conformities.resolution_notes}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </motion.div>
