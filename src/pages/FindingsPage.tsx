@@ -352,11 +352,11 @@ export default function FindingsPage() {
               className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex flex-col">
               <div className="flex items-center gap-2 text-sm text-primary mb-1">
                 <Timer className="w-4 h-4" />
-                {isAr ? 'جاري حلها' : 'In Progress'}
+                {isAr ? 'قيد المعالجة' : 'In Progress'}
               </div>
               <p className="text-2xl font-bold text-foreground">{stats?.inProgress || 0}</p>
               <p className="text-xs text-muted-foreground mt-1">
-                {isAr ? 'قيد المعالجة' : 'being worked on'}
+                {isAr ? 'ملاحظة جاري حلها' : 'being worked on'}
               </p>
             </motion.div>
 
