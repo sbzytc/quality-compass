@@ -322,7 +322,7 @@ export default function FindingsPage() {
 
       {/* KPI Dashboard */}
       {/* KPI Cards - Clickable filters */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {isLoading ? (
           [...Array(5)].map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)
         ) : (
@@ -333,6 +333,7 @@ export default function FindingsPage() {
               { key: 'in_progress', label: isAr ? 'قيد المعالجة' : 'In Progress', value: stats?.inProgress || 0, sub: isAr ? 'بانتظار الحل' : 'awaiting resolution', icon: <Timer className="w-4 h-4" />, style: 'bg-primary/5 border-primary/20 text-primary' },
               { key: 'pending_review', label: isAr ? 'بانتظار المراجعة' : 'Pending Review', value: stats?.pendingReview || 0, sub: isAr ? 'بانتظار الاعتماد' : 'awaiting approval', icon: <Eye className="w-4 h-4" />, style: 'bg-score-average/5 border-score-average/20 text-score-average' },
               { key: 'resolved', label: isAr ? 'تم الاعتماد' : 'Approved', value: stats?.resolved || 0, sub: `${stats?.resolutionRate || 0}% ${isAr ? 'نسبة الحل' : 'resolution rate'}`, icon: <CheckCircle2 className="w-4 h-4" />, style: 'bg-score-excellent/5 border-score-excellent/20 text-score-excellent' },
+              { key: 'rejected', label: isAr ? 'مرفوض' : 'Rejected', value: stats?.rejected || 0, sub: isAr ? 'يحتاج إعادة حل' : 'needs re-resolution', icon: <XCircle className="w-4 h-4" />, style: 'bg-score-critical/5 border-score-critical/20 text-score-critical' },
             ].map((card, i) => (
               <motion.button
                 key={card.key}
@@ -391,6 +392,7 @@ export default function FindingsPage() {
             const isExpanded = expandedBranches.has(group.branchId);
             const openCount = group.findings.filter(f => f.status === 'open').length;
             const inProgressCount = group.findings.filter(f => f.status === 'in_progress').length;
+            const rejectedCount = group.findings.filter(f => f.status === 'rejected').length;
             const overdueCount = group.findings.filter(f =>
               f.dueDate && new Date(f.dueDate) < new Date() && f.status !== 'resolved'
             ).length;
@@ -419,6 +421,11 @@ export default function FindingsPage() {
                         {openCount > 0 && (
                           <span className="text-xs px-1.5 py-0.5 rounded bg-score-critical/10 text-score-critical">
                             {openCount} {isAr ? 'مفتوح' : 'open'}
+                          </span>
+                        )}
+                        {rejectedCount > 0 && (
+                          <span className="text-xs px-1.5 py-0.5 rounded bg-score-critical/10 text-score-critical font-medium">
+                            {rejectedCount} {isAr ? 'مرفوض' : 'rejected'}
                           </span>
                         )}
                         {overdueCount > 0 && (
@@ -459,7 +466,7 @@ export default function FindingsPage() {
                           const showView = isBranchManager && (finding.status === 'in_progress' || finding.status === 'pending_review') && !canResolve && !showReview;
 
                           return (
-                            <div key={finding.id} className="p-4 hover:bg-muted/20 transition-colors">
+                            <div key={finding.id} className={`p-4 hover:bg-muted/20 transition-colors ${finding.status === 'rejected' ? 'border-s-4 border-s-score-critical bg-score-critical/5' : ''}`}>
                               <div className="flex items-start justify-between gap-3">
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2 flex-wrap mb-1">
