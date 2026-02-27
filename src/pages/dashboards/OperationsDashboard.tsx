@@ -8,20 +8,21 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function OperationsDashboard() {
   const navigate = useNavigate();
-  const { t, direction } = useLanguage();
+  const { t, direction, language } = useLanguage();
+  const isAr = language === 'ar';
 
   const tasks = [
-    { id: 1, title: 'Equipment maintenance - Refrigerator A', status: 'in_progress', assignee: 'Ahmad', dueDate: '2026-02-08' },
-    { id: 2, title: 'Safety inspection follow-up', status: 'pending', assignee: 'Fatima', dueDate: '2026-02-10' },
-    { id: 3, title: 'Update cleaning schedule', status: 'completed', assignee: 'Omar', dueDate: '2026-02-05' },
-    { id: 4, title: 'Pest control coordination', status: 'pending', assignee: 'Sara', dueDate: '2026-02-12' },
-    { id: 5, title: 'Staff uniform inspection', status: 'in_progress', assignee: 'Khalid', dueDate: '2026-02-09' },
+    { id: 1, title: isAr ? 'صيانة المعدات - الثلاجة أ' : 'Equipment maintenance - Refrigerator A', status: 'in_progress', assignee: isAr ? 'أحمد' : 'Ahmad', dueDate: '2026-02-08' },
+    { id: 2, title: isAr ? 'متابعة فحص السلامة' : 'Safety inspection follow-up', status: 'pending', assignee: isAr ? 'فاطمة' : 'Fatima', dueDate: '2026-02-10' },
+    { id: 3, title: isAr ? 'تحديث جدول التنظيف' : 'Update cleaning schedule', status: 'completed', assignee: isAr ? 'عمر' : 'Omar', dueDate: '2026-02-05' },
+    { id: 4, title: isAr ? 'تنسيق مكافحة الآفات' : 'Pest control coordination', status: 'pending', assignee: isAr ? 'سارة' : 'Sara', dueDate: '2026-02-12' },
+    { id: 5, title: isAr ? 'فحص زي الموظفين' : 'Staff uniform inspection', status: 'in_progress', assignee: isAr ? 'خالد' : 'Khalid', dueDate: '2026-02-09' },
   ];
 
   const upcomingInspections = [
-    { id: 1, type: 'Health & Safety', date: '2026-02-15', inspector: 'External' },
-    { id: 2, type: 'Quality Audit', date: '2026-02-20', inspector: 'Internal' },
-    { id: 3, type: 'Fire Safety', date: '2026-02-28', inspector: 'External' },
+    { id: 1, type: isAr ? 'الصحة والسلامة' : 'Health & Safety', date: '2026-02-15', inspector: isAr ? 'خارجي' : 'External' },
+    { id: 2, type: isAr ? 'مراجعة الجودة' : 'Quality Audit', date: '2026-02-20', inspector: isAr ? 'داخلي' : 'Internal' },
+    { id: 3, type: isAr ? 'السلامة من الحريق' : 'Fire Safety', date: '2026-02-28', inspector: isAr ? 'خارجي' : 'External' },
   ];
 
   const getStatusColor = (status: string) => {
