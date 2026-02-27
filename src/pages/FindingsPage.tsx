@@ -356,6 +356,10 @@ export default function FindingsPage() {
       {!isLoading && (
         <div className="flex items-center gap-4 flex-wrap">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Building2 className="w-4 h-4 text-primary" />
+            <span className="font-medium text-foreground">{branchGroups.length}</span> {isAr ? 'فرع' : 'branches'}
+          </div>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Clock className="w-4 h-4 text-score-weak" />
             <span className="font-medium text-foreground">{stats?.overdue || 0}</span> {isAr ? 'متأخر' : 'overdue'}
           </div>
