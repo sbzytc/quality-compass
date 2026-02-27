@@ -454,7 +454,7 @@ export default function FindingsPage() {
                           const isOverdue = finding.dueDate && new Date(finding.dueDate) < new Date() && finding.status !== 'resolved';
                           const isBranchManager = roles.includes('branch_manager');
                           const canResolve = isBranchManager && (finding.status === 'open' || finding.status === 'in_progress' || finding.status === 'rejected');
-                          const canAssign = (isAdmin || roles.includes('assessor')) && (finding.status === 'open' || finding.status === 'in_progress');
+                          const canAssign = (isAdmin || roles.includes('assessor') || isBranchManager) && (finding.status === 'open' || finding.status === 'in_progress');
                           const showReview = finding.status === 'pending_review' && canReviewFinding(finding);
                           const showView = isBranchManager && (finding.status === 'in_progress' || finding.status === 'pending_review') && !canResolve && !showReview;
 
