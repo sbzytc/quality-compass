@@ -330,7 +330,7 @@ export default function FindingsPage() {
             {[
               { key: 'all', label: isAr ? 'الإجمالي' : 'Total', value: stats?.total || 0, sub: isAr ? 'ملاحظة حرجة' : 'critical findings', icon: <Target className="w-4 h-4" />, style: 'bg-card border-border text-muted-foreground' },
               { key: 'open', label: isAr ? 'مفتوح' : 'Open', value: stats?.open || 0, sub: `${isAr ? 'غير معيّن' : 'unassigned'}: ${stats?.unassigned || 0}`, icon: <AlertTriangle className="w-4 h-4" />, style: 'bg-score-critical/5 border-score-critical/20 text-score-critical' },
-              { key: 'in_progress', label: isAr ? 'قيد المعالجة' : 'In Progress', value: stats?.inProgress || 0, sub: isAr ? 'تم تعيينها' : 'assigned', icon: <Timer className="w-4 h-4" />, style: 'bg-primary/5 border-primary/20 text-primary' },
+              { key: 'in_progress', label: isAr ? 'قيد المعالجة' : 'In Progress', value: stats?.inProgress || 0, sub: isAr ? 'بانتظار الحل' : 'awaiting resolution', icon: <Timer className="w-4 h-4" />, style: 'bg-primary/5 border-primary/20 text-primary' },
               { key: 'pending_review', label: isAr ? 'بانتظار المراجعة' : 'Pending Review', value: stats?.pendingReview || 0, sub: isAr ? 'بانتظار الاعتماد' : 'awaiting approval', icon: <Eye className="w-4 h-4" />, style: 'bg-score-average/5 border-score-average/20 text-score-average' },
               { key: 'resolved', label: isAr ? 'تم الاعتماد' : 'Approved', value: stats?.resolved || 0, sub: `${stats?.resolutionRate || 0}% ${isAr ? 'نسبة الحل' : 'resolution rate'}`, icon: <CheckCircle2 className="w-4 h-4" />, style: 'bg-score-excellent/5 border-score-excellent/20 text-score-excellent' },
             ].map((card, i) => (
@@ -482,12 +482,29 @@ export default function FindingsPage() {
                                     {isAr ? (finding.categoryNameAr || finding.categoryName) : finding.categoryName}
                                   </p>
 
+                                  {/* Assignment info - prominent when assigned */}
+                                  {finding.assignedTo && (
+                                    <div className="mt-1 mb-1 flex items-center gap-2 text-xs px-2 py-1 rounded bg-primary/5 border border-primary/10 w-fit">
+                                      <UserPlus className="w-3 h-3 text-primary" />
+                                      <span className="text-muted-foreground">{isAr ? 'معيّنة لـ:' : 'Assigned to:'}</span>
+                                      <span className="font-medium text-foreground">{getUserName(finding.assignedTo)}</span>
+                                      {finding.dueDate && (
+                                        <span className={`flex items-center gap-1 ${isOverdue ? 'text-score-critical font-medium' : 'text-muted-foreground'}`}>
+                                          • <Calendar className="w-3 h-3" />
+                                          {format(new Date(finding.dueDate), 'MMM d, yyyy')}
+                                        </span>
+                                      )}
+                                    </div>
+                                  )}
+
                                   <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
-                                    <span className="flex items-center gap-1">
-                                      <UserPlus className="w-3 h-3" />
-                                      {getUserName(finding.assignedTo)}
-                                    </span>
-                                    {finding.dueDate && (
+                                    {!finding.assignedTo && (
+                                      <span className="flex items-center gap-1">
+                                        <UserPlus className="w-3 h-3" />
+                                        {isAr ? 'غير معيّنة' : 'Unassigned'}
+                                      </span>
+                                    )}
+                                    {!finding.assignedTo && finding.dueDate && (
                                       <span className={`flex items-center gap-1 ${isOverdue ? 'text-score-critical font-medium' : ''}`}>
                                         <Calendar className="w-3 h-3" />
                                         {format(new Date(finding.dueDate), 'MMM d, yyyy')}
@@ -549,7 +566,9 @@ export default function FindingsPage() {
                                   {canAssign && (
                                     <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => handleAssign(finding)}>
                                       <UserPlus className="w-3 h-3 mr-1" />
-                                      {isAr ? 'تعيين' : 'Assign'}
+                                      {finding.assignedTo
+                                        ? (isAr ? 'إعادة تعيين' : 'Reassign')
+                                        : (isAr ? 'تعيين' : 'Assign')}
                                     </Button>
                                   )}
                                   {canResolve && (
