@@ -691,14 +691,72 @@ export default function FindingsPage() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            {selectedFinding && (
-              <div className="p-3 bg-muted/50 rounded-lg text-sm">
-                <p className="font-medium">{isAr ? (selectedFinding.criterionNameAr || selectedFinding.criterionName) : selectedFinding.criterionName}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {isAr ? 'الدرجة:' : 'Score:'} {selectedFinding.score}/{selectedFinding.maxScore}
-                </p>
-              </div>
-            )}
+            {selectedFinding && (() => {
+              const severity = getScoreSeverity(selectedFinding.score);
+              const statusInfo = getStatusInfo(selectedFinding.status);
+              return (
+                <div className="p-3 bg-muted/50 rounded-lg text-sm space-y-3">
+                  {/* Criterion & Category */}
+                  <div>
+                    <p className="font-semibold text-foreground">
+                      {isAr ? (selectedFinding.criterionNameAr || selectedFinding.criterionName) : selectedFinding.criterionName}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {isAr ? (selectedFinding.categoryNameAr || selectedFinding.categoryName) : selectedFinding.categoryName}
+                    </p>
+                  </div>
+
+                  {/* Score & Status */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant="outline" className={`text-xs ${severity.color}`}>
+                      {selectedFinding.score}/{selectedFinding.maxScore} - {severity.label}
+                    </Badge>
+                    <Badge variant="outline" className={`text-xs ${statusInfo.color} flex items-center gap-1`}>
+                      {statusInfo.icon} {statusInfo.label}
+                    </Badge>
+                  </div>
+
+                  {/* Branch */}
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Building2 className="w-3.5 h-3.5" />
+                    <span>{isAr ? 'الفرع:' : 'Branch:'}</span>
+                    <span className="font-medium text-foreground">
+                      {isAr ? (selectedFinding.branchNameAr || selectedFinding.branchName) : selectedFinding.branchName}
+                    </span>
+                  </div>
+
+                  {/* Assessor Notes */}
+                  {selectedFinding.assessorNotes && (
+                    <div className="p-2 bg-background border border-border rounded text-xs space-y-1">
+                      <span className="font-medium text-muted-foreground">{isAr ? 'ملاحظات المقيّم:' : 'Assessor Notes:'}</span>
+                      <p className="text-foreground">{selectedFinding.assessorNotes}</p>
+                    </div>
+                  )}
+
+                  {/* Original Attachments */}
+                  {selectedFinding.attachments && selectedFinding.attachments.length > 0 && (
+                    <div className="space-y-1">
+                      <span className="text-xs font-medium text-muted-foreground">{isAr ? 'صور المقيّم:' : 'Assessor Photos:'}</span>
+                      <div className="flex flex-wrap gap-1">
+                        {selectedFinding.attachments.map((url, i) => (
+                          <a key={i} href={url} target="_blank" rel="noopener noreferrer">
+                            <img src={url} alt="" className="w-14 h-14 rounded border border-border object-cover hover:opacity-80 transition-opacity" />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Rejection reason if re-resolving */}
+                  {selectedFinding.status === 'rejected' && selectedFinding.rejectionReason && (
+                    <div className="p-2 bg-score-critical/5 border border-score-critical/10 rounded text-xs space-y-1">
+                      <span className="font-medium text-score-critical">{isAr ? 'سبب الرفض السابق:' : 'Previous Rejection:'}</span>
+                      <p className="text-foreground">{selectedFinding.rejectionReason}</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
             <div className="space-y-2">
               <Label>{isAr ? 'الإجراء المتخذ (إلزامي)' : 'Resolution / Action Taken (required)'}</Label>
               <textarea
