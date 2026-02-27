@@ -707,6 +707,7 @@ export default function EvaluationForm() {
       average: 'bg-score-average',
       weak: 'bg-score-weak',
       critical: 'bg-score-critical',
+      unrated: 'bg-muted-foreground',
     };
     return colors[status];
   };

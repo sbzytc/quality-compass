@@ -1,6 +1,6 @@
 // SQCS Core Types
 
-export type ScoreLevel = 'excellent' | 'good' | 'average' | 'weak' | 'critical';
+export type ScoreLevel = 'excellent' | 'good' | 'average' | 'weak' | 'critical' | 'unrated';
 
 // New 4-category scoring for individual criterion scores (0-5)
 export type ScoreCategory = 'excellent' | 'good' | 'medium' | 'bad';
@@ -160,6 +160,7 @@ export function getScoreLabel(level: ScoreLevel, language: 'en' | 'ar' = 'en'): 
     average: { en: 'Average', ar: 'متوسط' },
     weak: { en: 'Weak', ar: 'ضعيف' },
     critical: { en: 'Very Weak', ar: 'ضعيف جداً' },
+    unrated: { en: 'Not Evaluated', ar: 'لم يُقيّم' },
   };
   return labels[level][language];
 }

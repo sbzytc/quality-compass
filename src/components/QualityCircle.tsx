@@ -26,6 +26,7 @@ const statusClasses: Record<ScoreLevel, string> = {
   average: 'bg-score-average',
   weak: 'bg-score-weak',
   critical: 'bg-score-critical',
+  unrated: 'bg-muted-foreground',
 };
 
 const glowClasses: Record<ScoreLevel, string> = {
@@ -34,6 +35,7 @@ const glowClasses: Record<ScoreLevel, string> = {
   average: 'shadow-[0_0_30px_-5px_hsl(var(--score-average)/0.6)]',
   weak: 'shadow-[0_0_30px_-5px_hsl(var(--score-weak)/0.6)]',
   critical: 'shadow-[0_0_30px_-5px_hsl(var(--score-critical)/0.6)]',
+  unrated: '',
 };
 
 export function QualityCircle({
@@ -70,7 +72,7 @@ export function QualityCircle({
           onClick && 'cursor-pointer hover:shadow-xl'
         )}
       >
-        {score}%
+        {status === 'unrated' ? 'N/A' : `${score}%`}
       </Component>
       {showLabel && (
         <span className={cn(
@@ -79,7 +81,8 @@ export function QualityCircle({
           status === 'good' && 'text-score-good',
           status === 'average' && 'text-score-average',
           status === 'weak' && 'text-score-weak',
-          status === 'critical' && 'text-score-critical'
+          status === 'critical' && 'text-score-critical',
+          status === 'unrated' && 'text-muted-foreground'
         )}>
           {getScoreLabel(status, language)}
         </span>
