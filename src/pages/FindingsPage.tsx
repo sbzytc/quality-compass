@@ -47,6 +47,8 @@ export default function FindingsPage() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [reviewImages, setReviewImages] = useState<File[]>([]);
   const [reviewImagePreviews, setReviewImagePreviews] = useState<string[]>([]);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [viewFinding, setViewFinding] = useState<Finding | null>(null);
 
   const { user, roles } = useAuth();
   const statusFilter = activeTab !== 'all' ? activeTab : undefined;
@@ -558,7 +560,8 @@ export default function FindingsPage() {
                                   )}
                                   {showView && (
                                     <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => {
-                                      toast.info(isAr ? 'الملاحظة قيد المعالجة حالياً' : 'Finding is currently being processed');
+                                      setViewFinding(finding);
+                                      setViewDialogOpen(true);
                                     }}>
                                       <Eye className="w-3 h-3 mr-1" />
                                       {isAr ? 'عرض' : 'View'}
@@ -852,6 +855,169 @@ export default function FindingsPage() {
                   ? (isAr ? 'اعتماد' : 'Approve')
                   : (isAr ? 'رفض' : 'Reject')
               }
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Detail Dialog */}
+      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+        <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {isAr ? 'تفاصيل الملاحظة' : 'Finding Details'}
+            </DialogTitle>
+          </DialogHeader>
+          {viewFinding && (() => {
+            const severity = getScoreSeverity(viewFinding.score);
+            const statusInfo = getStatusInfo(viewFinding.status);
+            return (
+              <div className="space-y-4 py-2">
+                {/* Criterion & Score */}
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-foreground">
+                    {isAr ? (viewFinding.criterionNameAr || viewFinding.criterionName) : viewFinding.criterionName}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {isAr ? (viewFinding.categoryNameAr || viewFinding.categoryName) : viewFinding.categoryName}
+                  </p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant="outline" className={`text-xs ${severity.color}`}>
+                      {viewFinding.score}/{viewFinding.maxScore} - {severity.label}
+                    </Badge>
+                    <Badge variant="outline" className={`text-xs ${statusInfo.color} flex items-center gap-1`}>
+                      {statusInfo.icon} {statusInfo.label}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Branch */}
+                <div className="flex items-center gap-2 text-sm">
+                  <Building2 className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">{isAr ? 'الفرع:' : 'Branch:'}</span>
+                  <span className="font-medium">{isAr ? (viewFinding.branchNameAr || viewFinding.branchName) : viewFinding.branchName}</span>
+                </div>
+
+                {/* Assigned To */}
+                {viewFinding.assignedTo && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <UserPlus className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">{isAr ? 'معيّن إلى:' : 'Assigned to:'}</span>
+                    <span className="font-medium">{getUserName(viewFinding.assignedTo)}</span>
+                  </div>
+                )}
+
+                {/* Due Date */}
+                {viewFinding.dueDate && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Calendar className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">{isAr ? 'تاريخ الاستحقاق:' : 'Due date:'}</span>
+                    <span className="font-medium">{format(new Date(viewFinding.dueDate), 'MMM d, yyyy')}</span>
+                  </div>
+                )}
+
+                {/* Created Date */}
+                <div className="flex items-center gap-2 text-sm">
+                  <Clock className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">{isAr ? 'تاريخ الإنشاء:' : 'Created:'}</span>
+                  <span className="font-medium">{format(new Date(viewFinding.createdAt), 'MMM d, yyyy')}</span>
+                </div>
+
+                {/* Assessor Notes */}
+                {viewFinding.assessorNotes && (
+                  <div className="p-3 bg-muted/50 rounded-lg text-sm space-y-1">
+                    <span className="font-medium text-muted-foreground">{isAr ? 'ملاحظات المقيّم:' : 'Assessor Notes:'}</span>
+                    <p className="text-foreground">{viewFinding.assessorNotes}</p>
+                  </div>
+                )}
+
+                {/* Assessor Attachments (original finding photos) */}
+                {viewFinding.attachments && viewFinding.attachments.length > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-sm font-medium text-muted-foreground">{isAr ? 'صور الملاحظة:' : 'Finding Photos:'}</span>
+                    <div className="flex flex-wrap gap-2">
+                      {viewFinding.attachments.map((url, i) => (
+                        <a key={i} href={url} target="_blank" rel="noopener noreferrer">
+                          <img src={url} alt="" className="w-20 h-20 rounded-lg border border-border object-cover hover:opacity-80 transition-opacity" />
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Resolved By */}
+                {viewFinding.resolvedBy && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <CheckCircle2 className="w-4 h-4 text-score-excellent" />
+                    <span className="text-muted-foreground">{isAr ? 'حُل بواسطة:' : 'Resolved by:'}</span>
+                    <span className="font-medium">{getUserName(viewFinding.resolvedBy)}</span>
+                    {viewFinding.resolvedAt && (
+                      <span className="text-muted-foreground">• {format(new Date(viewFinding.resolvedAt), 'MMM d, yyyy')}</span>
+                    )}
+                  </div>
+                )}
+
+                {/* Resolution Notes */}
+                {viewFinding.resolutionNotes && (
+                  <div className="p-3 bg-score-excellent/5 border border-score-excellent/10 rounded-lg text-sm space-y-1">
+                    <span className="font-medium text-score-excellent">{isAr ? 'ملاحظات الإصلاح:' : 'Fix Notes:'}</span>
+                    <p className="text-foreground">{viewFinding.resolutionNotes}</p>
+                  </div>
+                )}
+
+                {/* Resolution Attachments */}
+                {viewFinding.resolutionAttachments && viewFinding.resolutionAttachments.length > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-sm font-medium text-score-excellent">{isAr ? 'صور الإصلاح:' : 'Fix Photos:'}</span>
+                    <div className="flex flex-wrap gap-2">
+                      {viewFinding.resolutionAttachments.map((url, i) => (
+                        <a key={i} href={url} target="_blank" rel="noopener noreferrer">
+                          <img src={url} alt="" className="w-20 h-20 rounded-lg border border-border object-cover hover:opacity-80 transition-opacity" />
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Rejection Reason */}
+                {viewFinding.rejectionReason && (
+                  <div className="p-3 bg-score-critical/5 border border-score-critical/10 rounded-lg text-sm space-y-1">
+                    <span className="font-medium text-score-critical">{isAr ? 'سبب الرفض:' : 'Rejection Reason:'}</span>
+                    <p className="text-foreground">{viewFinding.rejectionReason}</p>
+                  </div>
+                )}
+
+                {/* Review Attachments */}
+                {viewFinding.reviewAttachments && viewFinding.reviewAttachments.length > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-sm font-medium text-muted-foreground">{isAr ? 'صور المراجعة:' : 'Review Photos:'}</span>
+                    <div className="flex flex-wrap gap-2">
+                      {viewFinding.reviewAttachments.map((url, i) => (
+                        <a key={i} href={url} target="_blank" rel="noopener noreferrer">
+                          <img src={url} alt="" className="w-20 h-20 rounded-lg border border-border object-cover hover:opacity-80 transition-opacity" />
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Reviewed By */}
+                {viewFinding.reviewedBy && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Eye className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">{isAr ? 'راجع بواسطة:' : 'Reviewed by:'}</span>
+                    <span className="font-medium">{getUserName(viewFinding.reviewedBy)}</span>
+                    {viewFinding.reviewedAt && (
+                      <span className="text-muted-foreground">• {format(new Date(viewFinding.reviewedAt), 'MMM d, yyyy')}</span>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewDialogOpen(false)}>
+              {isAr ? 'إغلاق' : 'Close'}
             </Button>
           </DialogFooter>
         </DialogContent>
