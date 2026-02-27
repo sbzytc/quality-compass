@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { TrendingUp, AlertTriangle, CheckCircle2, Clock, Users, ClipboardCheck } from 'lucide-react';
+import { TrendingUp, AlertTriangle, CheckCircle2, Clock, Users, ClipboardCheck, ExternalLink } from 'lucide-react';
 import { QualityCircle } from '@/components/QualityCircle';
 import { StatCard } from '@/components/StatCard';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -9,23 +9,49 @@ import { mockBranches } from '@/data/mockData';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function BranchManagerDashboard() {
   const navigate = useNavigate();
   const { t, direction, language } = useLanguage();
+  const { profile } = useAuth();
   const isAr = language === 'ar';
   const dateLocale = isAr ? { locale: ar } : {};
   
   // Simulating the manager's branch data
   const myBranch = mockBranches[0];
-  
-  const pendingActions = [
-    { id: 1, title: 'Fix temperature control unit', titleAr: 'إصلاح وحدة التحكم بالحرارة', dueDate: '2026-02-10', priority: 'high' },
-    { id: 2, title: 'Staff training on hygiene protocols', titleAr: 'تدريب الموظفين على بروتوكولات النظافة', dueDate: '2026-02-15', priority: 'medium' },
-    { id: 3, title: 'Update safety signage', titleAr: 'تحديث لوحات السلامة', dueDate: '2026-02-20', priority: 'low' },
-  ];
+
+  // Fetch real pending corrective actions
+  const { data: pendingActions = [] } = useQuery({
+    queryKey: ['pending-corrective-actions', profile?.branch_id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('corrective_actions')
+        .select(`
+          *,
+          non_conformities!inner(
+            branch_id,
+            criterion_id,
+            score,
+            max_score,
+            status,
+            branches:branch_id(name, name_ar),
+            template_criteria:criterion_id(name, name_ar)
+          )
+        `)
+        .in('status', ['pending', 'in_progress'])
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!profile,
+  });
 
   const priorityLabels: Record<string, { en: string; ar: string }> = {
+    critical: { en: 'Critical', ar: 'حرج' },
     high: { en: 'High', ar: 'عالي' },
     medium: { en: 'Medium', ar: 'متوسط' },
     low: { en: 'Low', ar: 'منخفض' },
@@ -112,32 +138,58 @@ export default function BranchManagerDashboard() {
       <div className="bg-card rounded-xl border border-border overflow-hidden">
         <div className="p-6 border-b border-border flex items-center justify-between">
           <h2 className="text-lg font-semibold text-foreground">{t('dashboard.pendingActions')}</h2>
-          <button className="text-sm text-primary hover:underline">
+          <button 
+            onClick={() => navigate('/corrective-actions')}
+            className="text-sm text-primary hover:underline"
+          >
             {t('common.viewAll')} →
           </button>
         </div>
         <div className="divide-y divide-border">
-          {pendingActions.map((action) => (
-            <div key={action.id} className="p-4 hover:bg-muted/30 transition-colors">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <h4 className="font-medium text-foreground">{isAr ? action.titleAr : action.title}</h4>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {t('common.dueDate')}: {format(new Date(action.dueDate), 'd MMM yyyy', dateLocale)}
-                  </p>
-                </div>
-                <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                  action.priority === 'high' 
-                    ? 'bg-score-critical/10 text-score-critical'
-                    : action.priority === 'medium'
-                    ? 'bg-score-average/10 text-score-average'
-                    : 'bg-muted text-muted-foreground'
-                }`}>
-                  {isAr ? priorityLabels[action.priority].ar : priorityLabels[action.priority].en}
-                </span>
-              </div>
+          {pendingActions.length === 0 ? (
+            <div className="p-6 text-center text-muted-foreground">
+              {isAr ? 'لا توجد إجراءات معلقة' : 'No pending actions'}
             </div>
-          ))}
+          ) : (
+            pendingActions.map((action) => {
+              const nc = action.non_conformities as any;
+              const criterionName = isAr ? (nc?.template_criteria?.name_ar || nc?.template_criteria?.name) : nc?.template_criteria?.name;
+              const branchName = isAr ? (nc?.branches?.name_ar || nc?.branches?.name) : nc?.branches?.name;
+              return (
+                <div 
+                  key={action.id} 
+                  className="p-4 hover:bg-muted/30 transition-colors cursor-pointer"
+                  onClick={() => navigate('/corrective-actions')}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <h4 className="font-medium text-foreground flex items-center gap-2">
+                        {criterionName || action.description}
+                        <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+                      </h4>
+                      {branchName && (
+                        <p className="text-xs text-muted-foreground mt-0.5">{branchName}</p>
+                      )}
+                      {action.due_date && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {t('common.dueDate')}: {format(new Date(action.due_date), 'd MMM yyyy', dateLocale)}
+                        </p>
+                      )}
+                    </div>
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                      action.priority === 'critical' || action.priority === 'high'
+                        ? 'bg-score-critical/10 text-score-critical'
+                        : action.priority === 'medium'
+                        ? 'bg-score-average/10 text-score-average'
+                        : 'bg-muted text-muted-foreground'
+                    }`}>
+                      {isAr ? priorityLabels[action.priority]?.ar || action.priority : priorityLabels[action.priority]?.en || action.priority}
+                    </span>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
 
