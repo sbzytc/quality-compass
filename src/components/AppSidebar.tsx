@@ -20,6 +20,10 @@ import {
   History,
   Archive,
   ListChecks,
+  BarChart3,
+  CalendarDays,
+  CalendarRange,
+  TrendingUp,
 } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -83,6 +87,16 @@ export function AppSidebar() {
       path: '/evaluations/new',
     },
     { 
+      labelKey: 'nav.evaluations.weekly', 
+      icon: CalendarDays, 
+      path: '/evaluations/period?period=weekly',
+    },
+    { 
+      labelKey: 'nav.evaluations.monthly', 
+      icon: CalendarRange, 
+      path: '/evaluations/period?period=monthly',
+    },
+    { 
       labelKey: 'nav.evaluations.previous', 
       icon: History, 
       path: '/evaluations/previous',
@@ -125,6 +139,18 @@ export function AppSidebar() {
       labelKey: 'nav.correctiveActions', 
       icon: ListChecks, 
       path: '/corrective-actions',
+    },
+    { 
+      labelKey: 'nav.reports', 
+      icon: BarChart3, 
+      path: '/reports',
+      allowedRoles: ['admin', 'executive'] as AppRole[]
+    },
+    { 
+      labelKey: 'nav.branchPerformance', 
+      icon: TrendingUp, 
+      path: '/branch-performance',
+      allowedRoles: ['admin', 'executive', 'branch_manager'] as AppRole[]
     },
   ] as NavItem[]).filter(item => !item.allowedRoles || item.allowedRoles.some(role => roles.includes(role)));
 

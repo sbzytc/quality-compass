@@ -24,6 +24,9 @@ import SettingsPage from "@/pages/SettingsPage";
 import ScoreAnalysisPage from "@/pages/ScoreAnalysisPage";
 import FindingsPage from "@/pages/FindingsPage";
 import CorrectiveActionsPage from "@/pages/CorrectiveActionsPage";
+import PeriodEvaluationForm from "@/pages/PeriodEvaluationForm";
+import ReportsPage from "@/pages/ReportsPage";
+import BranchPerformanceReport from "@/pages/BranchPerformanceReport";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -126,7 +129,27 @@ const AppRoutes = () => (
         </ProtectedRoute>
       } />
       
-      {/* Findings - All authenticated users */}
+      {/* Period Evaluations - Admin and Assessor */}
+      <Route path="/evaluations/period" element={
+        <ProtectedRoute allowedRoles={['admin', 'assessor']}>
+          <PeriodEvaluationForm />
+        </ProtectedRoute>
+      } />
+
+      {/* Reports - Admin, Executive, Branch Manager */}
+      <Route path="/reports" element={
+        <ProtectedRoute allowedRoles={['admin', 'executive', 'branch_manager']}>
+          <ReportsPage />
+        </ProtectedRoute>
+      } />
+
+      {/* Branch Performance Report - Branch Manager */}
+      <Route path="/branch-performance" element={
+        <ProtectedRoute allowedRoles={['admin', 'executive', 'branch_manager']}>
+          <BranchPerformanceReport />
+        </ProtectedRoute>
+      } />
+
       {/* Findings - All authenticated users */}
       <Route path="/findings" element={<FindingsPage />} />
       
