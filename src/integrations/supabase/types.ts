@@ -209,6 +209,7 @@ export type Database = {
           is_active: boolean
           name: string
           name_ar: string | null
+          period_type: string
           updated_at: string
           version: string
         }
@@ -219,6 +220,7 @@ export type Database = {
           is_active?: boolean
           name: string
           name_ar?: string | null
+          period_type?: string
           updated_at?: string
           version?: string
         }
@@ -229,6 +231,7 @@ export type Database = {
           is_active?: boolean
           name?: string
           name_ar?: string | null
+          period_type?: string
           updated_at?: string
           version?: string
         }
@@ -246,6 +249,7 @@ export type Database = {
           notes: string | null
           overall_percentage: number | null
           overall_score: number | null
+          period_type: string
           status: string
           submitted_at: string | null
           template_id: string
@@ -262,6 +266,7 @@ export type Database = {
           notes?: string | null
           overall_percentage?: number | null
           overall_score?: number | null
+          period_type?: string
           status?: string
           submitted_at?: string | null
           template_id: string
@@ -278,6 +283,7 @@ export type Database = {
           notes?: string | null
           overall_percentage?: number | null
           overall_score?: number | null
+          period_type?: string
           status?: string
           submitted_at?: string | null
           template_id?: string
