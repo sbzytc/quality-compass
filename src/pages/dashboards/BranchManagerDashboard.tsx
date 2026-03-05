@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, Clock, FileSearch, ExternalLink, AlertCircle } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, Clock, FileSearch, ExternalLink, AlertCircle, Building2 } from 'lucide-react';
 import { QualityCircle } from '@/components/QualityCircle';
 import { StatCard } from '@/components/StatCard';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -9,17 +10,25 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBranches } from '@/hooks/useBranches';
 import { getScoreLevel } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card } from '@/components/ui/card';
 
 export default function BranchManagerDashboard() {
   const navigate = useNavigate();
   const { t, language } = useLanguage();
-  const { profile } = useAuth();
+  const { profile, isAdmin, isExecutive } = useAuth();
+  const { data: branches } = useBranches();
   const isAr = language === 'ar';
   const dateLocale = isAr ? { locale: ar } : {};
+  const canSelectBranch = isAdmin || isExecutive;
 
-  const branchId = profile?.branch_id;
+  const [selectedBranchId, setSelectedBranchId] = useState<string>('');
+
+  // Admin/Executive select from dropdown; Branch Manager uses their assigned branch
+  const branchId = canSelectBranch ? selectedBranchId : profile?.branch_id;
 
   // Fetch branch info
   const { data: branch } = useQuery({
@@ -135,6 +144,52 @@ export default function BranchManagerDashboard() {
     low: { en: 'Low', ar: 'منخفض' },
   };
 
+  // Show branch selector for admin/exec when no branch selected
+  if (canSelectBranch && !branchId) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">{t('dashboard.branchManager.title')}</h1>
+          <p className="text-muted-foreground mt-1">{isAr ? 'اختر فرعاً لعرض لوحة التحكم' : 'Select a branch to view the dashboard'}</p>
+        </div>
+        <Card className="p-8">
+          <div className="flex flex-col items-center gap-4">
+            <Building2 className="w-12 h-12 text-muted-foreground/50" />
+            <h3 className="text-lg font-medium">{isAr ? 'اختر الفرع' : 'Select Branch'}</h3>
+            <Select value={selectedBranchId} onValueChange={setSelectedBranchId}>
+              <SelectTrigger className="w-[300px]">
+                <SelectValue placeholder={isAr ? 'اختر فرعاً...' : 'Choose a branch...'} />
+              </SelectTrigger>
+              <SelectContent>
+                {branches?.filter(b => b.isActive).map(b => (
+                  <SelectItem key={b.id} value={b.id}>
+                    {isAr ? (b.nameAr || b.name) : b.name} • {b.city || 'N/A'}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  // Show message for branch managers with no branch assigned
+  if (!canSelectBranch && !branchId) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">{t('dashboard.branchManager.title')}</h1>
+        </div>
+        <Card className="p-8 text-center">
+          <AlertCircle className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+          <h3 className="text-lg font-medium">{isAr ? 'لا يوجد فرع مرتبط بحسابك' : 'No branch assigned to your account'}</h3>
+          <p className="text-sm text-muted-foreground mt-2">{isAr ? 'يرجى التواصل مع المسؤول لربط حسابك بفرع' : 'Please contact your administrator to assign a branch'}</p>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -145,9 +200,25 @@ export default function BranchManagerDashboard() {
             {branchName || '...'} {branch?.city ? `- ${branch.city}` : ''}
           </p>
         </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Clock className="w-4 h-4" />
-          {t('common.lastUpdated')}: {format(new Date(), 'd MMM yyyy h:mm a', dateLocale)}
+        <div className="flex items-center gap-4">
+          {canSelectBranch && (
+            <Select value={selectedBranchId} onValueChange={setSelectedBranchId}>
+              <SelectTrigger className="w-[220px]">
+                <SelectValue placeholder={isAr ? 'تغيير الفرع...' : 'Change branch...'} />
+              </SelectTrigger>
+              <SelectContent>
+                {branches?.filter(b => b.isActive).map(b => (
+                  <SelectItem key={b.id} value={b.id}>
+                    {isAr ? (b.nameAr || b.name) : b.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Clock className="w-4 h-4" />
+            {t('common.lastUpdated')}: {format(new Date(), 'd MMM yyyy h:mm a', dateLocale)}
+          </div>
         </div>
       </div>
 
