@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
 
-type RoleKey = 'admin' | 'executive' | 'branch_manager' | 'assessor' | 'operations';
+type RoleKey = 'admin' | 'executive' | 'branch_manager' | 'assessor' | 'operations' | 'branch_employee';
 
 interface Permission {
   key: string;
@@ -59,6 +59,7 @@ const ROLES: { key: RoleKey; label: string; labelAr: string }[] = [
   { key: 'branch_manager', label: 'Branch Manager', labelAr: 'مدير الفرع' },
   { key: 'assessor', label: 'Quality Auditor', labelAr: 'مراجع الجودة' },
   { key: 'operations', label: 'Operations', labelAr: 'فريق العمليات' },
+  { key: 'branch_employee', label: 'Branch Employee', labelAr: 'موظف فرع' },
 ];
 
 // Default permission matrix
@@ -81,6 +82,9 @@ const DEFAULT_PERMISSIONS: Record<RoleKey, string[]> = {
     'settings_profile',
   ],
   operations: [
+    'dashboard_operations', 'findings_view', 'settings_profile',
+  ],
+  branch_employee: [
     'dashboard_operations', 'findings_view', 'settings_profile',
   ],
 };

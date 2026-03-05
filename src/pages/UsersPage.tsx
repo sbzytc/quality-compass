@@ -79,6 +79,7 @@ const roleLabels: Record<AppRole, { en: string; ar: string }> = {
   executive: { en: 'Executive', ar: 'تنفيذي' },
   branch_manager: { en: 'Branch Manager', ar: 'مدير الفرع' },
   assessor: { en: 'Assessor', ar: 'مقيّم' },
+  branch_employee: { en: 'Branch Employee', ar: 'موظف فرع' },
 };
 
 const roleColors: Record<AppRole, string> = {
@@ -86,6 +87,7 @@ const roleColors: Record<AppRole, string> = {
   executive: 'bg-blue-500/10 text-blue-500 border-blue-500/30',
   branch_manager: 'bg-amber-500/10 text-amber-500 border-amber-500/30',
   assessor: 'bg-green-500/10 text-green-500 border-green-500/30',
+  branch_employee: 'bg-teal-500/10 text-teal-500 border-teal-500/30',
 };
 
 export default function UsersPage() {
@@ -380,6 +382,7 @@ export default function UsersPage() {
             <SelectItem value="executive">{roleLabels.executive[language]}</SelectItem>
             <SelectItem value="branch_manager">{roleLabels.branch_manager[language]}</SelectItem>
             <SelectItem value="assessor">{roleLabels.assessor[language]}</SelectItem>
+            <SelectItem value="branch_employee">{roleLabels.branch_employee[language]}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -607,6 +610,7 @@ export default function UsersPage() {
                     <SelectItem value="executive">{roleLabels.executive[language]}</SelectItem>
                     <SelectItem value="branch_manager">{roleLabels.branch_manager[language]}</SelectItem>
                     <SelectItem value="assessor">{roleLabels.assessor[language]}</SelectItem>
+                    <SelectItem value="branch_employee">{roleLabels.branch_employee[language]}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -681,6 +685,7 @@ export default function UsersPage() {
                     <SelectItem value="executive">{roleLabels.executive[language]}</SelectItem>
                     <SelectItem value="branch_manager">{roleLabels.branch_manager[language]}</SelectItem>
                     <SelectItem value="assessor">{roleLabels.assessor[language]}</SelectItem>
+                    <SelectItem value="branch_employee">{roleLabels.branch_employee[language]}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1046,6 +1051,7 @@ export default function UsersPage() {
                     <SelectItem value="executive">{roleLabels.executive[language]}</SelectItem>
                     <SelectItem value="branch_manager">{roleLabels.branch_manager[language]}</SelectItem>
                     <SelectItem value="assessor">{roleLabels.assessor[language]}</SelectItem>
+                    <SelectItem value="branch_employee">{roleLabels.branch_employee[language]}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
