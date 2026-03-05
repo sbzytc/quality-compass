@@ -211,8 +211,9 @@ export default function ReportsPage() {
                 {(() => {
                   const allCurrentScores = buildPeriodData.map(b => b.periods[0]?.score).filter((s): s is number => s !== null);
                   const avg = allCurrentScores.length > 0 ? Math.round(allCurrentScores.reduce((a, b) => a + b, 0) / allCurrentScores.length) : 0;
-                  const best = buildPeriodData.reduce((best, b) => (!best || (b.periods[0]?.score ?? 0) > (best.periods[0]?.score ?? 0)) ? b : best, buildPeriodData[0]);
-                  const worst = buildPeriodData.reduce((worst, b) => (!worst || (b.periods[0]?.score ?? 100) < (worst.periods[0]?.score ?? 100)) ? b : worst, buildPeriodData[0]);
+                  const branchesWithScores = buildPeriodData.filter(b => b.periods[0]?.score !== null);
+                  const best = branchesWithScores.length > 0 ? branchesWithScores.reduce((best, b) => (b.periods[0]?.score ?? 0) > (best.periods[0]?.score ?? 0) ? b : best) : null;
+                  const worst = branchesWithScores.length > 0 ? branchesWithScores.reduce((worst, b) => (b.periods[0]?.score ?? 100) < (worst.periods[0]?.score ?? 100) ? b : worst) : null;
 
                   return (
                     <>
@@ -223,15 +224,27 @@ export default function ReportsPage() {
                       <Card>
                         <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">{isAr ? 'أفضل فرع' : 'Best Branch'}</CardTitle></CardHeader>
                         <CardContent>
-                          <span className="text-lg font-bold text-score-excellent">{best?.branchName}</span>
-                          <span className="text-sm text-muted-foreground ms-2">{best?.periods[0]?.score ?? 0}%</span>
+                          {best ? (
+                            <>
+                              <span className="text-lg font-bold text-score-excellent">{best.branchName}</span>
+                              <span className="text-sm text-muted-foreground ms-2">{best.periods[0]?.score}%</span>
+                            </>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">{isAr ? 'لا توجد بيانات' : 'No data'}</span>
+                          )}
                         </CardContent>
                       </Card>
                       <Card>
                         <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">{isAr ? 'أضعف فرع' : 'Weakest Branch'}</CardTitle></CardHeader>
                         <CardContent>
-                          <span className="text-lg font-bold text-score-critical">{worst?.branchName}</span>
-                          <span className="text-sm text-muted-foreground ms-2">{worst?.periods[0]?.score ?? 0}%</span>
+                          {worst ? (
+                            <>
+                              <span className="text-lg font-bold text-score-critical">{worst.branchName}</span>
+                              <span className="text-sm text-muted-foreground ms-2">{worst.periods[0]?.score}%</span>
+                            </>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">{isAr ? 'لا توجد بيانات' : 'No data'}</span>
+                          )}
                         </CardContent>
                       </Card>
                     </>
