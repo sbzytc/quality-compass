@@ -42,7 +42,7 @@ import {
 
 export default function PreviousEvaluationsPage() {
   const { t, language, direction } = useLanguage();
-  const { user } = useAuth();
+  const { user, profile, isBranchManager, isAdmin, isAssessor } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { data: evaluations, isLoading } = useEvaluations();
@@ -56,6 +56,11 @@ export default function PreviousEvaluationsPage() {
 
   // Filter evaluations
   const filteredEvaluations = evaluations?.filter(evaluation => {
+    // Branch managers can only see their branch's evaluations
+    if (isBranchManager && !isAdmin && !isAssessor && profile?.branch_id) {
+      if (evaluation.branchId !== profile.branch_id) return false;
+    }
+
     const matchesSearch = 
       evaluation.branchName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       evaluation.templateName.toLowerCase().includes(searchQuery.toLowerCase()) ||
