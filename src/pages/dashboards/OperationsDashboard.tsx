@@ -562,11 +562,19 @@ export default function OperationsDashboard() {
                     <SelectValue placeholder={isAr ? 'اختر' : 'Select'} />
                   </SelectTrigger>
                   <SelectContent>
-                    {users?.filter(u => u.is_active).map(u => (
-                      <SelectItem key={u.user_id} value={u.user_id}>
-                        {u.full_name}
-                      </SelectItem>
-                    ))}
+                    {(() => {
+                      const effectiveBranchId = canSelectBranch ? newBranchId : branchId;
+                      const filteredUsers = users?.filter(u => {
+                        if (!u.is_active) return false;
+                        if (!effectiveBranchId) return true;
+                        return u.branch_id === effectiveBranchId;
+                      }) || [];
+                      return filteredUsers.map(u => (
+                        <SelectItem key={u.user_id} value={u.user_id}>
+                          {u.full_name}
+                        </SelectItem>
+                      ));
+                    })()}
                   </SelectContent>
                 </Select>
               </div>
