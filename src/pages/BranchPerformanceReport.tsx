@@ -3,13 +3,13 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBranches } from '@/hooks/useBranches';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { QualityCircle } from '@/components/QualityCircle';
-import { CategoryProgressBar } from '@/components/CategoryProgressBar';
-import { TrendingUp, TrendingDown, ChevronDown, ChevronRight, CheckCircle2, AlertCircle, Clock, BarChart3 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { TrendingUp, TrendingDown, ChevronDown, ChevronRight, CheckCircle2, AlertCircle, BarChart3, Building2 } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks, subMonths } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -21,38 +21,47 @@ type PeriodTab = 'weekly' | 'monthly' | 'yearly';
 export default function BranchPerformanceReport() {
   const { language } = useLanguage();
   const isAr = language === 'ar';
-  const { profile } = useAuth();
-  const branchId = profile?.branch_id;
+  const { profile, isAdmin, isExecutive } = useAuth();
+  const { data: branches } = useBranches();
+  const canSelectBranch = isAdmin || isExecutive;
+  
+  const [selectedBranchId, setSelectedBranchId] = useState<string>('');
   const [activeTab, setActiveTab] = useState<PeriodTab>('monthly');
   const [expandedPeriod, setExpandedPeriod] = useState<number | null>(0);
   const dateLocale = isAr ? { locale: ar } : {};
 
+  // Determine the effective branch ID
+  const branchId = canSelectBranch ? selectedBranchId : profile?.branch_id;
+
+  // Auto-select first branch for admin/exec if none selected
+  const effectiveBranchId = branchId || '';
+
   // Fetch branch info
   const { data: branch } = useQuery({
-    queryKey: ['perf-branch', branchId],
+    queryKey: ['perf-branch', effectiveBranchId],
     queryFn: async () => {
-      const { data, error } = await supabase.from('branches').select('name, name_ar').eq('id', branchId!).maybeSingle();
+      const { data, error } = await supabase.from('branches').select('name, name_ar').eq('id', effectiveBranchId).maybeSingle();
       if (error) throw error;
       return data;
     },
-    enabled: !!branchId,
+    enabled: !!effectiveBranchId,
   });
 
   // Fetch all evaluations for this branch
   const { data: evaluations = [] } = useQuery({
-    queryKey: ['perf-evals', branchId],
+    queryKey: ['perf-evals', effectiveBranchId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('evaluations')
         .select('id, overall_percentage, overall_score, submitted_at, period_type, status')
-        .eq('branch_id', branchId!)
+        .eq('branch_id', effectiveBranchId)
         .in('status', ['submitted', 'approved'])
         .eq('is_archived', false)
         .order('submitted_at', { ascending: false });
       if (error) throw error;
       return data || [];
     },
-    enabled: !!branchId,
+    enabled: !!effectiveBranchId,
   });
 
   // Fetch category scores for all evaluations
@@ -121,7 +130,6 @@ export default function BranchPerformanceReport() {
         ? Math.round(pEvals.reduce((s, e) => s + (Number(e.overall_percentage) || 0), 0) / pEvals.length * 10) / 10
         : null;
 
-      // Category breakdown
       const evalIdsInPeriod = pEvals.map(e => e.id);
       const catMap: Record<string, { name: string; nameAr: string; totalScore: number; totalMax: number; count: number }> = {};
       categoryScores.filter(cs => evalIdsInPeriod.includes(cs.evaluation_id)).forEach(cs => {
@@ -139,7 +147,6 @@ export default function BranchPerformanceReport() {
         percentage: c.totalMax > 0 ? Math.round((c.totalScore / c.totalMax) * 100) : 0,
       }));
 
-      // Findings
       const periodFindings = findingsData.filter(f => evalIdsInPeriod.includes(f.evaluation_id));
       const findingsStats = {
         total: periodFindings.length,
@@ -153,11 +160,73 @@ export default function BranchPerformanceReport() {
 
   const branchName = isAr ? (branch?.name_ar || branch?.name) : branch?.name;
 
+  // Show branch selector prompt for admin/exec with no branch selected
+  if (canSelectBranch && !effectiveBranchId) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">{isAr ? 'تقرير أداء الفرع' : 'Branch Performance Report'}</h1>
+          <p className="text-muted-foreground mt-1">{isAr ? 'اختر فرعاً لعرض تقرير الأداء' : 'Select a branch to view the performance report'}</p>
+        </div>
+        <Card className="p-8">
+          <div className="flex flex-col items-center gap-4">
+            <Building2 className="w-12 h-12 text-muted-foreground/50" />
+            <h3 className="text-lg font-medium">{isAr ? 'اختر الفرع' : 'Select Branch'}</h3>
+            <Select value={selectedBranchId} onValueChange={setSelectedBranchId}>
+              <SelectTrigger className="w-[300px]">
+                <SelectValue placeholder={isAr ? 'اختر فرعاً...' : 'Choose a branch...'} />
+              </SelectTrigger>
+              <SelectContent>
+                {branches?.filter(b => b.isActive).map(b => (
+                  <SelectItem key={b.id} value={b.id}>
+                    {isAr ? (b.nameAr || b.name) : b.name} • {b.city || 'N/A'}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  // Show message for branch managers with no branch assigned
+  if (!canSelectBranch && !effectiveBranchId) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">{isAr ? 'تقرير أداء الفرع' : 'Branch Performance Report'}</h1>
+        </div>
+        <Card className="p-8 text-center">
+          <AlertCircle className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+          <h3 className="text-lg font-medium">{isAr ? 'لا يوجد فرع مرتبط بحسابك' : 'No branch assigned to your account'}</h3>
+          <p className="text-sm text-muted-foreground mt-2">{isAr ? 'يرجى التواصل مع المسؤول لربط حسابك بفرع' : 'Please contact your administrator to assign a branch'}</p>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">{isAr ? 'تقرير أداء الفرع' : 'Branch Performance Report'}</h1>
-        <p className="text-muted-foreground mt-1">{branchName || '...'} — {isAr ? 'مقارنة الأداء بين الفترات' : 'Period-to-period performance comparison'}</p>
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">{isAr ? 'تقرير أداء الفرع' : 'Branch Performance Report'}</h1>
+          <p className="text-muted-foreground mt-1">{branchName || '...'} — {isAr ? 'مقارنة الأداء بين الفترات' : 'Period-to-period performance comparison'}</p>
+        </div>
+        {canSelectBranch && (
+          <Select value={selectedBranchId} onValueChange={setSelectedBranchId}>
+            <SelectTrigger className="w-[250px]">
+              <SelectValue placeholder={isAr ? 'تغيير الفرع...' : 'Change branch...'} />
+            </SelectTrigger>
+            <SelectContent>
+              {branches?.filter(b => b.isActive).map(b => (
+                <SelectItem key={b.id} value={b.id}>
+                  {isAr ? (b.nameAr || b.name) : b.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       <Tabs value={activeTab} onValueChange={v => { setActiveTab(v as PeriodTab); setExpandedPeriod(0); }}>
@@ -172,7 +241,6 @@ export default function BranchPerformanceReport() {
             const prevPeriod = periodResults[i + 1];
             const trend = period.avg != null && prevPeriod?.avg != null ? +(period.avg - prevPeriod.avg).toFixed(1) : null;
             const isExpanded = expandedPeriod === i;
-            const scoreStatus = period.avg != null ? getScoreLevel(period.avg) : 'unrated' as const;
 
             return (
               <Card key={i} className="overflow-hidden">
