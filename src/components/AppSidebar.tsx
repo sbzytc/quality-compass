@@ -79,7 +79,7 @@ export function AppSidebar() {
     },
   ] as NavItem[]).filter(item => !item.allowedRoles || item.allowedRoles.some(role => roles.includes(role))) : [];
 
-  // Evaluation sub-items
+  // Evaluation sub-items for assessors
   const evaluationSubItems: NavItem[] = [
     { 
       labelKey: 'nav.evaluations.new', 
@@ -96,6 +96,20 @@ export function AppSidebar() {
       icon: CalendarRange, 
       path: '/evaluations/period?period=monthly',
     },
+    { 
+      labelKey: 'nav.evaluations.previous', 
+      icon: History, 
+      path: '/evaluations/previous',
+    },
+    { 
+      labelKey: 'nav.evaluations.archived', 
+      icon: Archive, 
+      path: '/evaluations/archived',
+    },
+  ];
+
+  // Evaluation history sub-items for branch managers (view only, no create)
+  const branchEvaluationSubItems: NavItem[] = [
     { 
       labelKey: 'nav.evaluations.previous', 
       icon: History, 
@@ -129,6 +143,13 @@ export function AppSidebar() {
       allowedRoles: ['admin', 'assessor'] as AppRole[],
       children: evaluationSubItems
     },
+    // Branch manager: evaluation history (view only)
+    ...(isBranchManager && !isAdmin && !isAssessor ? [{ 
+      labelKey: 'nav.evaluations', 
+      icon: ClipboardCheck, 
+      path: '/evaluations',
+      children: branchEvaluationSubItems
+    }] : []),
     { 
       labelKey: 'nav.findings', 
       icon: AlertTriangle, 
@@ -144,7 +165,7 @@ export function AppSidebar() {
       labelKey: 'nav.reports', 
       icon: BarChart3, 
       path: '/reports',
-      allowedRoles: ['admin', 'executive'] as AppRole[]
+      allowedRoles: ['admin', 'executive', 'branch_manager'] as AppRole[]
     },
     { 
       labelKey: 'nav.branchPerformance', 

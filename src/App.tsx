@@ -114,17 +114,17 @@ const AppRoutes = () => (
         </ProtectedRoute>
       } />
       <Route path="/evaluations/previous" element={
-        <ProtectedRoute allowedRoles={['admin', 'assessor']}>
+        <ProtectedRoute allowedRoles={['admin', 'assessor', 'branch_manager']}>
           <PreviousEvaluationsPage />
         </ProtectedRoute>
       } />
       <Route path="/evaluations/archived" element={
-        <ProtectedRoute allowedRoles={['admin', 'assessor']}>
+        <ProtectedRoute allowedRoles={['admin', 'assessor', 'branch_manager']}>
           <ArchivedEvaluationsPage />
         </ProtectedRoute>
       } />
       <Route path="/evaluations/:evaluationId" element={
-        <ProtectedRoute allowedRoles={['admin', 'assessor']}>
+        <ProtectedRoute allowedRoles={['admin', 'assessor', 'branch_manager']}>
           <EvaluationViewPage />
         </ProtectedRoute>
       } />

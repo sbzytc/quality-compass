@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useBranches } from '@/hooks/useBranches';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,6 +27,7 @@ interface PeriodData {
 export default function ReportsPage() {
   const { language } = useLanguage();
   const isAr = language === 'ar';
+  const { profile, isAdmin, isExecutive, isBranchManager } = useAuth();
   const { data: branches } = useBranches();
   const [activeTab, setActiveTab] = useState<PeriodTab>('monthly');
   const [periodsToShow, setPeriodsToShow] = useState(4);
@@ -74,7 +76,14 @@ export default function ReportsPage() {
       }
     }
 
-    const result: PeriodData[] = (branches || []).filter(b => b.isActive).map(branch => {
+    const result: PeriodData[] = (branches || []).filter(b => {
+      if (!b.isActive) return false;
+      // Branch managers can only see their own branch
+      if (isBranchManager && !isAdmin && !isExecutive && profile?.branch_id) {
+        return b.id === profile.branch_id;
+      }
+      return true;
+    }).map(branch => {
       const branchEvals = evaluations.filter(e => e.branch_id === branch.id && (activeTab === 'yearly' || e.period_type === activeTab));
 
       const periodScores = periods.map(p => {
@@ -99,7 +108,7 @@ export default function ReportsPage() {
     });
 
     return result;
-  }, [branches, evaluations, activeTab, periodsToShow, isAr]);
+  }, [branches, evaluations, activeTab, periodsToShow, isAr, isBranchManager, isAdmin, isExecutive, profile?.branch_id]);
 
   const getTrend = (periods: { score: number | null }[]) => {
     const current = periods[0]?.score;
