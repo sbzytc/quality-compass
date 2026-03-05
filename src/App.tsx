@@ -83,14 +83,14 @@ const AppRoutes = () => (
         </ProtectedRoute>
       } />
       
-      {/* Branches - Admin, Executive, Branch Manager */}
+      {/* Branches - Admin, Executive only */}
       <Route path="/branches" element={
-        <ProtectedRoute allowedRoles={['admin', 'executive', 'branch_manager']}>
+        <ProtectedRoute allowedRoles={['admin', 'executive']}>
           <BranchesList />
         </ProtectedRoute>
       } />
       <Route path="/branches/:branchId" element={
-        <ProtectedRoute allowedRoles={['admin', 'executive', 'branch_manager']}>
+        <ProtectedRoute allowedRoles={['admin', 'executive']}>
           <BranchDetail />
         </ProtectedRoute>
       } />

@@ -120,7 +120,7 @@ export function AppSidebar() {
       labelKey: 'nav.branches', 
       icon: Building2, 
       path: '/branches',
-      allowedRoles: ['admin', 'executive', 'branch_manager'] as AppRole[]
+      allowedRoles: ['admin', 'executive'] as AppRole[]
     },
     { 
       labelKey: 'nav.evaluations', 
