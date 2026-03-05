@@ -30,8 +30,9 @@ import { toast } from 'sonner';
 
 export default function OperationsDashboard() {
   const { t, direction, language } = useLanguage();
-  const { profile } = useAuth();
+  const { profile, isAdmin, isExecutive } = useAuth();
   const isAr = language === 'ar';
+  const canSelectBranch = isAdmin || isExecutive;
   const branchId = profile?.branch_id;
 
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -154,11 +155,12 @@ export default function OperationsDashboard() {
 
   const handleCreate = async () => {
     if (!newTitle.trim()) return;
+    const taskBranchId = canSelectBranch ? newBranchId : branchId;
     try {
       await createMutation.mutateAsync({
         title: newTitle.trim(),
         description: newDescription.trim() || undefined,
-        branchId: newBranchId || undefined,
+        branchId: taskBranchId || undefined,
         assignedTo: newAssignedTo || undefined,
         priority: newPriority,
         dueDate: newDueDate || undefined,
@@ -518,6 +520,7 @@ export default function OperationsDashboard() {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
+              {canSelectBranch && (
               <div className="space-y-2">
                 <Label>{isAr ? 'الفرع' : 'Branch'}</Label>
                 <Select value={newBranchId} onValueChange={setNewBranchId}>
@@ -533,6 +536,7 @@ export default function OperationsDashboard() {
                   </SelectContent>
                 </Select>
               </div>
+              )}
 
               <div className="space-y-2">
                 <Label>{isAr ? 'الأولوية' : 'Priority'}</Label>
