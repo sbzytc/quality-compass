@@ -118,15 +118,18 @@ export default function CEODashboard() {
       }));
   }, [resolutionLegendItems]);
 
-  // Pre-compute label distribution data for resolution pie
+  // Pre-compute label distribution data for resolution pie with collision avoidance
   const resolutionLabelDistribution = useMemo(() => {
     if (!resolutionPieData.length) return new Map();
 
     const total = resolutionPieData.reduce((sum, item) => sum + item.value, 0);
-    const minGap = 18;
+    const minGap = 20; // minimum vertical gap between labels
+    const pieCx = 170; // half of 340
+    const pieCy = 140; // half of 280
+    const oR = 85;
 
     // Calculate base positions using angles
-    let runningAngle = 90; // startAngle
+    let runningAngle = 90;
     const baseLabels = resolutionPieData.map((item, index) => {
       const sweepAngle = total > 0 ? (item.value / total) * 360 : 0;
       const midAngle = runningAngle - (sweepAngle / 2);
@@ -134,19 +137,41 @@ export default function CEODashboard() {
 
       const rad = (midAngle * Math.PI) / 180;
       const cos = Math.cos(rad);
-      const isRightSide = cos >= 0;
+      const sin = Math.sin(rad);
+      const isRight = cos >= 0;
+
+      // Natural Y position from angle
+      const naturalY = pieCy - sin * (oR + 22);
 
       return {
         index,
         color: item.color,
         percent: item.percent,
         midAngleDeg: midAngle,
-        side: isRightSide ? 'right' as const : 'left' as const,
-        textAnchor: isRightSide ? 'start' as const : 'end' as const,
+        isRight,
+        naturalY,
+        adjustedY: naturalY,
       };
     });
 
-    return new Map(baseLabels.map(l => [l.index, { ...l, minGap }]));
+    // Separate into left and right sides, then resolve overlaps per side
+    const rightLabels = baseLabels.filter(l => l.isRight).sort((a, b) => a.naturalY - b.naturalY);
+    const leftLabels = baseLabels.filter(l => !l.isRight).sort((a, b) => a.naturalY - b.naturalY);
+
+    const resolveOverlaps = (labels: typeof baseLabels) => {
+      for (let i = 1; i < labels.length; i++) {
+        const prev = labels[i - 1];
+        const curr = labels[i];
+        if (curr.adjustedY - prev.adjustedY < minGap) {
+          curr.adjustedY = prev.adjustedY + minGap;
+        }
+      }
+    };
+
+    resolveOverlaps(rightLabels);
+    resolveOverlaps(leftLabels);
+
+    return new Map([...rightLabels, ...leftLabels].map(l => [l.index, l]));
   }, [resolutionPieData]);
 
   // Calculate regional stats
@@ -273,19 +298,21 @@ export default function CEODashboard() {
                       const edgeX = cx + cos * (or + 2);
                       const edgeY = cy - sin * (or + 2);
 
-                      // Bend point
-                      const bendX = cx + cos * (or + 18);
-                      const bendY = cy - sin * (or + 18);
+                      // Use collision-adjusted Y position
+                      const labelY = info.adjustedY;
+                      const isRight = info.isRight;
 
-                      // Text position - far out
-                      const isRight = cos >= 0;
+                      // Text X position
                       const textX = cx + (isRight ? or + 50 : -(or + 50));
 
-                      // Line end: stop 4px before the text
-                      const lineEndX = isRight ? textX - 4 : textX + 4;
-                      const lineEndY = bendY;
+                      // Bend point: go outward from edge, then horizontal to near text
+                      const bendX = cx + cos * (or + 16);
+                      const bendY = cy - sin * (or + 16);
 
-                      const connectorPath = `M ${edgeX} ${edgeY} L ${bendX} ${bendY} L ${lineEndX} ${lineEndY}`;
+                      // Line end: stop 8px before the text
+                      const lineEndX = isRight ? textX - 8 : textX + 8;
+
+                      const connectorPath = `M ${edgeX} ${edgeY} L ${bendX} ${bendY} L ${lineEndX} ${labelY}`;
 
                       return (
                         <g>
@@ -298,7 +325,7 @@ export default function CEODashboard() {
                           />
                           <text
                             x={textX}
-                            y={lineEndY + 4}
+                            y={labelY + 4}
                             textAnchor={isRight ? 'start' : 'end'}
                             fontSize={11}
                             fontWeight={700}
