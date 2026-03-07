@@ -408,7 +408,16 @@ export default function CEODashboard() {
             <StatCard
               title={t('dashboard.totalBranches')}
               value={stats?.totalBranches || 0}
-              subtitle={t('dashboard.activeLocations')}
+              subtitle={
+                <span>
+                  {t('dashboard.activeLocations')}
+                  <span className="block text-[11px] text-muted-foreground/70 mt-0.5">
+                    {language === 'ar'
+                      ? `${assessorStats?.submittedCount || 0} مقيّم رفع من أصل ${assessorStats?.totalAssessors || 0}`
+                      : `${assessorStats?.submittedCount || 0} of ${assessorStats?.totalAssessors || 0} assessors submitted`}
+                  </span>
+                </span>
+              }
               icon={Building2}
               onClick={() => navigate('/branches')}
             />
