@@ -201,7 +201,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Navigation
     'nav.dashboard': 'لوحة التحكم',
     'nav.dashboard.ceo': 'المدير التنفيذي',
-    'nav.dashboard.branchManager': 'مدير الفرع',
+    'nav.dashboard.branchManager': 'الفرع',
     'nav.dashboard.operations': 'فريق العمليات',
     'nav.dashboard.auditor': 'مراجع الجودة',
     'nav.branches': 'الفروع',
