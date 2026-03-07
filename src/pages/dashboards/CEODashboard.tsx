@@ -292,9 +292,10 @@ export default function CEODashboard() {
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-sm font-bold text-foreground">{language === 'ar' ? 'التقييم' : 'Evaluation'}</span>
+                <span className="text-2xl font-bold text-foreground">{overallScore}%</span>
               </div>
-          </div>
+            </div>
+            <span className="text-sm font-bold text-foreground mt-1">{language === 'ar' ? 'التقييم' : 'Evaluation'}</span>
           </div>
           {/* Resolution Pie */}
           <div className="flex flex-col items-center cursor-pointer" onClick={() => navigate('/findings')}>
