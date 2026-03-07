@@ -1,4 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import rasdahLogo from '@/assets/rasdah-logo.png';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
@@ -238,9 +239,7 @@ export function AppSidebar() {
       {/* Logo */}
       <div className="h-16 flex items-center px-4 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-sidebar-primary flex items-center justify-center">
-            <span className="text-sidebar-primary-foreground font-bold text-lg">Q</span>
-          </div>
+          <img src={rasdahLogo} alt="Rasdah" className="w-10 h-10 rounded-xl object-contain" />
           <AnimatePresence>
             {!collapsed && (
               <motion.div
@@ -249,7 +248,7 @@ export function AppSidebar() {
                 exit={{ opacity: 0, width: 0 }}
                 className="overflow-hidden whitespace-nowrap"
               >
-                <span className="font-bold text-lg">SQCS</span>
+                <span className="font-bold text-lg">Rasdah</span>
                 <p className="text-xs text-sidebar-foreground/60">
                   {direction === 'rtl' ? 'نظام الجودة' : 'Quality System'}
                 </p>
