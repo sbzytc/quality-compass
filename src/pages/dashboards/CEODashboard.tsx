@@ -408,8 +408,8 @@ export default function CEODashboard() {
                   {t('dashboard.activeLocations')}
                   <span className="block text-[11px] text-muted-foreground/70 mt-0.5">
                     {language === 'ar'
-                      ? `${assessorStats?.submittedCount || 0} مقيّم رفع من أصل ${assessorStats?.totalAssessors || 0}`
-                      : `${assessorStats?.submittedCount || 0} of ${assessorStats?.totalAssessors || 0} assessors submitted`}
+                      ? `${assessorStats?.submittedCount || 0} مقيّم رفع تقييمات لـ ${assessorStats?.evaluatedBranches || 0} فرع`
+                      : `${assessorStats?.submittedCount || 0} assessors evaluated ${assessorStats?.evaluatedBranches || 0} branches`}
                   </span>
                 </span>
               }
