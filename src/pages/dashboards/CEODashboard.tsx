@@ -382,10 +382,12 @@ export default function CEODashboard() {
             {/* Status breakdown */}
             <div className="flex flex-wrap gap-4 justify-center md:justify-start">
               {[
-                { label: language === 'ar' ? 'تم الحل' : 'Resolved', count: findingStats?.resolved || 0, color: 'bg-score-excellent' },
-                { label: language === 'ar' ? 'قيد المعالجة' : 'In Progress', count: findingStats?.inProgress || 0, color: 'bg-score-average' },
                 { label: language === 'ar' ? 'مفتوح' : 'Open', count: findingStats?.open || 0, color: 'bg-score-critical' },
-                { label: language === 'ar' ? 'متأخر' : 'Overdue', count: findingStats?.overdue || 0, color: 'bg-score-weak' },
+                { label: language === 'ar' ? 'قيد المعالجة' : 'In Progress', count: findingStats?.inProgress || 0, color: 'bg-score-average' },
+                { label: language === 'ar' ? 'بانتظار المراجعة' : 'Pending Review', count: findingStats?.pendingReview || 0, color: 'bg-primary' },
+                { label: language === 'ar' ? 'تم الحل' : 'Resolved', count: findingStats?.resolved || 0, color: 'bg-score-excellent' },
+                { label: language === 'ar' ? 'مرفوض' : 'Rejected', count: findingStats?.rejected || 0, color: 'bg-score-weak' },
+                { label: language === 'ar' ? 'متأخر' : 'Overdue', count: findingStats?.overdue || 0, color: 'bg-orange-500' },
               ].map((item) => (
                 <div
                   key={item.label}
