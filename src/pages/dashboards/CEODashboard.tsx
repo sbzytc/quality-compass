@@ -260,27 +260,51 @@ export default function CEODashboard() {
                     startAngle={90}
                     endAngle={-270}
                     label={(props: any) => {
-                      const label = resolutionLabelsMap.get(props.index);
-                      if (!label) return null;
+                      const info = resolutionLabelDistribution.get(props.index);
+                      if (!info) return null;
+
+                      const { cx, cy, outerRadius: or, midAngle } = props;
+                      const RADIAN = Math.PI / 180;
+                      const rad = midAngle * RADIAN;
+                      const cos = Math.cos(rad);
+                      const sin = Math.sin(rad);
+
+                      // Point on pie edge
+                      const edgeX = cx + cos * (or + 2);
+                      const edgeY = cy - sin * (or + 2);
+
+                      // Bend point
+                      const bendX = cx + cos * (or + 18);
+                      const bendY = cy - sin * (or + 18);
+
+                      // Text position - far out
+                      const isRight = cos >= 0;
+                      const textX = cx + (isRight ? or + 50 : -(or + 50));
+
+                      // Line end: stop 4px before the text
+                      const lineEndX = isRight ? textX - 4 : textX + 4;
+                      const lineEndY = bendY;
+
+                      const connectorPath = `M ${edgeX} ${edgeY} L ${bendX} ${bendY} L ${lineEndX} ${lineEndY}`;
 
                       return (
                         <g>
                           <path
-                            d={label.connectorPath}
-                            stroke={label.color}
+                            d={connectorPath}
+                            stroke={info.color}
                             strokeWidth={1.25}
                             fill="none"
                             opacity={0.85}
                           />
                           <text
-                            x={label.textX}
-                            y={label.y + 4}
-                            textAnchor={label.textAnchor}
+                            x={textX}
+                            y={lineEndY + 4}
+                            textAnchor={isRight ? 'start' : 'end'}
                             fontSize={11}
                             fontWeight={700}
-                            fill={label.color}
+                            fill={info.color}
                           >
-                            {label.percent}%
+                            {info.percent}%
                           </text>
                         </g>
                       );
