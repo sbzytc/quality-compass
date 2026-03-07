@@ -15,7 +15,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Navigation
     'nav.dashboard': 'Dashboard',
     'nav.dashboard.ceo': 'CEO / GM',
-    'nav.dashboard.branchManager': 'Branch Manager',
+    'nav.dashboard.branchManager': 'Branch',
     'nav.dashboard.operations': 'Operations Team',
     'nav.dashboard.auditor': 'Quality Auditor',
     'nav.branches': 'Branches',
