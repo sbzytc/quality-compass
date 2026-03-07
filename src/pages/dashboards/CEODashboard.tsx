@@ -309,8 +309,8 @@ export default function CEODashboard() {
                       const bendX = cx + cos * (or + 16);
                       const bendY = cy - sin * (or + 16);
 
-                      // Line end: stop 14px before the text
-                      const lineEndX = isRight ? textX - 14 : textX + 14;
+                      // Line end: stop 20px before the text
+                      const lineEndX = isRight ? textX - 20 : textX + 20;
 
                       const connectorPath = `M ${edgeX} ${edgeY} L ${bendX} ${bendY} L ${lineEndX} ${labelY}`;
 
