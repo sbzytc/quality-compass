@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Building2, TrendingUp, AlertTriangle, CheckCircle2, Clock, ShieldCheck } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { QualityCircle } from '@/components/QualityCircle';
 import { StatCard } from '@/components/StatCard';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -52,10 +52,10 @@ export default function CEODashboard() {
 
   const isLoading = branchesLoading || statsLoading || findingStatsLoading || criterionScoresLoading;
 
-  // Build findings summary subtitle
+  // Build findings summary subtitle - show all statuses
   const findingsSummary = language === 'ar'
-    ? `${findingStats?.open || 0} مفتوح، ${findingStats?.inProgress || 0} قيد المعالجة`
-    : `${findingStats?.open || 0} open, ${findingStats?.inProgress || 0} in progress`;
+    ? `${findingStats?.open || 0} مفتوح، ${findingStats?.inProgress || 0} قيد المعالجة، ${findingStats?.pendingReview || 0} بانتظار المراجعة، ${findingStats?.resolved || 0} تم الحل، ${findingStats?.rejected || 0} مرفوض`
+    : `${findingStats?.open || 0} open, ${findingStats?.inProgress || 0} in progress, ${findingStats?.pendingReview || 0} pending, ${findingStats?.resolved || 0} resolved, ${findingStats?.rejected || 0} rejected`;
 
   // Calculate overall score across all branches
   const overallScore = stats?.averageScore || 0;
@@ -176,9 +176,11 @@ export default function CEODashboard() {
                 {(() => {
                     const raw = [
                       { name: language === 'ar' ? 'تم الحل' : 'Resolved', value: findingStats?.resolved || 0, color: 'hsl(142, 76%, 36%)' },
-                      { name: language === 'ar' ? 'جارية' : 'In Progress', value: findingStats?.inProgress || 0, color: 'hsl(45, 93%, 47%)' },
+                      { name: language === 'ar' ? 'بانتظار المراجعة' : 'Pending Review', value: findingStats?.pendingReview || 0, color: 'hsl(217, 91%, 60%)' },
+                      { name: language === 'ar' ? 'قيد المعالجة' : 'In Progress', value: findingStats?.inProgress || 0, color: 'hsl(45, 93%, 47%)' },
                       { name: language === 'ar' ? 'مفتوح' : 'Open', value: findingStats?.open || 0, color: 'hsl(0, 84%, 60%)' },
-                      { name: language === 'ar' ? 'متأخر' : 'Overdue', value: findingStats?.overdue || 0, color: 'hsl(25, 95%, 53%)' },
+                      { name: language === 'ar' ? 'مرفوض' : 'Rejected', value: findingStats?.rejected || 0, color: 'hsl(25, 95%, 53%)' },
+                      { name: language === 'ar' ? 'متأخر' : 'Overdue', value: findingStats?.overdue || 0, color: 'hsl(0, 60%, 40%)' },
                     ];
                     const total = raw.reduce((s, d) => s + d.value, 0);
                     const filtered = raw.filter(d => d.value > 0).map(d => ({ ...d, percent: total > 0 ? Math.round((d.value / total) * 100) : 0 }));
@@ -298,27 +300,44 @@ export default function CEODashboard() {
         )}
       </div>
 
-      {/* Score Distribution */}
+      {/* Score Distribution - Column Chart */}
       <div className="bg-card rounded-xl border border-border p-6">
         <h2 className="text-lg font-semibold text-foreground mb-4">{t('dashboard.scoreDistribution')}</h2>
-        <div className="flex flex-wrap gap-4 justify-center md:justify-start">
-          {[
-            { label: language === 'ar' ? 'ممتاز (5)' : 'Excellent (5)', count: scoreDistribution.excellent, colorClass: 'bg-score-excellent' },
-            { label: language === 'ar' ? 'جيد (4)' : 'Good (4)', count: scoreDistribution.good, colorClass: 'bg-score-good' },
-            { label: language === 'ar' ? 'متوسط (3)' : 'Medium (3)', count: scoreDistribution.medium, colorClass: 'bg-score-average' },
-            { label: language === 'ar' ? 'سيء (0-2)' : 'Bad (0-2)', count: scoreDistribution.bad, colorClass: 'bg-score-critical' },
-          ].map((item, idx) => (
-            <div
-              key={idx}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg bg-muted/50"
+        <div className="h-[300px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={[
+                { name: language === 'ar' ? 'ممتاز (5)' : 'Excellent (5)', value: scoreDistribution.excellent, fill: 'hsl(142, 76%, 36%)' },
+                { name: language === 'ar' ? 'جيد (4)' : 'Good (4)', value: scoreDistribution.good, fill: 'hsl(142, 52%, 50%)' },
+                { name: language === 'ar' ? 'متوسط (3)' : 'Medium (3)', value: scoreDistribution.medium, fill: 'hsl(45, 93%, 47%)' },
+                { name: language === 'ar' ? 'سيء (0-2)' : 'Bad (0-2)', value: scoreDistribution.bad, fill: 'hsl(0, 84%, 50%)' },
+              ]}
+              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
             >
-              <div className={`w-4 h-4 rounded-full ${item.colorClass}`} />
-              <div>
-                <p className="text-sm font-medium text-foreground">{item.label}</p>
-                <p className="text-2xl font-bold text-foreground">{item.count}</p>
-              </div>
-            </div>
-          ))}
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="name" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
+              <YAxis tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px',
+                  fontSize: '12px',
+                }}
+                formatter={(value: number) => [value, language === 'ar' ? 'العدد' : 'Count']}
+              />
+              <Bar dataKey="value" radius={[6, 6, 0, 0]} maxBarSize={60}>
+                {[
+                  'hsl(142, 76%, 36%)',
+                  'hsl(142, 52%, 50%)',
+                  'hsl(45, 93%, 47%)',
+                  'hsl(0, 84%, 50%)',
+                ].map((color, index) => (
+                  <Cell key={`cell-${index}`} fill={color} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
@@ -365,10 +384,12 @@ export default function CEODashboard() {
             {/* Status breakdown */}
             <div className="flex flex-wrap gap-4 justify-center md:justify-start">
               {[
-                { label: language === 'ar' ? 'تم الحل' : 'Resolved', count: findingStats?.resolved || 0, color: 'bg-score-excellent' },
-                { label: language === 'ar' ? 'قيد المعالجة' : 'In Progress', count: findingStats?.inProgress || 0, color: 'bg-score-average' },
                 { label: language === 'ar' ? 'مفتوح' : 'Open', count: findingStats?.open || 0, color: 'bg-score-critical' },
-                { label: language === 'ar' ? 'متأخر' : 'Overdue', count: findingStats?.overdue || 0, color: 'bg-score-weak' },
+                { label: language === 'ar' ? 'قيد المعالجة' : 'In Progress', count: findingStats?.inProgress || 0, color: 'bg-score-average' },
+                { label: language === 'ar' ? 'بانتظار المراجعة' : 'Pending Review', count: findingStats?.pendingReview || 0, color: 'bg-primary' },
+                { label: language === 'ar' ? 'تم الحل' : 'Resolved', count: findingStats?.resolved || 0, color: 'bg-score-excellent' },
+                { label: language === 'ar' ? 'مرفوض' : 'Rejected', count: findingStats?.rejected || 0, color: 'bg-score-weak' },
+                { label: language === 'ar' ? 'متأخر' : 'Overdue', count: findingStats?.overdue || 0, color: 'bg-orange-500' },
               ].map((item) => (
                 <div
                   key={item.label}
