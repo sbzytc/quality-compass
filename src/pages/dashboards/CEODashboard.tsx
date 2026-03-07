@@ -51,6 +51,34 @@ export default function CEODashboard() {
     },
   });
 
+  // Fetch unique assessors who submitted evaluations
+  const { data: assessorStats } = useQuery({
+    queryKey: ['assessor-submission-stats'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('evaluations')
+        .select('assessor_id')
+        .eq('status', 'submitted');
+
+      if (error) throw error;
+
+      const uniqueAssessors = new Set((data || []).map(e => e.assessor_id));
+
+      // Get total assessors (users with assessor role)
+      const { data: allAssessors, error: assessorError } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'assessor');
+
+      if (assessorError) throw assessorError;
+
+      return {
+        submittedCount: uniqueAssessors.size,
+        totalAssessors: allAssessors?.length || 0,
+      };
+    },
+  });
+
   const isLoading = branchesLoading || statsLoading || findingStatsLoading || criterionScoresLoading;
 
   // Build findings summary subtitle - show all statuses
