@@ -298,27 +298,44 @@ export default function CEODashboard() {
         )}
       </div>
 
-      {/* Score Distribution */}
+      {/* Score Distribution - Column Chart */}
       <div className="bg-card rounded-xl border border-border p-6">
         <h2 className="text-lg font-semibold text-foreground mb-4">{t('dashboard.scoreDistribution')}</h2>
-        <div className="flex flex-wrap gap-4 justify-center md:justify-start">
-          {[
-            { label: language === 'ar' ? 'ممتاز (5)' : 'Excellent (5)', count: scoreDistribution.excellent, colorClass: 'bg-score-excellent' },
-            { label: language === 'ar' ? 'جيد (4)' : 'Good (4)', count: scoreDistribution.good, colorClass: 'bg-score-good' },
-            { label: language === 'ar' ? 'متوسط (3)' : 'Medium (3)', count: scoreDistribution.medium, colorClass: 'bg-score-average' },
-            { label: language === 'ar' ? 'سيء (0-2)' : 'Bad (0-2)', count: scoreDistribution.bad, colorClass: 'bg-score-critical' },
-          ].map((item, idx) => (
-            <div
-              key={idx}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg bg-muted/50"
+        <div className="h-[300px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={[
+                { name: language === 'ar' ? 'ممتاز (5)' : 'Excellent (5)', value: scoreDistribution.excellent, fill: 'hsl(142, 76%, 36%)' },
+                { name: language === 'ar' ? 'جيد (4)' : 'Good (4)', value: scoreDistribution.good, fill: 'hsl(142, 52%, 50%)' },
+                { name: language === 'ar' ? 'متوسط (3)' : 'Medium (3)', value: scoreDistribution.medium, fill: 'hsl(45, 93%, 47%)' },
+                { name: language === 'ar' ? 'سيء (0-2)' : 'Bad (0-2)', value: scoreDistribution.bad, fill: 'hsl(0, 84%, 50%)' },
+              ]}
+              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
             >
-              <div className={`w-4 h-4 rounded-full ${item.colorClass}`} />
-              <div>
-                <p className="text-sm font-medium text-foreground">{item.label}</p>
-                <p className="text-2xl font-bold text-foreground">{item.count}</p>
-              </div>
-            </div>
-          ))}
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="name" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
+              <YAxis tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px',
+                  fontSize: '12px',
+                }}
+                formatter={(value: number) => [value, language === 'ar' ? 'العدد' : 'Count']}
+              />
+              <Bar dataKey="value" radius={[6, 6, 0, 0]} maxBarSize={60}>
+                {[
+                  'hsl(142, 76%, 36%)',
+                  'hsl(142, 52%, 50%)',
+                  'hsl(45, 93%, 47%)',
+                  'hsl(0, 84%, 50%)',
+                ].map((color, index) => (
+                  <Cell key={`cell-${index}`} fill={color} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
