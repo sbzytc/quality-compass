@@ -222,7 +222,7 @@ export default function CEODashboard() {
                 { name: language === 'ar' ? 'مفتوح' : 'Open', value: findingStats?.open || 0, color: 'hsl(0, 84%, 60%)' },
                 { name: language === 'ar' ? 'مرفوض' : 'Rejected', value: findingStats?.rejected || 0, color: 'hsl(25, 95%, 53%)' },
                 { name: language === 'ar' ? 'متأخر' : 'Overdue', value: findingStats?.overdue || 0, color: 'hsl(0, 60%, 40%)' },
-              ].filter(d => d.value > 0).map((item, i) => (
+              ].map((item, i) => (
                 <div key={i} className="flex items-center gap-1 text-xs">
                   <span className="w-2.5 h-2.5 rounded-sm inline-block shrink-0" style={{ backgroundColor: item.color }} />
                   <span className="text-muted-foreground">{item.name}</span>
