@@ -303,42 +303,79 @@ export default function CEODashboard() {
       {/* Score Distribution - Column Chart */}
       <div className="bg-card rounded-xl border border-border p-6">
         <h2 className="text-lg font-semibold text-foreground mb-4">{t('dashboard.scoreDistribution')}</h2>
-        <div className="h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={[
-                { name: language === 'ar' ? 'ممتاز (5)' : 'Excellent (5)', value: scoreDistribution.excellent, fill: 'hsl(142, 76%, 36%)' },
-                { name: language === 'ar' ? 'جيد (4)' : 'Good (4)', value: scoreDistribution.good, fill: 'hsl(142, 52%, 50%)' },
-                { name: language === 'ar' ? 'متوسط (3)' : 'Medium (3)', value: scoreDistribution.medium, fill: 'hsl(45, 93%, 47%)' },
-                { name: language === 'ar' ? 'سيء (0-2)' : 'Bad (0-2)', value: scoreDistribution.bad, fill: 'hsl(0, 84%, 50%)' },
-              ]}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="name" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
-              <YAxis tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'hsl(var(--card))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                }}
-                formatter={(value: number) => [value, language === 'ar' ? 'العدد' : 'Count']}
-              />
-              <Bar dataKey="value" radius={[6, 6, 0, 0]} maxBarSize={60}>
-                {[
-                  'hsl(142, 76%, 36%)',
-                  'hsl(142, 52%, 50%)',
-                  'hsl(45, 93%, 47%)',
-                  'hsl(0, 84%, 50%)',
-                ].map((color, index) => (
-                  <Cell key={`cell-${index}`} fill={color} />
+        {(() => {
+          const scoreData = [
+            { name: language === 'ar' ? 'ممتاز (5)' : 'Excellent (5)', value: scoreDistribution.excellent, fill: 'hsl(142, 76%, 36%)', scoreRange: '5' },
+            { name: language === 'ar' ? 'جيد (4)' : 'Good (4)', value: scoreDistribution.good, fill: 'hsl(142, 52%, 50%)', scoreRange: '4' },
+            { name: language === 'ar' ? 'متوسط (3)' : 'Medium (3)', value: scoreDistribution.medium, fill: 'hsl(45, 93%, 47%)', scoreRange: '3' },
+            { name: language === 'ar' ? 'سيء (0-2)' : 'Bad (0-2)', value: scoreDistribution.bad, fill: 'hsl(0, 84%, 50%)', scoreRange: '0-2' },
+          ];
+          const legendItems = [
+            { label: language === 'ar' ? 'ممتاز (5)' : 'Excellent (5)', color: 'hsl(142, 76%, 36%)' },
+            { label: language === 'ar' ? 'جيد (4)' : 'Good (4)', color: 'hsl(142, 52%, 50%)' },
+            { label: language === 'ar' ? 'متوسط (3)' : 'Medium (3)', color: 'hsl(45, 93%, 47%)' },
+            { label: language === 'ar' ? 'سيء (0-2)' : 'Bad (0-2)', color: 'hsl(0, 84%, 50%)' },
+          ];
+          return (
+            <>
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={scoreData}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 30 }}
+                    onClick={(state) => {
+                      if (state && state.activePayload && state.activePayload.length > 0) {
+                        const clicked = state.activePayload[0].payload;
+                        navigate(`/findings?scoreRange=${clicked.scoreRange}`);
+                      }
+                    }}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis 
+                      dataKey="name" 
+                      tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} 
+                      hide 
+                    />
+                    <YAxis hide />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px',
+                        fontSize: '12px',
+                      }}
+                      formatter={(value: number) => [value, language === 'ar' ? 'العدد' : 'Count']}
+                    />
+                    <Bar 
+                      dataKey="value" 
+                      radius={[6, 6, 0, 0]} 
+                      maxBarSize={60}
+                      label={({ x, y, width, value }: any) => (
+                        <text x={x + width / 2} y={y - 8} textAnchor="middle" fontSize={13} fontWeight={700} fill="hsl(var(--foreground))">
+                          {value}
+                        </text>
+                      )}
+                    >
+                      {scoreData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} cursor="pointer" />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              {/* Legend below chart */}
+              <div className="flex flex-wrap justify-center gap-4 mt-3">
+                {legendItems.map((item, i) => (
+                  <div key={i} className="flex items-center gap-1.5 text-sm">
+                    <span className="w-3 h-3 rounded-sm inline-block" style={{ backgroundColor: item.color }} />
+                    <span className="text-muted-foreground">{item.label}</span>
+                  </div>
                 ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+              </div>
+            </>
+          );
+        })()}
       </div>
 
       {/* Resolution Overview */}
