@@ -70,13 +70,13 @@ export function AppSidebar() {
       labelKey: 'nav.dashboard.branchManager', 
       icon: UserCircle, 
       path: '/dashboard/branch-manager',
-      allowedRoles: ['admin', 'executive', 'branch_manager'] as AppRole[]
+      allowedRoles: ['admin', 'branch_manager'] as AppRole[]
     },
     { 
       labelKey: 'nav.dashboard.operations', 
       icon: Wrench, 
       path: '/dashboard/operations',
-      allowedRoles: ['admin', 'executive', 'branch_manager'] as AppRole[]
+      allowedRoles: ['admin', 'branch_manager'] as AppRole[]
     },
   ] as NavItem[]).filter(item => !item.allowedRoles || item.allowedRoles.some(role => roles.includes(role))) : [];
 
