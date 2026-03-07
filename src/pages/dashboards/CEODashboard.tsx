@@ -51,6 +51,34 @@ export default function CEODashboard() {
     },
   });
 
+  // Fetch unique assessors who submitted evaluations
+  const { data: assessorStats } = useQuery({
+    queryKey: ['assessor-submission-stats'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('evaluations')
+        .select('assessor_id')
+        .eq('status', 'submitted');
+
+      if (error) throw error;
+
+      const uniqueAssessors = new Set((data || []).map(e => e.assessor_id));
+
+      // Get total assessors (users with assessor role)
+      const { data: allAssessors, error: assessorError } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'assessor');
+
+      if (assessorError) throw assessorError;
+
+      return {
+        submittedCount: uniqueAssessors.size,
+        totalAssessors: allAssessors?.length || 0,
+      };
+    },
+  });
+
   const isLoading = branchesLoading || statsLoading || findingStatsLoading || criterionScoresLoading;
 
   // Build findings summary subtitle - show all statuses
@@ -264,9 +292,10 @@ export default function CEODashboard() {
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-sm font-bold text-foreground">{language === 'ar' ? 'التقييم' : 'Evaluation'}</span>
+                <span className="text-2xl font-bold text-foreground">{overallScore}%</span>
               </div>
-          </div>
+            </div>
+            <span className="text-sm font-bold text-foreground mt-1">{language === 'ar' ? 'التقييم' : 'Evaluation'}</span>
           </div>
           {/* Resolution Pie */}
           <div className="flex flex-col items-center cursor-pointer" onClick={() => navigate('/findings')}>
@@ -379,7 +408,16 @@ export default function CEODashboard() {
             <StatCard
               title={t('dashboard.totalBranches')}
               value={stats?.totalBranches || 0}
-              subtitle={t('dashboard.activeLocations')}
+              subtitle={
+                <span>
+                  {t('dashboard.activeLocations')}
+                  <span className="block text-[11px] text-muted-foreground/70 mt-0.5">
+                    {language === 'ar'
+                      ? `${assessorStats?.submittedCount || 0} مقيّم رفع من أصل ${assessorStats?.totalAssessors || 0}`
+                      : `${assessorStats?.submittedCount || 0} of ${assessorStats?.totalAssessors || 0} assessors submitted`}
+                  </span>
+                </span>
+              }
               icon={Building2}
               onClick={() => navigate('/branches')}
             />
