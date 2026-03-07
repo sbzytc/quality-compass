@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Building2, TrendingUp, AlertTriangle, CheckCircle2, Clock, ShieldCheck } from 'lucide-react';
@@ -73,6 +74,138 @@ export default function CEODashboard() {
     medium: criterionScoreDistribution?.medium || 0,
     bad: criterionScoreDistribution?.bad || 0,
   };
+
+  const resolutionLegendItems = useMemo(() => ([
+    {
+      name: language === 'ar' ? 'تم الحل' : 'Resolved',
+      value: findingStats?.resolved || 0,
+      color: 'hsl(var(--score-excellent))',
+    },
+    {
+      name: language === 'ar' ? 'بانتظار المراجعة' : 'Pending Review',
+      value: findingStats?.pendingReview || 0,
+      color: 'hsl(var(--primary))',
+    },
+    {
+      name: language === 'ar' ? 'قيد المعالجة' : 'In Progress',
+      value: findingStats?.inProgress || 0,
+      color: 'hsl(var(--score-average))',
+    },
+    {
+      name: language === 'ar' ? 'مفتوح' : 'Open',
+      value: findingStats?.open || 0,
+      color: 'hsl(var(--score-critical))',
+    },
+    {
+      name: language === 'ar' ? 'مرفوض' : 'Rejected',
+      value: findingStats?.rejected || 0,
+      color: 'hsl(var(--score-weak))',
+    },
+    {
+      name: language === 'ar' ? 'متأخر' : 'Overdue',
+      value: findingStats?.overdue || 0,
+      color: 'hsl(var(--score-critical) / 0.8)',
+    },
+  ]), [findingStats, language]);
+
+  const resolutionPieData = useMemo(() => {
+    const total = resolutionLegendItems.reduce((sum, item) => sum + item.value, 0);
+    return resolutionLegendItems
+      .filter(item => item.value > 0)
+      .map(item => ({
+        ...item,
+        percent: total > 0 ? Math.round((item.value / total) * 100) : 0,
+      }));
+  }, [resolutionLegendItems]);
+
+  const resolutionLabelsMap = useMemo(() => {
+    if (!resolutionPieData.length) return new Map();
+
+    const chartCenterX = 170;
+    const chartCenterY = 140;
+    const chartHeight = 280;
+    const outerRadius = 85;
+    const labelRadius = outerRadius + 22;
+    const textOffsetX = outerRadius + 48;
+    const minGap = 18;
+    const minY = 16;
+    const maxY = chartHeight - 16;
+    const total = resolutionPieData.reduce((sum, item) => sum + item.value, 0);
+
+    let runningAngle = 90;
+    const baseLabels = resolutionPieData.map((item, index) => {
+      const sweepAngle = total > 0 ? (item.value / total) * 360 : 0;
+      const midAngle = runningAngle - (sweepAngle / 2);
+      runningAngle -= sweepAngle;
+
+      const rad = (midAngle * Math.PI) / 180;
+      const cos = Math.cos(rad);
+      const sin = Math.sin(rad);
+      const isRightSide = cos >= 0;
+      const textAnchor = isRightSide ? 'start' : 'end';
+      const textX = chartCenterX + (isRightSide ? textOffsetX : -textOffsetX);
+
+      return {
+        index,
+        color: item.color,
+        percent: item.percent,
+        side: isRightSide ? 'right' : 'left',
+        textAnchor,
+        textX,
+        rawY: chartCenterY - (sin * labelRadius),
+        arcX: chartCenterX + (cos * (outerRadius + 2)),
+        arcY: chartCenterY - (sin * (outerRadius + 2)),
+        bendX: chartCenterX + (cos * (outerRadius + 16)),
+        bendY: chartCenterY - (sin * (outerRadius + 16)),
+      };
+    });
+
+    const adjustSide = (side: 'left' | 'right') => {
+      const labels = baseLabels
+        .filter(label => label.side === side)
+        .sort((a, b) => a.rawY - b.rawY)
+        .map(label => ({ ...label, y: label.rawY }));
+
+      if (!labels.length) return labels;
+
+      labels[0].y = Math.max(labels[0].y, minY);
+      for (let i = 1; i < labels.length; i++) {
+        labels[i].y = Math.max(labels[i].y, labels[i - 1].y + minGap);
+      }
+
+      const overflow = labels[labels.length - 1].y - maxY;
+      if (overflow > 0) {
+        labels[labels.length - 1].y -= overflow;
+        for (let i = labels.length - 2; i >= 0; i--) {
+          labels[i].y = Math.min(labels[i].y, labels[i + 1].y - minGap);
+        }
+      }
+
+      const underflow = minY - labels[0].y;
+      if (underflow > 0) {
+        for (let i = 0; i < labels.length; i++) {
+          labels[i].y += underflow;
+        }
+      }
+
+      return labels;
+    };
+
+    const distributedLabels = [...adjustSide('left'), ...adjustSide('right')];
+
+    return new Map(
+      distributedLabels.map((label) => {
+        const lineEndX = label.textAnchor === 'start' ? label.textX - 6 : label.textX + 6;
+        return [
+          label.index,
+          {
+            ...label,
+            connectorPath: `M ${label.arcX} ${label.arcY} L ${label.bendX} ${label.bendY} L ${lineEndX} ${label.y}`,
+          },
+        ];
+      }),
+    );
+  }, [resolutionPieData]);
 
   // Calculate regional stats
   const regionalStats = regions?.map(region => {
@@ -172,37 +305,50 @@ export default function CEODashboard() {
           <div className="flex flex-col items-center cursor-pointer" onClick={() => navigate('/findings')}>
             <div className="w-[340px] h-[280px] relative">
               <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                {(() => {
-                    const raw = [
-                      { name: language === 'ar' ? 'تم الحل' : 'Resolved', value: findingStats?.resolved || 0, color: 'hsl(142, 76%, 36%)' },
-                      { name: language === 'ar' ? 'بانتظار المراجعة' : 'Pending Review', value: findingStats?.pendingReview || 0, color: 'hsl(217, 91%, 60%)' },
-                      { name: language === 'ar' ? 'قيد المعالجة' : 'In Progress', value: findingStats?.inProgress || 0, color: 'hsl(45, 93%, 47%)' },
-                      { name: language === 'ar' ? 'مفتوح' : 'Open', value: findingStats?.open || 0, color: 'hsl(0, 84%, 60%)' },
-                      { name: language === 'ar' ? 'مرفوض' : 'Rejected', value: findingStats?.rejected || 0, color: 'hsl(25, 95%, 53%)' },
-                      { name: language === 'ar' ? 'متأخر' : 'Overdue', value: findingStats?.overdue || 0, color: 'hsl(0, 60%, 40%)' },
-                    ];
-                    const total = raw.reduce((s, d) => s + d.value, 0);
-                    const filtered = raw.filter(d => d.value > 0).map(d => ({ ...d, percent: total > 0 ? Math.round((d.value / total) * 100) : 0 }));
-                    return (
-                      <Pie
-                        data={filtered}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={85}
-                        paddingAngle={3}
-                        dataKey="value"
-                        strokeWidth={0}
-                        label={false}
-                        labelLine={false}
-                      >
-                        {filtered.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                    );
-                  })()}
+                <PieChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+                  <Pie
+                    data={resolutionPieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={85}
+                    paddingAngle={3}
+                    dataKey="value"
+                    strokeWidth={0}
+                    startAngle={90}
+                    endAngle={-270}
+                    label={(props: any) => {
+                      const label = resolutionLabelsMap.get(props.index);
+                      if (!label) return null;
+
+                      return (
+                        <g>
+                          <path
+                            d={label.connectorPath}
+                            stroke={label.color}
+                            strokeWidth={1.25}
+                            fill="none"
+                            opacity={0.85}
+                          />
+                          <text
+                            x={label.textX}
+                            y={label.y + 4}
+                            textAnchor={label.textAnchor}
+                            fontSize={11}
+                            fontWeight={700}
+                            fill={label.color}
+                          >
+                            {label.percent}%
+                          </text>
+                        </g>
+                      );
+                    }}
+                    labelLine={false}
+                  >
+                    {resolutionPieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
                   <Tooltip
                     formatter={(value: number, name: string) => [`${value}`, name]}
                     contentStyle={{ fontSize: '12px', borderRadius: '8px' }}
@@ -215,14 +361,7 @@ export default function CEODashboard() {
             </div>
             {/* Legend below pie */}
             <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 mt-2 max-w-[340px]">
-              {[
-                { name: language === 'ar' ? 'تم الحل' : 'Resolved', value: findingStats?.resolved || 0, color: 'hsl(142, 76%, 36%)' },
-                { name: language === 'ar' ? 'بانتظار المراجعة' : 'Pending Review', value: findingStats?.pendingReview || 0, color: 'hsl(217, 91%, 60%)' },
-                { name: language === 'ar' ? 'قيد المعالجة' : 'In Progress', value: findingStats?.inProgress || 0, color: 'hsl(45, 93%, 47%)' },
-                { name: language === 'ar' ? 'مفتوح' : 'Open', value: findingStats?.open || 0, color: 'hsl(0, 84%, 60%)' },
-                { name: language === 'ar' ? 'مرفوض' : 'Rejected', value: findingStats?.rejected || 0, color: 'hsl(25, 95%, 53%)' },
-                { name: language === 'ar' ? 'متأخر' : 'Overdue', value: findingStats?.overdue || 0, color: 'hsl(0, 60%, 40%)' },
-              ].map((item, i) => (
+              {resolutionLegendItems.map((item, i) => (
                 <div key={i} className="flex items-center gap-1 text-xs">
                   <span className="w-2.5 h-2.5 rounded-sm inline-block shrink-0" style={{ backgroundColor: item.color }} />
                   <span className="text-muted-foreground">{item.name}</span>
