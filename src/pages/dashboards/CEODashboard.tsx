@@ -170,7 +170,7 @@ export default function CEODashboard() {
           </div>
           {/* Resolution Pie */}
           <div className="flex flex-col items-center cursor-pointer" onClick={() => navigate('/findings')}>
-            <div className="w-[340px] h-[340px] relative">
+            <div className="w-[340px] h-[280px] relative">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                 {(() => {
@@ -194,24 +194,7 @@ export default function CEODashboard() {
                         paddingAngle={3}
                         dataKey="value"
                         strokeWidth={0}
-                        label={({ cx, cy, midAngle, outerRadius: oR, percent, name, color }: any) => {
-                          const RADIAN = Math.PI / 180;
-                          const sin = Math.sin(-midAngle * RADIAN);
-                          const cos = Math.cos(-midAngle * RADIAN);
-                          const textX = cx + (oR + 38) * cos;
-                          const textY = cy + (oR + 38) * sin;
-                          const textAnchor = cos >= 0 ? 'start' : 'end';
-                          return (
-                            <g>
-                              <text x={textX} y={textY - 2} textAnchor={textAnchor} fontSize={9} fill={color} opacity={0.8}>
-                                {name}
-                              </text>
-                              <text x={textX} y={textY + 10} textAnchor={textAnchor} fontSize={11} fontWeight={700} fill={color}>
-                                {percent}%
-                              </text>
-                            </g>
-                          );
-                        }}
+                        label={false}
                         labelLine={false}
                       >
                         {filtered.map((entry, index) => (
@@ -229,7 +212,24 @@ export default function CEODashboard() {
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <span className="text-sm font-bold text-foreground">{language === 'ar' ? 'نسبة الحل' : 'Resolution'}</span>
               </div>
-          </div>
+            </div>
+            {/* Legend below pie */}
+            <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 mt-2 max-w-[340px]">
+              {[
+                { name: language === 'ar' ? 'تم الحل' : 'Resolved', value: findingStats?.resolved || 0, color: 'hsl(142, 76%, 36%)' },
+                { name: language === 'ar' ? 'بانتظار المراجعة' : 'Pending Review', value: findingStats?.pendingReview || 0, color: 'hsl(217, 91%, 60%)' },
+                { name: language === 'ar' ? 'قيد المعالجة' : 'In Progress', value: findingStats?.inProgress || 0, color: 'hsl(45, 93%, 47%)' },
+                { name: language === 'ar' ? 'مفتوح' : 'Open', value: findingStats?.open || 0, color: 'hsl(0, 84%, 60%)' },
+                { name: language === 'ar' ? 'مرفوض' : 'Rejected', value: findingStats?.rejected || 0, color: 'hsl(25, 95%, 53%)' },
+                { name: language === 'ar' ? 'متأخر' : 'Overdue', value: findingStats?.overdue || 0, color: 'hsl(0, 60%, 40%)' },
+              ].filter(d => d.value > 0).map((item, i) => (
+                <div key={i} className="flex items-center gap-1 text-xs">
+                  <span className="w-2.5 h-2.5 rounded-sm inline-block shrink-0" style={{ backgroundColor: item.color }} />
+                  <span className="text-muted-foreground">{item.name}</span>
+                  <span className="font-semibold text-foreground">({item.value})</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
