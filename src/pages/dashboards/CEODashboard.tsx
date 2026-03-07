@@ -305,37 +305,50 @@ export default function CEODashboard() {
           <div className="flex flex-col items-center cursor-pointer" onClick={() => navigate('/findings')}>
             <div className="w-[340px] h-[280px] relative">
               <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                {(() => {
-                    const raw = [
-                      { name: language === 'ar' ? 'تم الحل' : 'Resolved', value: findingStats?.resolved || 0, color: 'hsl(142, 76%, 36%)' },
-                      { name: language === 'ar' ? 'بانتظار المراجعة' : 'Pending Review', value: findingStats?.pendingReview || 0, color: 'hsl(217, 91%, 60%)' },
-                      { name: language === 'ar' ? 'قيد المعالجة' : 'In Progress', value: findingStats?.inProgress || 0, color: 'hsl(45, 93%, 47%)' },
-                      { name: language === 'ar' ? 'مفتوح' : 'Open', value: findingStats?.open || 0, color: 'hsl(0, 84%, 60%)' },
-                      { name: language === 'ar' ? 'مرفوض' : 'Rejected', value: findingStats?.rejected || 0, color: 'hsl(25, 95%, 53%)' },
-                      { name: language === 'ar' ? 'متأخر' : 'Overdue', value: findingStats?.overdue || 0, color: 'hsl(0, 60%, 40%)' },
-                    ];
-                    const total = raw.reduce((s, d) => s + d.value, 0);
-                    const filtered = raw.filter(d => d.value > 0).map(d => ({ ...d, percent: total > 0 ? Math.round((d.value / total) * 100) : 0 }));
-                    return (
-                      <Pie
-                        data={filtered}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={85}
-                        paddingAngle={3}
-                        dataKey="value"
-                        strokeWidth={0}
-                        label={false}
-                        labelLine={false}
-                      >
-                        {filtered.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                    );
-                  })()}
+                <PieChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+                  <Pie
+                    data={resolutionPieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={85}
+                    paddingAngle={3}
+                    dataKey="value"
+                    strokeWidth={0}
+                    startAngle={90}
+                    endAngle={-270}
+                    label={(props: any) => {
+                      const label = resolutionLabelsMap.get(props.index);
+                      if (!label) return null;
+
+                      return (
+                        <g>
+                          <path
+                            d={label.connectorPath}
+                            stroke={label.color}
+                            strokeWidth={1.25}
+                            fill="none"
+                            opacity={0.85}
+                          />
+                          <text
+                            x={label.textX}
+                            y={label.y + 4}
+                            textAnchor={label.textAnchor}
+                            fontSize={11}
+                            fontWeight={700}
+                            fill={label.color}
+                          >
+                            {label.percent}%
+                          </text>
+                        </g>
+                      );
+                    }}
+                    labelLine={false}
+                  >
+                    {resolutionPieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
                   <Tooltip
                     formatter={(value: number, name: string) => [`${value}`, name]}
                     contentStyle={{ fontSize: '12px', borderRadius: '8px' }}
@@ -348,14 +361,7 @@ export default function CEODashboard() {
             </div>
             {/* Legend below pie */}
             <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 mt-2 max-w-[340px]">
-              {[
-                { name: language === 'ar' ? 'تم الحل' : 'Resolved', value: findingStats?.resolved || 0, color: 'hsl(142, 76%, 36%)' },
-                { name: language === 'ar' ? 'بانتظار المراجعة' : 'Pending Review', value: findingStats?.pendingReview || 0, color: 'hsl(217, 91%, 60%)' },
-                { name: language === 'ar' ? 'قيد المعالجة' : 'In Progress', value: findingStats?.inProgress || 0, color: 'hsl(45, 93%, 47%)' },
-                { name: language === 'ar' ? 'مفتوح' : 'Open', value: findingStats?.open || 0, color: 'hsl(0, 84%, 60%)' },
-                { name: language === 'ar' ? 'مرفوض' : 'Rejected', value: findingStats?.rejected || 0, color: 'hsl(25, 95%, 53%)' },
-                { name: language === 'ar' ? 'متأخر' : 'Overdue', value: findingStats?.overdue || 0, color: 'hsl(0, 60%, 40%)' },
-              ].map((item, i) => (
+              {resolutionLegendItems.map((item, i) => (
                 <div key={i} className="flex items-center gap-1 text-xs">
                   <span className="w-2.5 h-2.5 rounded-sm inline-block shrink-0" style={{ backgroundColor: item.color }} />
                   <span className="text-muted-foreground">{item.name}</span>
