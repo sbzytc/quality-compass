@@ -1,4 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import rasdahLogo from '@/assets/rasdah-logo.png';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
