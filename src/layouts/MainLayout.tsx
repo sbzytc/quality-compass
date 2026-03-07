@@ -72,7 +72,7 @@ export function MainLayout() {
                   </Avatar>
                   <div className="hidden md:flex flex-col items-start text-sm">
                     <span className="font-medium leading-none">{profile.full_name}</span>
-                    <span className="text-xs text-muted-foreground">{getRoleBadge()}</span>
+                    <span className="text-xs text-muted-foreground">{profile.email}</span>
                   </div>
                 </Button>
               </DropdownMenuTrigger>
