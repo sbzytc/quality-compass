@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Building2, TrendingUp, AlertTriangle, CheckCircle2, Clock, ShieldCheck } from 'lucide-react';
