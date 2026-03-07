@@ -75,6 +75,138 @@ export default function CEODashboard() {
     bad: criterionScoreDistribution?.bad || 0,
   };
 
+  const resolutionLegendItems = useMemo(() => ([
+    {
+      name: language === 'ar' ? 'تم الحل' : 'Resolved',
+      value: findingStats?.resolved || 0,
+      color: 'hsl(var(--score-excellent))',
+    },
+    {
+      name: language === 'ar' ? 'بانتظار المراجعة' : 'Pending Review',
+      value: findingStats?.pendingReview || 0,
+      color: 'hsl(var(--primary))',
+    },
+    {
+      name: language === 'ar' ? 'قيد المعالجة' : 'In Progress',
+      value: findingStats?.inProgress || 0,
+      color: 'hsl(var(--score-average))',
+    },
+    {
+      name: language === 'ar' ? 'مفتوح' : 'Open',
+      value: findingStats?.open || 0,
+      color: 'hsl(var(--score-critical))',
+    },
+    {
+      name: language === 'ar' ? 'مرفوض' : 'Rejected',
+      value: findingStats?.rejected || 0,
+      color: 'hsl(var(--score-weak))',
+    },
+    {
+      name: language === 'ar' ? 'متأخر' : 'Overdue',
+      value: findingStats?.overdue || 0,
+      color: 'hsl(var(--score-critical) / 0.8)',
+    },
+  ]), [findingStats, language]);
+
+  const resolutionPieData = useMemo(() => {
+    const total = resolutionLegendItems.reduce((sum, item) => sum + item.value, 0);
+    return resolutionLegendItems
+      .filter(item => item.value > 0)
+      .map(item => ({
+        ...item,
+        percent: total > 0 ? Math.round((item.value / total) * 100) : 0,
+      }));
+  }, [resolutionLegendItems]);
+
+  const resolutionLabelsMap = useMemo(() => {
+    if (!resolutionPieData.length) return new Map();
+
+    const chartCenterX = 170;
+    const chartCenterY = 140;
+    const chartHeight = 280;
+    const outerRadius = 85;
+    const labelRadius = outerRadius + 22;
+    const textOffsetX = outerRadius + 48;
+    const minGap = 18;
+    const minY = 16;
+    const maxY = chartHeight - 16;
+    const total = resolutionPieData.reduce((sum, item) => sum + item.value, 0);
+
+    let runningAngle = 90;
+    const baseLabels = resolutionPieData.map((item, index) => {
+      const sweepAngle = total > 0 ? (item.value / total) * 360 : 0;
+      const midAngle = runningAngle - (sweepAngle / 2);
+      runningAngle -= sweepAngle;
+
+      const rad = (midAngle * Math.PI) / 180;
+      const cos = Math.cos(rad);
+      const sin = Math.sin(rad);
+      const isRightSide = cos >= 0;
+      const textAnchor = isRightSide ? 'start' : 'end';
+      const textX = chartCenterX + (isRightSide ? textOffsetX : -textOffsetX);
+
+      return {
+        index,
+        color: item.color,
+        percent: item.percent,
+        side: isRightSide ? 'right' : 'left',
+        textAnchor,
+        textX,
+        rawY: chartCenterY - (sin * labelRadius),
+        arcX: chartCenterX + (cos * (outerRadius + 2)),
+        arcY: chartCenterY - (sin * (outerRadius + 2)),
+        bendX: chartCenterX + (cos * (outerRadius + 16)),
+        bendY: chartCenterY - (sin * (outerRadius + 16)),
+      };
+    });
+
+    const adjustSide = (side: 'left' | 'right') => {
+      const labels = baseLabels
+        .filter(label => label.side === side)
+        .sort((a, b) => a.rawY - b.rawY)
+        .map(label => ({ ...label, y: label.rawY }));
+
+      if (!labels.length) return labels;
+
+      labels[0].y = Math.max(labels[0].y, minY);
+      for (let i = 1; i < labels.length; i++) {
+        labels[i].y = Math.max(labels[i].y, labels[i - 1].y + minGap);
+      }
+
+      const overflow = labels[labels.length - 1].y - maxY;
+      if (overflow > 0) {
+        labels[labels.length - 1].y -= overflow;
+        for (let i = labels.length - 2; i >= 0; i--) {
+          labels[i].y = Math.min(labels[i].y, labels[i + 1].y - minGap);
+        }
+      }
+
+      const underflow = minY - labels[0].y;
+      if (underflow > 0) {
+        for (let i = 0; i < labels.length; i++) {
+          labels[i].y += underflow;
+        }
+      }
+
+      return labels;
+    };
+
+    const distributedLabels = [...adjustSide('left'), ...adjustSide('right')];
+
+    return new Map(
+      distributedLabels.map((label) => {
+        const lineEndX = label.textAnchor === 'start' ? label.textX - 6 : label.textX + 6;
+        return [
+          label.index,
+          {
+            ...label,
+            connectorPath: `M ${label.arcX} ${label.arcY} L ${label.bendX} ${label.bendY} L ${lineEndX} ${label.y}`,
+          },
+        ];
+      }),
+    );
+  }, [resolutionPieData]);
+
   // Calculate regional stats
   const regionalStats = regions?.map(region => {
     const regionBranches = branches?.filter(b => b.regionId === region.id) || [];
