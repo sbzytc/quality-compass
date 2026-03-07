@@ -298,19 +298,21 @@ export default function CEODashboard() {
                       const edgeX = cx + cos * (or + 2);
                       const edgeY = cy - sin * (or + 2);
 
-                      // Bend point
-                      const bendX = cx + cos * (or + 18);
-                      const bendY = cy - sin * (or + 18);
+                      // Use collision-adjusted Y position
+                      const labelY = info.adjustedY;
+                      const isRight = info.isRight;
 
-                      // Text position - far out
-                      const isRight = cos >= 0;
+                      // Text X position
                       const textX = cx + (isRight ? or + 50 : -(or + 50));
 
-                      // Line end: stop 4px before the text
-                      const lineEndX = isRight ? textX - 4 : textX + 4;
-                      const lineEndY = bendY;
+                      // Bend point: go outward from edge, then horizontal to near text
+                      const bendX = cx + cos * (or + 16);
+                      const bendY = cy - sin * (or + 16);
 
-                      const connectorPath = `M ${edgeX} ${edgeY} L ${bendX} ${bendY} L ${lineEndX} ${lineEndY}`;
+                      // Line end: stop 8px before the text
+                      const lineEndX = isRight ? textX - 8 : textX + 8;
+
+                      const connectorPath = `M ${edgeX} ${edgeY} L ${bendX} ${bendY} L ${lineEndX} ${labelY}`;
 
                       return (
                         <g>
@@ -323,7 +325,7 @@ export default function CEODashboard() {
                           />
                           <text
                             x={textX}
-                            y={lineEndY + 4}
+                            y={labelY + 4}
                             textAnchor={isRight ? 'start' : 'end'}
                             fontSize={11}
                             fontWeight={700}
