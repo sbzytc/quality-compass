@@ -118,21 +118,15 @@ export default function CEODashboard() {
       }));
   }, [resolutionLegendItems]);
 
-  const resolutionLabelsMap = useMemo(() => {
+  // Pre-compute label distribution data for resolution pie
+  const resolutionLabelDistribution = useMemo(() => {
     if (!resolutionPieData.length) return new Map();
 
-    const chartCenterX = 170;
-    const chartCenterY = 140;
-    const chartHeight = 280;
-    const outerRadius = 85;
-    const labelRadius = outerRadius + 22;
-    const textOffsetX = outerRadius + 48;
-    const minGap = 18;
-    const minY = 16;
-    const maxY = chartHeight - 16;
     const total = resolutionPieData.reduce((sum, item) => sum + item.value, 0);
+    const minGap = 18;
 
-    let runningAngle = 90;
+    // Calculate base positions using angles
+    let runningAngle = 90; // startAngle
     const baseLabels = resolutionPieData.map((item, index) => {
       const sweepAngle = total > 0 ? (item.value / total) * 360 : 0;
       const midAngle = runningAngle - (sweepAngle / 2);
@@ -140,71 +134,19 @@ export default function CEODashboard() {
 
       const rad = (midAngle * Math.PI) / 180;
       const cos = Math.cos(rad);
-      const sin = Math.sin(rad);
       const isRightSide = cos >= 0;
-      const textAnchor = isRightSide ? 'start' : 'end';
-      const textX = chartCenterX + (isRightSide ? textOffsetX : -textOffsetX);
 
       return {
         index,
         color: item.color,
         percent: item.percent,
-        side: isRightSide ? 'right' : 'left',
-        textAnchor,
-        textX,
-        rawY: chartCenterY - (sin * labelRadius),
-        arcX: chartCenterX + (cos * (outerRadius + 2)),
-        arcY: chartCenterY - (sin * (outerRadius + 2)),
-        bendX: chartCenterX + (cos * (outerRadius + 16)),
-        bendY: chartCenterY - (sin * (outerRadius + 16)),
+        midAngleDeg: midAngle,
+        side: isRightSide ? 'right' as const : 'left' as const,
+        textAnchor: isRightSide ? 'start' as const : 'end' as const,
       };
     });
 
-    const adjustSide = (side: 'left' | 'right') => {
-      const labels = baseLabels
-        .filter(label => label.side === side)
-        .sort((a, b) => a.rawY - b.rawY)
-        .map(label => ({ ...label, y: label.rawY }));
-
-      if (!labels.length) return labels;
-
-      labels[0].y = Math.max(labels[0].y, minY);
-      for (let i = 1; i < labels.length; i++) {
-        labels[i].y = Math.max(labels[i].y, labels[i - 1].y + minGap);
-      }
-
-      const overflow = labels[labels.length - 1].y - maxY;
-      if (overflow > 0) {
-        labels[labels.length - 1].y -= overflow;
-        for (let i = labels.length - 2; i >= 0; i--) {
-          labels[i].y = Math.min(labels[i].y, labels[i + 1].y - minGap);
-        }
-      }
-
-      const underflow = minY - labels[0].y;
-      if (underflow > 0) {
-        for (let i = 0; i < labels.length; i++) {
-          labels[i].y += underflow;
-        }
-      }
-
-      return labels;
-    };
-
-    const distributedLabels = [...adjustSide('left'), ...adjustSide('right')];
-
-    return new Map(
-      distributedLabels.map((label) => {
-        const lineEndX = label.textAnchor === 'start' ? label.textX - 6 : label.textX + 6;
-        return [
-          label.index,
-          {
-            ...label,
-            connectorPath: `M ${label.arcX} ${label.arcY} L ${label.bendX} ${label.bendY} L ${lineEndX} ${label.y}`,
-          },
-        ];
-      }),
-    );
+    return new Map(baseLabels.map(l => [l.index, { ...l, minGap }]));
   }, [resolutionPieData]);
 
   // Calculate regional stats
@@ -318,27 +260,51 @@ export default function CEODashboard() {
                     startAngle={90}
                     endAngle={-270}
                     label={(props: any) => {
-                      const label = resolutionLabelsMap.get(props.index);
-                      if (!label) return null;
+                      const info = resolutionLabelDistribution.get(props.index);
+                      if (!info) return null;
+
+                      const { cx, cy, outerRadius: or, midAngle } = props;
+                      const RADIAN = Math.PI / 180;
+                      const rad = midAngle * RADIAN;
+                      const cos = Math.cos(rad);
+                      const sin = Math.sin(rad);
+
+                      // Point on pie edge
+                      const edgeX = cx + cos * (or + 2);
+                      const edgeY = cy - sin * (or + 2);
+
+                      // Bend point
+                      const bendX = cx + cos * (or + 18);
+                      const bendY = cy - sin * (or + 18);
+
+                      // Text position - far out
+                      const isRight = cos >= 0;
+                      const textX = cx + (isRight ? or + 50 : -(or + 50));
+
+                      // Line end: stop 4px before the text
+                      const lineEndX = isRight ? textX - 4 : textX + 4;
+                      const lineEndY = bendY;
+
+                      const connectorPath = `M ${edgeX} ${edgeY} L ${bendX} ${bendY} L ${lineEndX} ${lineEndY}`;
 
                       return (
                         <g>
                           <path
-                            d={label.connectorPath}
-                            stroke={label.color}
+                            d={connectorPath}
+                            stroke={info.color}
                             strokeWidth={1.25}
                             fill="none"
                             opacity={0.85}
                           />
                           <text
-                            x={label.textX}
-                            y={label.y + 4}
-                            textAnchor={label.textAnchor}
+                            x={textX}
+                            y={lineEndY + 4}
+                            textAnchor={isRight ? 'start' : 'end'}
                             fontSize={11}
                             fontWeight={700}
-                            fill={label.color}
+                            fill={info.color}
                           >
-                            {label.percent}%
+                            {info.percent}%
                           </text>
                         </g>
                       );
