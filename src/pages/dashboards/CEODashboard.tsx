@@ -176,9 +176,11 @@ export default function CEODashboard() {
                 {(() => {
                     const raw = [
                       { name: language === 'ar' ? 'تم الحل' : 'Resolved', value: findingStats?.resolved || 0, color: 'hsl(142, 76%, 36%)' },
-                      { name: language === 'ar' ? 'جارية' : 'In Progress', value: findingStats?.inProgress || 0, color: 'hsl(45, 93%, 47%)' },
+                      { name: language === 'ar' ? 'بانتظار المراجعة' : 'Pending Review', value: findingStats?.pendingReview || 0, color: 'hsl(217, 91%, 60%)' },
+                      { name: language === 'ar' ? 'قيد المعالجة' : 'In Progress', value: findingStats?.inProgress || 0, color: 'hsl(45, 93%, 47%)' },
                       { name: language === 'ar' ? 'مفتوح' : 'Open', value: findingStats?.open || 0, color: 'hsl(0, 84%, 60%)' },
-                      { name: language === 'ar' ? 'متأخر' : 'Overdue', value: findingStats?.overdue || 0, color: 'hsl(25, 95%, 53%)' },
+                      { name: language === 'ar' ? 'مرفوض' : 'Rejected', value: findingStats?.rejected || 0, color: 'hsl(25, 95%, 53%)' },
+                      { name: language === 'ar' ? 'متأخر' : 'Overdue', value: findingStats?.overdue || 0, color: 'hsl(0, 60%, 40%)' },
                     ];
                     const total = raw.reduce((s, d) => s + d.value, 0);
                     const filtered = raw.filter(d => d.value > 0).map(d => ({ ...d, percent: total > 0 ? Math.round((d.value / total) * 100) : 0 }));
