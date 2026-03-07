@@ -51,30 +51,25 @@ export default function CEODashboard() {
     },
   });
 
-  // Fetch unique assessors who submitted evaluations
+  // Fetch unique assessors who submitted evaluations vs total evaluations submitted
   const { data: assessorStats } = useQuery({
     queryKey: ['assessor-submission-stats'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Get all submitted evaluations to count unique assessors
+      const { data: submittedEvals, error } = await supabase
         .from('evaluations')
-        .select('assessor_id')
+        .select('assessor_id, branch_id')
         .eq('status', 'submitted');
 
       if (error) throw error;
 
-      const uniqueAssessors = new Set((data || []).map(e => e.assessor_id));
-
-      // Get total assessors (users with assessor role)
-      const { data: allAssessors, error: assessorError } = await supabase
-        .from('user_roles')
-        .select('user_id')
-        .eq('role', 'assessor');
-
-      if (assessorError) throw assessorError;
+      const uniqueAssessors = new Set((submittedEvals || []).map(e => e.assessor_id));
+      const uniqueBranchesEvaluated = new Set((submittedEvals || []).map(e => e.branch_id));
 
       return {
         submittedCount: uniqueAssessors.size,
-        totalAssessors: allAssessors?.length || 0,
+        evaluatedBranches: uniqueBranchesEvaluated.size,
+        totalSubmissions: submittedEvals?.length || 0,
       };
     },
   });
@@ -413,8 +408,8 @@ export default function CEODashboard() {
                   {t('dashboard.activeLocations')}
                   <span className="block text-[11px] text-muted-foreground/70 mt-0.5">
                     {language === 'ar'
-                      ? `${assessorStats?.submittedCount || 0} مقيّم رفع من أصل ${assessorStats?.totalAssessors || 0}`
-                      : `${assessorStats?.submittedCount || 0} of ${assessorStats?.totalAssessors || 0} assessors submitted`}
+                      ? `${assessorStats?.submittedCount || 0} مقيّم رفع تقييمات لـ ${assessorStats?.evaluatedBranches || 0} فرع`
+                      : `${assessorStats?.submittedCount || 0} assessors evaluated ${assessorStats?.evaluatedBranches || 0} branches`}
                   </span>
                 </span>
               }
