@@ -52,10 +52,10 @@ export default function CEODashboard() {
 
   const isLoading = branchesLoading || statsLoading || findingStatsLoading || criterionScoresLoading;
 
-  // Build findings summary subtitle
+  // Build findings summary subtitle - show all statuses
   const findingsSummary = language === 'ar'
-    ? `${findingStats?.open || 0} مفتوح، ${findingStats?.inProgress || 0} قيد المعالجة`
-    : `${findingStats?.open || 0} open, ${findingStats?.inProgress || 0} in progress`;
+    ? `${findingStats?.open || 0} مفتوح، ${findingStats?.inProgress || 0} قيد المعالجة، ${findingStats?.pendingReview || 0} بانتظار المراجعة، ${findingStats?.resolved || 0} تم الحل، ${findingStats?.rejected || 0} مرفوض`
+    : `${findingStats?.open || 0} open, ${findingStats?.inProgress || 0} in progress, ${findingStats?.pendingReview || 0} pending, ${findingStats?.resolved || 0} resolved, ${findingStats?.rejected || 0} rejected`;
 
   // Calculate overall score across all branches
   const overallScore = stats?.averageScore || 0;
