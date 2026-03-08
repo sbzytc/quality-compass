@@ -19,6 +19,7 @@ import PreviousEvaluationsPage from "@/pages/PreviousEvaluationsPage";
 import ArchivedEvaluationsPage from "@/pages/ArchivedEvaluationsPage";
 import EvaluationViewPage from "@/pages/EvaluationViewPage";
 import TemplatesPage from "@/pages/TemplatesPage";
+import CreateTemplatePage from "@/pages/CreateTemplatePage";
 import UsersPage from "@/pages/UsersPage";
 import SettingsPage from "@/pages/SettingsPage";
 import ScoreAnalysisPage from "@/pages/ScoreAnalysisPage";
