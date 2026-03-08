@@ -218,11 +218,23 @@ export default function ReportsPage() {
               {/* Summary Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {(() => {
-                  const allCurrentScores = buildPeriodData.map(b => b.periods[0]?.score).filter((s): s is number => s !== null);
-                  const avg = allCurrentScores.length > 0 ? Math.round(allCurrentScores.reduce((a, b) => a + b, 0) / allCurrentScores.length) : 0;
-                  const branchesWithScores = buildPeriodData.filter(b => b.periods[0]?.score !== null);
-                  const best = branchesWithScores.length > 0 ? branchesWithScores.reduce((best, b) => (b.periods[0]?.score ?? 0) > (best.periods[0]?.score ?? 0) ? b : best) : null;
-                  const worst = branchesWithScores.length > 0 ? branchesWithScores.reduce((worst, b) => (b.periods[0]?.score ?? 100) < (worst.periods[0]?.score ?? 100) ? b : worst) : null;
+                  // Compute overall average from ALL evaluations, not just current period
+                  const allEvalPercentages = evaluations
+                    .map(e => Number(e.overall_percentage) || 0)
+                    .filter(p => p > 0);
+                  const avg = allEvalPercentages.length > 0
+                    ? Math.round(allEvalPercentages.reduce((a, b) => a + b, 0) / allEvalPercentages.length)
+                    : 0;
+                  
+                  // Best/worst: use latest available score per branch (first non-null period)
+                  const branchesWithScores = buildPeriodData
+                    .map(b => {
+                      const latestScore = b.periods.find(p => p.score !== null)?.score ?? null;
+                      return { ...b, latestScore };
+                    })
+                    .filter(b => b.latestScore !== null);
+                  const best = branchesWithScores.length > 0 ? branchesWithScores.reduce((best, b) => (b.latestScore! > best.latestScore!) ? b : best) : null;
+                  const worst = branchesWithScores.length > 0 ? branchesWithScores.reduce((worst, b) => (b.latestScore! < worst.latestScore!) ? b : worst) : null;
 
                   return (
                     <>
@@ -236,7 +248,7 @@ export default function ReportsPage() {
                           {best ? (
                             <>
                               <span className="text-lg font-bold text-score-excellent">{best.branchName}</span>
-                              <span className="text-sm text-muted-foreground ms-2">{best.periods[0]?.score}%</span>
+                              <span className="text-sm text-muted-foreground ms-2">{best.latestScore}%</span>
                             </>
                           ) : (
                             <span className="text-sm text-muted-foreground">{isAr ? 'لا توجد بيانات' : 'No data'}</span>
@@ -249,7 +261,7 @@ export default function ReportsPage() {
                           {worst ? (
                             <>
                               <span className="text-lg font-bold text-score-critical">{worst.branchName}</span>
-                              <span className="text-sm text-muted-foreground ms-2">{worst.periods[0]?.score}%</span>
+                              <span className="text-sm text-muted-foreground ms-2">{worst.latestScore}%</span>
                             </>
                           ) : (
                             <span className="text-sm text-muted-foreground">{isAr ? 'لا توجد بيانات' : 'No data'}</span>
