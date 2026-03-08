@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Clock, CheckCircle2, AlertTriangle, Timer, Filter, Building2, Target } from 'lucide-react';
+import { ArrowLeft, Clock, CheckCircle2, AlertTriangle, Timer, Filter, Building2, Target, UserPlus, Calendar, Camera, ChevronRight, Eye, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useGoBack } from '@/hooks/useGoBack';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useUsers } from '@/hooks/useUsers';
 import { format } from 'date-fns';
 
 interface CorrectiveActionRow {
