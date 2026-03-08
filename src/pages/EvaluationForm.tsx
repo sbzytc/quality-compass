@@ -543,6 +543,7 @@ export default function EvaluationForm() {
 
       // Reset form to empty state
       setSelectedBranchId('');
+      setSelectedPeriodType(null);
       setScores({});
       setExpandedCategories(['cat-1']);
       setCurrentNotes(null);
