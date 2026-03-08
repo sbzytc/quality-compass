@@ -256,7 +256,7 @@ export default function CEODashboard() {
                         dataKey="value"
                         label={({ cx, cy, midAngle, outerRadius: or, percent: _p, index }) => {
                           const RADIAN = Math.PI / 180;
-                          const radius = or + 20;
+                          const radius = or + 30;
                           const x = cx + radius * Math.cos(-midAngle * RADIAN);
                           const y = cy + radius * Math.sin(-midAngle * RADIAN);
                           const item = filtered[index];
