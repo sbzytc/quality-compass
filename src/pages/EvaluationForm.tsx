@@ -356,6 +356,7 @@ export default function EvaluationForm() {
 
       // Reset form
       setSelectedBranchId('');
+      setSelectedPeriodType(null);
       setScores({});
       setExpandedCategories(['cat-1']);
       setCurrentNotes(null);
