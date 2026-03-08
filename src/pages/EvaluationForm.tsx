@@ -41,8 +41,8 @@ export default function EvaluationForm() {
   const goBack = useGoBack('/evaluations');
   const { t, direction } = useLanguage();
   const { user } = useAuth();
-  const { data: branches, isLoading: branchesLoading } = useBranches();
-  const { data: templateData, isLoading: templateLoading } = useActiveTemplate();
+  const [selectedPeriodType, setSelectedPeriodType] = useState<PeriodType | null>(null);
+  const { data: templateData, isLoading: templateLoading } = useTemplateByPeriod(selectedPeriodType || 'weekly');
   
   const [selectedBranchId, setSelectedBranchId] = useState<string>('');
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
