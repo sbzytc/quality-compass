@@ -260,6 +260,7 @@ export default function BranchPerformanceReport() {
                       <h3 className="font-semibold text-foreground">{period.label}</h3>
                       <p className="text-sm text-muted-foreground">
                         {period.evalCount} {isAr ? 'تقييم' : 'evaluations'}
+                        {period.evalCount > 1 && <span className="text-xs"> ({isAr ? 'متوسط' : 'avg'})</span>}
                       </p>
                     </div>
                   </div>
