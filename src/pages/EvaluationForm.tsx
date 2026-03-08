@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronRight, ChevronDown, Camera, MessageSquare, AlertTriangle, Check, Save, ArrowLeft, MapPin, AlertCircle, Eye, Pencil, FileText, Clock, X, Image } from 'lucide-react';
+import { ChevronRight, ChevronDown, Camera, MessageSquare, AlertTriangle, Check, Save, ArrowLeft, MapPin, AlertCircle, Eye, Pencil, FileText, Clock, X, Image, CalendarDays, CalendarRange } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -12,10 +12,12 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGoBack } from '@/hooks/useGoBack';
 import { useBranches } from '@/hooks/useBranches';
-import { useActiveTemplate } from '@/hooks/useTemplateData';
+import { useTemplateByPeriod } from '@/hooks/useTemplateByPeriod';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { differenceInHours } from 'date-fns';
+
+type PeriodType = 'weekly' | 'monthly';
 
 interface Score {
   criterionId: string;
@@ -40,7 +42,8 @@ export default function EvaluationForm() {
   const { t, direction } = useLanguage();
   const { user } = useAuth();
   const { data: branches, isLoading: branchesLoading } = useBranches();
-  const { data: templateData, isLoading: templateLoading } = useActiveTemplate();
+  const [selectedPeriodType, setSelectedPeriodType] = useState<PeriodType | null>(null);
+  const { data: templateData, isLoading: templateLoading } = useTemplateByPeriod(selectedPeriodType || 'weekly');
   
   const [selectedBranchId, setSelectedBranchId] = useState<string>('');
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
@@ -304,6 +307,7 @@ export default function EvaluationForm() {
             template_id: activeTemplateId,
             assessor_id: user.id,
             status: 'draft',
+            period_type: selectedPeriodType || 'weekly',
           })
           .select()
           .single();
@@ -352,6 +356,7 @@ export default function EvaluationForm() {
 
       // Reset form
       setSelectedBranchId('');
+      setSelectedPeriodType(null);
       setScores({});
       setExpandedCategories(['cat-1']);
       setCurrentNotes(null);
@@ -427,6 +432,7 @@ export default function EvaluationForm() {
             assessor_id: user?.id,
             status: 'submitted',
             submitted_at: new Date().toISOString(),
+            period_type: selectedPeriodType || 'weekly',
           })
           .select()
           .single();
@@ -537,6 +543,7 @@ export default function EvaluationForm() {
 
       // Reset form to empty state
       setSelectedBranchId('');
+      setSelectedPeriodType(null);
       setScores({});
       setExpandedCategories(['cat-1']);
       setCurrentNotes(null);
@@ -715,7 +722,7 @@ export default function EvaluationForm() {
   const progress = getOverallProgress();
 
   // Show loading state when loading a draft or template
-  if (isLoadingDraft || templateLoading) {
+  if (isLoadingDraft || (selectedPeriodType && templateLoading)) {
     return (
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="bg-card rounded-xl border border-border p-6">
@@ -732,8 +739,8 @@ export default function EvaluationForm() {
     );
   }
 
-  // Show error if no template found
-  if (!templateData) {
+  // Show error if period selected but no template found
+  if (selectedPeriodType && !templateLoading && !templateData) {
     return (
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="bg-card rounded-xl border border-border p-6">
@@ -741,15 +748,15 @@ export default function EvaluationForm() {
             <div className="flex flex-col items-center gap-4 text-center">
               <AlertCircle className="w-12 h-12 text-destructive" />
               <h3 className="text-lg font-medium text-foreground">
-                {direction === 'rtl' ? 'لا يوجد قالب تقييم نشط' : 'No Active Evaluation Template'}
+                {direction === 'rtl' ? 'لا يوجد قالب تقييم نشط لهذه الفترة' : 'No Active Template for This Period'}
               </h3>
               <p className="text-muted-foreground">
                 {direction === 'rtl' 
                   ? 'يرجى الاتصال بالمسؤول لإعداد قالب تقييم'
                   : 'Please contact an administrator to set up an evaluation template'}
               </p>
-              <Button variant="outline" onClick={goBack}>
-                {direction === 'rtl' ? 'العودة' : 'Go Back'}
+              <Button variant="outline" onClick={() => setSelectedPeriodType(null)}>
+                {direction === 'rtl' ? 'اختيار فترة أخرى' : 'Choose Another Period'}
               </Button>
             </div>
           </div>
@@ -810,7 +817,7 @@ export default function EvaluationForm() {
                 </Select>
               </div>
               
-              {selectedBranch && templateData && (
+              {selectedBranch && selectedPeriodType && templateData && (
                 <p className="text-sm text-muted-foreground mt-2">
                   {direction === 'rtl' ? 'القالب:' : 'Template:'} {direction === 'rtl' ? templateData.nameAr : templateData.name}
                 </p>
@@ -823,7 +830,7 @@ export default function EvaluationForm() {
         <div className="mt-4 h-2 bg-muted rounded-full overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
-            animate={{ width: `${(progress.scored / progress.total) * 100}%` }}
+            animate={{ width: `${progress.total > 0 ? (progress.scored / progress.total) * 100 : 0}%` }}
             className="h-full bg-primary rounded-full"
           />
         </div>
@@ -844,8 +851,54 @@ export default function EvaluationForm() {
         </div>
       )}
 
-      {/* Categories - only show when branch is selected and template loaded */}
-      {selectedBranch && templateData && (
+      {/* Period Type Selector - show after branch is selected */}
+      {selectedBranch && !selectedPeriodType && (
+        <div className="bg-card rounded-xl border border-border p-8">
+          <h3 className="text-lg font-semibold text-foreground text-center mb-2">
+            {direction === 'rtl' ? 'اختر نوع التقييم' : 'Select Evaluation Type'}
+          </h3>
+          <p className="text-sm text-muted-foreground text-center mb-6">
+            {direction === 'rtl' ? 'اختر الفترة الزمنية للتقييم' : 'Choose the evaluation period'}
+          </p>
+          <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
+            <button
+              onClick={() => {
+                setSelectedPeriodType('weekly');
+                setScores({});
+                setExpandedCategories([]);
+              }}
+              className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all"
+            >
+              <CalendarDays className="w-10 h-10 text-primary" />
+              <span className="font-semibold text-foreground">
+                {direction === 'rtl' ? 'أسبوعي' : 'Weekly'}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {direction === 'rtl' ? 'تقييم أسبوعي' : 'Weekly Evaluation'}
+              </span>
+            </button>
+            <button
+              onClick={() => {
+                setSelectedPeriodType('monthly');
+                setScores({});
+                setExpandedCategories([]);
+              }}
+              className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all"
+            >
+              <CalendarRange className="w-10 h-10 text-primary" />
+              <span className="font-semibold text-foreground">
+                {direction === 'rtl' ? 'شهري' : 'Monthly'}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {direction === 'rtl' ? 'تقييم شهري' : 'Monthly Evaluation'}
+              </span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Categories - only show when branch is selected, period chosen, and template loaded */}
+      {selectedBranch && selectedPeriodType && templateData && (
         <div className="space-y-4">
           {templateData.categories.map((category) => {
             const isExpanded = expandedCategories.includes(category.id);
@@ -1076,7 +1129,7 @@ export default function EvaluationForm() {
       )}
 
       {/* Sticky Footer with Progress and Submit */}
-      {selectedBranch && (
+      {selectedBranch && selectedPeriodType && templateData && (
         <div className="sticky bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border p-4 -mx-6 mt-6">
           <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
             {/* Progress bar */}
