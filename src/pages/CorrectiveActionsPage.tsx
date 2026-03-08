@@ -123,13 +123,47 @@ export default function CorrectiveActionsPage() {
   const goBack = useGoBack('/dashboard/ceo');
   const { language, direction } = useLanguage();
   const [activeTab, setActiveTab] = useState<string>('all');
+  const [selectedAction, setSelectedAction] = useState<CorrectiveActionRow | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
 
   const { data: actions, isLoading: actionsLoading } = useAllCorrectiveActions(
     activeTab !== 'all' ? activeTab : undefined
   );
   const { data: stats, isLoading: statsLoading } = useCorrectiveActionStats();
+  const { data: users } = useUsers();
 
   const isLoading = actionsLoading || statsLoading;
+
+  const getUserName = (userId: string) => {
+    const user = users?.find(u => u.user_id === userId);
+    return user?.full_name || userId.slice(0, 8);
+  };
+
+  const handleActionClick = (action: CorrectiveActionRow) => {
+    setSelectedAction(action);
+    setDetailOpen(true);
+  };
+
+  const getFindingStatusLabel = (status: string) => {
+    if (language === 'ar') {
+      switch (status) {
+        case 'open': return 'مفتوح';
+        case 'in_progress': return 'قيد التنفيذ';
+        case 'pending_review': return 'بانتظار المراجعة';
+        case 'resolved': return 'تم الحل';
+        case 'rejected': return 'مرفوض';
+        default: return status;
+      }
+    }
+    switch (status) {
+      case 'open': return 'Open';
+      case 'in_progress': return 'In Progress';
+      case 'pending_review': return 'Pending Review';
+      case 'resolved': return 'Resolved';
+      case 'rejected': return 'Rejected';
+      default: return status;
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
