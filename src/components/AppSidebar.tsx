@@ -88,16 +88,6 @@ export function AppSidebar() {
       path: '/evaluations/new',
     },
     { 
-      labelKey: 'nav.evaluations.weekly', 
-      icon: CalendarDays, 
-      path: '/evaluations/period?period=weekly',
-    },
-    { 
-      labelKey: 'nav.evaluations.monthly', 
-      icon: CalendarRange, 
-      path: '/evaluations/period?period=monthly',
-    },
-    { 
       labelKey: 'nav.evaluations.previous', 
       icon: History, 
       path: '/evaluations/previous',
