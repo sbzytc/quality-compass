@@ -431,6 +431,7 @@ export default function EvaluationForm() {
             assessor_id: user?.id,
             status: 'submitted',
             submitted_at: new Date().toISOString(),
+            period_type: selectedPeriodType || 'weekly',
           })
           .select()
           .single();
