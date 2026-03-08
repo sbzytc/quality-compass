@@ -170,6 +170,11 @@ const AppRoutes = () => (
           <TemplatesPage />
         </ProtectedRoute>
       } />
+      <Route path="/templates/new" element={
+        <ProtectedRoute allowedRoles={['admin']}>
+          <CreateTemplatePage />
+        </ProtectedRoute>
+      } />
       
       {/* Settings - All authenticated users */}
       <Route path="/settings" element={<SettingsPage />} />

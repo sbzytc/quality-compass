@@ -143,7 +143,7 @@ export default function TemplatesPage() {
           <p className="text-muted-foreground mt-1">
             {language === 'ar' ? 'أنشئ قالب التقييم الأول' : 'Create your first evaluation template'}
           </p>
-          <Button className="mt-4 gap-2">
+          <Button className="mt-4 gap-2" onClick={() => navigate('/templates/new')}>
             <Plus className="w-4 h-4" />
             {t('templates.create')}
           </Button>
