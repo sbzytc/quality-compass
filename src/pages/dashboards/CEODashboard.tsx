@@ -290,7 +290,8 @@ export default function CEODashboard() {
           </div>
           {/* Resolution Pie */}
           <div className="flex flex-col items-center cursor-pointer" onClick={() => navigate('/findings')}>
-            <div className="w-[340px] h-[280px] relative">
+            <span className="text-lg font-bold text-foreground mb-0">{language === 'ar' ? 'نسبة الحل' : 'Resolution'}</span>
+            <div className="w-[280px] h-[280px] relative">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
                   <Pie
