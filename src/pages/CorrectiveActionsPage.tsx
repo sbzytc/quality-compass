@@ -368,7 +368,8 @@ export default function CorrectiveActionsPage() {
                     initial={{ opacity: 0, x: direction === 'rtl' ? 20 : -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.03 }}
-                    className="p-4 hover:bg-muted/30 transition-colors"
+                    className="p-4 hover:bg-muted/30 transition-colors cursor-pointer"
+                    onClick={() => handleActionClick(action)}
                   >
                       <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
@@ -422,6 +423,7 @@ export default function CorrectiveActionsPage() {
                           </div>
                         )}
                       </div>
+                      <ChevronRight className={`w-5 h-5 text-muted-foreground shrink-0 mt-1 ${direction === 'rtl' ? 'rotate-180' : ''}`} />
                     </div>
                   </motion.div>
                 ))}
@@ -435,6 +437,209 @@ export default function CorrectiveActionsPage() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Detail Dialog */}
+      <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+        <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {language === 'ar' ? 'تفاصيل الإجراء التصحيحي' : 'Corrective Action Details'}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedAction && (() => {
+            const nc = selectedAction.non_conformities;
+            const isAr = language === 'ar';
+            return (
+              <div className="space-y-4 py-2">
+                {/* Criterion Name */}
+                <div className="space-y-1">
+                  <h3 className="font-semibold text-foreground text-base">
+                    {nc?.template_criteria
+                      ? (isAr ? nc.template_criteria.name_ar || nc.template_criteria.name : nc.template_criteria.name)
+                      : selectedAction.description}
+                  </h3>
+                  {nc?.template_criteria?.description && (
+                    <p className="text-sm text-muted-foreground">{nc.template_criteria.description}</p>
+                  )}
+                </div>
+
+                {/* Score & Statuses */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {nc && (
+                    <Badge variant="outline" className="text-xs">
+                      <Target className="w-3 h-3 mr-1" />
+                      {nc.score}/{nc.max_score}
+                    </Badge>
+                  )}
+                  <Badge variant="outline" className={`text-xs ${getStatusColor(selectedAction.status)}`}>
+                    <span className="flex items-center gap-1">
+                      {getStatusIcon(selectedAction.status)}
+                      {getStatusLabel(selectedAction.status)}
+                    </span>
+                  </Badge>
+                  <Badge variant="outline" className={`text-xs ${getPriorityColor(selectedAction.priority)}`}>
+                    {getPriorityLabel(selectedAction.priority)}
+                  </Badge>
+                  {nc && (
+                    <Badge variant="outline" className="text-xs bg-muted/50">
+                      {isAr ? 'حالة الملاحظة:' : 'Finding:'} {getFindingStatusLabel(nc.status)}
+                    </Badge>
+                  )}
+                </div>
+
+                {/* Description */}
+                {selectedAction.description && (
+                  <div className="p-3 bg-muted/50 rounded-lg text-sm">
+                    <span className="font-medium text-muted-foreground">{isAr ? 'الوصف:' : 'Description:'}</span>
+                    <p className="text-foreground mt-1">{selectedAction.description}</p>
+                  </div>
+                )}
+
+                {/* Branch */}
+                {nc?.branches && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Building2 className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">{isAr ? 'الفرع:' : 'Branch:'}</span>
+                    <span className="font-medium">{isAr ? nc.branches.name_ar || nc.branches.name : nc.branches.name}</span>
+                  </div>
+                )}
+
+                {/* Assigned To */}
+                {nc?.assigned_to && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <UserPlus className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">{isAr ? 'معيّن إلى:' : 'Assigned to:'}</span>
+                    <span className="font-medium">{getUserName(nc.assigned_to)}</span>
+                  </div>
+                )}
+
+                {/* Owner */}
+                {selectedAction.owner_id && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <UserPlus className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">{isAr ? 'المسؤول:' : 'Owner:'}</span>
+                    <span className="font-medium">{getUserName(selectedAction.owner_id)}</span>
+                  </div>
+                )}
+
+                {/* Due Date */}
+                {(selectedAction.due_date || nc?.due_date) && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Calendar className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">{isAr ? 'تاريخ الاستحقاق:' : 'Due date:'}</span>
+                    <span className="font-medium">
+                      {format(new Date(selectedAction.due_date || nc!.due_date!), 'MMM d, yyyy')}
+                    </span>
+                  </div>
+                )}
+
+                {/* Created Date */}
+                <div className="flex items-center gap-2 text-sm">
+                  <Clock className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">{isAr ? 'تاريخ الإنشاء:' : 'Created:'}</span>
+                  <span className="font-medium">{format(new Date(selectedAction.created_at), 'MMM d, yyyy')}</span>
+                </div>
+
+                {/* Completed Date */}
+                {selectedAction.completed_at && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <CheckCircle2 className="w-4 h-4 text-score-excellent" />
+                    <span className="text-muted-foreground">{isAr ? 'تاريخ الإكمال:' : 'Completed:'}</span>
+                    <span className="font-medium">{format(new Date(selectedAction.completed_at), 'MMM d, yyyy')}</span>
+                  </div>
+                )}
+
+                {/* Assessor Notes */}
+                {nc?.assessor_notes && (
+                  <div className="p-3 bg-muted/50 rounded-lg text-sm space-y-1">
+                    <span className="font-medium text-muted-foreground">{isAr ? 'ملاحظات المقيّم:' : 'Assessor Notes:'}</span>
+                    <p className="text-foreground">{nc.assessor_notes}</p>
+                  </div>
+                )}
+
+                {/* Finding Attachments */}
+                {nc?.attachments && nc.attachments.length > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                      <Camera className="w-4 h-4" />
+                      {isAr ? 'صور الملاحظة:' : 'Finding Photos:'}
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {nc.attachments.map((url, i) => (
+                        <a key={i} href={url} target="_blank" rel="noopener noreferrer">
+                          <img src={url} alt="" className="w-20 h-20 rounded-lg border border-border object-cover hover:opacity-80 transition-opacity" />
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Resolved By */}
+                {nc?.resolved_by && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <CheckCircle2 className="w-4 h-4 text-score-excellent" />
+                    <span className="text-muted-foreground">{isAr ? 'حُل بواسطة:' : 'Resolved by:'}</span>
+                    <span className="font-medium">{getUserName(nc.resolved_by)}</span>
+                    {nc.resolved_at && (
+                      <span className="text-muted-foreground">• {format(new Date(nc.resolved_at), 'MMM d, yyyy')}</span>
+                    )}
+                  </div>
+                )}
+
+                {/* Resolution Notes */}
+                {nc?.resolution_notes && (
+                  <div className="p-3 bg-score-excellent/5 border border-score-excellent/10 rounded-lg text-sm space-y-1">
+                    <span className="font-medium text-score-excellent">{isAr ? 'ملاحظات الإصلاح:' : 'Fix Notes:'}</span>
+                    <p className="text-foreground">{nc.resolution_notes}</p>
+                  </div>
+                )}
+
+                {/* Resolution Attachments */}
+                {nc?.resolution_attachments && nc.resolution_attachments.length > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-sm font-medium text-score-excellent flex items-center gap-1">
+                      <Camera className="w-4 h-4" />
+                      {isAr ? 'صور الإصلاح:' : 'Fix Photos:'}
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {nc.resolution_attachments.map((url, i) => (
+                        <a key={i} href={url} target="_blank" rel="noopener noreferrer">
+                          <img src={url} alt="" className="w-20 h-20 rounded-lg border border-border object-cover hover:opacity-80 transition-opacity" />
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Rejection Reason */}
+                {nc?.rejection_reason && (
+                  <div className="p-3 bg-score-critical/5 border border-score-critical/10 rounded-lg text-sm space-y-1">
+                    <span className="font-medium text-score-critical">{isAr ? 'سبب الرفض:' : 'Rejection Reason:'}</span>
+                    <p className="text-foreground">{nc.rejection_reason}</p>
+                  </div>
+                )}
+
+                {/* Review Attachments */}
+                {nc?.review_attachments && nc.review_attachments.length > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                      <Camera className="w-4 h-4" />
+                      {isAr ? 'صور المراجعة:' : 'Review Photos:'}
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {nc.review_attachments.map((url, i) => (
+                        <a key={i} href={url} target="_blank" rel="noopener noreferrer">
+                          <img src={url} alt="" className="w-20 h-20 rounded-lg border border-border object-cover hover:opacity-80 transition-opacity" />
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
