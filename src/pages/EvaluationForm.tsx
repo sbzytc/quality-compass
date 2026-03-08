@@ -307,6 +307,7 @@ export default function EvaluationForm() {
             template_id: activeTemplateId,
             assessor_id: user.id,
             status: 'draft',
+            period_type: selectedPeriodType || 'weekly',
           })
           .select()
           .single();
