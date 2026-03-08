@@ -151,6 +151,7 @@ export function AppSidebar() {
       labelKey: 'nav.correctiveActions', 
       icon: ListChecks, 
       path: '/corrective-actions',
+      allowedRoles: ['admin', 'executive', 'branch_manager'] as AppRole[],
     },
     { 
       labelKey: 'nav.reports', 
