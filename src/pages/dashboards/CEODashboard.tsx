@@ -370,11 +370,13 @@ export default function CEODashboard() {
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-sm font-bold text-foreground">{language === 'ar' ? 'نسبة الحل' : 'Resolution'}</span>
+                <span className="text-2xl font-bold text-foreground">
+                  {resolutionPieData.length > 0 ? `${Math.round((resolutionLegendItems[0].value / resolutionLegendItems.reduce((s, i) => s + i.value, 0)) * 100) || 0}%` : '0%'}
+                </span>
               </div>
             </div>
             {/* Legend below pie */}
-            <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 mt-2 max-w-[340px]">
+            <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 mt-2 max-w-[280px]">
               {resolutionLegendItems.map((item, i) => (
                 <div key={i} className="flex items-center gap-1 text-xs">
                   <span className="w-2.5 h-2.5 rounded-sm inline-block shrink-0" style={{ backgroundColor: item.color }} />
