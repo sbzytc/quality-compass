@@ -229,11 +229,11 @@ export default function CEODashboard() {
 
       {/* Score Circles */}
       {!isLoading && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 justify-items-center">
+        <div className="flex flex-row flex-wrap justify-center gap-8 items-start">
           {/* Evaluation Pie */}
           <div className="flex flex-col items-center cursor-pointer" onClick={() => navigate('/score-analysis')}>
-            <span className="text-lg font-bold text-foreground mb-2">{language === 'ar' ? 'التقييم' : 'Evaluation'}</span>
-            <div className="w-[340px] h-[340px] relative">
+            <span className="text-lg font-bold text-foreground mb-0">{language === 'ar' ? 'التقييم' : 'Evaluation'}</span>
+            <div className="w-[280px] h-[280px] relative">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   {(() => {
@@ -250,8 +250,8 @@ export default function CEODashboard() {
                         data={filtered}
                         cx="50%"
                         cy="50%"
-                        innerRadius={60}
-                        outerRadius={85}
+                        innerRadius={55}
+                        outerRadius={80}
                         paddingAngle={3}
                         dataKey="value"
                         label={({ cx, cy, midAngle, outerRadius: or, percent: _p, index }) => {
