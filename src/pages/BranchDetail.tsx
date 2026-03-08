@@ -2,7 +2,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Calendar, MapPin, AlertTriangle, CheckCircle2, Clock } from 'lucide-react';
 import { QualityCircle } from '@/components/QualityCircle';
-import { CategoryProgressBar } from '@/components/CategoryProgressBar';
 import { StatusBadge, ActionStatusBadge, PriorityBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -13,13 +12,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useGoBack } from '@/hooks/useGoBack';
-import { getScoreLevel, ScoreLevel } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
+import { getScoreLevel } from '@/types';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Cell } from 'recharts';
 
 export default function BranchDetail() {
   const { branchId } = useParams();
   const navigate = useNavigate();
   const goBack = useGoBack('/branches');
   const { t, language, direction } = useLanguage();
+  const { isAdmin, isExecutive } = useAuth();
 
   // Fetch branch data
   const { data: branch, isLoading: branchLoading } = useBranch(branchId || '');
@@ -31,7 +33,6 @@ export default function BranchDetail() {
   const { data: evaluationData, isLoading: evalLoading } = useQuery({
     queryKey: ['branch-evaluation', branchId],
     queryFn: async () => {
-      // Get latest evaluation
       const { data: evaluation, error: evalError } = await supabase
         .from('evaluations')
         .select(`
@@ -53,6 +54,36 @@ export default function BranchDetail() {
 
       if (evalError) throw evalError;
       return evaluation;
+    },
+    enabled: !!branchId,
+  });
+
+  // Fetch criterion score distribution for this branch
+  const { data: branchScoreDistribution } = useQuery({
+    queryKey: ['branch-criterion-score-distribution', branchId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('evaluation_criterion_scores')
+        .select('score, evaluations!inner(status, branch_id)')
+        .eq('evaluations.status', 'submitted')
+        .eq('evaluations.branch_id', branchId!);
+
+      if (error) throw error;
+
+      let excellent = 0;
+      let good = 0;
+      let medium = 0;
+      let bad = 0;
+
+      for (const row of data || []) {
+        const s = row.score;
+        if (s === 5) excellent++;
+        else if (s === 4) good++;
+        else if (s === 3) medium++;
+        else bad++;
+      }
+
+      return { excellent, good, medium, bad, total: (data || []).length };
     },
     enabled: !!branchId,
   });
@@ -114,19 +145,27 @@ export default function BranchDetail() {
   const status = getScoreLevel(overallScore);
   const regionName = language === 'ar' ? (branch.regions as any)?.name_ar || (branch.regions as any)?.name : (branch.regions as any)?.name;
 
-  // Map category scores
-  const categoryScores = evaluationData?.evaluation_category_scores?.map((cs: any) => ({
-    id: cs.id,
-    name: language === 'ar' ? cs.template_categories?.name_ar || cs.template_categories?.name : cs.template_categories?.name,
-    percentage: Number(cs.percentage) || 0,
-    status: getScoreLevel(Number(cs.percentage) || 0),
-  })) || [];
-
   // Count findings by status
   const openFindingsCount = findings?.filter(f => f.status === 'open').length || 0;
   const inProgressCount = findings?.filter(f => f.status === 'in_progress').length || 0;
   const resolvedCount = findings?.filter(f => f.status === 'resolved').length || 0;
+  const pendingReviewCount = findings?.filter(f => f.status === 'pending_review').length || 0;
   const overdueActionsCount = actions?.filter(a => a.status === 'overdue').length || 0;
+
+  // Score distribution data
+  const scoreDistribution = {
+    excellent: branchScoreDistribution?.excellent || 0,
+    good: branchScoreDistribution?.good || 0,
+    medium: branchScoreDistribution?.medium || 0,
+    bad: branchScoreDistribution?.bad || 0,
+  };
+
+  const handleStatClick = (statusFilter: string) => {
+    navigate(`/findings?status=${statusFilter}`);
+  };
+
+  // Check if executive only (not admin)
+  const isExecutiveOnly = isExecutive && !isAdmin;
 
   return (
     <div className="space-y-8">
@@ -171,64 +210,128 @@ export default function BranchDetail() {
         </div>
       </div>
 
-      {/* Quick Stats */}
+      {/* Quick Stats - Clickable */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-card rounded-xl border border-border p-4">
+        <button
+          onClick={() => handleStatClick('open')}
+          className="bg-card rounded-xl border border-border p-4 text-start hover:bg-muted/50 transition-colors"
+        >
           <div className="flex items-center gap-2 text-muted-foreground">
             <AlertTriangle className="w-4 h-4" />
             <span className="text-sm">{direction === 'rtl' ? 'ملاحظات مفتوحة' : 'Open Findings'}</span>
           </div>
           <p className="text-2xl font-bold text-foreground mt-1">{openFindingsCount}</p>
-        </div>
-        <div className="bg-card rounded-xl border border-border p-4">
+        </button>
+        <button
+          onClick={() => handleStatClick('in_progress')}
+          className="bg-card rounded-xl border border-border p-4 text-start hover:bg-muted/50 transition-colors"
+        >
           <div className="flex items-center gap-2 text-muted-foreground">
             <Clock className="w-4 h-4" />
             <span className="text-sm">{direction === 'rtl' ? 'قيد التنفيذ' : 'In Progress'}</span>
           </div>
           <p className="text-2xl font-bold text-foreground mt-1">{inProgressCount}</p>
-        </div>
-        <div className="bg-card rounded-xl border border-border p-4">
+        </button>
+        <button
+          onClick={() => handleStatClick('pending_review')}
+          className="bg-card rounded-xl border border-border p-4 text-start hover:bg-muted/50 transition-colors"
+        >
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Clock className="w-4 h-4" />
+            <span className="text-sm">{direction === 'rtl' ? 'بانتظار المراجعة' : 'Pending Review'}</span>
+          </div>
+          <p className="text-2xl font-bold text-foreground mt-1">{pendingReviewCount}</p>
+        </button>
+        <button
+          onClick={() => handleStatClick('resolved')}
+          className="bg-card rounded-xl border border-border p-4 text-start hover:bg-muted/50 transition-colors"
+        >
           <div className="flex items-center gap-2 text-muted-foreground">
             <CheckCircle2 className="w-4 h-4" />
             <span className="text-sm">{direction === 'rtl' ? 'تم حلها' : 'Resolved'}</span>
           </div>
           <p className="text-2xl font-bold text-foreground mt-1">{resolvedCount}</p>
-        </div>
-        <div className="bg-card rounded-xl border border-border p-4">
-          <div className="flex items-center gap-2 text-score-critical">
-            <AlertTriangle className="w-4 h-4" />
-            <span className="text-sm">{direction === 'rtl' ? 'إجراءات متأخرة' : 'Overdue Actions'}</span>
-          </div>
-          <p className="text-2xl font-bold text-score-critical mt-1">{overdueActionsCount}</p>
-        </div>
+        </button>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
-        {/* Category Scores */}
+        {/* Score Distribution Bar Chart */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-card rounded-xl border border-border p-6"
         >
-          <h2 className="text-lg font-semibold text-foreground mb-6">
-            {direction === 'rtl' ? 'تفصيل الفئات' : 'Category Breakdown'}
+          <h2 className="text-lg font-semibold text-foreground mb-4">
+            {direction === 'rtl' ? 'توزيع الدرجات' : 'Score Distribution'}
           </h2>
-          {categoryScores.length > 0 ? (
-            <div className="space-y-5">
-              {categoryScores.map((category: any) => (
-                <CategoryProgressBar
-                  key={category.id}
-                  name={category.name}
-                  percentage={category.percentage}
-                  status={category.status}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <p>{direction === 'rtl' ? 'لا توجد بيانات تقييم' : 'No evaluation data'}</p>
-            </div>
-          )}
+          {(() => {
+            const scoreData = [
+              { name: language === 'ar' ? 'ممتاز (5)' : 'Excellent (5)', value: scoreDistribution.excellent, fill: 'hsl(142, 76%, 36%)', scoreRange: '5' },
+              { name: language === 'ar' ? 'جيد (4)' : 'Good (4)', value: scoreDistribution.good, fill: 'hsl(142, 52%, 50%)', scoreRange: '4' },
+              { name: language === 'ar' ? 'متوسط (3)' : 'Medium (3)', value: scoreDistribution.medium, fill: 'hsl(45, 93%, 47%)', scoreRange: '3' },
+              { name: language === 'ar' ? 'ضعيف (0-2)' : 'Weak (0-2)', value: scoreDistribution.bad, fill: 'hsl(0, 84%, 50%)', scoreRange: '0-2' },
+            ];
+            const legendItems = [
+              { label: language === 'ar' ? 'ممتاز (5)' : 'Excellent (5)', color: 'hsl(142, 76%, 36%)' },
+              { label: language === 'ar' ? 'جيد (4)' : 'Good (4)', color: 'hsl(142, 52%, 50%)' },
+              { label: language === 'ar' ? 'متوسط (3)' : 'Medium (3)', color: 'hsl(45, 93%, 47%)' },
+              { label: language === 'ar' ? 'ضعيف (0-2)' : 'Weak (0-2)', color: 'hsl(0, 84%, 50%)' },
+            ];
+            return (
+              <>
+                <div className="h-[250px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={scoreData}
+                      margin={{ top: 20, right: 20, left: 10, bottom: 10 }}
+                      onClick={(state) => {
+                        if (state && state.activePayload && state.activePayload.length > 0) {
+                          const clicked = state.activePayload[0].payload;
+                          navigate(`/findings?scoreRange=${clicked.scoreRange}`);
+                        }
+                      }}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} hide />
+                      <YAxis hide />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                          fontSize: '12px',
+                        }}
+                        formatter={(value: number) => [value, language === 'ar' ? 'العدد' : 'Count']}
+                      />
+                      <Bar
+                        dataKey="value"
+                        radius={[6, 6, 0, 0]}
+                        maxBarSize={50}
+                        label={({ x, y, width, value }: any) => (
+                          <text x={x + width / 2} y={y - 8} textAnchor="middle" fontSize={13} fontWeight={700} fill="hsl(var(--foreground))">
+                            {value}
+                          </text>
+                        )}
+                      >
+                        {scoreData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} cursor="pointer" />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="flex flex-wrap justify-center gap-3 mt-2">
+                  {legendItems.map((item, i) => (
+                    <div key={i} className="flex items-center gap-1.5 text-sm">
+                      <span className="w-3 h-3 rounded-sm inline-block" style={{ backgroundColor: item.color }} />
+                      <span className="text-muted-foreground">{item.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            );
+          })()}
         </motion.div>
 
         {/* Findings List */}
@@ -302,9 +405,11 @@ export default function BranchDetail() {
           <h2 className="text-lg font-semibold text-foreground">
             {direction === 'rtl' ? 'الإجراءات التصحيحية' : 'Corrective Actions'}
           </h2>
-          <Button size="sm">
-            {direction === 'rtl' ? 'إضافة إجراء' : 'Add Action'}
-          </Button>
+          {!isExecutiveOnly && (
+            <Button size="sm">
+              {direction === 'rtl' ? 'إضافة إجراء' : 'Add Action'}
+            </Button>
+          )}
         </div>
         {!actions || actions.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
