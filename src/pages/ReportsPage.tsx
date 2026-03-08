@@ -248,7 +248,7 @@ export default function ReportsPage() {
                           {best ? (
                             <>
                               <span className="text-lg font-bold text-score-excellent">{best.branchName}</span>
-                              <span className="text-sm text-muted-foreground ms-2">{best.periods[0]?.score}%</span>
+                              <span className="text-sm text-muted-foreground ms-2">{best.latestScore}%</span>
                             </>
                           ) : (
                             <span className="text-sm text-muted-foreground">{isAr ? 'لا توجد بيانات' : 'No data'}</span>
