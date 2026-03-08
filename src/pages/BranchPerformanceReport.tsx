@@ -123,7 +123,7 @@ export default function BranchPerformanceReport() {
       const pEvals = evaluations.filter(e => {
         if (!e.submitted_at) return false;
         const d = new Date(e.submitted_at);
-        return d >= p.start && d <= p.end && (activeTab === 'yearly' || e.period_type === activeTab);
+        return d >= p.start && d <= p.end;
       });
 
       const avg = pEvals.length > 0

@@ -84,7 +84,7 @@ export default function ReportsPage() {
       }
       return true;
     }).map(branch => {
-      const branchEvals = evaluations.filter(e => e.branch_id === branch.id && (activeTab === 'yearly' || e.period_type === activeTab));
+      const branchEvals = evaluations.filter(e => e.branch_id === branch.id);
 
       const periodScores = periods.map(p => {
         const matching = branchEvals.filter(e => {
