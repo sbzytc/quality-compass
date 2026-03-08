@@ -289,6 +289,35 @@ export default function BranchPerformanceReport() {
                   {isExpanded && period.avg != null && (
                     <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
                       <div className="border-t border-border p-6 space-y-6">
+                        {/* Individual Evaluations */}
+                        {period.evalCount > 1 && (
+                          <div>
+                            <h4 className="text-sm font-semibold text-muted-foreground mb-3">
+                              {isAr ? `النتيجة هي متوسط ${period.evalCount} تقييمات` : `Result is the average of ${period.evalCount} evaluations`}
+                            </h4>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                              {period.individualEvals.map((ev, ei) => (
+                                <div key={ev.id} className="bg-muted/50 rounded-lg p-3 text-center">
+                                  <p className="text-xs text-muted-foreground mb-1">
+                                    {isAr ? `تقييم ${ei + 1}` : `Evaluation ${ei + 1}`}
+                                  </p>
+                                  <p className={cn(
+                                    "text-xl font-bold",
+                                    ev.percentage >= 80 ? "text-score-excellent" : ev.percentage >= 60 ? "text-score-good" : ev.percentage >= 40 ? "text-score-average" : "text-score-critical"
+                                  )}>
+                                    {Math.round(ev.percentage)}%
+                                  </p>
+                                  {ev.submittedAt && (
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                      {format(new Date(ev.submittedAt), 'd/M', dateLocale)}
+                                    </p>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
                         {/* Category Breakdown */}
                         <div>
                           <h4 className="text-sm font-semibold text-muted-foreground mb-3">{isAr ? 'تفصيل الفئات' : 'Category Breakdown'}</h4>
