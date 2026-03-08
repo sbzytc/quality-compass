@@ -1129,7 +1129,7 @@ export default function EvaluationForm() {
       )}
 
       {/* Sticky Footer with Progress and Submit */}
-      {selectedBranch && (
+      {selectedBranch && selectedPeriodType && templateData && (
         <div className="sticky bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border p-4 -mx-6 mt-6">
           <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
             {/* Progress bar */}
