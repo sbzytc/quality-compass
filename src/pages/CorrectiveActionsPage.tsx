@@ -30,11 +30,21 @@ interface CorrectiveActionRow {
     score: number;
     max_score: number;
     status: string;
+    assigned_to: string | null;
+    due_date: string | null;
     resolved_by: string | null;
     resolved_at: string | null;
     resolution_notes: string | null;
+    resolution_attachments: string[] | null;
+    rejection_reason: string | null;
+    assessor_notes: string | null;
+    attachments: string[] | null;
+    review_attachments: string[] | null;
+    reviewed_by: string | null;
+    reviewed_at: string | null;
+    created_at: string;
     branches: { name: string; name_ar: string | null } | null;
-    template_criteria: { name: string; name_ar: string | null } | null;
+    template_criteria: { name: string; name_ar: string | null; description: string | null } | null;
   } | null;
 }
 
@@ -52,11 +62,21 @@ function useAllCorrectiveActions(statusFilter?: string) {
             score,
             max_score,
             status,
+            assigned_to,
+            due_date,
             resolved_by,
             resolved_at,
             resolution_notes,
+            resolution_attachments,
+            rejection_reason,
+            assessor_notes,
+            attachments,
+            review_attachments,
+            reviewed_by,
+            reviewed_at,
+            created_at,
             branches:branch_id (name, name_ar),
-            template_criteria:criterion_id (name, name_ar)
+            template_criteria:criterion_id (name, name_ar, description)
           )
         `)
         .order('created_at', { ascending: false });
