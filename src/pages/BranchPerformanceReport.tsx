@@ -154,7 +154,13 @@ export default function BranchPerformanceReport() {
         resolved: periodFindings.filter(f => f.status === 'resolved').length,
       };
 
-      return { ...p, idx, avg, evalCount: pEvals.length, categories, findingsStats };
+      const individualEvals = pEvals.map(e => ({
+        id: e.id,
+        percentage: Number(e.overall_percentage) || 0,
+        submittedAt: e.submitted_at,
+      }));
+
+      return { ...p, idx, avg, evalCount: pEvals.length, categories, findingsStats, individualEvals };
     });
   }, [periods, evaluations, categoryScores, findingsData, activeTab]);
 
