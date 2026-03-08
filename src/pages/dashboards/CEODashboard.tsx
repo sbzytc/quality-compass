@@ -229,11 +229,11 @@ export default function CEODashboard() {
 
       {/* Score Circles */}
       {!isLoading && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 justify-items-center">
+        <div className="flex flex-row flex-wrap justify-center gap-8 items-start">
           {/* Evaluation Pie */}
           <div className="flex flex-col items-center cursor-pointer" onClick={() => navigate('/score-analysis')}>
-            <span className="text-lg font-bold text-foreground mb-2">{language === 'ar' ? 'التقييم' : 'Evaluation'}</span>
-            <div className="w-[340px] h-[340px] relative">
+            <span className="text-lg font-bold text-foreground mb-0">{language === 'ar' ? 'التقييم' : 'Evaluation'}</span>
+            <div className="w-[280px] h-[280px] relative">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   {(() => {
@@ -250,8 +250,8 @@ export default function CEODashboard() {
                         data={filtered}
                         cx="50%"
                         cy="50%"
-                        innerRadius={60}
-                        outerRadius={85}
+                        innerRadius={55}
+                        outerRadius={80}
                         paddingAngle={3}
                         dataKey="value"
                         label={({ cx, cy, midAngle, outerRadius: or, percent: _p, index }) => {
@@ -290,7 +290,8 @@ export default function CEODashboard() {
           </div>
           {/* Resolution Pie */}
           <div className="flex flex-col items-center cursor-pointer" onClick={() => navigate('/findings')}>
-            <div className="w-[340px] h-[280px] relative">
+            <span className="text-lg font-bold text-foreground mb-0">{language === 'ar' ? 'نسبة الحل' : 'Resolution'}</span>
+            <div className="w-[280px] h-[280px] relative">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
                   <Pie
@@ -369,11 +370,13 @@ export default function CEODashboard() {
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-sm font-bold text-foreground">{language === 'ar' ? 'نسبة الحل' : 'Resolution'}</span>
+                <span className="text-2xl font-bold text-foreground">
+                  {resolutionPieData.length > 0 ? `${Math.round((resolutionLegendItems[0].value / resolutionLegendItems.reduce((s, i) => s + i.value, 0)) * 100) || 0}%` : '0%'}
+                </span>
               </div>
             </div>
             {/* Legend below pie */}
-            <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 mt-2 max-w-[340px]">
+            <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 mt-2 max-w-[280px]">
               {resolutionLegendItems.map((item, i) => (
                 <div key={i} className="flex items-center gap-1 text-xs">
                   <span className="w-2.5 h-2.5 rounded-sm inline-block shrink-0" style={{ backgroundColor: item.color }} />
