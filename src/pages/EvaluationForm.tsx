@@ -718,7 +718,7 @@ export default function EvaluationForm() {
   const progress = getOverallProgress();
 
   // Show loading state when loading a draft or template
-  if (isLoadingDraft || templateLoading) {
+  if (isLoadingDraft || (selectedPeriodType && templateLoading)) {
     return (
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="bg-card rounded-xl border border-border p-6">
@@ -735,8 +735,8 @@ export default function EvaluationForm() {
     );
   }
 
-  // Show error if no template found
-  if (!templateData) {
+  // Show error if period selected but no template found
+  if (selectedPeriodType && !templateLoading && !templateData) {
     return (
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="bg-card rounded-xl border border-border p-6">
@@ -744,15 +744,15 @@ export default function EvaluationForm() {
             <div className="flex flex-col items-center gap-4 text-center">
               <AlertCircle className="w-12 h-12 text-destructive" />
               <h3 className="text-lg font-medium text-foreground">
-                {direction === 'rtl' ? 'لا يوجد قالب تقييم نشط' : 'No Active Evaluation Template'}
+                {direction === 'rtl' ? 'لا يوجد قالب تقييم نشط لهذه الفترة' : 'No Active Template for This Period'}
               </h3>
               <p className="text-muted-foreground">
                 {direction === 'rtl' 
                   ? 'يرجى الاتصال بالمسؤول لإعداد قالب تقييم'
                   : 'Please contact an administrator to set up an evaluation template'}
               </p>
-              <Button variant="outline" onClick={goBack}>
-                {direction === 'rtl' ? 'العودة' : 'Go Back'}
+              <Button variant="outline" onClick={() => setSelectedPeriodType(null)}>
+                {direction === 'rtl' ? 'اختيار فترة أخرى' : 'Choose Another Period'}
               </Button>
             </div>
           </div>
