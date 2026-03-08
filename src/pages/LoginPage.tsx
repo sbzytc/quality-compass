@@ -17,7 +17,7 @@ import {
 import { toast } from 'sonner';
 import { Loader2, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import rasdaLogo from '@/assets/rasda-logo.png';
+import rasdaLogo from '@/assets/rasdah-logo.png';
 import { getDefaultDashboard } from '@/components/ProtectedRoute';
 
 export default function LoginPage() {
