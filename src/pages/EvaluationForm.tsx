@@ -813,7 +813,7 @@ export default function EvaluationForm() {
                 </Select>
               </div>
               
-              {selectedBranch && templateData && (
+              {selectedBranch && selectedPeriodType && templateData && (
                 <p className="text-sm text-muted-foreground mt-2">
                   {direction === 'rtl' ? 'القالب:' : 'Template:'} {direction === 'rtl' ? templateData.nameAr : templateData.name}
                 </p>
@@ -826,7 +826,7 @@ export default function EvaluationForm() {
         <div className="mt-4 h-2 bg-muted rounded-full overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
-            animate={{ width: `${(progress.scored / progress.total) * 100}%` }}
+            animate={{ width: `${progress.total > 0 ? (progress.scored / progress.total) * 100 : 0}%` }}
             className="h-full bg-primary rounded-full"
           />
         </div>
@@ -847,8 +847,54 @@ export default function EvaluationForm() {
         </div>
       )}
 
-      {/* Categories - only show when branch is selected and template loaded */}
-      {selectedBranch && templateData && (
+      {/* Period Type Selector - show after branch is selected */}
+      {selectedBranch && !selectedPeriodType && (
+        <div className="bg-card rounded-xl border border-border p-8">
+          <h3 className="text-lg font-semibold text-foreground text-center mb-2">
+            {direction === 'rtl' ? 'اختر نوع التقييم' : 'Select Evaluation Type'}
+          </h3>
+          <p className="text-sm text-muted-foreground text-center mb-6">
+            {direction === 'rtl' ? 'اختر الفترة الزمنية للتقييم' : 'Choose the evaluation period'}
+          </p>
+          <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
+            <button
+              onClick={() => {
+                setSelectedPeriodType('weekly');
+                setScores({});
+                setExpandedCategories([]);
+              }}
+              className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all"
+            >
+              <CalendarDays className="w-10 h-10 text-primary" />
+              <span className="font-semibold text-foreground">
+                {direction === 'rtl' ? 'أسبوعي' : 'Weekly'}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {direction === 'rtl' ? 'تقييم أسبوعي' : 'Weekly Evaluation'}
+              </span>
+            </button>
+            <button
+              onClick={() => {
+                setSelectedPeriodType('monthly');
+                setScores({});
+                setExpandedCategories([]);
+              }}
+              className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all"
+            >
+              <CalendarRange className="w-10 h-10 text-primary" />
+              <span className="font-semibold text-foreground">
+                {direction === 'rtl' ? 'شهري' : 'Monthly'}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {direction === 'rtl' ? 'تقييم شهري' : 'Monthly Evaluation'}
+              </span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Categories - only show when branch is selected, period chosen, and template loaded */}
+      {selectedBranch && selectedPeriodType && templateData && (
         <div className="space-y-4">
           {templateData.categories.map((category) => {
             const isExpanded = expandedCategories.includes(category.id);
