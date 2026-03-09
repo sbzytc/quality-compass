@@ -132,6 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isExecutive = hasRole('executive');
   const isBranchManager = hasRole('branch_manager');
   const isAssessor = hasRole('assessor');
+  const isSupportAgent = hasRole('support_agent');
 
   return (
     <AuthContext.Provider
