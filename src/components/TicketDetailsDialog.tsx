@@ -32,6 +32,8 @@ export function TicketDetailsDialog({ ticket, isOpen, onClose, isSupportAgent = 
   const { t, direction } = useLanguage();
   const [newComment, setNewComment] = useState('');
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
+  const [commentPosted, setCommentPosted] = useState(false);
+  const [tempStatus, setTempStatus] = useState<string>('');
 
   const [pendingStatus, setPendingStatus] = useState<string | null>(null);
   const isCloseConfirmOpen = !!pendingStatus;
@@ -61,17 +63,46 @@ export function TicketDetailsDialog({ ticket, isOpen, onClose, isSupportAgent = 
   const { comments, isLoading, addComment } = useTicketComments(ticket?.id);
   const { updateTicket } = useSupportTickets();
 
+  // Reset comment posted state when ticket changes or dialog opens
+  React.useEffect(() => {
+    setCommentPosted(false);
+    if (ticket) {
+      setTempStatus(ticket.status);
+    }
+  }, [ticket?.id, ticket?.status, isOpen]);
+
   if (!ticket) return null;
 
-  const handleAddComment = async () => {
+  const handlePostComment = async () => {
     if (!newComment.trim()) return;
     try {
       await addComment.mutateAsync({ comment: newComment });
       setNewComment('');
-      toast.success(direction === 'rtl' ? 'تم إضافة التعليق' : 'Comment added');
+      setCommentPosted(true);
+      setTempStatus(ticket.status); // Initialize temp status with current status
+      toast.success(direction === 'rtl' ? 'تم نشر التعليق' : 'Comment posted');
+    } catch (error) {
+      toast.error(direction === 'rtl' ? 'فشل نشر التعليق' : 'Failed to post comment');
+    }
+  };
+
+  const handleFinalSubmit = async () => {
+    try {
+      if (tempStatus !== ticket.status) {
+        if (tempStatus === 'closed') {
+          if (isSupportAgent) {
+            setPendingStatus('pending_closure');
+          } else {
+            setPendingStatus('closed');
+          }
+          return;
+        }
+        await updateTicket.mutateAsync({ id: ticket.id, status: tempStatus as any });
+        toast.success(direction === 'rtl' ? 'تم تحديث الحالة' : 'Status updated');
+      }
       onClose();
     } catch (error) {
-      toast.error(direction === 'rtl' ? 'فشل إضافة التعليق' : 'Failed to add comment');
+      toast.error(direction === 'rtl' ? 'فشل التحديث' : 'Update failed');
     }
   };
 
@@ -104,6 +135,9 @@ export function TicketDetailsDialog({ ticket, isOpen, onClose, isSupportAgent = 
     setPendingStatus(null);
     if (!status) return;
     await executeStatusChange(status);
+    if (commentPosted) {
+      onClose();
+    }
   };
 
   const timeLocale = direction === 'rtl' ? ar : enUS;
@@ -244,71 +278,118 @@ export function TicketDetailsDialog({ ticket, isOpen, onClose, isSupportAgent = 
           <div className="p-4 border-t bg-muted/10">
             {ticket.status !== 'closed' && ticket.status !== 'resolved' ? (
               <div className="flex flex-col gap-3">
-                <div className="flex gap-2">
-                  <Textarea
-                    placeholder={direction === 'rtl' ? 'اكتب تعليقاً...' : 'Write a comment...'}
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    className="min-h-[60px]"
-                  />
-                  <Button
-                    onClick={handleAddComment}
-                    disabled={addComment.isPending || !newComment.trim()}
-                    className="h-auto shrink-0 px-6"
-                  >
-                    <Send className={`w-4 h-4 ${direction === 'rtl' ? 'rotate-180 ml-2' : 'mr-2'}`} />
-                    {direction === 'rtl' ? 'إرسال' : 'Send'}
-                  </Button>
-                </div>
-
-                <div className="flex justify-between items-center mt-2">
-                  {!isSupportAgent && ticket.status === 'pending_closure' ? (
-                    <div className="flex flex-col sm:flex-row items-center gap-2 w-full p-3 bg-primary/5 rounded-lg border border-primary/20">
-                      <span className="text-sm font-medium flex-1 text-center sm:text-start">
-                        {direction === 'rtl' 
-                          ? 'يطلب الدعم الفني إغلاق هذه التذكرة. هل توافق على الإغلاق؟' 
-                          : 'Support requested to close this ticket. Do you approve?'}
-                      </span>
-                      <div className="flex gap-2">
-                        <Button size="sm" onClick={() => executeStatusChange('closed')} className="bg-score-excellent hover:bg-score-excellent/90">
-                          {direction === 'rtl' ? 'موافقة وإغلاق' : 'Accept & Close'}
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={() => executeStatusChange('open')}>
-                          {direction === 'rtl' ? 'رفض وإعادة فتح' : 'Reject & Reopen'}
-                        </Button>
-                      </div>
-                    </div>
-                  ) : isSupportAgent ? (
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">{direction === 'rtl' ? 'تحديث الحالة:' : 'Update Status:'}</span>
-                      <Select value={ticket.status} onValueChange={requestStatusChange}>
-                        <SelectTrigger className="w-[140px] h-8 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="open">Open</SelectItem>
-                          <SelectItem value="in_progress">In Progress</SelectItem>
-                          <SelectItem value="resolved">Resolved</SelectItem>
-                          {ticket.status === 'pending_closure' && (
-                            <SelectItem value="pending_closure">
-                              {direction === 'rtl' ? 'بانتظار الإغلاق' : 'Pending Closure'}
-                            </SelectItem>
-                          )}
-                          <SelectItem value="closed">Closed</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  ) : (
+                {!commentPosted ? (
+                  // Step 1: Comment Input with Post Button
+                  <div className="flex gap-2">
+                    <Textarea
+                      placeholder={direction === 'rtl' ? 'اكتب تعليقاً...' : 'Write a comment...'}
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      className="min-h-[60px]"
+                    />
                     <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => requestStatusChange('closed')}
-                      className="text-destructive hover:bg-destructive/10"
+                      onClick={handlePostComment}
+                      disabled={addComment.isPending || !newComment.trim()}
+                      className="h-auto shrink-0 px-6"
                     >
-                      {direction === 'rtl' ? 'إغلاق التذكرة' : 'Close Ticket'}
+                      <Send className={`w-4 h-4 ${direction === 'rtl' ? 'rotate-180 ml-2' : 'mr-2'}`} />
+                      {direction === 'rtl' ? 'نشر' : 'Post'}
                     </Button>
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  // Step 2: Status Change with Final Submit
+                  <div className="space-y-3">
+                    <div className="p-3 bg-score-excellent/10 border border-score-excellent/20 rounded-lg">
+                      <p className="text-sm text-score-excellent font-medium">
+                        {direction === 'rtl' ? '✓ تم نشر التعليق بنجاح' : '✓ Comment posted successfully'}
+                      </p>
+                    </div>
+                    
+                    {isSupportAgent && (
+                      <div className="flex items-center gap-2 p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm font-medium">{direction === 'rtl' ? 'تحديث حالة التذكرة:' : 'Update ticket status:'}</span>
+                        <Select value={tempStatus} onValueChange={setTempStatus}>
+                          <SelectTrigger className="w-[140px] h-8 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="open">Open</SelectItem>
+                            <SelectItem value="in_progress">In Progress</SelectItem>
+                            <SelectItem value="resolved">Resolved</SelectItem>
+                            <SelectItem value="closed">Closed</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
+                    <div className="flex justify-between items-center">
+                      <Button
+                        variant="outline"
+                        onClick={() => setCommentPosted(false)}
+                        size="sm"
+                      >
+                        {direction === 'rtl' ? 'إضافة تعليق آخر' : 'Add Another Comment'}
+                      </Button>
+                      
+                      <Button onClick={handleFinalSubmit} className="px-8">
+                        <Send className={`w-4 h-4 ${direction === 'rtl' ? 'rotate-180 ml-2' : 'mr-2'}`} />
+                        {direction === 'rtl' ? 'إرسال وإغلاق' : 'Submit & Close'}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Original Status Controls - Show only if comment not posted */}
+                {!commentPosted && (
+                  <div className="flex justify-between items-center mt-2">
+                    {!isSupportAgent && ticket.status === 'pending_closure' ? (
+                      <div className="flex flex-col sm:flex-row items-center gap-2 w-full p-3 bg-primary/5 rounded-lg border border-primary/20">
+                        <span className="text-sm font-medium flex-1 text-center sm:text-start">
+                          {direction === 'rtl' 
+                            ? 'يطلب الدعم الفني إغلاق هذه التذكرة. هل توافق على الإغلاق؟' 
+                            : 'Support requested to close this ticket. Do you approve?'}
+                        </span>
+                        <div className="flex gap-2">
+                          <Button size="sm" onClick={() => executeStatusChange('closed')} className="bg-score-excellent hover:bg-score-excellent/90">
+                            {direction === 'rtl' ? 'موافقة وإغلاق' : 'Accept & Close'}
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => executeStatusChange('open')}>
+                            {direction === 'rtl' ? 'رفض وإعادة فتح' : 'Reject & Reopen'}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : isSupportAgent ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">{direction === 'rtl' ? 'تحديث الحالة:' : 'Update Status:'}</span>
+                        <Select value={ticket.status} onValueChange={requestStatusChange}>
+                          <SelectTrigger className="w-[140px] h-8 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="open">Open</SelectItem>
+                            <SelectItem value="in_progress">In Progress</SelectItem>
+                            <SelectItem value="resolved">Resolved</SelectItem>
+                            {ticket.status === 'pending_closure' && (
+                              <SelectItem value="pending_closure">
+                                {direction === 'rtl' ? 'بانتظار الإغلاق' : 'Pending Closure'}
+                              </SelectItem>
+                            )}
+                            <SelectItem value="closed">Closed</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => requestStatusChange('closed')}
+                        className="text-destructive hover:bg-destructive/10"
+                      >
+                        {direction === 'rtl' ? 'إغلاق التذكرة' : 'Close Ticket'}
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
             ) : (
               <p className="text-sm text-center text-muted-foreground">
