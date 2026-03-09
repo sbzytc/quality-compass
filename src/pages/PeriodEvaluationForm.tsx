@@ -84,6 +84,9 @@ export default function PeriodEvaluationForm() {
     try {
       if (!templateData?.id || !selectedBranchId || !user) return;
 
+      const now = new Date();
+      const startTime = evaluationStartTime || now;
+      const durationMinutes = Math.round((now.getTime() - startTime.getTime()) / 60000);
       const { data: evaluation, error: evalError } = await supabase
         .from('evaluations')
         .insert({
@@ -91,7 +94,9 @@ export default function PeriodEvaluationForm() {
           template_id: templateData.id,
           assessor_id: user.id,
           status: 'submitted',
-          submitted_at: new Date().toISOString(),
+          submitted_at: now.toISOString(),
+          started_at: startTime.toISOString(),
+          duration_minutes: durationMinutes,
           period_type: periodType,
         })
         .select()
