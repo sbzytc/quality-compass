@@ -167,6 +167,23 @@ export function AppSidebar() {
       path: '/branch-performance',
       allowedRoles: ['admin', 'executive', 'branch_manager'] as AppRole[]
     },
+    { 
+      labelKey: 'nav.support', 
+      icon: Headset, 
+      path: '/support',
+      children: [
+        {
+          labelKey: 'nav.support.myTickets',
+          icon: FileText,
+          path: '/support/my-tickets',
+        },
+        ...(isAdmin || isSupportAgent ? [{
+          labelKey: 'nav.support.dashboard',
+          icon: LayoutDashboard,
+          path: '/support/dashboard',
+        }] : [])
+      ]
+    },
   ] as NavItem[]).filter(item => !item.allowedRoles || item.allowedRoles.some(role => roles.includes(role)));
 
   const settingsNavItems: NavItem[] = ([

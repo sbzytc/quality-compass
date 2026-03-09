@@ -139,6 +139,12 @@ const translations: Record<Language, Record<string, string>> = {
     'role.branch_manager': 'Branch Manager',
     'role.assessor': 'Assessor',
     'role.branch_employee': 'Branch Employee',
+    'role.support_agent': 'Support Agent',
+
+    // Support
+    'nav.support': 'Technical Support',
+    'nav.support.dashboard': 'Support Dashboard',
+    'nav.support.myTickets': 'My Tickets',
 
     // Settings
     'settings.title': 'Settings',
