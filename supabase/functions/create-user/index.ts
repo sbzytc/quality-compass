@@ -11,7 +11,7 @@ interface CreateUserRequest {
   email: string;
   fullName: string;
   password: string;
-  role: "admin" | "executive" | "branch_manager" | "assessor";
+  role: "admin" | "executive" | "branch_manager" | "assessor" | "branch_employee" | "support_agent";
   forcePasswordChange: boolean;
   branchId?: string;
 }
