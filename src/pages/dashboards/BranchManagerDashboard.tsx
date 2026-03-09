@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, Clock, FileSearch, ExternalLink, AlertCircle, Building2 } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, Clock, FileSearch, AlertCircle, Building2 } from 'lucide-react';
 import { QualityCircle } from '@/components/QualityCircle';
 import { StatCard } from '@/components/StatCard';
 import { StatusBadge } from '@/components/StatusBadge';
