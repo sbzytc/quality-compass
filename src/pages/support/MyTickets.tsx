@@ -99,9 +99,38 @@ export default function MyTickets() {
                 <Input placeholder={direction === 'rtl' ? 'مثال: مشكلة في تقييم الفرع' : 'e.g. Issue with branch evaluation'} value={title} onChange={e => setTitle(e.target.value)} required />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">{direction === 'rtl' ? 'وصف المشكلة بالتفصيل' : 'Detailed Description'}</label>
-                <Textarea placeholder={direction === 'rtl' ? 'اشرح المشكلة التي تواجهك...' : 'Describe the issue you are facing...'} value={description} onChange={e => setDescription(e.target.value)} required rows={5} />
+                <label className="text-sm font-medium">{direction === 'rtl' ? 'اسم الشاشة / الصفحة (اختياري)' : 'Screen / Page Name (Optional)'}</label>
+                <Input placeholder={direction === 'rtl' ? 'أين تظهر المشكلة؟' : 'Where does the issue appear?'} value={screenName} onChange={e => setScreenName(e.target.value)} />
               </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{direction === 'rtl' ? 'وصف المشكلة بالتفصيل' : 'Detailed Description'}</label>
+                <Textarea placeholder={direction === 'rtl' ? 'اشرح المشكلة التي تواجهك...' : 'Describe the issue you are facing...'} value={description} onChange={e => setDescription(e.target.value)} required rows={4} />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{direction === 'rtl' ? 'إرفاق صورة (اختياري)' : 'Attach Image (Optional)'}</label>
+                <div className="flex items-center gap-2">
+                  <Input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={e => setFile(e.target.files?.[0] || null)}
+                    className="hidden" 
+                    id="ticket-image-upload" 
+                  />
+                  <Button type="button" variant="outline" className="w-full" asChild>
+                    <label htmlFor="ticket-image-upload" className="cursor-pointer flex items-center justify-center gap-2">
+                      <ImageIcon className="w-4 h-4" />
+                      {file ? file.name : (direction === 'rtl' ? 'اختر صورة...' : 'Choose image...')}
+                    </label>
+                  </Button>
+                  {file && (
+                    <Button type="button" variant="ghost" size="icon" onClick={() => setFile(null)}>
+                      <X className="w-4 h-4 text-destructive" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <label className="text-sm font-medium">{direction === 'rtl' ? 'مستوى الأهمية' : 'Priority'}</label>
                 <Select value={priority} onValueChange={setPriority}>
@@ -114,8 +143,8 @@ export default function MyTickets() {
                   </SelectContent>
                 </Select>
               </div>
-              <Button type="submit" className="w-full" disabled={createTicket.isPending}>
-                {createTicket.isPending ? t('common.loading') : t('common.save')}
+              <Button type="submit" className="w-full" disabled={createTicket.isPending || uploading}>
+                {uploading || createTicket.isPending ? t('common.loading') : t('common.save')}
               </Button>
             </form>
           </DialogContent>

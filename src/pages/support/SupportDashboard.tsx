@@ -118,7 +118,23 @@ export default function SupportDashboard() {
                         <div className="space-y-4 pt-4">
                           <div className="text-sm border p-3 rounded-md bg-muted/30 whitespace-pre-wrap">{ticket.description}</div>
                           
-                          <div className="flex items-center gap-4 text-sm">
+                          {ticket.attachments && ticket.attachments.length > 0 && (
+                            <div className="space-y-2 mt-4">
+                              <label className="text-sm font-medium text-muted-foreground">{direction === 'rtl' ? 'المرفقات' : 'Attachments'}</label>
+                              <div className="flex flex-wrap gap-2">
+                                {ticket.attachments.map((url: string, index: number) => (
+                                  <a key={index} href={url} target="_blank" rel="noreferrer" className="block max-w-[200px] rounded-md overflow-hidden border">
+                                    <img src={url} alt={`Attachment ${index + 1}`} className="w-full h-auto object-cover hover:opacity-90 transition-opacity" />
+                                  </a>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          
+                          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm mt-4">
+                            {ticket.screen_name && (
+                              <div><span className="text-muted-foreground">{direction === 'rtl' ? 'الشاشة: ' : 'Screen: '}</span><span className="font-medium">{ticket.screen_name}</span></div>
+                            )}
                             <div><span className="text-muted-foreground">Source: </span><Badge variant="outline">{ticket.source}</Badge></div>
                             <div><span className="text-muted-foreground">Priority: </span><span className="font-medium capitalize">{ticket.priority}</span></div>
                           </div>

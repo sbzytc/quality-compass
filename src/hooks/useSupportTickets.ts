@@ -17,6 +17,7 @@ export interface SupportTicket {
   branch_id?: string;
   assigned_to?: string;
   attachments: string[];
+  screen_name?: string;
   created_at: string;
   updated_at: string;
   resolved_at?: string;
