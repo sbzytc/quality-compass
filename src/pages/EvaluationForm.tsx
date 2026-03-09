@@ -125,6 +125,12 @@ export default function EvaluationForm() {
         setSelectedBranchId(evaluation.branch_id);
         setActiveTemplateId(evaluation.template_id);
         setCurrentDraftId(evaluation.id);
+        // Restore start time from draft
+        if ((evaluation as any).started_at) {
+          setEvaluationStartTime(new Date((evaluation as any).started_at));
+        } else {
+          setEvaluationStartTime(new Date(evaluation.created_at));
+        }
 
         // Fetch existing criterion scores for this evaluation
         const { data: criterionScores } = await supabase
