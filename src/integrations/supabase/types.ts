@@ -661,6 +661,7 @@ export type Database = {
           id: string
           priority: string
           resolved_at: string | null
+          resolved_by: string | null
           screen_name: string | null
           source: string
           status: string
@@ -678,6 +679,7 @@ export type Database = {
           id?: string
           priority?: string
           resolved_at?: string | null
+          resolved_by?: string | null
           screen_name?: string | null
           source?: string
           status?: string
@@ -695,6 +697,7 @@ export type Database = {
           id?: string
           priority?: string
           resolved_at?: string | null
+          resolved_by?: string | null
           screen_name?: string | null
           source?: string
           status?: string
