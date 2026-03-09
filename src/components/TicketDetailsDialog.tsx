@@ -135,6 +135,9 @@ export function TicketDetailsDialog({ ticket, isOpen, onClose, isSupportAgent = 
     setPendingStatus(null);
     if (!status) return;
     await executeStatusChange(status);
+    if (commentPosted) {
+      onClose();
+    }
   };
 
   const timeLocale = direction === 'rtl' ? ar : enUS;
