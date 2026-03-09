@@ -147,6 +147,9 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.support.myTickets': 'My Tickets',
     'nav.support.archived': 'Archived Tickets',
 
+    // AI Assistant
+    'nav.assistant': 'AI Assistant',
+
     // Settings
     'settings.title': 'Settings',
     'settings.subtitle': 'Configure application settings',
