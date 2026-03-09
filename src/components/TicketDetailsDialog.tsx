@@ -262,7 +262,23 @@ export function TicketDetailsDialog({ ticket, isOpen, onClose, isSupportAgent = 
                 </div>
 
                 <div className="flex justify-between items-center mt-2">
-                  {isSupportAgent ? (
+                  {!isSupportAgent && ticket.status === 'pending_closure' ? (
+                    <div className="flex flex-col sm:flex-row items-center gap-2 w-full p-3 bg-primary/5 rounded-lg border border-primary/20">
+                      <span className="text-sm font-medium flex-1 text-center sm:text-start">
+                        {direction === 'rtl' 
+                          ? 'يطلب الدعم الفني إغلاق هذه التذكرة. هل توافق على الإغلاق؟' 
+                          : 'Support requested to close this ticket. Do you approve?'}
+                      </span>
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={() => executeStatusChange('closed')} className="bg-score-excellent hover:bg-score-excellent/90">
+                          {direction === 'rtl' ? 'موافقة وإغلاق' : 'Accept & Close'}
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => executeStatusChange('open')}>
+                          {direction === 'rtl' ? 'رفض وإعادة فتح' : 'Reject & Reopen'}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : isSupportAgent ? (
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-muted-foreground">{direction === 'rtl' ? 'تحديث الحالة:' : 'Update Status:'}</span>
                       <Select value={ticket.status} onValueChange={requestStatusChange}>
@@ -273,6 +289,11 @@ export function TicketDetailsDialog({ ticket, isOpen, onClose, isSupportAgent = 
                           <SelectItem value="open">Open</SelectItem>
                           <SelectItem value="in_progress">In Progress</SelectItem>
                           <SelectItem value="resolved">Resolved</SelectItem>
+                          {ticket.status === 'pending_closure' && (
+                            <SelectItem value="pending_closure">
+                              {direction === 'rtl' ? 'بانتظار الإغلاق' : 'Pending Closure'}
+                            </SelectItem>
+                          )}
                           <SelectItem value="closed">Closed</SelectItem>
                         </SelectContent>
                       </Select>
