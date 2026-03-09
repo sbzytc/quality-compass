@@ -25,15 +25,6 @@ export function MainLayout() {
     navigate('/login');
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   const getRoleBadge = () => {
     if (isAdmin) return direction === 'rtl' ? 'مدير النظام' : 'Admin';
     if (isExecutive) return direction === 'rtl' ? 'تنفيذي' : 'Executive';
