@@ -753,13 +753,14 @@ export default function UsersPage() {
                 </div>
               )}
               <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                <div>
+                <div className="flex-1 min-w-0 me-3">
                   <p className="text-sm font-medium">{language === 'ar' ? 'تغيير كلمة المرور عند أول تسجيل دخول' : 'Force password change on first login'}</p>
                   <p className="text-xs text-muted-foreground">{language === 'ar' ? 'سيُطلب من المستخدم تغيير كلمة المرور' : 'User will be prompted to change their password'}</p>
                 </div>
                 <Switch
                   checked={createForm.forcePasswordChange}
                   onCheckedChange={(checked) => setCreateForm((prev) => ({ ...prev, forcePasswordChange: checked }))}
+                  className="shrink-0"
                 />
               </div>
             </div>
