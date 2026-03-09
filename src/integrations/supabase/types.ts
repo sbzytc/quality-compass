@@ -244,12 +244,14 @@ export type Database = {
           assessor_id: string
           branch_id: string
           created_at: string
+          duration_minutes: number | null
           id: string
           is_archived: boolean
           notes: string | null
           overall_percentage: number | null
           overall_score: number | null
           period_type: string
+          started_at: string | null
           status: string
           submitted_at: string | null
           template_id: string
@@ -261,12 +263,14 @@ export type Database = {
           assessor_id: string
           branch_id: string
           created_at?: string
+          duration_minutes?: number | null
           id?: string
           is_archived?: boolean
           notes?: string | null
           overall_percentage?: number | null
           overall_score?: number | null
           period_type?: string
+          started_at?: string | null
           status?: string
           submitted_at?: string | null
           template_id: string
@@ -278,12 +282,14 @@ export type Database = {
           assessor_id?: string
           branch_id?: string
           created_at?: string
+          duration_minutes?: number | null
           id?: string
           is_archived?: boolean
           notes?: string | null
           overall_percentage?: number | null
           overall_score?: number | null
           period_type?: string
+          started_at?: string | null
           status?: string
           submitted_at?: string | null
           template_id?: string
