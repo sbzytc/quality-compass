@@ -11,8 +11,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut, Settings } from 'lucide-react';
+import { LogOut, Settings, Languages } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { getInitials } from '@/lib/getInitials';
 
 export function MainLayout() {
   const { language, setLanguage, direction } = useLanguage();

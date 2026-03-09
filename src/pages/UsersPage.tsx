@@ -58,10 +58,11 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { getInitials } from '@/lib/getInitials';
 import { useGoBack } from '@/hooks/useGoBack';
-import { 
-  useUsers, 
-  useUserStats, 
+import {
+  useUsers,
+  useUserStats,
   useInviteUser,
   useCreateUser,
   useResetPassword,
@@ -69,7 +70,7 @@ import {
   useUpdateUserStatus,
   useUpdateUserRole,
   useAssignBranch,
-  UserWithRole
+  UserWithRole,
 } from '@/hooks/useUsers';
 import { AppRole, useAuth } from '@/contexts/AuthContext';
 import { useBranches } from '@/hooks/useBranches';

@@ -138,7 +138,8 @@ const translations: Record<Language, Record<string, string>> = {
     'role.executive': 'Executive',
     'role.branch_manager': 'Branch Manager',
     'role.assessor': 'Assessor',
-    
+    'role.branch_employee': 'Branch Employee',
+
     // Settings
     'settings.title': 'Settings',
     'settings.subtitle': 'Configure application settings',
