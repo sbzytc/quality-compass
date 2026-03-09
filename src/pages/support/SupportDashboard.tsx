@@ -101,8 +101,12 @@ export default function SupportDashboard() {
                     </div>
                   </div>
                   <div className="flex items-center gap-4 ms-4">
-                    <Badge variant={ticket.status === 'open' ? 'destructive' : ticket.status === 'resolved' || ticket.status === 'closed' ? 'default' : 'secondary'}>
-                      {ticket.status}
+                    <Badge variant={ticket.status === 'open' ? 'destructive' : ticket.status === 'resolved' || ticket.status === 'closed' ? 'default' : 'secondary'} className="capitalize">
+                      {ticket.status === 'open' ? (direction === 'rtl' ? 'مفتوحة' : 'Open') : 
+                       ticket.status === 'in_progress' ? (direction === 'rtl' ? 'قيد التنفيذ' : 'In Progress') : 
+                       ticket.status === 'resolved' ? (direction === 'rtl' ? 'محلولة' : 'Resolved') : 
+                       ticket.status === 'closed' ? (direction === 'rtl' ? 'مغلقة' : 'Closed') : 
+                       ticket.status.replace('_', ' ')}
                     </Badge>
                     
                     <Button variant="outline" size="sm" onClick={() => setSelectedTicket(ticket)}>
