@@ -331,9 +331,9 @@ function KanbanColumn({
   return (
     <div className="w-72 flex-shrink-0">
       {/* Column Header */}
-      <div className={`flex items-center gap-2 p-3 rounded-t-lg ${column.color}/10`}>
-        <div className={`p-1.5 rounded-lg ${column.color}/20`}>
-          <Icon className={`w-4 h-4 ${column.color.replace('bg-', 'text-')}`} />
+      <div className={`flex items-center gap-2 p-3 rounded-t-lg bg-${column.color}/10`}>
+        <div className={`p-1.5 rounded-lg bg-${column.color}/20`}>
+          <Icon className={`w-4 h-4 text-${column.color === 'muted' ? 'muted-foreground' : column.color}`} />
         </div>
         <span className="font-semibold text-sm">
           {direction === 'rtl' ? column.labelAr : column.labelEn}
