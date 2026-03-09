@@ -36,11 +36,6 @@ export function TicketDetailsDialog({ ticket, isOpen, onClose, isSupportAgent = 
   const [pendingStatus, setPendingStatus] = useState<string | null>(null);
   const isCloseConfirmOpen = !!pendingStatus;
 
-  const { comments, isLoading, addComment } = useTicketComments(ticket?.id);
-  const { updateTicket } = useSupportTickets();
-
-  if (!ticket) return null;
-
   const closeConfirmCopy = useMemo(() => {
     const isArabic = direction === 'rtl';
     return {
@@ -52,6 +47,11 @@ export function TicketDetailsDialog({ ticket, isOpen, onClose, isSupportAgent = 
       cancel: isArabic ? 'إلغاء' : 'Cancel',
     };
   }, [direction]);
+
+  const { comments, isLoading, addComment } = useTicketComments(ticket?.id);
+  const { updateTicket } = useSupportTickets();
+
+  if (!ticket) return null;
 
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
