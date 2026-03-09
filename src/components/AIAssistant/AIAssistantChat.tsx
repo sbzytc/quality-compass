@@ -33,7 +33,7 @@ export function AIAssistantChat({ fullPage = false }: AIAssistantChatProps) {
     const trimmed = input.trim();
     if (!trimmed || isLoading) return;
 
-    const userMsg: Message = { role: 'user', content: trimmed };
+    const userMsg = { role: 'user' as const, content: trimmed };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
     setInput('');
