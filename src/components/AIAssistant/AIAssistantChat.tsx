@@ -60,7 +60,7 @@ export function AIAssistantChat({ fullPage = false }: AIAssistantChatProps) {
       }
 
       const assistantMsg = {
-        role: 'assistant',
+        role: 'assistant' as const,
         content: data?.content || 'عذراً، لم أتمكن من معالجة طلبك.',
       };
       setMessages(prev => [...prev, assistantMsg]);
