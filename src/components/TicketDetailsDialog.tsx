@@ -32,6 +32,8 @@ export function TicketDetailsDialog({ ticket, isOpen, onClose, isSupportAgent = 
   const { t, direction } = useLanguage();
   const [newComment, setNewComment] = useState('');
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
+  const [commentPosted, setCommentPosted] = useState(false);
+  const [tempStatus, setTempStatus] = useState<string>('');
 
   const [pendingStatus, setPendingStatus] = useState<string | null>(null);
   const isCloseConfirmOpen = !!pendingStatus;
