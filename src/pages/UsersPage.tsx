@@ -408,13 +408,14 @@ export default function UsersPage() {
                 <TableHead>{language === 'ar' ? 'المستخدم' : 'User'}</TableHead>
                 <TableHead>{language === 'ar' ? 'الدور' : 'Role'}</TableHead>
                 <TableHead className="hidden sm:table-cell">{t('common.status')}</TableHead>
+                <TableHead className="hidden md:table-cell">{language === 'ar' ? 'المساعد الذكي' : 'AI Assistant'}</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredUsers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                     {t('common.noData')}
                   </TableCell>
                 </TableRow>
@@ -454,6 +455,22 @@ export default function UsersPage() {
                           {user.is_active 
                             ? (language === 'ar' ? 'نشط' : 'Active')
                             : (language === 'ar' ? 'غير نشط' : 'Inactive')
+                          }
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        <Badge
+                          variant="outline"
+                          className={
+                            user.ai_assistant_enabled
+                              ? 'bg-blue-500/10 text-blue-500 border-blue-500/30'
+                              : 'bg-muted text-muted-foreground border-border'
+                          }
+                        >
+                          <Bot className="w-3 h-3 me-1" />
+                          {user.ai_assistant_enabled
+                            ? (language === 'ar' ? 'مفعّل' : 'Enabled')
+                            : (language === 'ar' ? 'معطّل' : 'Disabled')
                           }
                         </Badge>
                       </TableCell>
