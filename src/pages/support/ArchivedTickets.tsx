@@ -37,7 +37,7 @@ export default function ArchivedTickets() {
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
       case 'critical': return <Badge variant="destructive">{direction === 'rtl' ? 'حرجة' : 'Critical'}</Badge>;
-      case 'high': return <Badge className="bg-orange-500/20 text-orange-600 hover:bg-orange-500/30">{direction === 'rtl' ? 'عالية' : 'High'}</Badge>;
+      case 'high': return <Badge className="bg-destructive/20 text-destructive hover:bg-destructive/30">{direction === 'rtl' ? 'عالية' : 'High'}</Badge>;
       case 'medium': return <Badge variant="secondary">{direction === 'rtl' ? 'متوسطة' : 'Medium'}</Badge>;
       case 'low': return <Badge variant="outline">{direction === 'rtl' ? 'منخفضة' : 'Low'}</Badge>;
       default: return <Badge variant="outline">{priority}</Badge>;
