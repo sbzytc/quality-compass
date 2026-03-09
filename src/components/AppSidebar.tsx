@@ -224,6 +224,7 @@ export function AppSidebar() {
     if (isExecutive) return t('role.executive');
     if (isBranchManager) return t('role.branch_manager');
     if (isAssessor) return t('role.assessor');
+    if (isSupportAgent) return t('role.support_agent');
     return '';
   };
 
