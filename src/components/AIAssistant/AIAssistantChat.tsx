@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Loader2, Sparkles, Trash2 } from 'lucide-react';
+import { Send, Bot, User, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
+import aiAssistantIcon from '@/assets/ai-assistant-icon.png';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -98,8 +99,8 @@ export function AIAssistantChat({ fullPage = false }: AIAssistantChatProps) {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b bg-primary/5">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-            <Sparkles className="w-4 h-4 text-primary-foreground" />
+          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+            <img src={aiAssistantIcon} alt="" className="w-6 h-6 object-contain" />
           </div>
           <div>
             <h3 className="font-semibold text-sm">{direction === 'rtl' ? 'مساعد رصدة الذكي' : 'Rasdah AI Assistant'}</h3>
