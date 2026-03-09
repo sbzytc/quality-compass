@@ -6,21 +6,17 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAIAssistant } from '@/contexts/AIAssistantContext';
 import aiAssistantIcon from '@/assets/ai-assistant-icon.png';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-}
 
 interface AIAssistantChatProps {
   fullPage?: boolean;
 }
 
 export function AIAssistantChat({ fullPage = false }: AIAssistantChatProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const { messages, setMessages, clearMessages } = useAIAssistant();
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
