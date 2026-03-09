@@ -28,22 +28,23 @@ export function AIAssistantButton() {
           "relative rounded-full transition-shadow duration-300",
           !isOpen && "shadow-[0_0_20px_6px_hsl(43_90%_55%/0.4),0_0_40px_12px_hsl(43_90%_55%/0.15)]"
         )}>
-          <Button
+          <button
             onClick={() => setIsOpen(!isOpen)}
-            size="icon"
             className={cn(
-              "h-14 w-14 rounded-full shadow-lg relative overflow-hidden p-0 flex items-center justify-center",
+              "h-14 w-14 rounded-full shadow-lg overflow-hidden border-0 outline-none cursor-pointer",
+              "flex items-center justify-center p-0 m-0",
               isOpen
                 ? "bg-muted text-foreground hover:bg-muted"
                 : "bg-white border-2 border-primary/30 hover:bg-primary/5"
             )}
+            style={{ padding: 0, lineHeight: 0 }}
           >
             {isOpen ? (
               <X className="w-5 h-5" />
             ) : (
-              <img src={aiAssistantIcon} alt="AI Assistant" className="block w-[112%] h-[112%] max-w-none max-h-none object-cover object-center translate-x-[1px] -translate-y-[1px]" />
+              <img src={aiAssistantIcon} alt="AI Assistant" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
             )}
-          </Button>
+          </button>
         </div>
       </motion.div>
 
