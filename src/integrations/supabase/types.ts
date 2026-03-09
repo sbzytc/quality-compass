@@ -661,6 +661,7 @@ export type Database = {
           id: string
           priority: string
           resolved_at: string | null
+          resolved_by: string | null
           screen_name: string | null
           source: string
           status: string
@@ -678,6 +679,7 @@ export type Database = {
           id?: string
           priority?: string
           resolved_at?: string | null
+          resolved_by?: string | null
           screen_name?: string | null
           source?: string
           status?: string
@@ -695,6 +697,7 @@ export type Database = {
           id?: string
           priority?: string
           resolved_at?: string | null
+          resolved_by?: string | null
           screen_name?: string | null
           source?: string
           status?: string
@@ -703,11 +706,32 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "support_tickets_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "support_tickets_branch_id_fkey"
             columns: ["branch_id"]
             isOneToOne: false
             referencedRelation: "branches"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_tickets_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "support_tickets_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -828,6 +852,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "support_tickets"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
           },
         ]
       }

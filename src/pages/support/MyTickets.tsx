@@ -11,11 +11,14 @@ import { Badge } from '@/components/ui/badge';
 import { PlusCircle, Info, Image as ImageIcon, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
+import { TicketDetailsDialog } from '@/components/TicketDetailsDialog';
+import { SupportTicket } from '@/hooks/useSupportTickets';
 
 export default function MyTickets() {
   const { t, direction } = useLanguage();
   const { tickets, isLoading, createTicket } = useSupportTickets();
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState('medium');
@@ -162,7 +165,7 @@ export default function MyTickets() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {tickets?.map(ticket => (
-            <Card key={ticket.id} className="flex flex-col">
+            <Card key={ticket.id} className="flex flex-col cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setSelectedTicket(ticket)}>
               <CardHeader className="pb-2">
                 <div className="flex justify-between items-start">
                   <CardTitle className="text-base line-clamp-1 leading-tight" title={ticket.title}>{ticket.title}</CardTitle>
@@ -179,9 +182,9 @@ export default function MyTickets() {
                 {ticket.attachments && ticket.attachments.length > 0 && (
                   <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
                     {ticket.attachments.map((url: string, index: number) => (
-                      <a key={index} href={url} target="_blank" rel="noreferrer" className="flex-shrink-0 block w-12 h-12 rounded-md overflow-hidden border">
+                      <div key={index} className="flex-shrink-0 block w-12 h-12 rounded-md overflow-hidden border pointer-events-none">
                         <img src={url} alt="Attachment" className="w-full h-full object-cover" />
-                      </a>
+                      </div>
                     ))}
                   </div>
                 )}
@@ -199,6 +202,12 @@ export default function MyTickets() {
           ))}
         </div>
       )}
+
+      <TicketDetailsDialog 
+        ticket={selectedTicket} 
+        isOpen={!!selectedTicket} 
+        onClose={() => setSelectedTicket(null)} 
+      />
     </div>
   );
 }

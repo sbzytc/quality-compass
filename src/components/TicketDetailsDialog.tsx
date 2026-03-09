@@ -1,0 +1,207 @@
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { SupportTicket, useTicketComments, useSupportTickets } from '@/hooks/useSupportTickets';
+import { toast } from 'sonner';
+import { X, Send, Clock, User } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { ar, enUS } from 'date-fns/locale';
+
+interface TicketDetailsDialogProps {
+  ticket: SupportTicket | null;
+  isOpen: boolean;
+  onClose: () => void;
+  isSupportAgent?: boolean;
+}
+
+export function TicketDetailsDialog({ ticket, isOpen, onClose, isSupportAgent = false }: TicketDetailsDialogProps) {
+  const { t, direction } = useLanguage();
+  const [newComment, setNewComment] = useState('');
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
+  
+  const { comments, isLoading, addComment } = useTicketComments(ticket?.id);
+  const { updateTicket } = useSupportTickets();
+
+  if (!ticket) return null;
+
+  const handleAddComment = async () => {
+    if (!newComment.trim()) return;
+    try {
+      await addComment.mutateAsync({ comment: newComment });
+      setNewComment('');
+      toast.success(direction === 'rtl' ? 'تم إضافة التعليق' : 'Comment added');
+    } catch (error) {
+      toast.error(direction === 'rtl' ? 'فشل إضافة التعليق' : 'Failed to add comment');
+    }
+  };
+
+  const handleStatusChange = async (status: string) => {
+    try {
+      await updateTicket.mutateAsync({ id: ticket.id, status: status as any });
+      toast.success(direction === 'rtl' ? 'تم تحديث الحالة' : 'Status updated');
+      if (status === 'closed' || status === 'resolved') {
+        onClose();
+      }
+    } catch (error) {
+      toast.error(direction === 'rtl' ? 'فشل التحديث' : 'Update failed');
+    }
+  };
+
+  const timeLocale = direction === 'rtl' ? ar : enUS;
+  const createdTimeText = formatDistanceToNow(new Date(ticket.created_at), { addSuffix: true, locale: timeLocale });
+  const resolvedTimeText = ticket.resolved_at ? formatDistanceToNow(new Date(ticket.resolved_at), { addSuffix: true, locale: timeLocale }) : null;
+
+  return (
+    <>
+      <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0">
+          <DialogHeader className="p-6 pb-2 border-b">
+            <div className="flex justify-between items-start">
+              <div>
+                <DialogTitle className="text-xl flex items-center gap-2">
+                  {ticket.title}
+                  <Badge variant={ticket.status === 'open' ? 'destructive' : ticket.status === 'resolved' || ticket.status === 'closed' ? 'default' : 'secondary'}>
+                    {ticket.status}
+                  </Badge>
+                </DialogTitle>
+                <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1"><User className="w-4 h-4"/> {ticket.creator?.full_name || 'User'}</span>
+                  <span className="flex items-center gap-1"><Clock className="w-4 h-4"/> {createdTimeText}</span>
+                  {ticket.screen_name && <Badge variant="outline">{direction === 'rtl' ? 'الشاشة:' : 'Screen:'} {ticket.screen_name}</Badge>}
+                </div>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            {/* Description */}
+            <div className="bg-muted/30 p-4 rounded-lg border whitespace-pre-wrap text-sm">
+              {ticket.description}
+            </div>
+
+            {/* Attachments */}
+            {ticket.attachments && ticket.attachments.length > 0 && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">{direction === 'rtl' ? 'المرفقات' : 'Attachments'}</label>
+                <div className="flex flex-wrap gap-2">
+                  {ticket.attachments.map((url, i) => (
+                    <div 
+                      key={i} 
+                      onClick={() => setFullscreenImage(url)}
+                      className="cursor-pointer block w-24 h-24 rounded-md overflow-hidden border hover:opacity-80 transition-opacity"
+                    >
+                      <img src={url} alt={`Attachment ${i + 1}`} className="w-full h-full object-cover" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Resolution Info */}
+            {(ticket.status === 'closed' || ticket.status === 'resolved') && ticket.resolver && (
+              <div className="bg-score-excellent/10 border-score-excellent/20 border p-3 rounded-lg flex items-center gap-2 text-sm">
+                <User className="w-4 h-4 text-score-excellent" />
+                <span>
+                  {direction === 'rtl' ? 'تم الحل بواسطة: ' : 'Resolved by: '} 
+                  <strong>{ticket.resolver.full_name}</strong>
+                  {resolvedTimeText && <span className="text-muted-foreground ms-2">({resolvedTimeText})</span>}
+                </span>
+              </div>
+            )}
+
+            {/* Comments Section */}
+            <div className="space-y-4 pt-4 border-t">
+              <h3 className="font-semibold">{direction === 'rtl' ? 'التعليقات' : 'Comments'}</h3>
+              
+              {isLoading ? (
+                <p className="text-sm text-muted-foreground">{t('common.loading')}</p>
+              ) : comments?.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4 border border-dashed rounded-lg bg-muted/10">{direction === 'rtl' ? 'لا توجد تعليقات بعد' : 'No comments yet'}</p>
+              ) : (
+                <div className="space-y-3">
+                  {comments?.map((c: any) => (
+                    <div key={c.id} className={`p-3 rounded-lg border text-sm ${c.user_id === ticket.created_by ? 'bg-background ml-8' : 'bg-primary/5 mr-8'}`}>
+                      <div className="flex justify-between items-center mb-1 text-xs">
+                        <span className="font-medium text-primary">{c.user?.full_name || 'User'}</span>
+                        <span className="text-muted-foreground">{formatDistanceToNow(new Date(c.created_at), { addSuffix: true, locale: timeLocale })}</span>
+                      </div>
+                      <p className="whitespace-pre-wrap">{c.comment}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Action Footer */}
+          <div className="p-4 border-t bg-muted/10">
+            {ticket.status !== 'closed' && ticket.status !== 'resolved' ? (
+              <div className="flex flex-col gap-3">
+                <div className="flex gap-2">
+                  <Textarea 
+                    placeholder={direction === 'rtl' ? 'اكتب تعليقاً...' : 'Write a comment...'} 
+                    value={newComment} 
+                    onChange={e => setNewComment(e.target.value)}
+                    className="min-h-[60px]"
+                  />
+                  <Button onClick={handleAddComment} disabled={addComment.isPending || !newComment.trim()} className="h-auto shrink-0 px-6">
+                    <Send className={`w-4 h-4 ${direction === 'rtl' ? 'rotate-180 ml-2' : 'mr-2'}`} />
+                    {direction === 'rtl' ? 'إرسال' : 'Send'}
+                  </Button>
+                </div>
+                
+                <div className="flex justify-between items-center mt-2">
+                  {isSupportAgent ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">{direction === 'rtl' ? 'تحديث الحالة:' : 'Update Status:'}</span>
+                      <Select value={ticket.status} onValueChange={handleStatusChange}>
+                        <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="open">Open</SelectItem>
+                          <SelectItem value="in_progress">In Progress</SelectItem>
+                          <SelectItem value="resolved">Resolved</SelectItem>
+                          <SelectItem value="closed">Closed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  ) : (
+                    <Button variant="outline" size="sm" onClick={() => handleStatusChange('closed')} className="text-destructive hover:bg-destructive/10">
+                      {direction === 'rtl' ? 'إغلاق التذكرة' : 'Close Ticket'}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-center text-muted-foreground">
+                {direction === 'rtl' ? 'هذه التذكرة مغلقة. لا يمكن إضافة تعليقات.' : 'This ticket is closed. No new comments can be added.'}
+              </p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Fullscreen Image Modal */}
+      <Dialog open={!!fullscreenImage} onOpenChange={(open) => !open && setFullscreenImage(null)}>
+        <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 border-0 bg-transparent shadow-none [&>button]:hidden flex items-center justify-center">
+          <div className="relative flex flex-col items-center justify-center w-full h-full max-h-[90vh]">
+            <Button 
+              variant="secondary" 
+              size="icon" 
+              className="absolute -top-4 -right-4 z-50 rounded-full h-10 w-10 shadow-lg border bg-background hover:bg-muted"
+              onClick={() => setFullscreenImage(null)}
+            >
+              <X className="w-5 h-5" />
+            </Button>
+            {fullscreenImage && (
+              <img src={fullscreenImage} alt="Fullscreen" className="max-w-full max-h-[85vh] object-contain rounded-md shadow-2xl" />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
