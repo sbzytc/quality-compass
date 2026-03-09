@@ -97,7 +97,7 @@ const roleColors: Record<AppRole, string> = {
 
 export default function UsersPage() {
   const navigate = useNavigate();
-  const { roles, refreshProfile, user: authUser } = useAuth();
+  const { roles, refreshProfile, user: authUser: authUser } = useAuth();
   const goBack = useGoBack('/dashboard/ceo');
   const { t, language } = useLanguage();
   const { data: users, isLoading } = useUsers();
@@ -528,7 +528,7 @@ export default function UsersPage() {
                                     try {
                                       await toggleAIAssistant.mutateAsync({ userId: user.user_id, enabled: !user.ai_assistant_enabled });
                                       // Refresh own profile if toggling for current user
-                                      if (user.user_id === (window as any).__currentUserId) {
+                                      if (user.usauthUser?.irrentUserId) {
                                         await refreshProfile();
                                       }
                                       toast.success(
