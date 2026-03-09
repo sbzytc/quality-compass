@@ -49,9 +49,9 @@ export function MainLayout() {
             onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
             title={language === 'en' ? 'العربية' : 'English'}
           >
-            🌐
+            <Languages className="h-4 w-4" />
             <span>{language === 'en' ? 'العربية' : 'English'}</span>
-          </Button>
+
 
           {/* User Profile Dropdown */}
           {profile && (
