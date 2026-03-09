@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { AppSidebar } from '@/components/AppSidebar';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,7 +12,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { LogOut, Settings, Languages } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { getInitials } from '@/lib/getInitials';
 
 export function MainLayout() {
@@ -42,16 +41,16 @@ export function MainLayout() {
         {/* Header */}
         <header className="h-14 border-b bg-background flex items-center justify-end px-4 gap-2">
           {/* Language Toggle - Direct switch */}
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="h-9 px-3 gap-1.5 border-primary/30 hover:bg-primary/10 font-semibold text-sm"
             onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
             title={language === 'en' ? 'العربية' : 'English'}
           >
             <Languages className="h-4 w-4" />
             <span>{language === 'en' ? 'العربية' : 'English'}</span>
-
+          </Button>
 
           {/* User Profile Dropdown */}
           {profile && (
@@ -69,17 +68,16 @@ export function MainLayout() {
                     {roleBadge && <span className="text-xs text-muted-foreground">{roleBadge}</span>}
                     <span className="text-xs text-muted-foreground">{profile.email}</span>
                   </div>
-
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem onClick={() => navigate('/settings')}>
-                  <Settings className="mr-2 h-4 w-4" />
+                  <Settings className="me-2 h-4 w-4" />
                   {direction === 'rtl' ? 'الإعدادات' : 'Settings'}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
-                  <LogOut className="mr-2 h-4 w-4" />
+                  <LogOut className="me-2 h-4 w-4" />
                   {direction === 'rtl' ? 'تسجيل الخروج' : 'Sign Out'}
                 </DropdownMenuItem>
               </DropdownMenuContent>
