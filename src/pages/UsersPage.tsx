@@ -732,7 +732,7 @@ export default function UsersPage() {
                   </SelectContent>
                 </Select>
               </div>
-              {createForm.role === 'branch_manager' && (
+              {(createForm.role === 'branch_manager' || createForm.role === 'branch_employee') && (
                 <div className="space-y-2">
                   <Label>{language === 'ar' ? 'الفرع' : 'Assign to Branch'}</Label>
                   <Select
