@@ -81,7 +81,7 @@ export default function PreviousEvaluationsPage() {
     
     if (evaluation.status === 'draft') {
       const hoursSinceCreation = differenceInHours(new Date(), new Date(evaluation.createdAt));
-      return hoursSinceCreation <= 5;
+      return hoursSinceCreation <= 24;
     }
     
     if (evaluation.submittedAt) {
@@ -103,7 +103,7 @@ export default function PreviousEvaluationsPage() {
     
     if (evaluation.status === 'draft') {
       const hoursSinceCreation = differenceInHours(new Date(), new Date(evaluation.createdAt));
-      const remainingHours = Math.max(0, 5 - hoursSinceCreation);
+      const remainingHours = Math.max(0, 24 - hoursSinceCreation);
       if (remainingHours > 0) {
         return { hours: remainingHours, type: 'draft' as const, expired: false };
       }
@@ -285,6 +285,7 @@ export default function PreviousEvaluationsPage() {
                     <TableHead>{language === 'ar' ? 'القالب' : 'Template'}</TableHead>
                     <TableHead>{language === 'ar' ? 'المقيّم' : 'Assessor'}</TableHead>
                     <TableHead>{language === 'ar' ? 'النتيجة' : 'Score'}</TableHead>
+                    <TableHead>{language === 'ar' ? 'المدة' : 'Duration'}</TableHead>
                     <TableHead>{language === 'ar' ? 'الحالة' : 'Status'}</TableHead>
                     <TableHead>{language === 'ar' ? 'التاريخ' : 'Date'}</TableHead>
                     <TableHead className="text-center">{language === 'ar' ? 'الإجراءات' : 'Actions'}</TableHead>
@@ -329,6 +330,24 @@ export default function PreviousEvaluationsPage() {
                         <TableCell>
                           {evaluation.overallPercentage != null ? (
                             <span className="font-semibold">{Math.round(evaluation.overallPercentage)}%</span>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {evaluation.durationMinutes != null ? (
+                            <div className="flex items-center gap-1 text-sm">
+                              <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                              <span>
+                                {evaluation.durationMinutes >= 60
+                                  ? language === 'ar'
+                                    ? `${Math.floor(evaluation.durationMinutes / 60)} ساعة${Math.round(evaluation.durationMinutes % 60) > 0 ? ` و ${Math.round(evaluation.durationMinutes % 60)} دقيقة` : ''}`
+                                    : `${Math.floor(evaluation.durationMinutes / 60)}h${Math.round(evaluation.durationMinutes % 60) > 0 ? ` ${Math.round(evaluation.durationMinutes % 60)}m` : ''}`
+                                  : language === 'ar'
+                                    ? `${Math.round(evaluation.durationMinutes)} دقيقة`
+                                    : `${Math.round(evaluation.durationMinutes)} min`}
+                              </span>
+                            </div>
                           ) : (
                             <span className="text-muted-foreground">-</span>
                           )}

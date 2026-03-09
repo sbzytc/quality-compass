@@ -16,6 +16,7 @@ export interface EvaluationWithDetails {
   createdAt: string;
   submittedAt: string | null;
   isArchived?: boolean;
+  durationMinutes: number | null;
 }
 
 export function useEvaluations() {
@@ -66,6 +67,7 @@ export function useEvaluations() {
         createdAt: e.created_at,
         submittedAt: e.submitted_at,
         isArchived: e.is_archived,
+        durationMinutes: e.duration_minutes ? Number(e.duration_minutes) : null,
       })) as EvaluationWithDetails[];
     },
   });
@@ -109,6 +111,7 @@ export function useArchivedEvaluations() {
         createdAt: e.created_at,
         submittedAt: e.submitted_at,
         isArchived: e.is_archived,
+        durationMinutes: e.duration_minutes ? Number(e.duration_minutes) : null,
       })) as EvaluationWithDetails[];
     },
   });
