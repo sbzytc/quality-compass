@@ -84,35 +84,7 @@ export default function BranchManagerDashboard() {
     enabled: !!branchId,
   });
 
-  // Fetch active findings (in_progress + pending_review) for the list
-  const { data: activeFindings = [] } = useQuery({
-    queryKey: ['manager-active-findings', branchId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('non_conformities')
-        .select(`
-          id,
-          status,
-          score,
-          max_score,
-          assigned_to,
-          due_date,
-          resolved_at,
-          resolved_by,
-          template_criteria:criterion_id(name, name_ar),
-          profiles:assigned_to(full_name)
-        `)
-        .eq('branch_id', branchId!)
-        .in('status', ['open', 'in_progress', 'pending_review', 'rejected'])
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!branchId,
-  });
-
-  // Fetch previous evaluation for trend
+  // Fetch previous evaluation for trend (only if there are 2+ evaluations)
   const { data: previousEval } = useQuery({
     queryKey: ['manager-prev-eval', branchId],
     queryFn: async () => {
