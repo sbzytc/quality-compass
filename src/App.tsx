@@ -29,6 +29,8 @@ import PeriodEvaluationForm from "@/pages/PeriodEvaluationForm";
 import ReportsPage from "@/pages/ReportsPage";
 import BranchPerformanceReport from "@/pages/BranchPerformanceReport";
 import NotFound from "@/pages/NotFound";
+import SupportDashboard from "@/pages/support/SupportDashboard";
+import MyTickets from "@/pages/support/MyTickets";
 
 const queryClient = new QueryClient();
 
