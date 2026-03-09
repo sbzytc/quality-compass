@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Loader2, Trash2 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -170,7 +171,9 @@ export function AIAssistantChat({ fullPage = false }: AIAssistantChatProps) {
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-muted text-foreground'
                 )}>
-                  <div className="whitespace-pre-wrap">{msg.content}</div>
+                  <div className="prose prose-sm dark:prose-invert max-w-none [&>p]:m-0 [&>ul]:my-1 [&>ol]:my-1">
+                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                  </div>
                 </div>
               </div>
             ))}
