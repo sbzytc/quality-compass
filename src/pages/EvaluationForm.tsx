@@ -415,7 +415,7 @@ export default function EvaluationForm() {
 
       if (currentDraftId) {
         const now = new Date();
-        const startedAt = evaluationStartTime || new Date(evaluation?.started_at || evaluation?.created_at || now);
+        const startedAt = evaluationStartTime || now;
         const durationMinutes = Math.round((now.getTime() - startedAt.getTime()) / 60000);
         const { error: updateError } = await supabase
           .from('evaluations')
