@@ -23,6 +23,7 @@ export interface SupportTicket {
   resolved_at?: string;
   creator?: { full_name: string; email: string };
   assignee?: { full_name: string; email: string };
+  resolver?: { full_name: string; email: string };
 }
 
 export const useSupportTickets = () => {
