@@ -89,7 +89,11 @@ export function TicketDetailsDialog({ ticket, isOpen, onClose, isSupportAgent = 
 
   const requestStatusChange = (status: string) => {
     if (status === 'closed') {
-      setPendingStatus(status);
+      if (isSupportAgent) {
+        setPendingStatus('pending_closure');
+      } else {
+        setPendingStatus('closed');
+      }
       return;
     }
     void executeStatusChange(status);
