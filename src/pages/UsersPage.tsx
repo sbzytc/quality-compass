@@ -528,7 +528,7 @@ export default function UsersPage() {
                                     try {
                                       await toggleAIAssistant.mutateAsync({ userId: user.user_id, enabled: !user.ai_assistant_enabled });
                                       // Refresh own profile if toggling for current user
-                                      if (user.usauthUser?.irrentUserId) {
+                                      if (user.user_id === authUser?.id) {
                                         await refreshProfile();
                                       }
                                       toast.success(
