@@ -285,6 +285,7 @@ export default function PreviousEvaluationsPage() {
                     <TableHead>{language === 'ar' ? 'القالب' : 'Template'}</TableHead>
                     <TableHead>{language === 'ar' ? 'المقيّم' : 'Assessor'}</TableHead>
                     <TableHead>{language === 'ar' ? 'النتيجة' : 'Score'}</TableHead>
+                    <TableHead>{language === 'ar' ? 'المدة' : 'Duration'}</TableHead>
                     <TableHead>{language === 'ar' ? 'الحالة' : 'Status'}</TableHead>
                     <TableHead>{language === 'ar' ? 'التاريخ' : 'Date'}</TableHead>
                     <TableHead className="text-center">{language === 'ar' ? 'الإجراءات' : 'Actions'}</TableHead>
