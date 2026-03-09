@@ -238,6 +238,7 @@ export function AppSidebar() {
     if (isBranchManager) return t('role.branch_manager');
     if (isAssessor) return t('role.assessor');
     if (isSupportAgent) return t('role.support_agent');
+    if (roles.includes('branch_employee')) return direction === 'rtl' ? 'موظف فرع' : 'Branch Employee';
     return '';
   };
 

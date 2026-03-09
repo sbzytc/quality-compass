@@ -17,7 +17,7 @@ export interface Finding {
   maxScore: number;
   assessorNotes?: string;
   attachments: string[];
-  status: 'open' | 'in_progress' | 'pending_review' | 'resolved' | 'rejected';
+  status: 'open' | 'in_progress' | 'pending_manager_review' | 'pending_review' | 'resolved' | 'rejected';
   assignedTo?: string;
   dueDate?: string;
   resolvedAt?: string;
@@ -160,13 +160,14 @@ export function useFindingStats() {
 
       const open = allFindings.filter(f => f.status === 'open').length;
       const inProgress = allFindings.filter(f => f.status === 'in_progress' || f.status === 'rejected').length;
+      const pendingManagerReview = allFindings.filter(f => f.status === 'pending_manager_review').length;
       const pendingReview = allFindings.filter(f => f.status === 'pending_review').length;
       const resolved = allFindings.filter(f => f.status === 'resolved').length;
       const rejected = allFindings.filter(f => f.status === 'rejected').length;
       const total = allFindings.length;
 
       const assigned = allFindings.filter(f => f.assigned_to).length;
-      const unassigned = allFindings.filter(f => !f.assigned_to && !['resolved', 'pending_review'].includes(f.status)).length;
+      const unassigned = allFindings.filter(f => !f.assigned_to && !['resolved', 'pending_review', 'pending_manager_review'].includes(f.status)).length;
 
       const now = new Date();
       const overdue = allFindings.filter(f => 
@@ -189,6 +190,7 @@ export function useFindingStats() {
       return {
         open,
         inProgress,
+        pendingManagerReview,
         pendingReview,
         resolved,
         rejected,
@@ -247,18 +249,14 @@ export function useAssignFinding() {
       });
 
       // Create notification for assigned user
-      const { error: notifError } = await supabase
-        .from('notifications')
-        .insert({
-          user_id: assignedTo,
-          title: 'New Finding Assigned',
-          message: 'A critical finding has been assigned to you for resolution.',
-          type: 'assignment',
-          reference_type: 'finding',
-          reference_id: findingId,
-        });
-
-      if (notifError) console.error('Notification error:', notifError);
+      await supabase.from('notifications').insert({
+        user_id: assignedTo,
+        title: 'New Finding Assigned',
+        message: 'A critical finding has been assigned to you for resolution.',
+        type: 'assignment',
+        reference_type: 'finding',
+        reference_id: findingId,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['findings'] });
@@ -270,14 +268,28 @@ export function useAssignFinding() {
   });
 }
 
+/**
+ * Resolve a finding.
+ * - If resolvedByManager=true: BM resolves directly → pending_review (assessor reviews)
+ * - If resolvedByManager=false: Employee resolves → pending_manager_review (BM reviews first)
+ */
 export function useResolveFinding() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ findingId, assessorId, resolution, attachments }: { findingId: string; assessorId?: string; resolution: string; attachments?: string[] }) => {
+    mutationFn: async ({ findingId, assessorId, resolution, attachments, resolvedByManager, branchManagerId }: { 
+      findingId: string; 
+      assessorId?: string; 
+      resolution: string; 
+      attachments?: string[];
+      resolvedByManager?: boolean;
+      branchManagerId?: string;
+    }) => {
+      const targetStatus = resolvedByManager ? 'pending_review' : 'pending_manager_review';
+      
       const updateData: any = {
-        status: 'pending_review',
+        status: targetStatus,
         resolved_at: new Date().toISOString(),
         resolved_by: user?.id,
         resolution_notes: resolution,
@@ -300,6 +312,8 @@ export function useResolveFinding() {
         notes: resolution,
         attachments: attachments || null,
       });
+      
+      // Update corrective action status
       const { data: existingCA } = await supabase
         .from('corrective_actions')
         .select('id')
@@ -327,16 +341,30 @@ export function useResolveFinding() {
         });
       }
 
-      // Notify the assessor (evaluator) that a finding is ready for review
-      if (assessorId) {
-        await supabase.from('notifications').insert({
-          user_id: assessorId,
-          title: 'Finding Ready for Review',
-          message: 'A finding fix has been submitted and is awaiting your review.',
-          type: 'review_pending',
-          reference_type: 'finding',
-          reference_id: findingId,
-        });
+      if (resolvedByManager) {
+        // BM resolved directly → notify assessor
+        if (assessorId) {
+          await supabase.from('notifications').insert({
+            user_id: assessorId,
+            title: 'Finding Ready for Review',
+            message: 'A finding fix has been submitted and is awaiting your review.',
+            type: 'review_pending',
+            reference_type: 'finding',
+            reference_id: findingId,
+          });
+        }
+      } else {
+        // Employee resolved → notify branch manager
+        if (branchManagerId) {
+          await supabase.from('notifications').insert({
+            user_id: branchManagerId,
+            title: 'Finding Fix Submitted',
+            message: 'An employee has submitted a fix for a finding. Please review and approve or reject.',
+            type: 'manager_review_pending',
+            reference_type: 'finding',
+            reference_id: findingId,
+          });
+        }
       }
     },
     onSuccess: () => {
@@ -350,6 +378,119 @@ export function useResolveFinding() {
   });
 }
 
+/**
+ * Branch Manager approves employee's resolution → moves to pending_review (assessor)
+ */
+export function useManagerApproveFinding() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ findingId, assessorId, notes, attachments }: { 
+      findingId: string; 
+      assessorId?: string;
+      notes?: string; 
+      attachments?: string[] 
+    }) => {
+      const { error } = await supabase
+        .from('non_conformities')
+        .update({ status: 'pending_review' })
+        .eq('id', findingId);
+
+      if (error) throw error;
+
+      // Log history
+      await supabase.from('non_conformity_history').insert({
+        non_conformity_id: findingId,
+        action: 'manager_approved',
+        performed_by: user!.id,
+        notes: notes || 'Manager approved the fix',
+        attachments: attachments || null,
+      });
+
+      // Notify the assessor
+      if (assessorId) {
+        await supabase.from('notifications').insert({
+          user_id: assessorId,
+          title: 'Finding Ready for Review',
+          message: 'A finding fix has been approved by the branch manager and is awaiting your review.',
+          type: 'review_pending',
+          reference_type: 'finding',
+          reference_id: findingId,
+        });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['findings'] });
+      queryClient.invalidateQueries({ queryKey: ['critical-findings'] });
+      queryClient.invalidateQueries({ queryKey: ['finding-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+  });
+}
+
+/**
+ * Branch Manager rejects employee's resolution → back to rejected status
+ */
+export function useManagerRejectFinding() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ findingId, reason, attachments, assignedTo }: { 
+      findingId: string; 
+      reason: string; 
+      attachments?: string[];
+      assignedTo?: string;
+    }) => {
+      const updateData: any = {
+        status: 'rejected',
+        rejection_reason: reason,
+        resolved_at: null,
+        resolved_by: null,
+      };
+      if (attachments && attachments.length > 0) updateData.review_attachments = attachments;
+
+      const { error } = await supabase
+        .from('non_conformities')
+        .update(updateData)
+        .eq('id', findingId);
+
+      if (error) throw error;
+
+      // Log history
+      await supabase.from('non_conformity_history').insert({
+        non_conformity_id: findingId,
+        action: 'manager_rejected',
+        performed_by: user!.id,
+        notes: reason,
+        attachments: attachments || null,
+      });
+
+      // Notify the assigned employee
+      if (assignedTo) {
+        await supabase.from('notifications').insert({
+          user_id: assignedTo,
+          title: 'Finding Fix Rejected by Manager',
+          message: `Your fix was rejected. Reason: ${reason}`,
+          type: 'rejection',
+          reference_type: 'finding',
+          reference_id: findingId,
+        });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['findings'] });
+      queryClient.invalidateQueries({ queryKey: ['critical-findings'] });
+      queryClient.invalidateQueries({ queryKey: ['finding-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+  });
+}
+
+/**
+ * Assessor approves a finding fix (from pending_review → resolved)
+ */
 export function useApproveFinding() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -404,12 +545,21 @@ export function useApproveFinding() {
   });
 }
 
+/**
+ * Assessor rejects a finding fix → back to rejected, notify employee + BM
+ */
 export function useRejectFinding() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ findingId, reason, attachments, assignedTo }: { findingId: string; reason: string; attachments?: string[]; assignedTo?: string }) => {
+    mutationFn: async ({ findingId, reason, attachments, assignedTo, branchManagerId }: { 
+      findingId: string; 
+      reason: string; 
+      attachments?: string[]; 
+      assignedTo?: string;
+      branchManagerId?: string;
+    }) => {
       const updateData: any = {
         status: 'rejected',
         reviewed_by: user?.id,
@@ -436,12 +586,24 @@ export function useRejectFinding() {
         attachments: attachments || null,
       });
 
-      // Notify the branch manager about the rejection
+      // Notify the assigned employee
       if (assignedTo) {
         await supabase.from('notifications').insert({
           user_id: assignedTo,
           title: 'Finding Fix Rejected',
-          message: `Your fix was rejected. Reason: ${reason}`,
+          message: `Your fix was rejected by the assessor. Reason: ${reason}`,
+          type: 'rejection',
+          reference_type: 'finding',
+          reference_id: findingId,
+        });
+      }
+
+      // Notify the branch manager
+      if (branchManagerId) {
+        await supabase.from('notifications').insert({
+          user_id: branchManagerId,
+          title: 'Finding Fix Rejected by Assessor',
+          message: `A finding fix was rejected by the assessor. Reason: ${reason}`,
           type: 'rejection',
           reference_type: 'finding',
           reference_id: findingId,
