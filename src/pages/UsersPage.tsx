@@ -71,6 +71,7 @@ import {
   useUpdateUserStatus,
   useUpdateUserRole,
   useAssignBranch,
+  useToggleAIAssistant,
   UserWithRole,
 } from '@/hooks/useUsers';
 import { AppRole, useAuth } from '@/contexts/AuthContext';
