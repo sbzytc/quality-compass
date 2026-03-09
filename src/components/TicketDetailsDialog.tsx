@@ -63,13 +63,15 @@ export function TicketDetailsDialog({ ticket, isOpen, onClose, isSupportAgent = 
   const { comments, isLoading, addComment } = useTicketComments(ticket?.id);
   const { updateTicket } = useSupportTickets();
 
-  if (!ticket) return null;
-
   // Reset comment posted state when ticket changes or dialog opens
   React.useEffect(() => {
     setCommentPosted(false);
-    setTempStatus(ticket?.status || '');
-  }, [ticket?.id, isOpen]);
+    if (ticket) {
+      setTempStatus(ticket.status);
+    }
+  }, [ticket?.id, ticket?.status, isOpen]);
+
+  if (!ticket) return null;
 
   const handlePostComment = async () => {
     if (!newComment.trim()) return;
