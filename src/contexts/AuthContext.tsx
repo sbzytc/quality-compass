@@ -130,6 +130,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return roles.includes(role);
   };
 
+  const refreshProfile = async () => {
+    if (user) {
+      await fetchUserData(user.id);
+    }
+  };
+
   const isAdmin = hasRole('admin');
   const isExecutive = hasRole('executive');
   const isBranchManager = hasRole('branch_manager');
@@ -147,6 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signIn,
         signOut,
         hasRole,
+        refreshProfile,
         isAdmin,
         isExecutive,
         isBranchManager,
