@@ -337,7 +337,8 @@ const translations: Record<Language, Record<string, string>> = {
     'role.executive': 'تنفيذي',
     'role.branch_manager': 'مدير الفرع',
     'role.assessor': 'مقيّم',
-    
+    'role.branch_employee': 'موظف فرع',
+
     // Settings
     'settings.title': 'الإعدادات',
     'settings.subtitle': 'تكوين إعدادات التطبيق',
