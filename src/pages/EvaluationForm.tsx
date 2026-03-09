@@ -17,7 +17,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { differenceInHours } from 'date-fns';
 
-type PeriodType = 'weekly' | 'monthly';
+type PeriodType = 'weekly' | 'monthly' | 'yearly';
 
 interface Score {
   criterionId: string;
@@ -881,7 +881,7 @@ export default function EvaluationForm() {
           <p className="text-sm text-muted-foreground text-center mb-6">
             {direction === 'rtl' ? 'اختر الفترة الزمنية للتقييم' : 'Choose the evaluation period'}
           </p>
-          <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
+          <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto">
             <button
               onClick={() => {
                 setSelectedPeriodType('weekly');
@@ -912,6 +912,22 @@ export default function EvaluationForm() {
               </span>
               <span className="text-xs text-muted-foreground">
                 {direction === 'rtl' ? 'تقييم شهري' : 'Monthly Evaluation'}
+              </span>
+            </button>
+            <button
+              onClick={() => {
+                setSelectedPeriodType('yearly');
+                setScores({});
+                setExpandedCategories([]);
+              }}
+              className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all"
+            >
+              <FileText className="w-10 h-10 text-primary" />
+              <span className="font-semibold text-foreground">
+                {direction === 'rtl' ? 'سنوي' : 'Yearly'}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {direction === 'rtl' ? 'تقييم سنوي' : 'Yearly Evaluation'}
               </span>
             </button>
           </div>
