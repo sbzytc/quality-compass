@@ -356,6 +356,9 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.support.myTickets': 'تذاكري',
     'nav.support.archived': 'الأرشيف',
 
+    // AI Assistant
+    'nav.assistant': 'المساعد الذكي',
+
     // Settings
     'settings.title': 'الإعدادات',
     'settings.subtitle': 'تكوين إعدادات التطبيق',
