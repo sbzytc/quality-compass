@@ -42,6 +42,7 @@ export default function PeriodEvaluationForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [uploadingCriterionId, setUploadingCriterionId] = useState<string | null>(null);
+  const [evaluationStartTime, setEvaluationStartTime] = useState<Date | null>(null);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const selectedBranch = branches?.find(b => b.id === selectedBranchId);
