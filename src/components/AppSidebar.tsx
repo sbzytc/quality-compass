@@ -26,6 +26,7 @@ import {
   CalendarDays,
   CalendarRange,
   TrendingUp,
+  Headset,
 } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
