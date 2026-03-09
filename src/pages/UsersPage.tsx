@@ -200,7 +200,7 @@ export default function UsersPage() {
         password: createForm.password,
         role: createForm.role,
         forcePasswordChange: createForm.forcePasswordChange,
-        branchId: createForm.role === 'branch_manager' ? createForm.branchId : undefined,
+        branchId: (createForm.role === 'branch_manager' || createForm.role === 'branch_employee') ? createForm.branchId : undefined,
       });
       toast.success(
         language === 'ar'
@@ -732,7 +732,7 @@ export default function UsersPage() {
                   </SelectContent>
                 </Select>
               </div>
-              {createForm.role === 'branch_manager' && (
+              {(createForm.role === 'branch_manager' || createForm.role === 'branch_employee') && (
                 <div className="space-y-2">
                   <Label>{language === 'ar' ? 'الفرع' : 'Assign to Branch'}</Label>
                   <Select
@@ -753,13 +753,14 @@ export default function UsersPage() {
                 </div>
               )}
               <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                <div>
+                <div className="flex-1 min-w-0 me-3">
                   <p className="text-sm font-medium">{language === 'ar' ? 'تغيير كلمة المرور عند أول تسجيل دخول' : 'Force password change on first login'}</p>
                   <p className="text-xs text-muted-foreground">{language === 'ar' ? 'سيُطلب من المستخدم تغيير كلمة المرور' : 'User will be prompted to change their password'}</p>
                 </div>
                 <Switch
                   checked={createForm.forcePasswordChange}
                   onCheckedChange={(checked) => setCreateForm((prev) => ({ ...prev, forcePasswordChange: checked }))}
+                  className="shrink-0"
                 />
               </div>
             </div>
@@ -788,7 +789,7 @@ export default function UsersPage() {
                 {addUserMode === 'create' && (
                   <Button
                     onClick={handleCreateUser}
-                    disabled={!createForm.email || !createForm.fullName || !createForm.password || createForm.password !== createForm.confirmPassword || (createForm.role === 'branch_manager' && !createForm.branchId) || createUser.isPending}
+                    disabled={!createForm.email || !createForm.fullName || !createForm.password || createForm.password !== createForm.confirmPassword || ((createForm.role === 'branch_manager' || createForm.role === 'branch_employee') && !createForm.branchId) || createUser.isPending}
                   >
                     {createUser.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
                     <UserPlus className="w-4 h-4 me-2" />
