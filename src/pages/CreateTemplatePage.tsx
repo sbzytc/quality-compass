@@ -40,7 +40,7 @@ const createCriterion = (): CriterionForm => ({
   nameAr: '',
   description: '',
   maxScore: 5,
-  weight: 1,
+  weight: 100,
   isCritical: false,
 });
 
@@ -48,7 +48,7 @@ const createCategory = (): CategoryForm => ({
   localId: crypto.randomUUID(),
   name: '',
   nameAr: '',
-  weight: 1,
+  weight: 100,
   criteria: [createCriterion()],
 });
 
@@ -110,6 +110,13 @@ export default function CreateTemplatePage() {
   const totalCriteria = categories.reduce((sum, c) => sum + c.criteria.length, 0);
   const criticalCount = categories.reduce((sum, c) => sum + c.criteria.filter(cr => cr.isCritical).length, 0);
 
+  // Weight calculations
+  const totalCategoryWeight = categories.reduce((sum, c) => sum + c.weight, 0);
+  const categoryWeightRemaining = 100 - totalCategoryWeight;
+
+  const getCriteriaWeightTotal = (criteria: CriterionForm[]) =>
+    criteria.reduce((sum, cr) => sum + cr.weight, 0);
+
   const handleSave = async () => {
     if (!name.trim()) {
       toast.error(language === 'ar' ? 'يرجى إدخال اسم القالب' : 'Please enter a template name');
@@ -118,6 +125,16 @@ export default function CreateTemplatePage() {
 
     if (categories.length === 0) {
       toast.error(language === 'ar' ? 'يرجى إضافة فئة واحدة على الأقل' : 'Please add at least one category');
+      return;
+    }
+
+    // Validate category weights sum to 100%
+    if (Math.abs(totalCategoryWeight - 100) > 0.01) {
+      toast.error(
+        language === 'ar'
+          ? `مجموع أوزان الفئات يجب أن يكون 100%. المجموع الحالي: ${totalCategoryWeight}%`
+          : `Category weights must sum to 100%. Current total: ${totalCategoryWeight}%`
+      );
       return;
     }
 
@@ -130,6 +147,19 @@ export default function CreateTemplatePage() {
         toast.error(language === 'ar' ? `الفئة "${cat.name}" يجب أن تحتوي على معيار واحد على الأقل` : `Category "${cat.name}" must have at least one criterion`);
         return;
       }
+
+      // Validate criteria weights sum to 100%
+      const criteriaTotal = getCriteriaWeightTotal(cat.criteria);
+      if (Math.abs(criteriaTotal - 100) > 0.01) {
+        const catLabel = cat.nameAr || cat.name;
+        toast.error(
+          language === 'ar'
+            ? `مجموع أوزان المعايير في الفئة "${catLabel}" يجب أن يكون 100%. المجموع الحالي: ${criteriaTotal}%`
+            : `Criteria weights in category "${cat.name}" must sum to 100%. Current total: ${criteriaTotal}%`
+        );
+        return;
+      }
+
       for (const cr of cat.criteria) {
         if (!cr.name.trim()) {
           toast.error(language === 'ar' ? 'يرجى إدخال اسم لكل معيار' : 'Please enter a name for each criterion');
@@ -205,6 +235,34 @@ export default function CreateTemplatePage() {
     }
   };
 
+  const WeightIndicator = ({ total, label }: { total: number; label: string }) => {
+    const remaining = 100 - total;
+    const isValid = Math.abs(remaining) < 0.01;
+    const isOver = remaining < -0.01;
+
+    return (
+      <div className={`flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border ${
+        isValid 
+          ? 'bg-green-50 border-green-200 text-green-700 dark:bg-green-950/30 dark:border-green-800 dark:text-green-400' 
+          : isOver
+            ? 'bg-destructive/10 border-destructive/30 text-destructive'
+            : 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-400'
+      }`}>
+        <span className="font-medium">{label}:</span>
+        <span>{total}%</span>
+        {!isValid && (
+          <span className="text-xs">
+            ({isOver 
+              ? (language === 'ar' ? `زيادة ${Math.abs(remaining)}%` : `over by ${Math.abs(remaining)}%`)
+              : (language === 'ar' ? `متبقي ${remaining}%` : `${remaining}% remaining`)
+            })
+          </span>
+        )}
+        {isValid && <span className="text-xs">✓</span>}
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Header */}
@@ -271,7 +329,7 @@ export default function CreateTemplatePage() {
       </Card>
 
       {/* Summary badges */}
-      <div className="flex gap-3 flex-wrap">
+      <div className="flex gap-3 flex-wrap items-center">
         <Badge variant="outline" className="text-sm px-3 py-1">
           {categories.length} {language === 'ar' ? 'فئة' : 'Categories'}
         </Badge>
@@ -284,6 +342,10 @@ export default function CreateTemplatePage() {
             {criticalCount} {language === 'ar' ? 'حرج' : 'Critical'}
           </Badge>
         )}
+        <WeightIndicator
+          total={totalCategoryWeight}
+          label={language === 'ar' ? 'أوزان الفئات' : 'Category Weights'}
+        />
       </div>
 
       {/* Categories */}
@@ -299,166 +361,187 @@ export default function CreateTemplatePage() {
         </div>
 
         <Accordion type="multiple" defaultValue={categories.map(c => c.localId)} className="space-y-3">
-          {categories.map((category, catIdx) => (
-            <AccordionItem
-              key={category.localId}
-              value={category.localId}
-              className="border border-border rounded-xl overflow-hidden bg-card"
-            >
-              <AccordionTrigger className="hover:no-underline px-4 py-3">
-                <div className="flex items-center justify-between w-full pe-2">
-                  <div className="flex items-center gap-2">
-                    <GripVertical className="w-4 h-4 text-muted-foreground" />
-                    <span className="font-medium text-foreground">
-                      {category.name || category.nameAr || `${language === 'ar' ? 'فئة' : 'Category'} ${catIdx + 1}`}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-xs">
-                      {category.criteria.length} {language === 'ar' ? 'معيار' : 'criteria'}
-                    </Badge>
-                  </div>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="px-4 pb-4">
-                <div className="space-y-4">
-                  {/* Category fields */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 bg-muted/30 rounded-lg">
-                    <div className="space-y-1">
-                      <Label className="text-xs">{language === 'ar' ? 'الاسم (إنجليزي)' : 'Name (EN)'}</Label>
-                      <Input
-                        value={category.name}
-                        onChange={e => updateCategory(category.localId, { name: e.target.value })}
-                        placeholder="Category name"
-                        className="h-9"
-                      />
+          {categories.map((category, catIdx) => {
+            const criteriaWeightTotal = getCriteriaWeightTotal(category.criteria);
+            return (
+              <AccordionItem
+                key={category.localId}
+                value={category.localId}
+                className="border border-border rounded-xl overflow-hidden bg-card"
+              >
+                <AccordionTrigger className="hover:no-underline px-4 py-3">
+                  <div className="flex items-center justify-between w-full pe-2">
+                    <div className="flex items-center gap-2">
+                      <GripVertical className="w-4 h-4 text-muted-foreground" />
+                      <span className="font-medium text-foreground">
+                        {category.name || category.nameAr || `${language === 'ar' ? 'فئة' : 'Category'} ${catIdx + 1}`}
+                      </span>
                     </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">{language === 'ar' ? 'الاسم (عربي)' : 'Name (AR)'}</Label>
-                      <Input
-                        value={category.nameAr}
-                        onChange={e => updateCategory(category.localId, { nameAr: e.target.value })}
-                        placeholder="اسم الفئة"
-                        dir="rtl"
-                        className="h-9"
-                      />
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="text-xs">
+                        {category.weight}%
+                      </Badge>
+                      <Badge variant="secondary" className="text-xs">
+                        {category.criteria.length} {language === 'ar' ? 'معيار' : 'criteria'}
+                      </Badge>
                     </div>
-                    <div className="flex items-end gap-2">
-                      <div className="space-y-1 flex-1">
-                        <Label className="text-xs">{language === 'ar' ? 'الوزن %' : 'Weight %'}</Label>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4">
+                  <div className="space-y-4">
+                    {/* Category fields */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 bg-muted/30 rounded-lg">
+                      <div className="space-y-1">
+                        <Label className="text-xs">{language === 'ar' ? 'الاسم (إنجليزي)' : 'Name (EN)'}</Label>
                         <Input
-                          type="number"
-                          value={category.weight}
-                          onChange={e => updateCategory(category.localId, { weight: Number(e.target.value) })}
-                          min={0}
+                          value={category.name}
+                          onChange={e => updateCategory(category.localId, { name: e.target.value })}
+                          placeholder="Category name"
                           className="h-9"
                         />
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:text-destructive h-9 w-9"
-                        onClick={() => removeCategory(category.localId)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Criteria */}
-                  <div className="space-y-2">
-                    {category.criteria.map((criterion, crIdx) => (
-                      <div
-                        key={criterion.localId}
-                        className="p-3 border border-border rounded-lg bg-background space-y-3"
-                      >
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          <div className="space-y-1">
-                            <Label className="text-xs">{language === 'ar' ? 'المعيار (إنجليزي)' : 'Criterion (EN)'}</Label>
-                            <Input
-                              value={criterion.name}
-                              onChange={e => updateCriterion(category.localId, criterion.localId, { name: e.target.value })}
-                              placeholder="Criterion name"
-                              className="h-9"
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <Label className="text-xs">{language === 'ar' ? 'المعيار (عربي)' : 'Criterion (AR)'}</Label>
-                            <Input
-                              value={criterion.nameAr}
-                              onChange={e => updateCriterion(category.localId, criterion.localId, { nameAr: e.target.value })}
-                              placeholder="اسم المعيار"
-                              dir="rtl"
-                              className="h-9"
-                            />
-                          </div>
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-xs">{language === 'ar' ? 'الوصف' : 'Description'}</Label>
+                      <div className="space-y-1">
+                        <Label className="text-xs">{language === 'ar' ? 'الاسم (عربي)' : 'Name (AR)'}</Label>
+                        <Input
+                          value={category.nameAr}
+                          onChange={e => updateCategory(category.localId, { nameAr: e.target.value })}
+                          placeholder="اسم الفئة"
+                          dir="rtl"
+                          className="h-9"
+                        />
+                      </div>
+                      <div className="flex items-end gap-2">
+                        <div className="space-y-1 flex-1">
+                          <Label className="text-xs">{language === 'ar' ? 'الوزن %' : 'Weight %'}</Label>
                           <Input
-                            value={criterion.description}
-                            onChange={e => updateCriterion(category.localId, criterion.localId, { description: e.target.value })}
-                            placeholder={language === 'ar' ? 'وصف المعيار (اختياري)' : 'Criterion description (optional)'}
+                            type="number"
+                            value={category.weight}
+                            onChange={e => {
+                              const val = Math.min(100, Math.max(0, Number(e.target.value)));
+                              updateCategory(category.localId, { weight: val });
+                            }}
+                            min={0}
+                            max={100}
                             className="h-9"
                           />
                         </div>
-                        <div className="flex items-center gap-4 flex-wrap">
-                          <div className="flex items-center gap-2">
-                            <Label className="text-xs whitespace-nowrap">{language === 'ar' ? 'أعلى درجة' : 'Max Score'}</Label>
-                            <Input
-                              type="number"
-                              value={criterion.maxScore}
-                              onChange={e => updateCriterion(category.localId, criterion.localId, { maxScore: Number(e.target.value) })}
-                              min={1}
-                              className="h-9 w-20"
-                            />
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Label className="text-xs whitespace-nowrap">{language === 'ar' ? 'الوزن' : 'Weight'}</Label>
-                            <Input
-                              type="number"
-                              value={criterion.weight}
-                              onChange={e => updateCriterion(category.localId, criterion.localId, { weight: Number(e.target.value) })}
-                              min={0}
-                              step={0.1}
-                              className="h-9 w-20"
-                            />
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Switch
-                              checked={criterion.isCritical}
-                              onCheckedChange={checked => updateCriterion(category.localId, criterion.localId, { isCritical: checked })}
-                            />
-                            <Label className="text-xs flex items-center gap-1">
-                              <AlertTriangle className="w-3 h-3 text-destructive" />
-                              {language === 'ar' ? 'حرج' : 'Critical'}
-                            </Label>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive hover:text-destructive h-8 w-8 ms-auto"
-                            onClick={() => removeCriterion(category.localId, criterion.localId)}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:text-destructive h-9 w-9"
+                          onClick={() => removeCategory(category.localId)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </div>
-                    ))}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => addCriterion(category.localId)}
-                      className="gap-1 w-full"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      {language === 'ar' ? 'إضافة معيار' : 'Add Criterion'}
-                    </Button>
+                    </div>
+
+                    {/* Criteria weight indicator */}
+                    <WeightIndicator
+                      total={criteriaWeightTotal}
+                      label={language === 'ar' ? 'أوزان المعايير' : 'Criteria Weights'}
+                    />
+
+                    {/* Criteria */}
+                    <div className="space-y-2">
+                      {category.criteria.map((criterion, crIdx) => (
+                        <div
+                          key={criterion.localId}
+                          className="p-3 border border-border rounded-lg bg-background space-y-3"
+                        >
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <Label className="text-xs">{language === 'ar' ? 'المعيار (إنجليزي)' : 'Criterion (EN)'}</Label>
+                              <Input
+                                value={criterion.name}
+                                onChange={e => updateCriterion(category.localId, criterion.localId, { name: e.target.value })}
+                                placeholder="Criterion name"
+                                className="h-9"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">{language === 'ar' ? 'المعيار (عربي)' : 'Criterion (AR)'}</Label>
+                              <Input
+                                value={criterion.nameAr}
+                                onChange={e => updateCriterion(category.localId, criterion.localId, { nameAr: e.target.value })}
+                                placeholder="اسم المعيار"
+                                dir="rtl"
+                                className="h-9"
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">{language === 'ar' ? 'الوصف' : 'Description'}</Label>
+                            <Input
+                              value={criterion.description}
+                              onChange={e => updateCriterion(category.localId, criterion.localId, { description: e.target.value })}
+                              placeholder={language === 'ar' ? 'وصف المعيار (اختياري)' : 'Criterion description (optional)'}
+                              className="h-9"
+                            />
+                          </div>
+                          <div className="flex items-center gap-3 flex-wrap">
+                            <div className="flex items-center gap-2">
+                              <Label className="text-xs whitespace-nowrap">{language === 'ar' ? 'أعلى درجة' : 'Max Score'}</Label>
+                              <Input
+                                type="number"
+                                value={criterion.maxScore}
+                                onChange={e => updateCriterion(category.localId, criterion.localId, { maxScore: Number(e.target.value) })}
+                                min={1}
+                                className="h-9 w-20"
+                              />
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Label className="text-xs whitespace-nowrap">{language === 'ar' ? 'الوزن %' : 'Weight %'}</Label>
+                              <Input
+                                type="number"
+                                value={criterion.weight}
+                                onChange={e => {
+                                  const val = Math.min(100, Math.max(0, Number(e.target.value)));
+                                  updateCriterion(category.localId, criterion.localId, { weight: val });
+                                }}
+                                min={0}
+                                max={100}
+                                step={1}
+                                className="h-9 w-20"
+                              />
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <Switch
+                                checked={criterion.isCritical}
+                                onCheckedChange={checked => updateCriterion(category.localId, criterion.localId, { isCritical: checked })}
+                                id={`critical-${criterion.localId}`}
+                              />
+                              <Label htmlFor={`critical-${criterion.localId}`} className="text-xs flex items-center gap-1 whitespace-nowrap cursor-pointer">
+                                <AlertTriangle className="w-3 h-3 text-destructive shrink-0" />
+                                {language === 'ar' ? 'حرج' : 'Critical'}
+                              </Label>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-destructive hover:text-destructive h-8 w-8 ms-auto shrink-0"
+                              onClick={() => removeCriterion(category.localId, criterion.localId)}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => addCriterion(category.localId)}
+                        className="gap-1 w-full"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        {language === 'ar' ? 'إضافة معيار' : 'Add Criterion'}
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          ))}
+                </AccordionContent>
+              </AccordionItem>
+            );
+          })}
         </Accordion>
 
         <Button variant="outline" onClick={addCategory} className="gap-2 w-full">
