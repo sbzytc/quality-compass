@@ -41,6 +41,15 @@ export function useEvaluations() {
 
       if (error) throw error;
 
+      // Fetch assessor names
+      const assessorIds = [...new Set(data.map(e => e.assessor_id))];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, full_name')
+        .in('user_id', assessorIds);
+      
+      const profileMap = new Map(profiles?.map(p => [p.user_id, p.full_name]) || []);
+
       return data.map(e => ({
         id: e.id,
         branchId: e.branch_id,
@@ -48,7 +57,7 @@ export function useEvaluations() {
         templateId: e.template_id,
         templateName: (e.evaluation_templates as any)?.name || 'Unknown',
         assessorId: e.assessor_id,
-        assessorName: 'Assessor', // Would need to join with profiles
+        assessorName: profileMap.get(e.assessor_id) || 'Unknown',
         overallScore: e.overall_score,
         overallPercentage: e.overall_percentage,
         status: e.status as 'draft' | 'submitted' | 'approved',
@@ -76,6 +85,14 @@ export function useArchivedEvaluations() {
 
       if (error) throw error;
 
+      const assessorIds = [...new Set(data.map(e => e.assessor_id))];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, full_name')
+        .in('user_id', assessorIds);
+      
+      const profileMap = new Map(profiles?.map(p => [p.user_id, p.full_name]) || []);
+
       return data.map(e => ({
         id: e.id,
         branchId: e.branch_id,
@@ -83,7 +100,7 @@ export function useArchivedEvaluations() {
         templateId: e.template_id,
         templateName: (e.evaluation_templates as any)?.name || 'Unknown',
         assessorId: e.assessor_id,
-        assessorName: 'Assessor',
+        assessorName: profileMap.get(e.assessor_id) || 'Unknown',
         overallScore: e.overall_score,
         overallPercentage: e.overall_percentage,
         status: e.status as 'draft' | 'submitted' | 'approved',
