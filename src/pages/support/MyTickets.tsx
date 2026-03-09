@@ -8,8 +8,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Info } from 'lucide-react';
+import { PlusCircle, Info, Image as ImageIcon, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function MyTickets() {
   const { t, direction } = useLanguage();
