@@ -189,6 +189,9 @@ export default function PeriodEvaluationForm() {
   };
 
   const setScoreWithValidation = (criterionId: string, score: number) => {
+    if (!evaluationStartTime) {
+      setEvaluationStartTime(new Date());
+    }
     setScores(prev => ({
       ...prev,
       [criterionId]: { ...prev[criterionId], criterionId, score, notes: prev[criterionId]?.notes || '' },
