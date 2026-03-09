@@ -27,6 +27,7 @@ import {
   CalendarRange,
   TrendingUp,
   Headset,
+  Sparkles,
 } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -190,6 +191,11 @@ export function AppSidebar() {
           }
         ] : [])
       ]
+    },
+    {
+      labelKey: 'nav.assistant',
+      icon: Sparkles,
+      path: '/assistant',
     },
   ] as NavItem[]).filter(item => !item.allowedRoles || item.allowedRoles.some(role => roles.includes(role)));
 

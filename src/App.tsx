@@ -32,6 +32,7 @@ import NotFound from "@/pages/NotFound";
 import SupportDashboard from "@/pages/support/SupportDashboard";
 import MyTickets from "@/pages/support/MyTickets";
 import ArchivedTickets from "@/pages/support/ArchivedTickets";
+import AIAssistantPage from "@/pages/AIAssistantPage";
 
 const queryClient = new QueryClient();
 
@@ -181,6 +182,9 @@ const AppRoutes = () => (
       
       {/* Settings - All authenticated users */}
       <Route path="/settings" element={<SettingsPage />} />
+
+      {/* AI Assistant - All authenticated users */}
+      <Route path="/assistant" element={<AIAssistantPage />} />
 
       {/* Support Routes */}
       <Route path="/support/dashboard" element={
