@@ -16,6 +16,7 @@ export interface EvaluationWithDetails {
   createdAt: string;
   submittedAt: string | null;
   isArchived?: boolean;
+  durationMinutes: number | null;
 }
 
 export function useEvaluations() {
