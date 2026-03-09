@@ -188,6 +188,11 @@ const AppRoutes = () => (
           <SupportDashboard />
         </ProtectedRoute>
       } />
+      <Route path="/support/archived" element={
+        <ProtectedRoute allowedRoles={['admin', 'support_agent']}>
+          <ArchivedTickets />
+        </ProtectedRoute>
+      } />
       <Route path="/support/my-tickets" element={<MyTickets />} />
     </Route>
     
