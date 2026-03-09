@@ -80,7 +80,7 @@ export function AIAssistantChat({ fullPage = false }: AIAssistantChatProps) {
   };
 
   const clearChat = () => {
-    setMessages([]);
+    clearMessages();
   };
 
   const suggestions = [
