@@ -105,6 +105,7 @@ export default function SupportDashboard() {
                       {ticket.status === 'open' ? (direction === 'rtl' ? 'مفتوحة' : 'Open') : 
                        ticket.status === 'in_progress' ? (direction === 'rtl' ? 'قيد التنفيذ' : 'In Progress') : 
                        ticket.status === 'resolved' ? (direction === 'rtl' ? 'محلولة' : 'Resolved') : 
+                       ticket.status === 'pending_closure' ? (direction === 'rtl' ? 'بانتظار الإغلاق' : 'Pending Closure') :
                        ticket.status === 'closed' ? (direction === 'rtl' ? 'مغلقة' : 'Closed') : 
                        String(ticket.status).replace('_', ' ')}
                     </Badge>
