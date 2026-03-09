@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { AppSidebar } from '@/components/AppSidebar';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,11 +11,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut, Settings } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { LogOut, Settings, Languages } from 'lucide-react';
+import { getInitials } from '@/lib/getInitials';
 
 export function MainLayout() {
-  const { language, setLanguage, direction } = useLanguage();
+  const { language, setLanguage, direction, t } = useLanguage();
   const { profile, signOut, isAdmin, isExecutive, isBranchManager, isAssessor } = useAuth();
   const navigate = useNavigate();
 
@@ -24,22 +24,15 @@ export function MainLayout() {
     navigate('/login');
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   const getRoleBadge = () => {
-    if (isAdmin) return direction === 'rtl' ? 'مدير النظام' : 'Admin';
-    if (isExecutive) return direction === 'rtl' ? 'تنفيذي' : 'Executive';
-    if (isBranchManager) return direction === 'rtl' ? 'مدير الفرع' : 'Branch Manager';
-    if (isAssessor) return direction === 'rtl' ? 'مقيّم' : 'Assessor';
+    if (isAdmin) return t('role.admin');
+    if (isExecutive) return t('role.executive');
+    if (isBranchManager) return t('role.branch_manager');
+    if (isAssessor) return t('role.assessor');
     return '';
   };
+
+  const roleBadge = getRoleBadge();
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -48,14 +41,14 @@ export function MainLayout() {
         {/* Header */}
         <header className="h-14 border-b bg-background flex items-center justify-end px-4 gap-2">
           {/* Language Toggle - Direct switch */}
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="h-9 px-3 gap-1.5 border-primary/30 hover:bg-primary/10 font-semibold text-sm"
             onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
             title={language === 'en' ? 'العربية' : 'English'}
           >
-            🌐
+            <Languages className="h-4 w-4" />
             <span>{language === 'en' ? 'العربية' : 'English'}</span>
           </Button>
 
@@ -72,18 +65,19 @@ export function MainLayout() {
                   </Avatar>
                   <div className="hidden md:flex flex-col items-start text-sm">
                     <span className="font-medium leading-none">{profile.full_name}</span>
+                    {roleBadge && <span className="text-xs text-muted-foreground">{roleBadge}</span>}
                     <span className="text-xs text-muted-foreground">{profile.email}</span>
                   </div>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem onClick={() => navigate('/settings')}>
-                  <Settings className="mr-2 h-4 w-4" />
+                  <Settings className="me-2 h-4 w-4" />
                   {direction === 'rtl' ? 'الإعدادات' : 'Settings'}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
-                  <LogOut className="mr-2 h-4 w-4" />
+                  <LogOut className="me-2 h-4 w-4" />
                   {direction === 'rtl' ? 'تسجيل الخروج' : 'Sign Out'}
                 </DropdownMenuItem>
               </DropdownMenuContent>

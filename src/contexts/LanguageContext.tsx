@@ -138,7 +138,8 @@ const translations: Record<Language, Record<string, string>> = {
     'role.executive': 'Executive',
     'role.branch_manager': 'Branch Manager',
     'role.assessor': 'Assessor',
-    
+    'role.branch_employee': 'Branch Employee',
+
     // Settings
     'settings.title': 'Settings',
     'settings.subtitle': 'Configure application settings',
@@ -164,7 +165,19 @@ const translations: Record<Language, Record<string, string>> = {
     'status.completed': 'Completed',
     'status.inProgress': 'In Progress',
     'status.pending': 'Pending',
-    
+
+    // Priorities
+    'priority.low': 'Low',
+    'priority.medium': 'Medium',
+    'priority.high': 'High',
+    'priority.critical': 'Critical',
+
+    // Action status
+    'action_status.pending': 'Pending',
+    'action_status.in_progress': 'In Progress',
+    'action_status.completed': 'Completed',
+    'action_status.overdue': 'Overdue',
+
     // Auth
     'auth.signIn': 'Sign In',
     'auth.signOut': 'Sign Out',
@@ -324,7 +337,8 @@ const translations: Record<Language, Record<string, string>> = {
     'role.executive': 'تنفيذي',
     'role.branch_manager': 'مدير الفرع',
     'role.assessor': 'مقيّم',
-    
+    'role.branch_employee': 'موظف فرع',
+
     // Settings
     'settings.title': 'الإعدادات',
     'settings.subtitle': 'تكوين إعدادات التطبيق',
@@ -350,7 +364,19 @@ const translations: Record<Language, Record<string, string>> = {
     'status.completed': 'مكتمل',
     'status.inProgress': 'قيد التنفيذ',
     'status.pending': 'معلق',
-    
+
+    // Priorities
+    'priority.low': 'منخفض',
+    'priority.medium': 'متوسط',
+    'priority.high': 'مرتفع',
+    'priority.critical': 'حرج',
+
+    // Action status
+    'action_status.pending': 'معلق',
+    'action_status.in_progress': 'قيد التنفيذ',
+    'action_status.completed': 'مكتمل',
+    'action_status.overdue': 'متأخر',
+
     // Auth
     'auth.signIn': 'تسجيل الدخول',
     'auth.signOut': 'تسجيل الخروج',
