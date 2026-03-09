@@ -174,7 +174,6 @@ export function AIAssistantChat({ fullPage = false }: AIAssistantChatProps) {
                   <div dir="auto" className="prose prose-sm dark:prose-invert max-w-none [&>p]:m-0 [&>ul]:my-1 [&>ol]:my-1">
                     <ReactMarkdown>{msg.content}</ReactMarkdown>
                   </div>
-                  </div>
                 </div>
               </div>
             ))}
