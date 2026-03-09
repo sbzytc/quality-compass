@@ -121,7 +121,7 @@ export default function FindingsPage() {
 
   // Get branch manager for a branch
   const getBranchManagerId = (branchId: string): string | undefined => {
-    return branches?.find(b => b.id === branchId)?.manager_id || undefined;
+    return rawBranches?.find(b => b.id === branchId)?.manager_id || undefined;
   };
 
   const handleAssign = (finding: Finding) => {
