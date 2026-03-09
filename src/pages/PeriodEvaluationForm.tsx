@@ -42,6 +42,7 @@ export default function PeriodEvaluationForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [uploadingCriterionId, setUploadingCriterionId] = useState<string | null>(null);
+  const [evaluationStartTime, setEvaluationStartTime] = useState<Date | null>(null);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const selectedBranch = branches?.find(b => b.id === selectedBranchId);
@@ -83,6 +84,9 @@ export default function PeriodEvaluationForm() {
     try {
       if (!templateData?.id || !selectedBranchId || !user) return;
 
+      const now = new Date();
+      const startTime = evaluationStartTime || now;
+      const durationMinutes = Math.round((now.getTime() - startTime.getTime()) / 60000);
       const { data: evaluation, error: evalError } = await supabase
         .from('evaluations')
         .insert({
@@ -90,7 +94,9 @@ export default function PeriodEvaluationForm() {
           template_id: templateData.id,
           assessor_id: user.id,
           status: 'submitted',
-          submitted_at: new Date().toISOString(),
+          submitted_at: now.toISOString(),
+          started_at: startTime.toISOString(),
+          duration_minutes: durationMinutes,
           period_type: periodType,
         })
         .select()
@@ -183,6 +189,9 @@ export default function PeriodEvaluationForm() {
   };
 
   const setScoreWithValidation = (criterionId: string, score: number) => {
+    if (!evaluationStartTime) {
+      setEvaluationStartTime(new Date());
+    }
     setScores(prev => ({
       ...prev,
       [criterionId]: { ...prev[criterionId], criterionId, score, notes: prev[criterionId]?.notes || '' },

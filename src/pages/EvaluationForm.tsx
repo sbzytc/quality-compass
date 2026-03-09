@@ -55,6 +55,7 @@ export default function EvaluationForm() {
   const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null);
   const [currentDraftId, setCurrentDraftId] = useState<string | null>(draftId);
   const [isLoadingDraft, setIsLoadingDraft] = useState(!!draftId);
+  const [evaluationStartTime, setEvaluationStartTime] = useState<Date | null>(null);
   
   // Duplicate evaluation check state
   const [existingEvaluation, setExistingEvaluation] = useState<ExistingEvaluation | null>(null);
@@ -124,6 +125,12 @@ export default function EvaluationForm() {
         setSelectedBranchId(evaluation.branch_id);
         setActiveTemplateId(evaluation.template_id);
         setCurrentDraftId(evaluation.id);
+        // Restore start time from draft
+        if ((evaluation as any).started_at) {
+          setEvaluationStartTime(new Date((evaluation as any).started_at));
+        } else {
+          setEvaluationStartTime(new Date(evaluation.created_at));
+        }
 
         // Fetch existing criterion scores for this evaluation
         const { data: criterionScores } = await supabase
@@ -308,6 +315,7 @@ export default function EvaluationForm() {
             assessor_id: user.id,
             status: 'draft',
             period_type: selectedPeriodType || 'weekly',
+            started_at: evaluationStartTime?.toISOString() || new Date().toISOString(),
           })
           .select()
           .single();
@@ -413,17 +421,24 @@ export default function EvaluationForm() {
       let evaluationId = currentDraftId;
 
       if (currentDraftId) {
+        const now = new Date();
+        const startedAt = evaluationStartTime || now;
+        const durationMinutes = Math.round((now.getTime() - startedAt.getTime()) / 60000);
         const { error: updateError } = await supabase
           .from('evaluations')
           .update({
             status: 'submitted',
-            submitted_at: new Date().toISOString(),
+            submitted_at: now.toISOString(),
+            duration_minutes: durationMinutes,
           })
           .eq('id', currentDraftId);
 
         if (updateError) throw updateError;
       } else {
         // Create evaluation as submitted (need the id to persist answers)
+        const now = new Date();
+        const startTime = evaluationStartTime || now;
+        const durationMinutes = Math.round((now.getTime() - startTime.getTime()) / 60000);
         const { data: evaluation, error: evalError } = await supabase
           .from('evaluations')
           .insert({
@@ -431,7 +446,9 @@ export default function EvaluationForm() {
             template_id: activeTemplateId,
             assessor_id: user?.id,
             status: 'submitted',
-            submitted_at: new Date().toISOString(),
+            submitted_at: now.toISOString(),
+            started_at: startTime.toISOString(),
+            duration_minutes: durationMinutes,
             period_type: selectedPeriodType || 'weekly',
           })
           .select()
@@ -561,6 +578,10 @@ export default function EvaluationForm() {
 
   // Clear validation error when a score is set
   const setScoreWithValidation = (criterionId: string, score: number) => {
+    // Start timer on first score entry
+    if (!evaluationStartTime) {
+      setEvaluationStartTime(new Date());
+    }
     setScores((prev) => ({
       ...prev,
       [criterionId]: {
