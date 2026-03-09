@@ -29,6 +29,7 @@ interface AuthContextType {
   isExecutive: boolean;
   isBranchManager: boolean;
   isAssessor: boolean;
+  isSupportAgent: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
