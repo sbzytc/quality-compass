@@ -65,8 +65,12 @@ export function TicketDetailsDialog({ ticket, isOpen, onClose, isSupportAgent = 
               <div>
                 <DialogTitle className="text-xl flex items-center gap-2">
                   {ticket.title}
-                  <Badge variant={ticket.status === 'open' ? 'destructive' : ticket.status === 'resolved' || ticket.status === 'closed' ? 'default' : 'secondary'}>
-                    {ticket.status}
+                  <Badge variant={ticket.status === 'open' ? 'destructive' : ticket.status === 'resolved' || ticket.status === 'closed' ? 'default' : 'secondary'} className="capitalize">
+                    {ticket.status === 'open' ? (direction === 'rtl' ? 'مفتوحة' : 'Open') : 
+                     ticket.status === 'in_progress' ? (direction === 'rtl' ? 'قيد التنفيذ' : 'In Progress') : 
+                     ticket.status === 'resolved' ? (direction === 'rtl' ? 'محلولة' : 'Resolved') : 
+                     ticket.status === 'closed' ? (direction === 'rtl' ? 'مغلقة' : 'Closed') : 
+                     String(ticket.status).replace('_', ' ')}
                   </Badge>
                 </DialogTitle>
                 <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-muted-foreground">
