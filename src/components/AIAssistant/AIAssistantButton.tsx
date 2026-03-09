@@ -24,12 +24,9 @@ export function AIAssistantButton() {
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.95 }}
       >
-        {!isOpen && (
-          <div className="absolute inset-0 rounded-full bg-primary/30 animate-ping" />
-        )}
         <div className={cn(
           "relative rounded-full transition-shadow duration-300",
-          !isOpen && "shadow-[0_0_25px_8px_hsl(var(--primary)/0.35),0_0_50px_15px_hsl(var(--primary)/0.15)]"
+          !isOpen && "shadow-[0_0_20px_6px_hsl(43_90%_55%/0.4),0_0_40px_12px_hsl(43_90%_55%/0.15)]"
         )}>
           <Button
             onClick={() => setIsOpen(!isOpen)}
