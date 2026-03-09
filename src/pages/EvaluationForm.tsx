@@ -795,7 +795,7 @@ export default function EvaluationForm() {
             <Button
               variant="outline"
               size="icon"
-              onClick={goBack}
+              onClick={() => navigate('/')}
               className="mt-1"
             >
               <ArrowLeft className="w-4 h-4" />
