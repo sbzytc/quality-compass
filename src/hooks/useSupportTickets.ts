@@ -66,9 +66,17 @@ export const useSupportTickets = () => {
   const updateTicket = useMutation({
     mutationFn: async (updates: { id: string } & Partial<SupportTicket>) => {
       const { id, ...rest } = updates;
+      const updateData: any = { ...rest };
+      
+      if (rest.status === 'resolved' || rest.status === 'closed') {
+        const { data: { user } } = await supabase.auth.getUser();
+        updateData.resolved_at = new Date().toISOString();
+        if (user) updateData.resolved_by = user.id;
+      }
+
       const { data, error } = await supabase
         .from('support_tickets')
-        .update(rest as any)
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();
