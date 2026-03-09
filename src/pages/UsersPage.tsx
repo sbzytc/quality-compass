@@ -458,6 +458,22 @@ export default function UsersPage() {
                           }
                         </Badge>
                       </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        <Badge
+                          variant="outline"
+                          className={
+                            user.ai_assistant_enabled
+                              ? 'bg-blue-500/10 text-blue-500 border-blue-500/30'
+                              : 'bg-muted text-muted-foreground border-border'
+                          }
+                        >
+                          <Bot className="w-3 h-3 me-1" />
+                          {user.ai_assistant_enabled
+                            ? (language === 'ar' ? 'مفعّل' : 'Enabled')
+                            : (language === 'ar' ? 'معطّل' : 'Disabled')
+                          }
+                        </Badge>
+                      </TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
