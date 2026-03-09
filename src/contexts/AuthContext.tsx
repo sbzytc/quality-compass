@@ -14,6 +14,7 @@ interface UserProfile {
   branch_id?: string;
   region_id?: string;
   is_active: boolean;
+  ai_assistant_enabled: boolean;
 }
 
 interface AuthContextType {

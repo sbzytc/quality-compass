@@ -12,6 +12,7 @@ export interface UserWithRole {
   branch_id?: string;
   region_id?: string;
   is_active: boolean;
+  ai_assistant_enabled: boolean;
   created_at: string;
   roles: AppRole[];
 }
