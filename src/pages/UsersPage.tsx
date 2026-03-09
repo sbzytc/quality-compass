@@ -527,6 +527,10 @@ export default function UsersPage() {
                                   onClick={async () => {
                                     try {
                                       await toggleAIAssistant.mutateAsync({ userId: user.user_id, enabled: !user.ai_assistant_enabled });
+                                      // Refresh own profile if toggling for current user
+                                      if (user.user_id === (window as any).__currentUserId) {
+                                        await refreshProfile();
+                                      }
                                       toast.success(
                                         language === 'ar'
                                           ? user.ai_assistant_enabled ? 'تم تعطيل المساعد الذكي' : 'تم تفعيل المساعد الذكي'
