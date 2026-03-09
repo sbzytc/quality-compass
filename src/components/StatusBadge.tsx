@@ -30,7 +30,7 @@ export function StatusBadge({ status, size = 'md', className }: StatusBadgeProps
     >
       <span
         className={cn(
-          'rounded-full mr-1.5',
+          'rounded-full me-1.5',
           size === 'sm' ? 'w-1.5 h-1.5' : 'w-2 h-2',
           status === 'excellent' && 'bg-score-excellent',
           status === 'good' && 'bg-score-good',
@@ -59,14 +59,9 @@ const priorityStyles = {
   critical: 'bg-score-critical/10 text-score-critical border-score-critical/30',
 };
 
-const priorityLabels = {
-  low: 'Low',
-  medium: 'Medium',
-  high: 'High',
-  critical: 'Critical',
-};
-
 export function PriorityBadge({ priority, size = 'md', className }: PriorityBadgeProps) {
+  const { t } = useLanguage();
+
   return (
     <span
       className={cn(
@@ -76,7 +71,7 @@ export function PriorityBadge({ priority, size = 'md', className }: PriorityBadg
         className
       )}
     >
-      {priorityLabels[priority]}
+      {t(`priority.${priority}`)}
     </span>
   );
 }
@@ -95,14 +90,9 @@ const actionStatusStyles = {
   overdue: 'bg-score-critical/10 text-score-critical border-score-critical/30',
 };
 
-const actionStatusLabels = {
-  pending: 'Pending',
-  in_progress: 'In Progress',
-  completed: 'Completed',
-  overdue: 'Overdue',
-};
-
 export function ActionStatusBadge({ status, size = 'md', className }: ActionStatusBadgeProps) {
+  const { t } = useLanguage();
+
   return (
     <span
       className={cn(
@@ -112,7 +102,7 @@ export function ActionStatusBadge({ status, size = 'md', className }: ActionStat
         className
       )}
     >
-      {actionStatusLabels[status]}
+      {t(`action_status.${status}`)}
     </span>
   );
 }

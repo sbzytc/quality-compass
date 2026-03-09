@@ -364,7 +364,19 @@ const translations: Record<Language, Record<string, string>> = {
     'status.completed': 'مكتمل',
     'status.inProgress': 'قيد التنفيذ',
     'status.pending': 'معلق',
-    
+
+    // Priorities
+    'priority.low': 'منخفض',
+    'priority.medium': 'متوسط',
+    'priority.high': 'مرتفع',
+    'priority.critical': 'حرج',
+
+    // Action status
+    'action_status.pending': 'معلق',
+    'action_status.in_progress': 'قيد التنفيذ',
+    'action_status.completed': 'مكتمل',
+    'action_status.overdue': 'متأخر',
+
     // Auth
     'auth.signIn': 'تسجيل الدخول',
     'auth.signOut': 'تسجيل الخروج',

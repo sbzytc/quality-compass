@@ -307,10 +307,6 @@ export default function UsersPage() {
     }
   };
 
-  const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-  };
-
   return (
     <div className="space-y-6">
       {/* Header with Back Button */}
