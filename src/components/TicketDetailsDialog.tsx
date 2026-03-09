@@ -89,6 +89,14 @@ export function TicketDetailsDialog({ ticket, isOpen, onClose, isSupportAgent = 
   const handleFinalSubmit = async () => {
     try {
       if (tempStatus !== ticket.status) {
+        if (tempStatus === 'closed') {
+          if (isSupportAgent) {
+            setPendingStatus('pending_closure');
+          } else {
+            setPendingStatus('closed');
+          }
+          return;
+        }
         await updateTicket.mutateAsync({ id: ticket.id, status: tempStatus as any });
         toast.success(direction === 'rtl' ? 'تم تحديث الحالة' : 'Status updated');
       }
