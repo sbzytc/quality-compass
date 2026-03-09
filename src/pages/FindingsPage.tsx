@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft, AlertTriangle, Clock, CheckCircle2, Target,
   UserPlus, Calendar, TrendingUp, Building2, ChevronDown,
