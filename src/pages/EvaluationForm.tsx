@@ -429,6 +429,9 @@ export default function EvaluationForm() {
         if (updateError) throw updateError;
       } else {
         // Create evaluation as submitted (need the id to persist answers)
+        const now = new Date();
+        const startTime = evaluationStartTime || now;
+        const durationMinutes = Math.round((now.getTime() - startTime.getTime()) / 60000);
         const { data: evaluation, error: evalError } = await supabase
           .from('evaluations')
           .insert({
@@ -436,7 +439,9 @@ export default function EvaluationForm() {
             template_id: activeTemplateId,
             assessor_id: user?.id,
             status: 'submitted',
-            submitted_at: new Date().toISOString(),
+            submitted_at: now.toISOString(),
+            started_at: startTime.toISOString(),
+            duration_minutes: durationMinutes,
             period_type: selectedPeriodType || 'weekly',
           })
           .select()
