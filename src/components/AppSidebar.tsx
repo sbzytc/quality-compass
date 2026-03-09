@@ -192,6 +192,11 @@ export function AppSidebar() {
         ] : [])
       ]
     },
+    {
+      labelKey: 'nav.assistant',
+      icon: Sparkles,
+      path: '/assistant',
+    },
   ] as NavItem[]).filter(item => !item.allowedRoles || item.allowedRoles.some(role => roles.includes(role)));
 
   const settingsNavItems: NavItem[] = ([

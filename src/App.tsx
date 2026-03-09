@@ -183,6 +183,9 @@ const AppRoutes = () => (
       {/* Settings - All authenticated users */}
       <Route path="/settings" element={<SettingsPage />} />
 
+      {/* AI Assistant - All authenticated users */}
+      <Route path="/assistant" element={<AIAssistantPage />} />
+
       {/* Support Routes */}
       <Route path="/support/dashboard" element={
         <ProtectedRoute allowedRoles={['admin', 'support_agent']}>
