@@ -65,15 +65,28 @@ export function TicketDetailsDialog({ ticket, isOpen, onClose, isSupportAgent = 
 
   if (!ticket) return null;
 
-  const handleAddComment = async () => {
+  const handlePostComment = async () => {
     if (!newComment.trim()) return;
     try {
       await addComment.mutateAsync({ comment: newComment });
       setNewComment('');
-      toast.success(direction === 'rtl' ? 'تم إضافة التعليق' : 'Comment added');
+      setCommentPosted(true);
+      setTempStatus(ticket.status); // Initialize temp status with current status
+      toast.success(direction === 'rtl' ? 'تم نشر التعليق' : 'Comment posted');
+    } catch (error) {
+      toast.error(direction === 'rtl' ? 'فشل نشر التعليق' : 'Failed to post comment');
+    }
+  };
+
+  const handleFinalSubmit = async () => {
+    try {
+      if (tempStatus !== ticket.status) {
+        await updateTicket.mutateAsync({ id: ticket.id, status: tempStatus as any });
+        toast.success(direction === 'rtl' ? 'تم تحديث الحالة' : 'Status updated');
+      }
       onClose();
     } catch (error) {
-      toast.error(direction === 'rtl' ? 'فشل إضافة التعليق' : 'Failed to add comment');
+      toast.error(direction === 'rtl' ? 'فشل التحديث' : 'Update failed');
     }
   };
 
