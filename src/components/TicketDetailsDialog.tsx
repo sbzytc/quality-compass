@@ -34,6 +34,7 @@ export function TicketDetailsDialog({ ticket, isOpen, onClose, isSupportAgent = 
       await addComment.mutateAsync({ comment: newComment });
       setNewComment('');
       toast.success(direction === 'rtl' ? 'تم إضافة التعليق' : 'Comment added');
+      onClose();
     } catch (error) {
       toast.error(direction === 'rtl' ? 'فشل إضافة التعليق' : 'Failed to add comment');
     }
