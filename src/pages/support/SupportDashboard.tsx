@@ -27,12 +27,12 @@ import { formatDistanceToNow, differenceInHours, differenceInDays } from 'date-f
 import { ar, enUS } from 'date-fns/locale';
 
 // Kanban column configuration
-const KANBAN_COLUMNS: { status: TicketStatus; labelAr: string; labelEn: string; color: string; icon: React.ElementType }[] = [
-  { status: 'open', labelAr: 'مفتوحة', labelEn: 'Open', color: 'destructive', icon: Bug },
-  { status: 'in_progress', labelAr: 'قيد التنفيذ', labelEn: 'In Progress', color: 'primary', icon: Clock },
-  { status: 'pending_closure', labelAr: 'بانتظار الإغلاق', labelEn: 'Pending Closure', color: 'secondary', icon: Hourglass },
-  { status: 'resolved', labelAr: 'محلولة', labelEn: 'Resolved', color: 'score-good', icon: CheckCircle },
-  { status: 'closed', labelAr: 'مغلقة', labelEn: 'Closed', color: 'muted', icon: XCircle },
+const KANBAN_COLUMNS: { status: TicketStatus; labelAr: string; labelEn: string; headerClass: string; iconBgClass: string; iconClass: string; icon: React.ElementType }[] = [
+  { status: 'open', labelAr: 'مفتوحة', labelEn: 'Open', headerClass: 'bg-destructive/10', iconBgClass: 'bg-destructive/20', iconClass: 'text-destructive', icon: Bug },
+  { status: 'in_progress', labelAr: 'قيد التنفيذ', labelEn: 'In Progress', headerClass: 'bg-primary/10', iconBgClass: 'bg-primary/20', iconClass: 'text-primary', icon: Clock },
+  { status: 'pending_closure', labelAr: 'بانتظار الإغلاق', labelEn: 'Pending Closure', headerClass: 'bg-secondary/50', iconBgClass: 'bg-secondary', iconClass: 'text-secondary-foreground', icon: Hourglass },
+  { status: 'resolved', labelAr: 'محلولة', labelEn: 'Resolved', headerClass: 'bg-score-excellent/10', iconBgClass: 'bg-score-excellent/20', iconClass: 'text-score-excellent', icon: CheckCircle },
+  { status: 'closed', labelAr: 'مغلقة', labelEn: 'Closed', headerClass: 'bg-muted', iconBgClass: 'bg-muted-foreground/20', iconClass: 'text-muted-foreground', icon: XCircle },
 ];
 
 export default function SupportDashboard() {
