@@ -97,7 +97,7 @@ const roleColors: Record<AppRole, string> = {
 
 export default function UsersPage() {
   const navigate = useNavigate();
-  const { roles, refreshProfile, user } = useAuth();
+  const { roles, refreshProfile, user: authUser } = useAuth();
   const goBack = useGoBack('/dashboard/ceo');
   const { t, language } = useLanguage();
   const { data: users, isLoading } = useUsers();
