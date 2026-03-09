@@ -70,7 +70,7 @@ export function TicketDetailsDialog({ ticket, isOpen, onClose, isSupportAgent = 
                      ticket.status === 'in_progress' ? (direction === 'rtl' ? 'قيد التنفيذ' : 'In Progress') : 
                      ticket.status === 'resolved' ? (direction === 'rtl' ? 'محلولة' : 'Resolved') : 
                      ticket.status === 'closed' ? (direction === 'rtl' ? 'مغلقة' : 'Closed') : 
-                     ticket.status.replace('_', ' ')}
+                     String(ticket.status).replace('_', ' ')}
                   </Badge>
                 </DialogTitle>
                 <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-muted-foreground">

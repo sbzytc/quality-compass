@@ -106,7 +106,7 @@ export default function SupportDashboard() {
                        ticket.status === 'in_progress' ? (direction === 'rtl' ? 'قيد التنفيذ' : 'In Progress') : 
                        ticket.status === 'resolved' ? (direction === 'rtl' ? 'محلولة' : 'Resolved') : 
                        ticket.status === 'closed' ? (direction === 'rtl' ? 'مغلقة' : 'Closed') : 
-                       ticket.status.replace('_', ' ')}
+                       String(ticket.status).replace('_', ' ')}
                     </Badge>
                     
                     <Button variant="outline" size="sm" onClick={() => setSelectedTicket(ticket)}>
