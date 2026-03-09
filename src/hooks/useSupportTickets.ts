@@ -34,7 +34,12 @@ export const useSupportTickets = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('support_tickets')
-        .select('*')
+        .select(`
+          *,
+          creator:profiles!support_tickets_created_by_fkey(full_name, email),
+          assignee:profiles!support_tickets_assigned_to_fkey(full_name, email),
+          resolver:profiles!support_tickets_resolved_by_fkey(full_name, email)
+        `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
