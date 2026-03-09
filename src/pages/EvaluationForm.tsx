@@ -562,6 +562,10 @@ export default function EvaluationForm() {
 
   // Clear validation error when a score is set
   const setScoreWithValidation = (criterionId: string, score: number) => {
+    // Start timer on first score entry
+    if (!evaluationStartTime) {
+      setEvaluationStartTime(new Date());
+    }
     setScores((prev) => ({
       ...prev,
       [criterionId]: {
