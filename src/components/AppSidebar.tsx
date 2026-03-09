@@ -202,20 +202,11 @@ export function AppSidebar() {
   };
 
   const getRoleBadge = () => {
-    if (isAdmin) return direction === 'rtl' ? 'مدير النظام' : 'Admin';
-    if (isExecutive) return direction === 'rtl' ? 'تنفيذي' : 'Executive';
-    if (isBranchManager) return direction === 'rtl' ? 'مدير الفرع' : 'Branch Manager';
-    if (isAssessor) return direction === 'rtl' ? 'مقيّم' : 'Assessor';
+    if (isAdmin) return t('role.admin');
+    if (isExecutive) return t('role.executive');
+    if (isBranchManager) return t('role.branch_manager');
+    if (isAssessor) return t('role.assessor');
     return '';
-  };
-
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
   };
 
   return (
