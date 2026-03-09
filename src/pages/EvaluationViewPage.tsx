@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Building2, Calendar, User, ClipboardCheck, Lock, Pencil, Save, X, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Building2, Calendar, User, ClipboardCheck, Lock, Pencil, Save, X, AlertTriangle, Clock, Timer } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, differenceInHours } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
