@@ -11,6 +11,8 @@ export function useTemplateByPeriod(periodType: 'weekly' | 'monthly' | 'yearly')
         .select('*')
         .eq('is_active', true)
         .eq('period_type', periodType)
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       if (templateError) throw templateError;
