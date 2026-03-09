@@ -247,76 +247,7 @@ export default function BranchManagerDashboard() {
         </div>
       </div>
 
-      {/* Active Findings List */}
-      <div className="bg-card rounded-xl border border-border overflow-hidden">
-        <div className="p-6 border-b border-border flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-foreground">
-            {isAr ? 'الملاحظات النشطة' : 'Active Findings'}
-          </h2>
-          <button
-            onClick={() => navigate('/findings')}
-            className="text-sm text-primary hover:underline"
-          >
-            {t('common.viewAll')} →
-          </button>
-        </div>
-        <div className="divide-y divide-border">
-          {activeFindings.length === 0 ? (
-            <div className="p-6 text-center text-muted-foreground">
-              {isAr ? 'لا توجد ملاحظات نشطة' : 'No active findings'}
-            </div>
-          ) : (
-            activeFindings.map((finding: any) => {
-              const criterionName = isAr
-                ? (finding.template_criteria?.name_ar || finding.template_criteria?.name)
-                : finding.template_criteria?.name;
-              const assigneeName = finding.profiles?.full_name;
-              const isInProgress = finding.status === 'in_progress';
-              const isPendingReview = finding.status === 'pending_review';
-
-              return (
-                <div
-                  key={finding.id}
-                  className="p-4 hover:bg-muted/30 transition-colors cursor-pointer"
-                  onClick={() => navigate('/findings')}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <h4 className="font-medium text-foreground flex items-center gap-2">
-                        {criterionName || '—'}
-                        <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
-                      </h4>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {finding.score}/{finding.max_score}
-                        {assigneeName && isInProgress && (
-                          <> • {isAr ? 'معيّنة لـ' : 'Assigned to'}: {assigneeName}</>
-                        )}
-                      </p>
-                      {finding.due_date && (
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {t('common.dueDate')}: {format(new Date(finding.due_date), 'd MMM yyyy', dateLocale)}
-                        </p>
-                      )}
-                    </div>
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full shrink-0 ${
-                      isInProgress
-                        ? 'bg-score-average/10 text-score-average'
-                        : 'bg-primary/10 text-primary'
-                    }`}>
-                      {isInProgress
-                        ? (isAr ? 'معلّقة' : 'Pending')
-                        : (isAr ? 'قيد المراجعة' : 'Under Review')
-                      }
-                    </span>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-      </div>
-
-      {/* Score Trend */}
+      {/* Score Trend - only show when there's a previous evaluation to compare */}
       {scoreDiff !== null && (
         <div className="bg-card rounded-xl border border-border p-6">
           <h2 className="text-lg font-semibold text-foreground mb-4">{t('dashboard.scoreTrend')}</h2>
