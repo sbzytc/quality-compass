@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { LogOut, Settings, Languages } from 'lucide-react';
 import { getInitials } from '@/lib/getInitials';
+import { AIAssistantButton } from '@/components/AIAssistant/AIAssistantButton';
 
 export function MainLayout() {
   const { language, setLanguage, direction, t } = useLanguage();
