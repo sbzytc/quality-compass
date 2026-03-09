@@ -1,85 +1,84 @@
-# نظام رصدة - المزايا الرئيسية
-## Rasdah Quality Management System - Key Features
+# Rasdah - Quality Management System
+## Key Features Overview
 
 ---
 
-## 🎯 ما هو نظام رصدة؟
+## 🎯 What is Rasdah?
 
-نظام رصدة هو **منصة ذكية لإدارة الجودة** مصممة خصيصاً للشركات متعددة الفروع. يساعدك على مراقبة الأداء، تتبع الملاحظات، وتحسين الجودة بشكل مستمر.
-
----
-
-## ✨ المزايا الرئيسية
-
-### 1. 📊 لوحات تحكم ذكية
-- نظرة شاملة وفورية على أداء جميع فروعك
-- مؤشرات أداء رئيسية (KPIs) واضحة
-- رسوم بيانية تفاعلية لتتبع الاتجاهات
-- تنبيهات ذكية للفروع التي تحتاج اهتمام
-
-### 2. ✅ نظام تقييم مرن
-- قوالب تقييم قابلة للتخصيص بالكامل
-- تقييمات دورية (سنوية، شهرية، أسبوعية)
-- حساب تلقائي للنتائج والنسب
-- إرفاق الصور والمستندات كأدلة
-
-### 3. 🔔 تتبع الملاحظات والتحسين
-- اكتشاف نقاط الضعف تلقائياً
-- نظام متابعة متكامل للإجراءات التصحيحية
-- إشعارات فورية عند كل تحديث
-- سجل كامل لجميع الإجراءات
-
-### 4. 👥 إدارة فرق العمل
-- صلاحيات مرنة لكل مستوى إداري
-- تعيين المهام ومتابعة الإنجاز
-- تواصل فعّال بين الفروع والإدارة
-
-### 5. 📱 سهولة الاستخدام
-- واجهة بسيطة وبديهية
-- يعمل على جميع الأجهزة
-- دعم كامل للغة العربية
-
-### 6. 🔒 أمان وموثوقية
-- تخزين سحابي آمن
-- نسخ احتياطي تلقائي
-- صلاحيات دقيقة لحماية البيانات
+Rasdah is a **smart quality management platform** built specifically for multi-branch organizations. It helps you monitor performance, track findings, and continuously improve quality across all your locations.
 
 ---
 
-## 📈 لماذا رصدة؟
+## ✨ Key Features
 
-| التحدي | الحل مع رصدة |
-|--------|-------------|
-| صعوبة متابعة أداء الفروع المتعددة | لوحة تحكم موحدة لجميع الفروع |
-| ضياع الملاحظات وعدم متابعتها | نظام تتبع تلقائي مع تنبيهات |
-| تقييمات ورقية يصعب تحليلها | تقييمات رقمية مع تقارير فورية |
-| صعوبة التواصل بين الإدارة والفروع | إشعارات فورية ونظام مهام متكامل |
+### 1. 📊 Smart Dashboards
+- Instant, comprehensive overview of all branch performance
+- Clear Key Performance Indicators (KPIs)
+- Interactive charts for trend tracking
+- Smart alerts for branches that need attention
+
+### 2. ✅ Flexible Evaluation System
+- Fully customizable evaluation templates
+- Periodic evaluations (yearly, monthly, weekly)
+- Automatic score and percentage calculation
+- Attach photos and documents as evidence
+
+### 3. 🔔 Finding Tracking & Improvement
+- Automatic detection of weak points
+- Integrated corrective action tracking system
+- Real-time notifications on every update
+- Complete audit trail of all actions
+
+### 4. 👥 Team Management
+- Flexible permissions for each management level
+- Task assignment and progress tracking
+- Effective communication between branches and management
+
+### 5. 📱 Ease of Use
+- Simple and intuitive interface
+- Works on all devices
+- Full Arabic language support
+
+### 6. 🔒 Security & Reliability
+- Secure cloud storage
+- Automatic backups
+- Granular permissions for data protection
 
 ---
 
-## 🎯 مثالي لـ:
+## 📈 Why Rasdah?
 
-- ✅ سلاسل المطاعم والمقاهي
-- ✅ شركات التجزئة متعددة الفروع
-- ✅ المؤسسات الصحية
-- ✅ شركات الخدمات
-- ✅ أي منشأة تسعى للتميز في الجودة
-
----
-
-## 💡 ابدأ رحلة التميز الآن
-
-نظام رصدة يساعدك على:
-- 📉 تقليل المخالفات بنسبة تصل إلى 40%
-- ⏱️ توفير وقت التقييم والمتابعة بنسبة 60%
-- 📊 قرارات مبنية على بيانات حقيقية
-- 🏆 تحسين مستمر لجودة الخدمة
+| Challenge | Rasdah Solution |
+|-----------|----------------|
+| Difficulty monitoring multiple branches | Unified dashboard for all branches |
+| Lost findings and lack of follow-up | Automatic tracking system with alerts |
+| Paper-based evaluations hard to analyze | Digital evaluations with instant reports |
+| Communication gaps between HQ and branches | Real-time notifications and integrated task system |
 
 ---
 
-**تواصل معنا الآن لتجربة النظام**
+## 🎯 Perfect For:
+
+- ✅ Restaurant and café chains
+- ✅ Multi-branch retail companies
+- ✅ Healthcare institutions
+- ✅ Service companies
+- ✅ Any organization striving for quality excellence
 
 ---
 
-*نظام رصدة - لأن الجودة تبدأ بالقياس*
-*Rasdah - Quality Starts with Measurement*
+## 💡 Start Your Quality Journey Now
+
+Rasdah helps you:
+- 📉 Reduce violations by up to 40%
+- ⏱️ Save up to 60% of evaluation and follow-up time
+- 📊 Make decisions based on real data
+- 🏆 Continuously improve service quality
+
+---
+
+**Contact us now to try the system**
+
+---
+
+*Rasdah — Quality Starts with Measurement*
