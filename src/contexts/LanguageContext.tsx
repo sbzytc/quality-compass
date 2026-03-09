@@ -145,6 +145,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.support': 'Technical Support',
     'nav.support.dashboard': 'Support Dashboard',
     'nav.support.myTickets': 'My Tickets',
+    'nav.support.archived': 'Archived Tickets',
 
     // Settings
     'settings.title': 'Settings',
