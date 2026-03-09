@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN ai_assistant_enabled boolean NOT NULL DEFAULT false;
