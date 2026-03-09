@@ -35,8 +35,8 @@ export default function MyTickets() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'open': return <Badge variant="destructive">{direction === 'rtl' ? 'مفتوحة' : 'Open'}</Badge>;
-      case 'in_progress': return <Badge className="bg-yellow-500 hover:bg-yellow-600">{direction === 'rtl' ? 'قيد التنفيذ' : 'In Progress'}</Badge>;
-      case 'resolved': return <Badge className="bg-green-500 hover:bg-green-600">{direction === 'rtl' ? 'محلولة' : 'Resolved'}</Badge>;
+      case 'in_progress': return <Badge variant="secondary" className="bg-primary/20 text-primary hover:bg-primary/30">{direction === 'rtl' ? 'قيد التنفيذ' : 'In Progress'}</Badge>;
+      case 'resolved': return <Badge variant="secondary" className="bg-score-excellent/20 text-score-excellent hover:bg-score-excellent/30">{direction === 'rtl' ? 'محلولة' : 'Resolved'}</Badge>;
       case 'closed': return <Badge variant="secondary">{direction === 'rtl' ? 'مغلقة' : 'Closed'}</Badge>;
       default: return <Badge variant="secondary">{status}</Badge>;
     }

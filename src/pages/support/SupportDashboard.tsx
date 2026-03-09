@@ -38,7 +38,7 @@ export default function SupportDashboard() {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardContent className="p-6 flex items-center gap-4">
-            <div className="p-3 bg-red-100 text-red-600 rounded-full"><Bug className="w-6 h-6" /></div>
+            <div className="p-3 bg-destructive/10 text-destructive rounded-full"><Bug className="w-6 h-6" /></div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">{direction === 'rtl' ? 'مفتوحة' : 'Open'}</p>
               <h3 className="text-2xl font-bold">{openTickets.length}</h3>
@@ -47,7 +47,7 @@ export default function SupportDashboard() {
         </Card>
         <Card>
           <CardContent className="p-6 flex items-center gap-4">
-            <div className="p-3 bg-yellow-100 text-yellow-600 rounded-full"><Clock className="w-6 h-6" /></div>
+            <div className="p-3 bg-primary/10 text-primary rounded-full"><Clock className="w-6 h-6" /></div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">{direction === 'rtl' ? 'قيد التنفيذ' : 'In Progress'}</p>
               <h3 className="text-2xl font-bold">{inProgress.length}</h3>
@@ -56,7 +56,7 @@ export default function SupportDashboard() {
         </Card>
         <Card>
           <CardContent className="p-6 flex items-center gap-4">
-            <div className="p-3 bg-green-100 text-green-600 rounded-full"><CheckCircle className="w-6 h-6" /></div>
+            <div className="p-3 bg-score-excellent/10 text-score-excellent rounded-full"><CheckCircle className="w-6 h-6" /></div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">{direction === 'rtl' ? 'محلولة' : 'Resolved'}</p>
               <h3 className="text-2xl font-bold">{resolved.length}</h3>

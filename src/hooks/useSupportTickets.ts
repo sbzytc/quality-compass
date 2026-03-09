@@ -32,15 +32,11 @@ export const useSupportTickets = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('support_tickets')
-        .select(`
-          *,
-          creator:profiles!support_tickets_created_by_fkey(full_name, email),
-          assignee:profiles!support_tickets_assigned_to_fkey(full_name, email)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as SupportTicket[];
+      return data as any as SupportTicket[];
     },
   });
 
@@ -49,7 +45,7 @@ export const useSupportTickets = () => {
       const { data: { user } } = await supabase.auth.getUser();
       const { data, error } = await supabase
         .from('support_tickets')
-        .insert({ ...newTicket, created_by: user?.id })
+        .insert({ ...newTicket, created_by: user?.id } as any)
         .select()
         .single();
       if (error) throw error;
@@ -65,7 +61,7 @@ export const useSupportTickets = () => {
       const { id, ...rest } = updates;
       const { data, error } = await supabase
         .from('support_tickets')
-        .update(rest)
+        .update(rest as any)
         .eq('id', id)
         .select()
         .single();
