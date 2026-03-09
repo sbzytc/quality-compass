@@ -43,12 +43,14 @@ export function useEvaluations() {
 
       // Fetch assessor names
       const assessorIds = [...new Set(data.map(e => e.assessor_id))];
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('user_id, full_name')
-        .in('user_id', assessorIds);
-      
-      const profileMap = new Map(profiles?.map(p => [p.user_id, p.full_name]) || []);
+      let profileMap = new Map<string, string>();
+      if (assessorIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('user_id, full_name')
+          .in('user_id', assessorIds);
+        profileMap = new Map(profiles?.map(p => [p.user_id, p.full_name]) || []);
+      }
 
       return data.map(e => ({
         id: e.id,
