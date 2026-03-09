@@ -1,9 +1,19 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { SupportTicket, useTicketComments, useSupportTickets } from '@/hooks/useSupportTickets';
 import { toast } from 'sonner';
@@ -22,7 +32,22 @@ export function TicketDetailsDialog({ ticket, isOpen, onClose, isSupportAgent = 
   const { t, direction } = useLanguage();
   const [newComment, setNewComment] = useState('');
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
-  
+
+  const [pendingStatus, setPendingStatus] = useState<string | null>(null);
+  const isCloseConfirmOpen = !!pendingStatus;
+
+  const closeConfirmCopy = useMemo(() => {
+    const isArabic = direction === 'rtl';
+    return {
+      title: isArabic ? 'تأكيد إغلاق التذكرة' : 'Confirm closing ticket',
+      description: isArabic
+        ? 'هل أنت متأكد من رغبتك في إغلاق هذه التذكرة؟ بعد الإغلاق لن تتمكن من إضافة تعليقات.'
+        : 'Are you sure you want to close this ticket? After closing, no new comments can be added.',
+      confirm: isArabic ? 'نعم، أغلق التذكرة' : 'Yes, close ticket',
+      cancel: isArabic ? 'إلغاء' : 'Cancel',
+    };
+  }, [direction]);
+
   const { comments, isLoading, addComment } = useTicketComments(ticket?.id);
   const { updateTicket } = useSupportTickets();
 
@@ -40,7 +65,7 @@ export function TicketDetailsDialog({ ticket, isOpen, onClose, isSupportAgent = 
     }
   };
 
-  const handleStatusChange = async (status: string) => {
+  const executeStatusChange = async (status: string) => {
     try {
       await updateTicket.mutateAsync({ id: ticket.id, status: status as any });
       toast.success(direction === 'rtl' ? 'تم تحديث الحالة' : 'Status updated');
@@ -52,9 +77,26 @@ export function TicketDetailsDialog({ ticket, isOpen, onClose, isSupportAgent = 
     }
   };
 
+  const requestStatusChange = (status: string) => {
+    if (status === 'closed') {
+      setPendingStatus(status);
+      return;
+    }
+    void executeStatusChange(status);
+  };
+
+  const confirmClose = async () => {
+    const status = pendingStatus;
+    setPendingStatus(null);
+    if (!status) return;
+    await executeStatusChange(status);
+  };
+
   const timeLocale = direction === 'rtl' ? ar : enUS;
   const createdTimeText = formatDistanceToNow(new Date(ticket.created_at), { addSuffix: true, locale: timeLocale });
-  const resolvedTimeText = ticket.resolved_at ? formatDistanceToNow(new Date(ticket.resolved_at), { addSuffix: true, locale: timeLocale }) : null;
+  const resolvedTimeText = ticket.resolved_at
+    ? formatDistanceToNow(new Date(ticket.resolved_at), { addSuffix: true, locale: timeLocale })
+    : null;
 
   return (
     <>
@@ -65,18 +107,47 @@ export function TicketDetailsDialog({ ticket, isOpen, onClose, isSupportAgent = 
               <div>
                 <DialogTitle className="text-xl flex items-center gap-2">
                   {ticket.title}
-                  <Badge variant={ticket.status === 'open' ? 'destructive' : ticket.status === 'resolved' || ticket.status === 'closed' ? 'default' : 'secondary'} className="capitalize">
-                    {ticket.status === 'open' ? (direction === 'rtl' ? 'مفتوحة' : 'Open') : 
-                     ticket.status === 'in_progress' ? (direction === 'rtl' ? 'قيد التنفيذ' : 'In Progress') : 
-                     ticket.status === 'resolved' ? (direction === 'rtl' ? 'محلولة' : 'Resolved') : 
-                     ticket.status === 'closed' ? (direction === 'rtl' ? 'مغلقة' : 'Closed') : 
-                     String(ticket.status).replace('_', ' ')}
+                  <Badge
+                    variant={
+                      ticket.status === 'open'
+                        ? 'destructive'
+                        : ticket.status === 'resolved' || ticket.status === 'closed'
+                          ? 'default'
+                          : 'secondary'
+                    }
+                    className="capitalize"
+                  >
+                    {ticket.status === 'open'
+                      ? direction === 'rtl'
+                        ? 'مفتوحة'
+                        : 'Open'
+                      : ticket.status === 'in_progress'
+                        ? direction === 'rtl'
+                          ? 'قيد التنفيذ'
+                          : 'In Progress'
+                        : ticket.status === 'resolved'
+                          ? direction === 'rtl'
+                            ? 'محلولة'
+                            : 'Resolved'
+                          : ticket.status === 'closed'
+                            ? direction === 'rtl'
+                              ? 'مغلقة'
+                              : 'Closed'
+                            : String(ticket.status).replace('_', ' ')}
                   </Badge>
                 </DialogTitle>
                 <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1"><User className="w-4 h-4"/> {ticket.creator?.full_name || 'User'}</span>
-                  <span className="flex items-center gap-1"><Clock className="w-4 h-4"/> {createdTimeText}</span>
-                  {ticket.screen_name && <Badge variant="outline">{direction === 'rtl' ? 'الشاشة:' : 'Screen:'} {ticket.screen_name}</Badge>}
+                  <span className="flex items-center gap-1">
+                    <User className="w-4 h-4" /> {ticket.creator?.full_name || 'User'}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-4 h-4" /> {createdTimeText}
+                  </span>
+                  {ticket.screen_name && (
+                    <Badge variant="outline">
+                      {direction === 'rtl' ? 'الشاشة:' : 'Screen:'} {ticket.screen_name}
+                    </Badge>
+                  )}
                 </div>
               </div>
             </div>
@@ -84,18 +155,18 @@ export function TicketDetailsDialog({ ticket, isOpen, onClose, isSupportAgent = 
 
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {/* Description */}
-            <div className="bg-muted/30 p-4 rounded-lg border whitespace-pre-wrap text-sm">
-              {ticket.description}
-            </div>
+            <div className="bg-muted/30 p-4 rounded-lg border whitespace-pre-wrap text-sm">{ticket.description}</div>
 
             {/* Attachments */}
             {ticket.attachments && ticket.attachments.length > 0 && (
               <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">{direction === 'rtl' ? 'المرفقات' : 'Attachments'}</label>
+                <label className="text-sm font-medium text-muted-foreground">
+                  {direction === 'rtl' ? 'المرفقات' : 'Attachments'}
+                </label>
                 <div className="flex flex-wrap gap-2">
                   {ticket.attachments.map((url, i) => (
-                    <div 
-                      key={i} 
+                    <div
+                      key={i}
                       onClick={() => setFullscreenImage(url)}
                       className="cursor-pointer block w-24 h-24 rounded-md overflow-hidden border hover:opacity-80 transition-opacity"
                     >
@@ -111,7 +182,7 @@ export function TicketDetailsDialog({ ticket, isOpen, onClose, isSupportAgent = 
               <div className="bg-score-excellent/10 border-score-excellent/20 border p-3 rounded-lg flex items-center gap-2 text-sm">
                 <User className="w-4 h-4 text-score-excellent" />
                 <span>
-                  {direction === 'rtl' ? 'تم الحل بواسطة: ' : 'Resolved by: '} 
+                  {direction === 'rtl' ? 'تم الحل بواسطة: ' : 'Resolved by: '}
                   <strong>{ticket.resolver.full_name}</strong>
                   {resolvedTimeText && <span className="text-muted-foreground ms-2">({resolvedTimeText})</span>}
                 </span>
@@ -121,18 +192,27 @@ export function TicketDetailsDialog({ ticket, isOpen, onClose, isSupportAgent = 
             {/* Comments Section */}
             <div className="space-y-4 pt-4 border-t">
               <h3 className="font-semibold">{direction === 'rtl' ? 'التعليقات' : 'Comments'}</h3>
-              
+
               {isLoading ? (
                 <p className="text-sm text-muted-foreground">{t('common.loading')}</p>
               ) : comments?.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4 border border-dashed rounded-lg bg-muted/10">{direction === 'rtl' ? 'لا توجد تعليقات بعد' : 'No comments yet'}</p>
+                <p className="text-sm text-muted-foreground text-center py-4 border border-dashed rounded-lg bg-muted/10">
+                  {direction === 'rtl' ? 'لا توجد تعليقات بعد' : 'No comments yet'}
+                </p>
               ) : (
                 <div className="space-y-3">
                   {comments?.map((c: any) => (
-                    <div key={c.id} className={`p-3 rounded-lg border text-sm ${c.user_id === ticket.created_by ? 'bg-background ml-8' : 'bg-primary/5 mr-8'}`}>
+                    <div
+                      key={c.id}
+                      className={`p-3 rounded-lg border text-sm ${
+                        c.user_id === ticket.created_by ? 'bg-background ml-8' : 'bg-primary/5 mr-8'
+                      }`}
+                    >
                       <div className="flex justify-between items-center mb-1 text-xs">
                         <span className="font-medium text-primary">{c.user?.full_name || 'User'}</span>
-                        <span className="text-muted-foreground">{formatDistanceToNow(new Date(c.created_at), { addSuffix: true, locale: timeLocale })}</span>
+                        <span className="text-muted-foreground">
+                          {formatDistanceToNow(new Date(c.created_at), { addSuffix: true, locale: timeLocale })}
+                        </span>
                       </div>
                       <p className="whitespace-pre-wrap">{c.comment}</p>
                     </div>
@@ -147,24 +227,30 @@ export function TicketDetailsDialog({ ticket, isOpen, onClose, isSupportAgent = 
             {ticket.status !== 'closed' && ticket.status !== 'resolved' ? (
               <div className="flex flex-col gap-3">
                 <div className="flex gap-2">
-                  <Textarea 
-                    placeholder={direction === 'rtl' ? 'اكتب تعليقاً...' : 'Write a comment...'} 
-                    value={newComment} 
-                    onChange={e => setNewComment(e.target.value)}
+                  <Textarea
+                    placeholder={direction === 'rtl' ? 'اكتب تعليقاً...' : 'Write a comment...'}
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
                     className="min-h-[60px]"
                   />
-                  <Button onClick={handleAddComment} disabled={addComment.isPending || !newComment.trim()} className="h-auto shrink-0 px-6">
+                  <Button
+                    onClick={handleAddComment}
+                    disabled={addComment.isPending || !newComment.trim()}
+                    className="h-auto shrink-0 px-6"
+                  >
                     <Send className={`w-4 h-4 ${direction === 'rtl' ? 'rotate-180 ml-2' : 'mr-2'}`} />
                     {direction === 'rtl' ? 'إرسال' : 'Send'}
                   </Button>
                 </div>
-                
+
                 <div className="flex justify-between items-center mt-2">
                   {isSupportAgent ? (
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-muted-foreground">{direction === 'rtl' ? 'تحديث الحالة:' : 'Update Status:'}</span>
-                      <Select value={ticket.status} onValueChange={handleStatusChange}>
-                        <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue /></SelectTrigger>
+                      <Select value={ticket.status} onValueChange={requestStatusChange}>
+                        <SelectTrigger className="w-[140px] h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="open">Open</SelectItem>
                           <SelectItem value="in_progress">In Progress</SelectItem>
@@ -174,7 +260,12 @@ export function TicketDetailsDialog({ ticket, isOpen, onClose, isSupportAgent = 
                       </Select>
                     </div>
                   ) : (
-                    <Button variant="outline" size="sm" onClick={() => handleStatusChange('closed')} className="text-destructive hover:bg-destructive/10">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => requestStatusChange('closed')}
+                      className="text-destructive hover:bg-destructive/10"
+                    >
                       {direction === 'rtl' ? 'إغلاق التذكرة' : 'Close Ticket'}
                     </Button>
                   )}
@@ -182,27 +273,47 @@ export function TicketDetailsDialog({ ticket, isOpen, onClose, isSupportAgent = 
               </div>
             ) : (
               <p className="text-sm text-center text-muted-foreground">
-                {direction === 'rtl' ? 'هذه التذكرة مغلقة. لا يمكن إضافة تعليقات.' : 'This ticket is closed. No new comments can be added.'}
+                {direction === 'rtl'
+                  ? 'هذه التذكرة مغلقة. لا يمكن إضافة تعليقات.'
+                  : 'This ticket is closed. No new comments can be added.'}
               </p>
             )}
           </div>
         </DialogContent>
       </Dialog>
 
+      {/* Close confirmation */}
+      <AlertDialog open={isCloseConfirmOpen} onOpenChange={(open) => !open && setPendingStatus(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{closeConfirmCopy.title}</AlertDialogTitle>
+            <AlertDialogDescription>{closeConfirmCopy.description}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{closeConfirmCopy.cancel}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmClose}>{closeConfirmCopy.confirm}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Fullscreen Image Modal */}
       <Dialog open={!!fullscreenImage} onOpenChange={(open) => !open && setFullscreenImage(null)}>
         <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 border-0 bg-transparent shadow-none [&>button]:hidden flex items-center justify-center">
           <div className="relative flex flex-col items-center justify-center w-full h-full max-h-[90vh]">
-            <Button 
-              variant="secondary" 
-              size="icon" 
+            <Button
+              variant="secondary"
+              size="icon"
               className="absolute -top-4 -right-4 z-50 rounded-full h-10 w-10 shadow-lg border bg-background hover:bg-muted"
               onClick={() => setFullscreenImage(null)}
             >
               <X className="w-5 h-5" />
             </Button>
             {fullscreenImage && (
-              <img src={fullscreenImage} alt="Fullscreen" className="max-w-full max-h-[85vh] object-contain rounded-md shadow-2xl" />
+              <img
+                src={fullscreenImage}
+                alt="Fullscreen"
+                className="max-w-full max-h-[85vh] object-contain rounded-md shadow-2xl"
+              />
             )}
           </div>
         </DialogContent>
@@ -210,3 +321,4 @@ export function TicketDetailsDialog({ ticket, isOpen, onClose, isSupportAgent = 
     </>
   );
 }
+
