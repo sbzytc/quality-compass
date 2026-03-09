@@ -103,7 +103,7 @@ export default function BranchManagerDashboard() {
           profiles:assigned_to(full_name)
         `)
         .eq('branch_id', branchId!)
-        .in('status', ['in_progress', 'pending_review'])
+        .in('status', ['open', 'in_progress', 'pending_review', 'rejected'])
         .order('created_at', { ascending: false });
 
       if (error) throw error;
