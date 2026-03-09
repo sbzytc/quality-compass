@@ -26,6 +26,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   hasRole: (role: AppRole) => boolean;
+  refreshProfile: () => Promise<void>;
   isAdmin: boolean;
   isExecutive: boolean;
   isBranchManager: boolean;
