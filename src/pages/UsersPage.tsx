@@ -200,7 +200,7 @@ export default function UsersPage() {
         password: createForm.password,
         role: createForm.role,
         forcePasswordChange: createForm.forcePasswordChange,
-        branchId: createForm.role === 'branch_manager' ? createForm.branchId : undefined,
+        branchId: (createForm.role === 'branch_manager' || createForm.role === 'branch_employee') ? createForm.branchId : undefined,
       });
       toast.success(
         language === 'ar'
