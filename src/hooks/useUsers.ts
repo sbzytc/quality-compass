@@ -216,3 +216,21 @@ export function useAssignBranch() {
     },
   });
 }
+
+export function useToggleAIAssistant() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ userId, enabled }: { userId: string; enabled: boolean }) => {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ ai_assistant_enabled: enabled } as any)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+  });
+}
