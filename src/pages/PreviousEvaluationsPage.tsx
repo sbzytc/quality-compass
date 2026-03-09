@@ -103,7 +103,7 @@ export default function PreviousEvaluationsPage() {
     
     if (evaluation.status === 'draft') {
       const hoursSinceCreation = differenceInHours(new Date(), new Date(evaluation.createdAt));
-      const remainingHours = Math.max(0, 5 - hoursSinceCreation);
+      const remainingHours = Math.max(0, 24 - hoursSinceCreation);
       if (remainingHours > 0) {
         return { hours: remainingHours, type: 'draft' as const, expired: false };
       }
