@@ -142,7 +142,7 @@ export default function FindingsPage() {
   };
 
   const submitAssignment = async () => {
-    if (!selectedFinding || !assignUserId || !assignDueDate) return;
+    if (!selectedFinding || !assignUserId) return;
     try {
       await assignMutation.mutateAsync({
         findingId: selectedFinding.id,

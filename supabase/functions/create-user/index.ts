@@ -11,7 +11,7 @@ interface CreateUserRequest {
   email: string;
   fullName: string;
   password: string;
-  role: "admin" | "executive" | "branch_manager" | "assessor";
+  role: "admin" | "executive" | "branch_manager" | "assessor" | "branch_employee" | "support_agent";
   forcePasswordChange: boolean;
   branchId?: string;
 }
@@ -103,7 +103,7 @@ const handler = async (req: Request): Promise<Response> => {
       full_name: fullName,
       force_password_change: forcePasswordChange ?? false,
     };
-    if (role === "branch_manager" && branchId) {
+    if ((role === "branch_manager" || role === "branch_employee") && branchId) {
       profileData.branch_id = branchId;
     }
 
