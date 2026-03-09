@@ -19,17 +19,49 @@ export default function MyTickets() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState('medium');
+  const [screenName, setScreenName] = useState('');
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setUploading(true);
     try {
-      await createTicket.mutateAsync({ title, description, priority: priority as any });
+      let attachments: string[] = [];
+      if (file) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('support-attachments')
+          .upload(fileName, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrlData } = supabase.storage
+          .from('support-attachments')
+          .getPublicUrl(fileName);
+
+        attachments.push(publicUrlData.publicUrl);
+      }
+
+      await createTicket.mutateAsync({ 
+        title, 
+        description, 
+        priority: priority as any,
+        screen_name: screenName,
+        attachments
+      });
       toast.success(direction === 'rtl' ? 'تم إنشاء التذكرة بنجاح' : 'Ticket created successfully');
       setIsOpen(false);
       setTitle('');
       setDescription('');
+      setScreenName('');
+      setFile(null);
     } catch (error) {
       toast.error(direction === 'rtl' ? 'فشل إنشاء التذكرة' : 'Failed to create ticket');
+    } finally {
+      setUploading(false);
     }
   };
 
