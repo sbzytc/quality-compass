@@ -789,7 +789,7 @@ export default function UsersPage() {
                 {addUserMode === 'create' && (
                   <Button
                     onClick={handleCreateUser}
-                    disabled={!createForm.email || !createForm.fullName || !createForm.password || createForm.password !== createForm.confirmPassword || (createForm.role === 'branch_manager' && !createForm.branchId) || createUser.isPending}
+                    disabled={!createForm.email || !createForm.fullName || !createForm.password || createForm.password !== createForm.confirmPassword || ((createForm.role === 'branch_manager' || createForm.role === 'branch_employee') && !createForm.branchId) || createUser.isPending}
                   >
                     {createUser.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
                     <UserPlus className="w-4 h-4 me-2" />
