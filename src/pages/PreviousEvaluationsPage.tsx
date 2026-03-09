@@ -81,7 +81,7 @@ export default function PreviousEvaluationsPage() {
     
     if (evaluation.status === 'draft') {
       const hoursSinceCreation = differenceInHours(new Date(), new Date(evaluation.createdAt));
-      return hoursSinceCreation <= 5;
+      return hoursSinceCreation <= 24;
     }
     
     if (evaluation.submittedAt) {
