@@ -38,7 +38,7 @@ export default function EvaluationForm() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const draftId = searchParams.get('draft');
-  const goBack = useGoBack('/evaluations');
+  const goBack = useGoBack('/');
   const { t, direction } = useLanguage();
   const { user } = useAuth();
   const { data: branches, isLoading: branchesLoading } = useBranches();
