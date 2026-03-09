@@ -111,6 +111,7 @@ export function useArchivedEvaluations() {
         createdAt: e.created_at,
         submittedAt: e.submitted_at,
         isArchived: e.is_archived,
+        durationMinutes: e.duration_minutes ? Number(e.duration_minutes) : null,
       })) as EvaluationWithDetails[];
     },
   });
