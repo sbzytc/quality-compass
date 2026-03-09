@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useSupportTickets } from '@/hooks/useSupportTickets';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { PlusCircle, Info, Image as ImageIcon, X } from 'lucide-react';
@@ -14,8 +16,75 @@ import { supabase } from '@/integrations/supabase/client';
 import { TicketDetailsDialog } from '@/components/TicketDetailsDialog';
 import { SupportTicket } from '@/hooks/useSupportTickets';
 
+// Define all screens/pages in the system with their allowed roles
+interface ScreenOption {
+  id: string;
+  labelAr: string;
+  labelEn: string;
+  allowedRoles: string[];
+}
+
+const ALL_SCREENS: ScreenOption[] = [
+  // Dashboards
+  { id: 'dashboard-ceo', labelAr: 'لوحة التحكم - المدير التنفيذي', labelEn: 'CEO Dashboard', allowedRoles: ['admin', 'executive'] },
+  { id: 'dashboard-branch-manager', labelAr: 'لوحة التحكم - مدير الفرع', labelEn: 'Branch Manager Dashboard', allowedRoles: ['admin', 'branch_manager'] },
+  { id: 'dashboard-operations', labelAr: 'لوحة التحكم - العمليات', labelEn: 'Operations Dashboard', allowedRoles: ['admin', 'branch_manager'] },
+  { id: 'support-dashboard', labelAr: 'لوحة الدعم الفني', labelEn: 'Support Dashboard', allowedRoles: ['admin', 'support_agent'] },
+  
+  // Branches
+  { id: 'branches-list', labelAr: 'قائمة الفروع', labelEn: 'Branches List', allowedRoles: ['admin', 'executive'] },
+  { id: 'branch-detail', labelAr: 'تفاصيل الفرع', labelEn: 'Branch Detail', allowedRoles: ['admin', 'executive', 'branch_manager'] },
+  
+  // Evaluations
+  { id: 'evaluations-new', labelAr: 'إنشاء تقييم جديد', labelEn: 'New Evaluation', allowedRoles: ['admin', 'assessor'] },
+  { id: 'evaluations-previous', labelAr: 'التقييمات السابقة', labelEn: 'Previous Evaluations', allowedRoles: ['admin', 'assessor', 'branch_manager'] },
+  { id: 'evaluations-archived', labelAr: 'الأرشيف', labelEn: 'Archived Evaluations', allowedRoles: ['admin', 'assessor', 'branch_manager'] },
+  { id: 'evaluation-form', labelAr: 'نموذج التقييم', labelEn: 'Evaluation Form', allowedRoles: ['admin', 'assessor'] },
+  { id: 'evaluation-view', labelAr: 'عرض التقييم', labelEn: 'View Evaluation', allowedRoles: ['admin', 'assessor', 'branch_manager', 'executive'] },
+  
+  // Findings & Corrective Actions
+  { id: 'findings', labelAr: 'الملاحظات / المخالفات', labelEn: 'Findings', allowedRoles: ['admin', 'assessor', 'branch_manager', 'executive'] },
+  { id: 'corrective-actions', labelAr: 'الإجراءات التصحيحية', labelEn: 'Corrective Actions', allowedRoles: ['admin', 'branch_manager', 'executive'] },
+  
+  // Reports
+  { id: 'reports', labelAr: 'التقارير', labelEn: 'Reports', allowedRoles: ['admin', 'executive', 'branch_manager'] },
+  { id: 'branch-performance', labelAr: 'أداء الفروع', labelEn: 'Branch Performance', allowedRoles: ['admin', 'executive', 'branch_manager'] },
+  { id: 'score-analysis', labelAr: 'تحليل الدرجات', labelEn: 'Score Analysis', allowedRoles: ['admin', 'executive', 'branch_manager'] },
+  
+  // Support
+  { id: 'support-my-tickets', labelAr: 'تذاكري', labelEn: 'My Tickets', allowedRoles: ['admin', 'executive', 'branch_manager', 'assessor', 'branch_employee', 'support_agent'] },
+  { id: 'support-archived', labelAr: 'أرشيف الدعم', labelEn: 'Support Archive', allowedRoles: ['admin', 'support_agent'] },
+  
+  // Admin
+  { id: 'users', labelAr: 'إدارة المستخدمين', labelEn: 'User Management', allowedRoles: ['admin'] },
+  { id: 'templates', labelAr: 'قوالب التقييم', labelEn: 'Evaluation Templates', allowedRoles: ['admin'] },
+  { id: 'settings', labelAr: 'الإعدادات', labelEn: 'Settings', allowedRoles: ['admin', 'executive', 'branch_manager', 'assessor', 'branch_employee', 'support_agent'] },
+  
+  // Login
+  { id: 'login', labelAr: 'صفحة تسجيل الدخول', labelEn: 'Login Page', allowedRoles: ['admin', 'executive', 'branch_manager', 'assessor', 'branch_employee', 'support_agent'] },
+];
+
+// Team options for support agents
+interface TeamOption {
+  id: string;
+  labelAr: string;
+  labelEn: string;
+}
+
+const TEAM_OPTIONS: TeamOption[] = [
+  { id: 'frontend', labelAr: 'الواجهة الأمامية (Frontend)', labelEn: 'Frontend' },
+  { id: 'backend', labelAr: 'الخادم (Backend)', labelEn: 'Backend' },
+  { id: 'database', labelAr: 'قاعدة البيانات', labelEn: 'Database' },
+  { id: 'infrastructure', labelAr: 'البنية التحتية / IT', labelEn: 'Infrastructure / IT' },
+  { id: 'ui-ux', labelAr: 'تصميم واجهة المستخدم', labelEn: 'UI/UX Design' },
+  { id: 'security', labelAr: 'الأمان', labelEn: 'Security' },
+  { id: 'performance', labelAr: 'الأداء', labelEn: 'Performance' },
+  { id: 'integrations', labelAr: 'التكاملات الخارجية', labelEn: 'External Integrations' },
+];
+
 export default function MyTickets() {
   const { t, direction } = useLanguage();
+  const { roles, isSupportAgent } = useAuth();
   const { tickets, isLoading, createTicket } = useSupportTickets();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
@@ -23,8 +92,25 @@ export default function MyTickets() {
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState('medium');
   const [screenName, setScreenName] = useState('');
+  const [customScreenName, setCustomScreenName] = useState('');
+  const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+
+  // Filter screens based on user roles
+  const availableScreens = useMemo(() => {
+    return ALL_SCREENS.filter(screen => 
+      screen.allowedRoles.some(role => roles.includes(role as any))
+    );
+  }, [roles]);
+
+  const handleTeamToggle = (teamId: string) => {
+    setSelectedTeams(prev => 
+      prev.includes(teamId) 
+        ? prev.filter(t => t !== teamId)
+        : [...prev, teamId]
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,24 +134,48 @@ export default function MyTickets() {
         attachments.push(publicUrlData.publicUrl);
       }
 
+      // Determine final screen name
+      const finalScreenName = screenName === 'other' 
+        ? customScreenName 
+        : (direction === 'rtl' 
+            ? availableScreens.find(s => s.id === screenName)?.labelAr 
+            : availableScreens.find(s => s.id === screenName)?.labelEn) || '';
+
+      // Build description with team info for support agents
+      let finalDescription = description;
+      if (isSupportAgent && selectedTeams.length > 0) {
+        const teamLabels = selectedTeams.map(teamId => {
+          const team = TEAM_OPTIONS.find(t => t.id === teamId);
+          return direction === 'rtl' ? team?.labelAr : team?.labelEn;
+        }).join(', ');
+        finalDescription = `[${direction === 'rtl' ? 'الفريق المعني' : 'Related Team'}: ${teamLabels}]\n\n${description}`;
+      }
+
       await createTicket.mutateAsync({ 
         title, 
-        description, 
+        description: finalDescription, 
         priority: priority as any,
-        screen_name: screenName,
+        screen_name: finalScreenName,
         attachments
       });
       toast.success(direction === 'rtl' ? 'تم إنشاء التذكرة بنجاح' : 'Ticket created successfully');
       setIsOpen(false);
-      setTitle('');
-      setDescription('');
-      setScreenName('');
-      setFile(null);
+      resetForm();
     } catch (error) {
       toast.error(direction === 'rtl' ? 'فشل إنشاء التذكرة' : 'Failed to create ticket');
     } finally {
       setUploading(false);
     }
+  };
+
+  const resetForm = () => {
+    setTitle('');
+    setDescription('');
+    setScreenName('');
+    setCustomScreenName('');
+    setSelectedTeams([]);
+    setFile(null);
+    setPriority('medium');
   };
 
   const getStatusBadge = (status: string) => {
@@ -79,9 +189,6 @@ export default function MyTickets() {
     }
   };
 
-  // Only show tickets created by the user, if the user is a standard employee
-  // The hook fetches all tickets based on RLS, which already filters for branch/user appropriately.
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center bg-card p-4 rounded-lg border shadow-sm">
@@ -89,11 +196,11 @@ export default function MyTickets() {
           <h1 className="text-2xl font-bold">{t('nav.support.myTickets')}</h1>
           <p className="text-muted-foreground mt-1 text-sm">{direction === 'rtl' ? 'تتبع طلبات الدعم الفني الخاصة بك وارفع بلاغات عن المشاكل' : 'Track your support requests and report issues'}</p>
         </div>
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) resetForm(); }}>
           <DialogTrigger asChild>
             <Button><PlusCircle className="w-4 h-4 mr-2" /> {direction === 'rtl' ? 'تذكرة جديدة' : 'New Ticket'}</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{direction === 'rtl' ? 'إنشاء تذكرة دعم' : 'Create Support Ticket'}</DialogTitle>
             </DialogHeader>
@@ -102,10 +209,56 @@ export default function MyTickets() {
                 <label className="text-sm font-medium">{direction === 'rtl' ? 'العنوان المرجعي' : 'Subject / Title'}</label>
                 <Input placeholder={direction === 'rtl' ? 'مثال: مشكلة في تقييم الفرع' : 'e.g. Issue with branch evaluation'} value={title} onChange={e => setTitle(e.target.value)} required />
               </div>
+
+              {/* Screen Name Dropdown */}
               <div className="space-y-2">
-                <label className="text-sm font-medium">{direction === 'rtl' ? 'اسم الشاشة / الصفحة (اختياري)' : 'Screen / Page Name (Optional)'}</label>
-                <Input placeholder={direction === 'rtl' ? 'أين تظهر المشكلة؟' : 'Where does the issue appear?'} value={screenName} onChange={e => setScreenName(e.target.value)} />
+                <label className="text-sm font-medium">{direction === 'rtl' ? 'مكان ظهور المشكلة' : 'Where does the issue appear?'}</label>
+                <Select value={screenName} onValueChange={setScreenName}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={direction === 'rtl' ? 'اختر الشاشة أو الصفحة' : 'Select screen or page'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableScreens.map(screen => (
+                      <SelectItem key={screen.id} value={screen.id}>
+                        {direction === 'rtl' ? screen.labelAr : screen.labelEn}
+                      </SelectItem>
+                    ))}
+                    <SelectItem value="other">{direction === 'rtl' ? 'أخرى...' : 'Other...'}</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+
+              {/* Custom Screen Name (only if "other" selected) */}
+              {screenName === 'other' && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">{direction === 'rtl' ? 'حدد مكان المشكلة' : 'Specify the location'}</label>
+                  <Input 
+                    placeholder={direction === 'rtl' ? 'اكتب اسم الشاشة أو وصف مكان المشكلة...' : 'Enter the screen name or describe where the issue occurs...'} 
+                    value={customScreenName} 
+                    onChange={e => setCustomScreenName(e.target.value)} 
+                    required
+                  />
+                </div>
+              )}
+
+              {/* Team Selection for Support Agents */}
+              {isSupportAgent && (
+                <div className="space-y-3 p-3 bg-muted/50 rounded-lg border">
+                  <label className="text-sm font-medium">{direction === 'rtl' ? 'الفريق المعني بالمشكلة (اختياري - يمكن اختيار أكثر من فريق)' : 'Related Team (Optional - can select multiple)'}</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {TEAM_OPTIONS.map(team => (
+                      <label key={team.id} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-background p-2 rounded-md transition-colors">
+                        <Checkbox 
+                          checked={selectedTeams.includes(team.id)} 
+                          onCheckedChange={() => handleTeamToggle(team.id)}
+                        />
+                        <span>{direction === 'rtl' ? team.labelAr : team.labelEn}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <label className="text-sm font-medium">{direction === 'rtl' ? 'وصف المشكلة بالتفصيل' : 'Detailed Description'}</label>
                 <Textarea placeholder={direction === 'rtl' ? 'اشرح المشكلة التي تواجهك...' : 'Describe the issue you are facing...'} value={description} onChange={e => setDescription(e.target.value)} required rows={4} />
