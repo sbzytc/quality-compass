@@ -32,16 +32,16 @@ export function AIAssistantButton() {
             onClick={() => setIsOpen(!isOpen)}
             size="icon"
             className={cn(
-              "h-14 w-14 rounded-full shadow-lg relative overflow-hidden",
+              "h-14 w-14 rounded-full shadow-lg relative overflow-hidden p-0 flex items-center justify-center",
               isOpen
                 ? "bg-muted text-foreground hover:bg-muted"
-                : "bg-primary/10 border-2 border-primary/30 hover:bg-primary/20"
+                : "bg-white border-2 border-primary/30 hover:bg-primary/5"
             )}
           >
             {isOpen ? (
               <X className="w-5 h-5" />
             ) : (
-              <img src={aiAssistantIcon} alt="AI Assistant" className="w-full h-full object-contain scale-90" />
+              <img src={aiAssistantIcon} alt="AI Assistant" className="w-10 h-10 object-contain" />
             )}
           </Button>
         </div>
