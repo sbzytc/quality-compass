@@ -408,6 +408,7 @@ export default function UsersPage() {
                 <TableHead>{language === 'ar' ? 'المستخدم' : 'User'}</TableHead>
                 <TableHead>{language === 'ar' ? 'الدور' : 'Role'}</TableHead>
                 <TableHead className="hidden sm:table-cell">{t('common.status')}</TableHead>
+                <TableHead className="hidden md:table-cell">{language === 'ar' ? 'المساعد الذكي' : 'AI Assistant'}</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
