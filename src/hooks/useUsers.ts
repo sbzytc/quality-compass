@@ -12,6 +12,7 @@ export interface UserWithRole {
   branch_id?: string;
   region_id?: string;
   is_active: boolean;
+  ai_assistant_enabled: boolean;
   created_at: string;
   roles: AppRole[];
 }
@@ -53,6 +54,7 @@ export function useUsers() {
         branch_id: p.branch_id,
         region_id: p.region_id,
         is_active: p.is_active,
+        ai_assistant_enabled: p.ai_assistant_enabled ?? false,
         created_at: p.created_at,
         roles: rolesByUser.get(p.user_id) || [],
       })) as UserWithRole[];
@@ -211,6 +213,24 @@ export function useAssignBranch() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       queryClient.invalidateQueries({ queryKey: ['branches'] });
+    },
+  });
+}
+
+export function useToggleAIAssistant() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ userId, enabled }: { userId: string; enabled: boolean }) => {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ ai_assistant_enabled: enabled } as any)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
     },
   });
 }

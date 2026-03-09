@@ -49,7 +49,9 @@ export function AIAssistantChat({ fullPage = false }: AIAssistantChatProps) {
 
       if (error) {
         // Check for specific error codes
-        if (error.message?.includes('429') || (error as any)?.status === 429) {
+        if (error.message?.includes('403') || (error as any)?.status === 403) {
+          toast.error(direction === 'rtl' ? 'ليس لديك صلاحية استخدام المساعد الذكي' : 'You do not have permission to use the AI Assistant');
+        } else if (error.message?.includes('429') || (error as any)?.status === 429) {
           toast.error('تم تجاوز حد الطلبات، حاول بعد قليل');
         } else if (error.message?.includes('402') || (error as any)?.status === 402) {
           toast.error('الرصيد غير كافٍ، يرجى إضافة رصيد');

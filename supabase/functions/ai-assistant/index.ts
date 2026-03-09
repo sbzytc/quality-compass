@@ -428,11 +428,63 @@ serve(async (req) => {
 
     const userId = claimsData.claims.sub as string;
 
+    // Check if user has AI assistant access
+    const adminClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+    const { data: profileData, error: profileError } = await adminClient
+      .from("profiles")
+      .select("ai_assistant_enabled")
+      .eq("user_id", userId)
+      .single();
+
+    if (profileError || !profileData?.ai_assistant_enabled) {
+      return new Response(
+        JSON.stringify({ error: "forbidden", message: "ليس لديك صلاحية استخدام المساعد الذكي" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Get user roles for context
+    const { data: userRoles } = await adminClient
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+    
+    const roles = (userRoles || []).map((r: any) => r.role);
+
     const { messages } = await req.json();
+
+    // Get user's branch info for scope restriction
+    const { data: userProfile } = await adminClient
+      .from("profiles")
+      .select("branch_id, full_name")
+      .eq("user_id", userId)
+      .single();
+
+    const userBranchId = userProfile?.branch_id || null;
+    const userName = userProfile?.full_name || "";
+
+    // Build role-aware system prompt
+    const roleContext = `
+## معلومات المستخدم الحالي:
+- الاسم: ${userName}
+- الأدوار: ${roles.join(", ")}
+- ${userBranchId ? `معرّف الفرع: ${userBranchId}` : "لا يوجد فرع محدد"}
+
+## قواعد الصلاحيات (مهم جداً - يجب الالتزام بها):
+${roles.includes("admin") || roles.includes("executive") ? "- هذا المستخدم لديه صلاحيات كاملة للاطلاع على جميع البيانات." : ""}
+${roles.includes("branch_manager") ? `- هذا المستخدم مدير فرع. يمكنه فقط الاطلاع على بيانات فرعه (${userBranchId}). لا تعرض له أي بيانات من فروع أخرى. إذا طلب بيانات فروع أخرى، أخبره أن صلاحياته لا تسمح بذلك.` : ""}
+${roles.includes("branch_employee") ? `- هذا المستخدم موظف فرع. يمكنه فقط الاطلاع على بيانات فرعه (${userBranchId}). لا تعرض له أي تقارير أو بيانات شاملة أو من فروع أخرى. إذا طلب ذلك، أخبره أن صلاحياته لا تسمح بذلك.` : ""}
+${roles.includes("assessor") ? "- هذا المستخدم مقيّم جودة. يمكنه الاطلاع على التقييمات والملاحظات المرتبطة به فقط. لا تعرض له بيانات إدارية أو تقارير شاملة." : ""}
+${roles.includes("support_agent") ? "- هذا المستخدم موظف دعم فني. يمكنه فقط الاطلاع على تذاكر الدعم. لا تعرض له تقييمات أو تقارير أداء الفروع." : ""}
+- إذا طلب المستخدم بيانات خارج نطاق صلاحياته، أرفض الطلب بلطف وأوضح له السبب.
+- البيانات المسترجعة من قاعدة البيانات محمية بنظام الصلاحيات (RLS) وستعود فقط البيانات المسموح بها.`;
 
     // First AI call with tools
     let aiMessages = [
-      { role: "system", content: SYSTEM_PROMPT },
+      { role: "system", content: SYSTEM_PROMPT + roleContext },
       ...messages,
     ];
 

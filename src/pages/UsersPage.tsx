@@ -18,6 +18,7 @@ import {
   UserPlus,
   Eye,
   EyeOff,
+  Bot,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -70,6 +71,7 @@ import {
   useUpdateUserStatus,
   useUpdateUserRole,
   useAssignBranch,
+  useToggleAIAssistant,
   UserWithRole,
 } from '@/hooks/useUsers';
 import { AppRole, useAuth } from '@/contexts/AuthContext';
@@ -108,6 +110,7 @@ export default function UsersPage() {
   const updateStatus = useUpdateUserStatus();
   const updateRole = useUpdateUserRole();
   const assignBranch = useAssignBranch();
+  const toggleAIAssistant = useToggleAIAssistant();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<AppRole | 'all'>('all');
@@ -502,6 +505,26 @@ export default function UsersPage() {
                                 >
                                   <Shield className="w-4 h-4 me-2" />
                                   {language === 'ar' ? 'تغيير الدور' : 'Change Role'}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={async () => {
+                                    try {
+                                      await toggleAIAssistant.mutateAsync({ userId: user.user_id, enabled: !user.ai_assistant_enabled });
+                                      toast.success(
+                                        language === 'ar'
+                                          ? user.ai_assistant_enabled ? 'تم تعطيل المساعد الذكي' : 'تم تفعيل المساعد الذكي'
+                                          : user.ai_assistant_enabled ? 'AI Assistant disabled' : 'AI Assistant enabled'
+                                      );
+                                    } catch {
+                                      toast.error(language === 'ar' ? 'فشل تحديث الإعداد' : 'Failed to update setting');
+                                    }
+                                  }}
+                                >
+                                  <Bot className="w-4 h-4 me-2" />
+                                  {user.ai_assistant_enabled
+                                    ? (language === 'ar' ? 'تعطيل المساعد الذكي' : 'Disable AI Assistant')
+                                    : (language === 'ar' ? 'تفعيل المساعد الذكي' : 'Enable AI Assistant')
+                                  }
                                 </DropdownMenuItem>
                               </>
                             )}
