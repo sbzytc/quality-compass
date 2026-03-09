@@ -950,7 +950,10 @@ export default function EvaluationForm() {
                       </h3>
                       <p className="text-sm text-muted-foreground">
                         {catProgress.scored}/{catProgress.total} {direction === 'rtl' ? 'معيار تم تقييمه' : 'criteria scored'} •{' '}
-                        {direction === 'rtl' ? 'الوزن:' : 'Weight:'} {category.weight}%
+                        {direction === 'rtl' ? 'الوزن:' : 'Weight:'} {(() => {
+                          const totalWeight = templateData?.categories.reduce((sum, c) => sum + c.weight, 0) || 1;
+                          return Math.round((category.weight / totalWeight) * 100);
+                        })()}%
                       </p>
                     </div>
                   </div>
