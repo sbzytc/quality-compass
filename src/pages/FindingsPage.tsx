@@ -19,7 +19,7 @@ import { useCriticalFindings, useFindingStats, useAssignFinding, useResolveFindi
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useUsers } from '@/hooks/useUsers';
-import { useBranches } from '@/hooks/useBranches';
+
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useGoBack } from '@/hooks/useGoBack';
 import { format, differenceInDays } from 'date-fns';
