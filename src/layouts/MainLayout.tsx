@@ -66,8 +66,10 @@ export function MainLayout() {
                   </Avatar>
                   <div className="hidden md:flex flex-col items-start text-sm">
                     <span className="font-medium leading-none">{profile.full_name}</span>
+                    {roleBadge && <span className="text-xs text-muted-foreground">{roleBadge}</span>}
                     <span className="text-xs text-muted-foreground">{profile.email}</span>
                   </div>
+
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
