@@ -357,7 +357,20 @@ export default function PreviousEvaluationsPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center justify-center gap-2">
-                            {isEditable && !timeInfo?.expired ? (
+                            {/* View button - always show for submitted evaluations */}
+                            {evaluation.status !== 'draft' && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleViewEdit(evaluation, 'view')}
+                                className="gap-1"
+                              >
+                                <Eye className="h-4 w-4" />
+                                {language === 'ar' ? 'عرض' : 'View'}
+                              </Button>
+                            )}
+                            {/* Edit/Continue button */}
+                            {isEditable && !timeInfo?.expired && (
                               <div className="flex flex-col items-center gap-1">
                                 <Button
                                   variant="outline"
@@ -377,16 +390,6 @@ export default function PreviousEvaluationsPage() {
                                   </span>
                                 )}
                               </div>
-                            ) : (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleViewEdit(evaluation, 'view')}
-                                className="gap-1"
-                              >
-                                <Eye className="h-4 w-4" />
-                                {language === 'ar' ? 'عرض' : 'View'}
-                              </Button>
                             )}
                             
                             {/* Delete button for drafts */}
