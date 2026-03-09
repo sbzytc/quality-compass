@@ -93,6 +93,7 @@ export function MainLayout() {
           </div>
         </main>
       </div>
+      <AIAssistantButton />
     </div>
   );
 }
