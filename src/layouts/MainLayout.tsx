@@ -16,7 +16,7 @@ import { useNavigate } from 'react-router-dom';
 import { getInitials } from '@/lib/getInitials';
 
 export function MainLayout() {
-  const { language, setLanguage, direction } = useLanguage();
+  const { language, setLanguage, direction, t } = useLanguage();
   const { profile, signOut, isAdmin, isExecutive, isBranchManager, isAssessor } = useAuth();
   const navigate = useNavigate();
 
