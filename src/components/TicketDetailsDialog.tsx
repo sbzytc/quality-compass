@@ -143,11 +143,15 @@ export function TicketDetailsDialog({ ticket, isOpen, onClose, isSupportAgent = 
                           ? direction === 'rtl'
                             ? 'محلولة'
                             : 'Resolved'
-                          : ticket.status === 'closed'
+                          : ticket.status === 'pending_closure'
                             ? direction === 'rtl'
-                              ? 'مغلقة'
-                              : 'Closed'
-                            : String(ticket.status).replace('_', ' ')}
+                              ? 'بانتظار الإغلاق'
+                              : 'Pending Closure'
+                            : ticket.status === 'closed'
+                              ? direction === 'rtl'
+                                ? 'مغلقة'
+                                : 'Closed'
+                              : String(ticket.status).replace('_', ' ')}
                   </Badge>
                 </DialogTitle>
                 <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-muted-foreground">
