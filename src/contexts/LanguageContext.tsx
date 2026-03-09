@@ -165,7 +165,19 @@ const translations: Record<Language, Record<string, string>> = {
     'status.completed': 'Completed',
     'status.inProgress': 'In Progress',
     'status.pending': 'Pending',
-    
+
+    // Priorities
+    'priority.low': 'Low',
+    'priority.medium': 'Medium',
+    'priority.high': 'High',
+    'priority.critical': 'Critical',
+
+    // Action status
+    'action_status.pending': 'Pending',
+    'action_status.in_progress': 'In Progress',
+    'action_status.completed': 'Completed',
+    'action_status.overdue': 'Overdue',
+
     // Auth
     'auth.signIn': 'Sign In',
     'auth.signOut': 'Sign Out',
