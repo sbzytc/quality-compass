@@ -81,6 +81,7 @@ const roleLabels: Record<AppRole, { en: string; ar: string }> = {
   branch_manager: { en: 'Branch Manager', ar: 'مدير الفرع' },
   assessor: { en: 'Assessor', ar: 'مقيّم' },
   branch_employee: { en: 'Branch Employee', ar: 'موظف فرع' },
+  support_agent: { en: 'Support Agent', ar: 'موظف دعم فني' },
 };
 
 const roleColors: Record<AppRole, string> = {
@@ -89,6 +90,7 @@ const roleColors: Record<AppRole, string> = {
   branch_manager: 'bg-amber-500/10 text-amber-500 border-amber-500/30',
   assessor: 'bg-green-500/10 text-green-500 border-green-500/30',
   branch_employee: 'bg-teal-500/10 text-teal-500 border-teal-500/30',
+  support_agent: 'bg-primary/10 text-primary border-primary/30',
 };
 
 export default function UsersPage() {

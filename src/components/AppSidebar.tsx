@@ -26,6 +26,7 @@ import {
   CalendarDays,
   CalendarRange,
   TrendingUp,
+  Headset,
 } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -50,7 +51,7 @@ export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { t, direction } = useLanguage();
-  const { profile, roles, signOut, isAdmin, isExecutive, isBranchManager, isAssessor } = useAuth();
+  const { profile, roles, signOut, isAdmin, isExecutive, isBranchManager, isAssessor, isSupportAgent } = useAuth();
   const { data: findingStats } = useFindingStats();
 
   // Get open findings count for badge
@@ -166,6 +167,23 @@ export function AppSidebar() {
       path: '/branch-performance',
       allowedRoles: ['admin', 'executive', 'branch_manager'] as AppRole[]
     },
+    { 
+      labelKey: 'nav.support', 
+      icon: Headset, 
+      path: '/support',
+      children: [
+        {
+          labelKey: 'nav.support.myTickets',
+          icon: FileText,
+          path: '/support/my-tickets',
+        },
+        ...(isAdmin || isSupportAgent ? [{
+          labelKey: 'nav.support.dashboard',
+          icon: LayoutDashboard,
+          path: '/support/dashboard',
+        }] : [])
+      ]
+    },
   ] as NavItem[]).filter(item => !item.allowedRoles || item.allowedRoles.some(role => roles.includes(role)));
 
   const settingsNavItems: NavItem[] = ([
@@ -206,6 +224,7 @@ export function AppSidebar() {
     if (isExecutive) return t('role.executive');
     if (isBranchManager) return t('role.branch_manager');
     if (isAssessor) return t('role.assessor');
+    if (isSupportAgent) return t('role.support_agent');
     return '';
   };
 

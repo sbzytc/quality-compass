@@ -29,6 +29,8 @@ import PeriodEvaluationForm from "@/pages/PeriodEvaluationForm";
 import ReportsPage from "@/pages/ReportsPage";
 import BranchPerformanceReport from "@/pages/BranchPerformanceReport";
 import NotFound from "@/pages/NotFound";
+import SupportDashboard from "@/pages/support/SupportDashboard";
+import MyTickets from "@/pages/support/MyTickets";
 
 const queryClient = new QueryClient();
 
@@ -178,6 +180,14 @@ const AppRoutes = () => (
       
       {/* Settings - All authenticated users */}
       <Route path="/settings" element={<SettingsPage />} />
+
+      {/* Support Routes */}
+      <Route path="/support/dashboard" element={
+        <ProtectedRoute allowedRoles={['admin', 'support_agent']}>
+          <SupportDashboard />
+        </ProtectedRoute>
+      } />
+      <Route path="/support/my-tickets" element={<MyTickets />} />
     </Route>
     
     <Route path="*" element={<NotFound />} />

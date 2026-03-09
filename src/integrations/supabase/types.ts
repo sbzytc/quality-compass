@@ -649,6 +649,65 @@ export type Database = {
         }
         Relationships: []
       }
+      support_tickets: {
+        Row: {
+          assigned_to: string | null
+          attachments: string[] | null
+          branch_id: string | null
+          category: string
+          created_at: string
+          created_by: string
+          description: string
+          id: string
+          priority: string
+          resolved_at: string | null
+          source: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          attachments?: string[] | null
+          branch_id?: string | null
+          category?: string
+          created_at?: string
+          created_by: string
+          description: string
+          id?: string
+          priority?: string
+          resolved_at?: string | null
+          source?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          attachments?: string[] | null
+          branch_id?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string
+          description?: string
+          id?: string
+          priority?: string
+          resolved_at?: string | null
+          source?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       template_categories: {
         Row: {
           created_at: string
@@ -734,6 +793,41 @@ export type Database = {
           },
         ]
       }
+      ticket_comments: {
+        Row: {
+          attachments: string[] | null
+          comment: string
+          created_at: string
+          id: string
+          ticket_id: string
+          user_id: string
+        }
+        Insert: {
+          attachments?: string[] | null
+          comment: string
+          created_at?: string
+          id?: string
+          ticket_id: string
+          user_id: string
+        }
+        Update: {
+          attachments?: string[] | null
+          comment?: string
+          created_at?: string
+          id?: string
+          ticket_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_comments_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -789,6 +883,7 @@ export type Database = {
         | "branch_manager"
         | "assessor"
         | "branch_employee"
+        | "support_agent"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -922,6 +1017,7 @@ export const Constants = {
         "branch_manager",
         "assessor",
         "branch_employee",
+        "support_agent",
       ],
     },
   },
