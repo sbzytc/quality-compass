@@ -85,6 +85,7 @@ export const useSupportTickets = () => {
     isLoading,
     createTicket,
     updateTicket
+  };
 };
 
 export const useTicketComments = (ticketId?: string) => {
@@ -149,5 +150,4 @@ export const useTicketComments = (ticketId?: string) => {
   });
 
   return { comments, isLoading, addComment };
-};
 };

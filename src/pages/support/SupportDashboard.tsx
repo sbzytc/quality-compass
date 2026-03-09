@@ -105,55 +105,9 @@ export default function SupportDashboard() {
                       {ticket.status}
                     </Badge>
                     
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="sm" onClick={() => setSelectedTicket(ticket)}>
-                          {direction === 'rtl' ? 'إدارة' : 'Manage'}
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>{ticket.title}</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4 pt-4">
-                          <div className="text-sm border p-3 rounded-md bg-muted/30 whitespace-pre-wrap">{ticket.description}</div>
-                          
-                          {ticket.attachments && ticket.attachments.length > 0 && (
-                            <div className="space-y-2 mt-4">
-                              <label className="text-sm font-medium text-muted-foreground">{direction === 'rtl' ? 'المرفقات' : 'Attachments'}</label>
-                              <div className="flex flex-wrap gap-2">
-                                {ticket.attachments.map((url: string, index: number) => (
-                                  <a key={index} href={url} target="_blank" rel="noreferrer" className="block max-w-[200px] rounded-md overflow-hidden border">
-                                    <img src={url} alt={`Attachment ${index + 1}`} className="w-full h-auto object-cover hover:opacity-90 transition-opacity" />
-                                  </a>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                          
-                          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm mt-4">
-                            {ticket.screen_name && (
-                              <div><span className="text-muted-foreground">{direction === 'rtl' ? 'الشاشة: ' : 'Screen: '}</span><span className="font-medium">{ticket.screen_name}</span></div>
-                            )}
-                            <div><span className="text-muted-foreground">Source: </span><Badge variant="outline">{ticket.source}</Badge></div>
-                            <div><span className="text-muted-foreground">Priority: </span><span className="font-medium capitalize">{ticket.priority}</span></div>
-                          </div>
-
-                          <div className="space-y-2 mt-4 pt-4 border-t">
-                            <label className="text-sm font-medium">{direction === 'rtl' ? 'تحديث الحالة' : 'Update Status'}</label>
-                            <Select value={ticket.status} onValueChange={(val) => handleUpdateStatus(ticket.id, val)}>
-                              <SelectTrigger><SelectValue /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="open">Open</SelectItem>
-                                <SelectItem value="in_progress">In Progress</SelectItem>
-                                <SelectItem value="resolved">Resolved</SelectItem>
-                                <SelectItem value="closed">Closed</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
+                    <Button variant="outline" size="sm" onClick={() => setSelectedTicket(ticket)}>
+                      {direction === 'rtl' ? 'إدارة' : 'Manage'}
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -161,6 +115,13 @@ export default function SupportDashboard() {
           )}
         </CardContent>
       </Card>
+
+      <TicketDetailsDialog 
+        ticket={selectedTicket} 
+        isOpen={!!selectedTicket} 
+        onClose={() => setSelectedTicket(null)} 
+        isSupportAgent={true}
+      />
     </div>
   );
 }
