@@ -428,6 +428,32 @@ serve(async (req) => {
 
     const userId = claimsData.claims.sub as string;
 
+    // Check if user has AI assistant access
+    const adminClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+    const { data: profileData, error: profileError } = await adminClient
+      .from("profiles")
+      .select("ai_assistant_enabled")
+      .eq("user_id", userId)
+      .single();
+
+    if (profileError || !profileData?.ai_assistant_enabled) {
+      return new Response(
+        JSON.stringify({ error: "forbidden", message: "ليس لديك صلاحية استخدام المساعد الذكي" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Get user roles for context
+    const { data: userRoles } = await adminClient
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+    
+    const roles = (userRoles || []).map((r: any) => r.role);
+
     const { messages } = await req.json();
 
     // First AI call with tools
