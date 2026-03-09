@@ -31,6 +31,7 @@ import BranchPerformanceReport from "@/pages/BranchPerformanceReport";
 import NotFound from "@/pages/NotFound";
 import SupportDashboard from "@/pages/support/SupportDashboard";
 import MyTickets from "@/pages/support/MyTickets";
+import ArchivedTickets from "@/pages/support/ArchivedTickets";
 
 const queryClient = new QueryClient();
 
@@ -185,6 +186,11 @@ const AppRoutes = () => (
       <Route path="/support/dashboard" element={
         <ProtectedRoute allowedRoles={['admin', 'support_agent']}>
           <SupportDashboard />
+        </ProtectedRoute>
+      } />
+      <Route path="/support/archived" element={
+        <ProtectedRoute allowedRoles={['admin', 'support_agent']}>
+          <ArchivedTickets />
         </ProtectedRoute>
       } />
       <Route path="/support/my-tickets" element={<MyTickets />} />

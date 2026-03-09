@@ -177,11 +177,18 @@ export function AppSidebar() {
           icon: FileText,
           path: '/support/my-tickets',
         },
-        ...(isAdmin || isSupportAgent ? [{
-          labelKey: 'nav.support.dashboard',
-          icon: LayoutDashboard,
-          path: '/support/dashboard',
-        }] : [])
+        ...(isAdmin || isSupportAgent ? [
+          {
+            labelKey: 'nav.support.dashboard',
+            icon: LayoutDashboard,
+            path: '/support/dashboard',
+          },
+          {
+            labelKey: 'nav.support.archived',
+            icon: Archive,
+            path: '/support/archived',
+          }
+        ] : [])
       ]
     },
   ] as NavItem[]).filter(item => !item.allowedRoles || item.allowedRoles.some(role => roles.includes(role)));
