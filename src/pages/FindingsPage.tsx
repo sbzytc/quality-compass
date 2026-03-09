@@ -60,7 +60,15 @@ export default function FindingsPage() {
   );
   const { data: stats, isLoading: statsLoading } = useFindingStats();
   const { data: users } = useUsers();
-  const { data: branches } = useBranches();
+  // Fetch raw branches for manager_id lookup
+  const { data: rawBranches } = useQuery({
+    queryKey: ['branches-raw'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('branches').select('id, manager_id');
+      if (error) throw error;
+      return data;
+    },
+  });
   const assignMutation = useAssignFinding();
   const resolveMutation = useResolveFinding();
   const approveMutation = useApproveFinding();
