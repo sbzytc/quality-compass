@@ -32,6 +32,8 @@ interface EvaluationData {
   notes: string | null;
   created_at: string;
   submitted_at: string | null;
+  started_at: string | null;
+  duration_minutes: number | null;
   branches: { name: string; name_ar: string | null } | null;
   evaluation_templates: { name: string; name_ar: string | null } | null;
 }
