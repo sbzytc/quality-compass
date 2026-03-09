@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, Clock, FileSearch, ExternalLink, AlertCircle, Building2 } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, Clock, FileSearch, AlertCircle, Building2 } from 'lucide-react';
 import { QualityCircle } from '@/components/QualityCircle';
 import { StatCard } from '@/components/StatCard';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -84,35 +84,7 @@ export default function BranchManagerDashboard() {
     enabled: !!branchId,
   });
 
-  // Fetch active findings (in_progress + pending_review) for the list
-  const { data: activeFindings = [] } = useQuery({
-    queryKey: ['manager-active-findings', branchId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('non_conformities')
-        .select(`
-          id,
-          status,
-          score,
-          max_score,
-          assigned_to,
-          due_date,
-          resolved_at,
-          resolved_by,
-          template_criteria:criterion_id(name, name_ar),
-          profiles:assigned_to(full_name)
-        `)
-        .eq('branch_id', branchId!)
-        .in('status', ['open', 'in_progress', 'pending_review', 'rejected'])
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!branchId,
-  });
-
-  // Fetch previous evaluation for trend
+  // Fetch previous evaluation for trend (only if there are 2+ evaluations)
   const { data: previousEval } = useQuery({
     queryKey: ['manager-prev-eval', branchId],
     queryFn: async () => {
@@ -275,76 +247,7 @@ export default function BranchManagerDashboard() {
         </div>
       </div>
 
-      {/* Active Findings List */}
-      <div className="bg-card rounded-xl border border-border overflow-hidden">
-        <div className="p-6 border-b border-border flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-foreground">
-            {isAr ? 'الملاحظات النشطة' : 'Active Findings'}
-          </h2>
-          <button
-            onClick={() => navigate('/findings')}
-            className="text-sm text-primary hover:underline"
-          >
-            {t('common.viewAll')} →
-          </button>
-        </div>
-        <div className="divide-y divide-border">
-          {activeFindings.length === 0 ? (
-            <div className="p-6 text-center text-muted-foreground">
-              {isAr ? 'لا توجد ملاحظات نشطة' : 'No active findings'}
-            </div>
-          ) : (
-            activeFindings.map((finding: any) => {
-              const criterionName = isAr
-                ? (finding.template_criteria?.name_ar || finding.template_criteria?.name)
-                : finding.template_criteria?.name;
-              const assigneeName = finding.profiles?.full_name;
-              const isInProgress = finding.status === 'in_progress';
-              const isPendingReview = finding.status === 'pending_review';
-
-              return (
-                <div
-                  key={finding.id}
-                  className="p-4 hover:bg-muted/30 transition-colors cursor-pointer"
-                  onClick={() => navigate('/findings')}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <h4 className="font-medium text-foreground flex items-center gap-2">
-                        {criterionName || '—'}
-                        <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
-                      </h4>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {finding.score}/{finding.max_score}
-                        {assigneeName && isInProgress && (
-                          <> • {isAr ? 'معيّنة لـ' : 'Assigned to'}: {assigneeName}</>
-                        )}
-                      </p>
-                      {finding.due_date && (
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {t('common.dueDate')}: {format(new Date(finding.due_date), 'd MMM yyyy', dateLocale)}
-                        </p>
-                      )}
-                    </div>
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full shrink-0 ${
-                      isInProgress
-                        ? 'bg-score-average/10 text-score-average'
-                        : 'bg-primary/10 text-primary'
-                    }`}>
-                      {isInProgress
-                        ? (isAr ? 'معلّقة' : 'Pending')
-                        : (isAr ? 'قيد المراجعة' : 'Under Review')
-                      }
-                    </span>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-      </div>
-
-      {/* Score Trend */}
+      {/* Score Trend - only show when there's a previous evaluation to compare */}
       {scoreDiff !== null && (
         <div className="bg-card rounded-xl border border-border p-6">
           <h2 className="text-lg font-semibold text-foreground mb-4">{t('dashboard.scoreTrend')}</h2>
