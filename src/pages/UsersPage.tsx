@@ -506,6 +506,26 @@ export default function UsersPage() {
                                   <Shield className="w-4 h-4 me-2" />
                                   {language === 'ar' ? 'تغيير الدور' : 'Change Role'}
                                 </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={async () => {
+                                    try {
+                                      await toggleAIAssistant.mutateAsync({ userId: user.user_id, enabled: !user.ai_assistant_enabled });
+                                      toast.success(
+                                        language === 'ar'
+                                          ? user.ai_assistant_enabled ? 'تم تعطيل المساعد الذكي' : 'تم تفعيل المساعد الذكي'
+                                          : user.ai_assistant_enabled ? 'AI Assistant disabled' : 'AI Assistant enabled'
+                                      );
+                                    } catch {
+                                      toast.error(language === 'ar' ? 'فشل تحديث الإعداد' : 'Failed to update setting');
+                                    }
+                                  }}
+                                >
+                                  <Bot className="w-4 h-4 me-2" />
+                                  {user.ai_assistant_enabled
+                                    ? (language === 'ar' ? 'تعطيل المساعد الذكي' : 'Disable AI Assistant')
+                                    : (language === 'ar' ? 'تفعيل المساعد الذكي' : 'Enable AI Assistant')
+                                  }
+                                </DropdownMenuItem>
                               </>
                             )}
                             <DropdownMenuSeparator />
