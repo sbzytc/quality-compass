@@ -335,6 +335,24 @@ export default function PreviousEvaluationsPage() {
                           )}
                         </TableCell>
                         <TableCell>
+                          {evaluation.durationMinutes != null ? (
+                            <div className="flex items-center gap-1 text-sm">
+                              <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                              <span>
+                                {evaluation.durationMinutes >= 60
+                                  ? language === 'ar'
+                                    ? `${Math.floor(evaluation.durationMinutes / 60)} ساعة${Math.round(evaluation.durationMinutes % 60) > 0 ? ` و ${Math.round(evaluation.durationMinutes % 60)} دقيقة` : ''}`
+                                    : `${Math.floor(evaluation.durationMinutes / 60)}h${Math.round(evaluation.durationMinutes % 60) > 0 ? ` ${Math.round(evaluation.durationMinutes % 60)}m` : ''}`
+                                  : language === 'ar'
+                                    ? `${Math.round(evaluation.durationMinutes)} دقيقة`
+                                    : `${Math.round(evaluation.durationMinutes)} min`}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
                           <div className="flex flex-col gap-1">
                             {getStatusBadge(evaluation.status)}
                             {evaluation.status === 'draft' && timeInfo && (
