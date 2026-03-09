@@ -390,7 +390,7 @@ export default function EvaluationViewPage() {
       {/* Info Card */}
       <Card>
         <CardContent className="pt-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-primary/10 rounded-lg">
                 <Building2 className="h-5 w-5 text-primary" />
@@ -417,6 +417,34 @@ export default function EvaluationViewPage() {
                 <p className="text-sm text-muted-foreground">{language === 'ar' ? 'التاريخ' : 'Date'}</p>
                 <p className="font-medium">
                   {format(new Date(evaluation.created_at), 'MMM d, yyyy', { locale: dateLocale })}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Clock className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'وقت البدء' : 'Start Time'}</p>
+                <p className="font-medium">
+                  {evaluation.started_at 
+                    ? format(new Date(evaluation.started_at), 'hh:mm a', { locale: dateLocale })
+                    : '-'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Timer className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'المدة' : 'Duration'}</p>
+                <p className="font-medium">
+                  {evaluation.duration_minutes != null
+                    ? evaluation.duration_minutes >= 60
+                      ? `${Math.floor(evaluation.duration_minutes / 60)}${language === 'ar' ? ' س ' : 'h '}${Math.round(evaluation.duration_minutes % 60)}${language === 'ar' ? ' د' : 'm'}`
+                      : `${Math.round(evaluation.duration_minutes)} ${language === 'ar' ? 'دقيقة' : 'min'}`
+                    : '-'}
                 </p>
               </div>
             </div>
