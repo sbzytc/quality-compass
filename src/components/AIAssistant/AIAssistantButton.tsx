@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Sparkles, X, Maximize2 } from 'lucide-react';
+import { X, Maximize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AIAssistantChat } from './AIAssistantChat';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import aiAssistantIcon from '@/assets/ai-assistant-icon.png';
 
 export function AIAssistantButton() {
   const [isOpen, setIsOpen] = useState(false);
@@ -20,21 +21,33 @@ export function AIAssistantButton() {
           "fixed bottom-6 z-50",
           direction === 'rtl' ? 'left-6' : 'right-6'
         )}
-        whileHover={{ scale: 1.05 }}
+        whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.95 }}
       >
-        <Button
-          onClick={() => setIsOpen(!isOpen)}
-          size="icon"
-          className={cn(
-            "h-14 w-14 rounded-full shadow-lg",
-            isOpen
-              ? "bg-muted text-foreground hover:bg-muted"
-              : "bg-primary text-primary-foreground hover:bg-primary/90"
-          )}
-        >
-          {isOpen ? <X className="w-5 h-5" /> : <Sparkles className="w-5 h-5" />}
-        </Button>
+        {!isOpen && (
+          <div className="absolute inset-0 rounded-full bg-primary/30 animate-ping" />
+        )}
+        <div className={cn(
+          "relative rounded-full transition-shadow duration-300",
+          !isOpen && "shadow-[0_0_25px_8px_hsl(var(--primary)/0.35),0_0_50px_15px_hsl(var(--primary)/0.15)]"
+        )}>
+          <Button
+            onClick={() => setIsOpen(!isOpen)}
+            size="icon"
+            className={cn(
+              "h-14 w-14 rounded-full shadow-lg relative overflow-hidden",
+              isOpen
+                ? "bg-muted text-foreground hover:bg-muted"
+                : "bg-primary/10 border-2 border-primary/30 hover:bg-primary/20"
+            )}
+          >
+            {isOpen ? (
+              <X className="w-5 h-5" />
+            ) : (
+              <img src={aiAssistantIcon} alt="AI Assistant" className="w-9 h-9 object-contain" />
+            )}
+          </Button>
+        </div>
       </motion.div>
 
       {/* Chat Window */}
