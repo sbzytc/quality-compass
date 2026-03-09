@@ -41,7 +41,7 @@ export function AIAssistantButton() {
             {isOpen ? (
               <X className="w-5 h-5" />
             ) : (
-              <img src={aiAssistantIcon} alt="AI Assistant" className="block w-full h-full object-cover object-center" />
+              <img src={aiAssistantIcon} alt="AI Assistant" className="block w-[112%] h-[112%] max-w-none max-h-none object-cover object-center translate-x-[1px] -translate-y-[1px]" />
             )}
           </Button>
         </div>
