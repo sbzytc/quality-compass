@@ -176,6 +176,20 @@ export default function MyTickets() {
                 <p className="text-sm text-muted-foreground line-clamp-3 mb-4 flex-1">
                   {ticket.description}
                 </p>
+                {ticket.attachments && ticket.attachments.length > 0 && (
+                  <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+                    {ticket.attachments.map((url: string, index: number) => (
+                      <a key={index} href={url} target="_blank" rel="noreferrer" className="flex-shrink-0 block w-12 h-12 rounded-md overflow-hidden border">
+                        <img src={url} alt="Attachment" className="w-full h-full object-cover" />
+                      </a>
+                    ))}
+                  </div>
+                )}
+                {ticket.screen_name && (
+                  <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded-md mb-4 border">
+                    <span className="font-medium">{direction === 'rtl' ? 'الشاشة:' : 'Screen:'}</span> {ticket.screen_name}
+                  </div>
+                )}
                 <div className="flex justify-between items-center text-xs text-muted-foreground pt-4 border-t">
                   <span>{new Date(ticket.created_at).toLocaleDateString()}</span>
                   <span>{ticket.id.split('-')[0].toUpperCase()}</span>
