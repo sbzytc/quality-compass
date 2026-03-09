@@ -11,11 +11,14 @@ import { Badge } from '@/components/ui/badge';
 import { PlusCircle, Info, Image as ImageIcon, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
+import { TicketDetailsDialog } from '@/components/TicketDetailsDialog';
+import { SupportTicket } from '@/hooks/useSupportTickets';
 
 export default function MyTickets() {
   const { t, direction } = useLanguage();
   const { tickets, isLoading, createTicket } = useSupportTickets();
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState('medium');
