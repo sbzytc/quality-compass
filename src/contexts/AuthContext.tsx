@@ -149,6 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isExecutive,
         isBranchManager,
         isAssessor,
+        isSupportAgent,
       }}
     >
       {children}
