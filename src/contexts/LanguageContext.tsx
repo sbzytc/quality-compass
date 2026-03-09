@@ -351,6 +351,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.support': 'الدعم الفني',
     'nav.support.dashboard': 'لوحة تحكم الدعم',
     'nav.support.myTickets': 'تذاكري',
+    'nav.support.archived': 'الأرشيف',
 
     // Settings
     'settings.title': 'الإعدادات',
