@@ -51,7 +51,7 @@ export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { t, direction } = useLanguage();
-  const { profile, roles, signOut, isAdmin, isExecutive, isBranchManager, isAssessor } = useAuth();
+  const { profile, roles, signOut, isAdmin, isExecutive, isBranchManager, isAssessor, isSupportAgent } = useAuth();
   const { data: findingStats } = useFindingStats();
 
   // Get open findings count for badge
