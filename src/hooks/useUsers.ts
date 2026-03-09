@@ -54,6 +54,7 @@ export function useUsers() {
         branch_id: p.branch_id,
         region_id: p.region_id,
         is_active: p.is_active,
+        ai_assistant_enabled: p.ai_assistant_enabled ?? false,
         created_at: p.created_at,
         roles: rolesByUser.get(p.user_id) || [],
       })) as UserWithRole[];

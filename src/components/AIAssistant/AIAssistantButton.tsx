@@ -12,7 +12,11 @@ import aiAssistantIcon from '@/assets/ai-assistant-icon.png';
 export function AIAssistantButton() {
   const [isOpen, setIsOpen] = useState(false);
   const { direction } = useLanguage();
+  const { profile } = useAuth();
   const navigate = useNavigate();
+
+  // Don't render if user doesn't have AI assistant access
+  if (!profile?.ai_assistant_enabled) return null;
 
   return (
     <>
