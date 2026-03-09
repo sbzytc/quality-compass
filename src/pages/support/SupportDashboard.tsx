@@ -28,11 +28,11 @@ import { ar, enUS } from 'date-fns/locale';
 
 // Kanban column configuration
 const KANBAN_COLUMNS: { status: TicketStatus; labelAr: string; labelEn: string; color: string; icon: React.ElementType }[] = [
-  { status: 'open', labelAr: 'مفتوحة', labelEn: 'Open', color: 'bg-destructive', icon: Bug },
-  { status: 'in_progress', labelAr: 'قيد التنفيذ', labelEn: 'In Progress', color: 'bg-primary', icon: Clock },
-  { status: 'pending_closure', labelAr: 'بانتظار الإغلاق', labelEn: 'Pending Closure', color: 'bg-amber-500', icon: Hourglass },
-  { status: 'resolved', labelAr: 'محلولة', labelEn: 'Resolved', color: 'bg-score-good', icon: CheckCircle },
-  { status: 'closed', labelAr: 'مغلقة', labelEn: 'Closed', color: 'bg-muted-foreground', icon: XCircle },
+  { status: 'open', labelAr: 'مفتوحة', labelEn: 'Open', color: 'destructive', icon: Bug },
+  { status: 'in_progress', labelAr: 'قيد التنفيذ', labelEn: 'In Progress', color: 'primary', icon: Clock },
+  { status: 'pending_closure', labelAr: 'بانتظار الإغلاق', labelEn: 'Pending Closure', color: 'secondary', icon: Hourglass },
+  { status: 'resolved', labelAr: 'محلولة', labelEn: 'Resolved', color: 'score-good', icon: CheckCircle },
+  { status: 'closed', labelAr: 'مغلقة', labelEn: 'Closed', color: 'muted', icon: XCircle },
 ];
 
 export default function SupportDashboard() {
