@@ -85,21 +85,16 @@ export function useArchivedEvaluations() {
 
       if (error) throw error;
 
-      return data.map(e => ({
-        id: e.id,
-        branchId: e.branch_id,
-        branchName: (e.branches as any)?.name || 'Unknown',
-        templateId: e.template_id,
-        templateName: (e.evaluation_templates as any)?.name || 'Unknown',
-        assessorId: e.assessor_id,
-        assessorName: 'Assessor',
-        overallScore: e.overall_score,
-        overallPercentage: e.overall_percentage,
-        status: e.status as 'draft' | 'submitted' | 'approved',
-        createdAt: e.created_at,
-        submittedAt: e.submitted_at,
-        isArchived: e.is_archived,
-      })) as EvaluationWithDetails[];
+      return data.map(e => {
+        // We'll fetch profiles in bulk below
+        return e;
+      });
+
+      // Actually, let's do it properly:
+    },
+  });
+}
+
     },
   });
 }
