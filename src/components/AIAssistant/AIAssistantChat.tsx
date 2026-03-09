@@ -6,21 +6,17 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAIAssistant } from '@/contexts/AIAssistantContext';
 import aiAssistantIcon from '@/assets/ai-assistant-icon.png';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-}
 
 interface AIAssistantChatProps {
   fullPage?: boolean;
 }
 
 export function AIAssistantChat({ fullPage = false }: AIAssistantChatProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const { messages, setMessages, clearMessages } = useAIAssistant();
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -37,7 +33,7 @@ export function AIAssistantChat({ fullPage = false }: AIAssistantChatProps) {
     const trimmed = input.trim();
     if (!trimmed || isLoading) return;
 
-    const userMsg: Message = { role: 'user', content: trimmed };
+    const userMsg = { role: 'user' as const, content: trimmed };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
     setInput('');
@@ -63,8 +59,8 @@ export function AIAssistantChat({ fullPage = false }: AIAssistantChatProps) {
         return;
       }
 
-      const assistantMsg: Message = {
-        role: 'assistant',
+      const assistantMsg = {
+        role: 'assistant' as const,
         content: data?.content || 'عذراً، لم أتمكن من معالجة طلبك.',
       };
       setMessages(prev => [...prev, assistantMsg]);
@@ -84,7 +80,7 @@ export function AIAssistantChat({ fullPage = false }: AIAssistantChatProps) {
   };
 
   const clearChat = () => {
-    setMessages([]);
+    clearMessages();
   };
 
   const suggestions = [
