@@ -38,6 +38,16 @@ export function TicketDetailsDialog({ ticket, isOpen, onClose, isSupportAgent = 
 
   const closeConfirmCopy = useMemo(() => {
     const isArabic = direction === 'rtl';
+    if (pendingStatus === 'pending_closure') {
+      return {
+        title: isArabic ? 'تأكيد طلب إغلاق التذكرة' : 'Confirm closure request',
+        description: isArabic
+          ? 'سيتم إرسال طلب للموظف للموافقة على الإغلاق النهائي. هل تريد الاستمرار؟'
+          : 'A request will be sent to the employee for final approval. Do you want to continue?',
+        confirm: isArabic ? 'نعم، إرسال الطلب' : 'Yes, send request',
+        cancel: isArabic ? 'إلغاء' : 'Cancel',
+      };
+    }
     return {
       title: isArabic ? 'تأكيد إغلاق التذكرة' : 'Confirm closing ticket',
       description: isArabic
@@ -46,7 +56,7 @@ export function TicketDetailsDialog({ ticket, isOpen, onClose, isSupportAgent = 
       confirm: isArabic ? 'نعم، أغلق التذكرة' : 'Yes, close ticket',
       cancel: isArabic ? 'إلغاء' : 'Cancel',
     };
-  }, [direction]);
+  }, [direction, pendingStatus]);
 
   const { comments, isLoading, addComment } = useTicketComments(ticket?.id);
   const { updateTicket } = useSupportTickets();
