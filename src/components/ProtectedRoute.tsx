@@ -34,6 +34,8 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
         return <Navigate to="/dashboard/branch-manager" replace />;
       } else if (roles.includes('assessor')) {
         return <Navigate to="/dashboard/auditor" replace />;
+      } else if (roles.includes('branch_employee')) {
+        return <Navigate to="/findings" replace />;
       }
       return <Navigate to="/login" replace />;
     }
