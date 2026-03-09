@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-export type TicketStatus = 'open' | 'in_progress' | 'resolved' | 'closed';
+export type TicketStatus = 'open' | 'in_progress' | 'resolved' | 'pending_closure' | 'closed';
 export type TicketPriority = 'low' | 'medium' | 'high' | 'critical';
 export type TicketSource = 'app' | 'phone' | 'system';
 
