@@ -414,11 +414,15 @@ export default function EvaluationForm() {
       let evaluationId = currentDraftId;
 
       if (currentDraftId) {
+        const now = new Date();
+        const startedAt = evaluationStartTime || new Date(evaluation?.started_at || evaluation?.created_at || now);
+        const durationMinutes = Math.round((now.getTime() - startedAt.getTime()) / 60000);
         const { error: updateError } = await supabase
           .from('evaluations')
           .update({
             status: 'submitted',
-            submitted_at: new Date().toISOString(),
+            submitted_at: now.toISOString(),
+            duration_minutes: durationMinutes,
           })
           .eq('id', currentDraftId);
 
