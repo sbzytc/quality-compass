@@ -297,17 +297,21 @@ export default function CustomerComplaintsPage() {
 
       {/* Main Tabs: Complaints vs Suggestions */}
       <Tabs value={activeType} onValueChange={(v) => { setActiveType(v); setActiveStatus('all'); }}>
-        <TabsList className="grid w-full grid-cols-2 max-w-md">
-          <TabsTrigger value="complaints" className="gap-2">
-            <AlertCircle className="w-4 h-4" />
-            {isAr ? 'الشكاوى' : 'Complaints'}
-            <Badge variant="secondary" className="text-xs">{complaintsOnly.length}</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="suggestions" className="gap-2">
-            <Lightbulb className="w-4 h-4" />
-            {isAr ? 'الاقتراحات' : 'Suggestions'}
-            <Badge variant="secondary" className="text-xs">{suggestionsOnly.length}</Badge>
-          </TabsTrigger>
+        <TabsList className={`grid w-full max-w-md ${canViewComplaints && canViewSuggestions ? 'grid-cols-2' : 'grid-cols-1'}`}>
+          {canViewComplaints && (
+            <TabsTrigger value="complaints" className="gap-2">
+              <AlertCircle className="w-4 h-4" />
+              {isAr ? 'الشكاوى' : 'Complaints'}
+              <Badge variant="secondary" className="text-xs">{complaintsOnly.length}</Badge>
+            </TabsTrigger>
+          )}
+          {canViewSuggestions && (
+            <TabsTrigger value="suggestions" className="gap-2">
+              <Lightbulb className="w-4 h-4" />
+              {isAr ? 'الاقتراحات' : 'Suggestions'}
+              <Badge variant="secondary" className="text-xs">{suggestionsOnly.length}</Badge>
+            </TabsTrigger>
+          )}
         </TabsList>
 
         {/* Status filter */}
