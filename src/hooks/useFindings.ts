@@ -430,6 +430,8 @@ export function useManagerApproveFinding() {
           reference_id: findingId,
         });
       }
+
+      await logAction('manager_approved', 'finding', findingId, { notes });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['findings'] });
