@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, Send, CheckCircle2, MessageSquare, User, Phone, Shield, ArrowLeft, ArrowRight } from 'lucide-react';
+import { REGEXP_ONLY_DIGITS } from 'input-otp';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -181,7 +182,7 @@ export default function CustomerFeedbackPage() {
                 </div>
 
                 <div className="flex justify-center" dir="ltr">
-                  <InputOTP maxLength={4} value={otpValue} onChange={setOtpValue}>
+                  <InputOTP maxLength={4} value={otpValue} onChange={setOtpValue} pattern={REGEXP_ONLY_DIGITS}>
                     <InputOTPGroup>
                       <InputOTPSlot index={0} />
                       <InputOTPSlot index={1} />
