@@ -95,7 +95,7 @@ export function useSubmitFeedback() {
 
       // Insert scores
       const scoreRows = params.scores.map(s => ({
-        feedback_id: feedback.id,
+        feedback_id: feedbackId,
         question_id: s.questionId,
         score: s.score,
       }));
@@ -109,7 +109,7 @@ export function useSubmitFeedback() {
         const { error: complaintError } = await supabase
           .from('customer_complaints')
           .insert({
-            feedback_id: feedback.id,
+            feedback_id: feedbackId,
             branch_id: params.branchId,
             complaint_text: params.complaintText.trim(),
             type: 'complaint',
@@ -122,7 +122,7 @@ export function useSubmitFeedback() {
         const { error: suggestionError } = await supabase
           .from('customer_complaints')
           .insert({
-            feedback_id: feedback.id,
+            feedback_id: feedbackId,
             branch_id: params.branchId,
             complaint_text: params.suggestionText.trim(),
             type: 'suggestion',
@@ -130,7 +130,7 @@ export function useSubmitFeedback() {
         if (suggestionError) throw suggestionError;
       }
 
-      return feedback;
+      return { id: feedbackId };
     },
   });
 }
