@@ -13,6 +13,9 @@ export interface UserWithRole {
   region_id?: string;
   is_active: boolean;
   ai_assistant_enabled: boolean;
+  can_view_customer_feedback: boolean;
+  can_view_complaints: boolean;
+  can_view_suggestions: boolean;
   created_at: string;
   roles: AppRole[];
 }
