@@ -144,6 +144,7 @@ export default function CustomerFeedbackListPage() {
             </SelectContent>
           </Select>
         )}
+        </div>
       </div>
 
       {/* Stats */}
