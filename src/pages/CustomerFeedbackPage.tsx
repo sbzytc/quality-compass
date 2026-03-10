@@ -22,6 +22,7 @@ export default function CustomerFeedbackPage() {
   const [otpValue, setOtpValue] = useState('');
   const [scores, setScores] = useState<Record<string, number>>({});
   const [complaintText, setComplaintText] = useState('');
+  const [suggestionText, setSuggestionText] = useState('');
   const [branchName, setBranchName] = useState('');
   const [branchNameAr, setBranchNameAr] = useState('');
 
