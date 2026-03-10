@@ -259,6 +259,9 @@ export function useAssignFinding() {
         reference_type: 'finding',
         reference_id: findingId,
       });
+
+      // System log
+      await logAction('assigned', 'finding', findingId, { assignedTo, dueDate });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['findings'] });
