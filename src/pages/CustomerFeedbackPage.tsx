@@ -108,7 +108,7 @@ export default function CustomerFeedbackPage() {
     <div className="min-h-screen bg-gradient-to-br from-[hsl(214,65%,95%)] to-[hsl(214,65%,88%)]" dir="rtl">
       {/* Header */}
       <div className="bg-[hsl(214,65%,28%)] text-white py-6 px-4 text-center">
-        <img src={rasdahLogo} alt="Rasdah" className="w-14 h-14 mx-auto mb-3 rounded-xl" />
+        <img src={rasdahLogo} alt="Rasdah" className="w-24 h-24 mx-auto mb-3 rounded-xl" />
         <h1 className="text-xl font-bold">تقييم العملاء</h1>
         <p className="text-sm text-white/70 mt-1">{branchNameAr || branchName}</p>
       </div>
