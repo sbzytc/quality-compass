@@ -240,3 +240,21 @@ export function useToggleAIAssistant() {
     },
   });
 }
+
+export function useToggleFeatureAccess() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ userId, feature, enabled }: { userId: string; feature: 'can_view_customer_feedback' | 'can_view_complaints' | 'can_view_suggestions'; enabled: boolean }) => {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ [feature]: enabled } as any)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+  });
+}
