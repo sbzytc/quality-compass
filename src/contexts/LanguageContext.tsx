@@ -32,6 +32,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.users': 'Users',
     'nav.templates': 'Templates',
     'nav.settings': 'Settings',
+    'nav.systemLogs': 'System Logs',
     
     // CEO Dashboard
     'dashboard.ceo.title': 'Executive Dashboard',
