@@ -202,6 +202,18 @@ const AppRoutes = () => (
         </ProtectedRoute>
       } />
       <Route path="/support/my-tickets" element={<MyTickets />} />
+
+      {/* Customer Feedback - Admin, Executive, Branch Manager, Assessor */}
+      <Route path="/customer-feedback" element={
+        <ProtectedRoute allowedRoles={['admin', 'executive', 'branch_manager', 'assessor']}>
+          <CustomerFeedbackListPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/customer-complaints" element={
+        <ProtectedRoute allowedRoles={['admin', 'executive', 'branch_manager', 'assessor']}>
+          <CustomerComplaintsPage />
+        </ProtectedRoute>
+      } />
     </Route>
     
     <Route path="*" element={<NotFound />} />
