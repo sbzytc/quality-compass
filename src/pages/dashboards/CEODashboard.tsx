@@ -74,6 +74,34 @@ export default function CEODashboard() {
     },
   });
 
+  // Fetch performance trend per branch over time
+  const { data: branchTrendData } = useQuery({
+    queryKey: ['branch-performance-trends-all'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('evaluations')
+        .select('branch_id, overall_percentage, submitted_at, created_at, branches!inner(name, name_ar)')
+        .in('status', ['submitted', 'approved'])
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+
+      // Group by branch
+      const branchMap = new Map<string, { name: string; nameAr?: string; points: { date: string; score: number }[] }>();
+      for (const e of data || []) {
+        const bid = e.branch_id;
+        const branchInfo = e.branches as any;
+        if (!branchMap.has(bid)) {
+          branchMap.set(bid, { name: branchInfo?.name || '', nameAr: branchInfo?.name_ar, points: [] });
+        }
+        branchMap.get(bid)!.points.push({
+          date: format(new Date(e.submitted_at || e.created_at), 'dd/MM/yy'),
+          score: Number(e.overall_percentage) || 0,
+        });
+      }
+      return branchMap;
+    },
+  });
+
   const isLoading = branchesLoading || statsLoading || findingStatsLoading || criterionScoresLoading;
 
   // Build findings summary subtitle - show all statuses
