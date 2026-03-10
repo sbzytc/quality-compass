@@ -78,17 +78,19 @@ export function useSubmitFeedback() {
       const totalScore = params.scores.reduce((sum, s) => sum + s.score, 0);
       const overallRating = totalScore / params.scores.length;
 
+      // Generate ID client-side to avoid needing SELECT after insert
+      const feedbackId = crypto.randomUUID();
+
       // Insert feedback
-      const { data: feedback, error: feedbackError } = await supabase
+      const { error: feedbackError } = await supabase
         .from('customer_feedbacks')
         .insert({
+          id: feedbackId,
           branch_id: params.branchId,
           customer_name: params.customerName,
           customer_phone: params.customerPhone,
           overall_rating: overallRating,
-        })
-        .select()
-        .single();
+        });
       if (feedbackError) throw feedbackError;
 
       // Insert scores
