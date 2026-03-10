@@ -182,7 +182,7 @@ export default function CustomerFeedbackPage() {
                 </div>
 
                 <div className="flex justify-center" dir="ltr">
-                  <InputOTP maxLength={4} value={otpValue} onChange={setOtpValue}>
+                  <InputOTP maxLength={4} value={otpValue} onChange={setOtpValue} pattern={REGEXP_ONLY_DIGITS}>
                     <InputOTPGroup>
                       <InputOTPSlot index={0} />
                       <InputOTPSlot index={1} />
