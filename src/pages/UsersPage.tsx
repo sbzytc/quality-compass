@@ -19,6 +19,9 @@ import {
   Eye,
   EyeOff,
   Bot,
+  Star,
+  AlertTriangle,
+  Lightbulb,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -72,6 +75,7 @@ import {
   useUpdateUserRole,
   useAssignBranch,
   useToggleAIAssistant,
+  useToggleFeatureAccess,
   UserWithRole,
 } from '@/hooks/useUsers';
 import { AppRole, useAuth } from '@/contexts/AuthContext';
@@ -111,6 +115,7 @@ export default function UsersPage() {
   const updateRole = useUpdateUserRole();
   const assignBranch = useAssignBranch();
   const toggleAIAssistant = useToggleAIAssistant();
+  const toggleFeatureAccess = useToggleFeatureAccess();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<AppRole | 'all'>('all');
@@ -527,7 +532,6 @@ export default function UsersPage() {
                                   onClick={async () => {
                                     try {
                                       await toggleAIAssistant.mutateAsync({ userId: user.user_id, enabled: !user.ai_assistant_enabled });
-                                      // Refresh own profile if toggling for current user
                                       if (user.user_id === authUser?.id) {
                                         await refreshProfile();
                                       }
@@ -545,6 +549,53 @@ export default function UsersPage() {
                                   {user.ai_assistant_enabled
                                     ? (language === 'ar' ? 'تعطيل المساعد الذكي' : 'Disable AI Assistant')
                                     : (language === 'ar' ? 'تفعيل المساعد الذكي' : 'Enable AI Assistant')
+                                  }
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                {/* Feature access toggles */}
+                                <DropdownMenuItem
+                                  onClick={async () => {
+                                    try {
+                                      await toggleFeatureAccess.mutateAsync({ userId: user.user_id, feature: 'can_view_customer_feedback', enabled: !user.can_view_customer_feedback });
+                                      if (user.user_id === authUser?.id) await refreshProfile();
+                                      toast.success(language === 'ar' ? 'تم التحديث' : 'Updated');
+                                    } catch { toast.error(language === 'ar' ? 'فشل التحديث' : 'Failed'); }
+                                  }}
+                                >
+                                  <Star className="w-4 h-4 me-2" />
+                                  {user.can_view_customer_feedback
+                                    ? (language === 'ar' ? 'إلغاء صلاحية التقييمات' : 'Revoke Feedback Access')
+                                    : (language === 'ar' ? 'منح صلاحية التقييمات' : 'Grant Feedback Access')
+                                  }
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={async () => {
+                                    try {
+                                      await toggleFeatureAccess.mutateAsync({ userId: user.user_id, feature: 'can_view_complaints', enabled: !user.can_view_complaints });
+                                      if (user.user_id === authUser?.id) await refreshProfile();
+                                      toast.success(language === 'ar' ? 'تم التحديث' : 'Updated');
+                                    } catch { toast.error(language === 'ar' ? 'فشل التحديث' : 'Failed'); }
+                                  }}
+                                >
+                                  <AlertTriangle className="w-4 h-4 me-2" />
+                                  {user.can_view_complaints
+                                    ? (language === 'ar' ? 'إلغاء صلاحية الشكاوى' : 'Revoke Complaints Access')
+                                    : (language === 'ar' ? 'منح صلاحية الشكاوى' : 'Grant Complaints Access')
+                                  }
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={async () => {
+                                    try {
+                                      await toggleFeatureAccess.mutateAsync({ userId: user.user_id, feature: 'can_view_suggestions', enabled: !user.can_view_suggestions });
+                                      if (user.user_id === authUser?.id) await refreshProfile();
+                                      toast.success(language === 'ar' ? 'تم التحديث' : 'Updated');
+                                    } catch { toast.error(language === 'ar' ? 'فشل التحديث' : 'Failed'); }
+                                  }}
+                                >
+                                  <Lightbulb className="w-4 h-4 me-2" />
+                                  {user.can_view_suggestions
+                                    ? (language === 'ar' ? 'إلغاء صلاحية الاقتراحات' : 'Revoke Suggestions Access')
+                                    : (language === 'ar' ? 'منح صلاحية الاقتراحات' : 'Grant Suggestions Access')
                                   }
                                 </DropdownMenuItem>
                               </>

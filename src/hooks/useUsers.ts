@@ -13,6 +13,9 @@ export interface UserWithRole {
   region_id?: string;
   is_active: boolean;
   ai_assistant_enabled: boolean;
+  can_view_customer_feedback: boolean;
+  can_view_complaints: boolean;
+  can_view_suggestions: boolean;
   created_at: string;
   roles: AppRole[];
 }
@@ -55,6 +58,9 @@ export function useUsers() {
         region_id: p.region_id,
         is_active: p.is_active,
         ai_assistant_enabled: p.ai_assistant_enabled ?? false,
+        can_view_customer_feedback: (p as any).can_view_customer_feedback ?? false,
+        can_view_complaints: (p as any).can_view_complaints ?? false,
+        can_view_suggestions: (p as any).can_view_suggestions ?? false,
         created_at: p.created_at,
         roles: rolesByUser.get(p.user_id) || [],
       })) as UserWithRole[];
@@ -225,6 +231,24 @@ export function useToggleAIAssistant() {
       const { error } = await supabase
         .from('profiles')
         .update({ ai_assistant_enabled: enabled } as any)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+  });
+}
+
+export function useToggleFeatureAccess() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ userId, feature, enabled }: { userId: string; feature: 'can_view_customer_feedback' | 'can_view_complaints' | 'can_view_suggestions'; enabled: boolean }) => {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ [feature]: enabled } as any)
         .eq('user_id', userId);
 
       if (error) throw error;

@@ -761,6 +761,9 @@ export type Database = {
           ai_assistant_enabled: boolean
           avatar_url: string | null
           branch_id: string | null
+          can_view_complaints: boolean
+          can_view_customer_feedback: boolean
+          can_view_suggestions: boolean
           created_at: string
           email: string
           force_password_change: boolean
@@ -776,6 +779,9 @@ export type Database = {
           ai_assistant_enabled?: boolean
           avatar_url?: string | null
           branch_id?: string | null
+          can_view_complaints?: boolean
+          can_view_customer_feedback?: boolean
+          can_view_suggestions?: boolean
           created_at?: string
           email: string
           force_password_change?: boolean
@@ -791,6 +797,9 @@ export type Database = {
           ai_assistant_enabled?: boolean
           avatar_url?: string | null
           branch_id?: string | null
+          can_view_complaints?: boolean
+          can_view_customer_feedback?: boolean
+          can_view_suggestions?: boolean
           created_at?: string
           email?: string
           force_password_change?: boolean

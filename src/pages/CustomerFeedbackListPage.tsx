@@ -112,6 +112,17 @@ export default function CustomerFeedbackListPage() {
     );
   };
 
+  // Check access
+  const canView = roles.includes('admin') || profile?.can_view_customer_feedback;
+
+  if (!canView) {
+    return (
+      <div className="p-6 text-center" dir={direction}>
+        <p className="text-muted-foreground">{isAr ? 'ليس لديك صلاحية الوصول لهذه الصفحة' : 'You do not have access to this page'}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 space-y-6" dir={direction}>
       {/* Header */}

@@ -35,6 +35,8 @@ export default function CustomerComplaintsPage() {
   const [resolveOpen, setResolveOpen] = useState(false);
   const [resolveNotes, setResolveNotes] = useState('');
 
+  const canViewComplaints = isAdmin || profile?.can_view_complaints;
+  const canViewSuggestions = isAdmin || profile?.can_view_suggestions;
   const branchFilter = selectedBranch !== 'all' ? selectedBranch :
     (isBranchManager && !isAdmin ? profile?.branch_id || undefined : undefined);
 
@@ -42,6 +44,15 @@ export default function CustomerComplaintsPage() {
   const { data: branches } = useBranches();
   const { data: users } = useUsers();
   const updateMutation = useUpdateComplaint();
+
+  // Access check after all hooks
+  if (!canViewComplaints && !canViewSuggestions) {
+    return (
+      <div className="p-6 text-center" dir={direction}>
+        <p className="text-muted-foreground">{isAr ? 'ليس لديك صلاحية الوصول لهذه الصفحة' : 'You do not have access to this page'}</p>
+      </div>
+    );
+  }
 
   const showBranchFilter = isAdmin || roles.includes('executive');
 
@@ -286,17 +297,21 @@ export default function CustomerComplaintsPage() {
 
       {/* Main Tabs: Complaints vs Suggestions */}
       <Tabs value={activeType} onValueChange={(v) => { setActiveType(v); setActiveStatus('all'); }}>
-        <TabsList className="grid w-full grid-cols-2 max-w-md">
-          <TabsTrigger value="complaints" className="gap-2">
-            <AlertCircle className="w-4 h-4" />
-            {isAr ? 'الشكاوى' : 'Complaints'}
-            <Badge variant="secondary" className="text-xs">{complaintsOnly.length}</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="suggestions" className="gap-2">
-            <Lightbulb className="w-4 h-4" />
-            {isAr ? 'الاقتراحات' : 'Suggestions'}
-            <Badge variant="secondary" className="text-xs">{suggestionsOnly.length}</Badge>
-          </TabsTrigger>
+        <TabsList className={`grid w-full max-w-md ${canViewComplaints && canViewSuggestions ? 'grid-cols-2' : 'grid-cols-1'}`}>
+          {canViewComplaints && (
+            <TabsTrigger value="complaints" className="gap-2">
+              <AlertCircle className="w-4 h-4" />
+              {isAr ? 'الشكاوى' : 'Complaints'}
+              <Badge variant="secondary" className="text-xs">{complaintsOnly.length}</Badge>
+            </TabsTrigger>
+          )}
+          {canViewSuggestions && (
+            <TabsTrigger value="suggestions" className="gap-2">
+              <Lightbulb className="w-4 h-4" />
+              {isAr ? 'الاقتراحات' : 'Suggestions'}
+              <Badge variant="secondary" className="text-xs">{suggestionsOnly.length}</Badge>
+            </TabsTrigger>
+          )}
         </TabsList>
 
         {/* Status filter */}
