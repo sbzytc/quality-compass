@@ -120,6 +120,29 @@ export default function ReportsPage() {
     return +(current - previous).toFixed(1);
   };
 
+  const handleExportReport = () => {
+    if (!buildPeriodData.length) {
+      toast.error(isAr ? 'لا توجد بيانات للتصدير' : 'No data to export');
+      return;
+    }
+    const periodLabels = buildPeriodData[0]?.periods.map(p => p.label) || [];
+    const headers = [
+      isAr ? 'الفرع' : 'Branch',
+      ...periodLabels,
+      isAr ? 'الاتجاه' : 'Trend',
+    ];
+    const rows = buildPeriodData.map(branch => {
+      const trend = getTrend(branch.periods);
+      return [
+        branch.branchName,
+        ...branch.periods.map(p => p.score !== null ? `${p.score}%` : '—'),
+        trend !== null ? `${trend > 0 ? '+' : ''}${trend}%` : '—',
+      ];
+    });
+    exportToExcel(headers, rows, `${isAr ? 'تقرير-الأداء' : 'performance-report'}-${activeTab}-${format(new Date(), 'yyyy-MM-dd')}`);
+    toast.success(isAr ? 'تم التصدير بنجاح' : 'Exported successfully');
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
