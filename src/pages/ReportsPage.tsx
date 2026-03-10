@@ -150,16 +150,22 @@ export default function ReportsPage() {
           <h1 className="text-3xl font-bold text-foreground">{isAr ? 'التقارير والمقارنات' : 'Reports & Comparisons'}</h1>
           <p className="text-muted-foreground mt-1">{isAr ? 'مقارنة أداء الفروع عبر الفترات' : 'Compare branch performance across periods'}</p>
         </div>
-        <Select value={String(periodsToShow)} onValueChange={v => setPeriodsToShow(Number(v))}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="3">{isAr ? '3 فترات' : '3 periods'}</SelectItem>
-            <SelectItem value="4">{isAr ? '4 فترات' : '4 periods'}</SelectItem>
-            <SelectItem value="6">{isAr ? '6 فترات' : '6 periods'}</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleExportReport}>
+            <Download className="w-4 h-4 me-1" />
+            {isAr ? 'تصدير Excel' : 'Export Excel'}
+          </Button>
+          <Select value={String(periodsToShow)} onValueChange={v => setPeriodsToShow(Number(v))}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="3">{isAr ? '3 فترات' : '3 periods'}</SelectItem>
+              <SelectItem value="4">{isAr ? '4 فترات' : '4 periods'}</SelectItem>
+              <SelectItem value="6">{isAr ? '6 فترات' : '6 periods'}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={v => setActiveTab(v as PeriodTab)}>
