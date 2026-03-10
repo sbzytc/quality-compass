@@ -45,6 +45,15 @@ export default function CustomerComplaintsPage() {
   const { data: users } = useUsers();
   const updateMutation = useUpdateComplaint();
 
+  // Access check after all hooks
+  if (!canViewComplaints && !canViewSuggestions) {
+    return (
+      <div className="p-6 text-center" dir={direction}>
+        <p className="text-muted-foreground">{isAr ? 'ليس لديك صلاحية الوصول لهذه الصفحة' : 'You do not have access to this page'}</p>
+      </div>
+    );
+  }
+
   const showBranchFilter = isAdmin || roles.includes('executive');
 
   const complaintsOnly = complaints?.filter(c => c.type === 'complaint') || [];
