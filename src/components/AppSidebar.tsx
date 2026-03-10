@@ -30,6 +30,7 @@ import {
   Sparkles,
   Star,
   MessageSquareMore,
+  ScrollText,
 } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -245,6 +246,12 @@ export function AppSidebar() {
       labelKey: 'nav.settings', 
       icon: Settings, 
       path: '/settings' 
+    },
+    {
+      labelKey: 'nav.systemLogs',
+      icon: ScrollText,
+      path: '/system-logs',
+      allowedRoles: ['admin'] as AppRole[]
     },
   ] as NavItem[]).filter(item => !item.allowedRoles || item.allowedRoles.some(role => roles.includes(role)));
 

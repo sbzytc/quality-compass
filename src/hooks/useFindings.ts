@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLogAction } from '@/hooks/useSystemLogs';
 
 export interface Finding {
   id: string;
@@ -208,6 +209,7 @@ export function useFindingStats() {
 export function useAssignFinding() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const logAction = useLogAction();
 
   return useMutation({
     mutationFn: async ({ findingId, assignedTo, dueDate }: { findingId: string; assignedTo: string; dueDate: string }) => {
@@ -257,6 +259,9 @@ export function useAssignFinding() {
         reference_type: 'finding',
         reference_id: findingId,
       });
+
+      // System log
+      await logAction('assigned', 'finding', findingId, { assignedTo, dueDate });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['findings'] });
@@ -276,6 +281,7 @@ export function useAssignFinding() {
 export function useResolveFinding() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const logAction = useLogAction();
 
   return useMutation({
     mutationFn: async ({ findingId, assessorId, resolution, attachments, resolvedByManager, branchManagerId }: { 
@@ -366,6 +372,10 @@ export function useResolveFinding() {
           });
         }
       }
+
+      // System log
+      const statusDesc = resolvedByManager ? 'resolved_by_manager' : 'resolved_by_employee';
+      await logAction('resolved', 'finding', findingId, { resolution, resolvedByManager, status: statusDesc });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['findings'] });
@@ -384,6 +394,7 @@ export function useResolveFinding() {
 export function useManagerApproveFinding() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const logAction = useLogAction();
 
   return useMutation({
     mutationFn: async ({ findingId, assessorId, notes, attachments }: { 
@@ -419,6 +430,8 @@ export function useManagerApproveFinding() {
           reference_id: findingId,
         });
       }
+
+      await logAction('manager_approved', 'finding', findingId, { notes });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['findings'] });
@@ -435,6 +448,7 @@ export function useManagerApproveFinding() {
 export function useManagerRejectFinding() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const logAction = useLogAction();
 
   return useMutation({
     mutationFn: async ({ findingId, reason, attachments, assignedTo }: { 
@@ -478,6 +492,8 @@ export function useManagerRejectFinding() {
           reference_id: findingId,
         });
       }
+
+      await logAction('manager_rejected', 'finding', findingId, { reason });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['findings'] });
@@ -494,6 +510,7 @@ export function useManagerRejectFinding() {
 export function useApproveFinding() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const logAction = useLogAction();
 
   return useMutation({
     mutationFn: async ({ findingId, notes, attachments }: { findingId: string; notes?: string; attachments?: string[] }) => {
@@ -533,6 +550,8 @@ export function useApproveFinding() {
           completed_at: new Date().toISOString(),
         }).eq('id', existingCA[0].id);
       }
+
+      await logAction('approved', 'finding', findingId, { notes });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['findings'] });
@@ -551,6 +570,7 @@ export function useApproveFinding() {
 export function useRejectFinding() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const logAction = useLogAction();
 
   return useMutation({
     mutationFn: async ({ findingId, reason, attachments, assignedTo, branchManagerId }: { 
@@ -609,6 +629,8 @@ export function useRejectFinding() {
           reference_id: findingId,
         });
       }
+
+      await logAction('rejected', 'finding', findingId, { reason });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['findings'] });

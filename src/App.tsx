@@ -37,6 +37,7 @@ import AIAssistantPage from "@/pages/AIAssistantPage";
 import CustomerFeedbackPage from "@/pages/CustomerFeedbackPage";
 import CustomerFeedbackListPage from "@/pages/CustomerFeedbackListPage";
 import CustomerComplaintsPage from "@/pages/CustomerComplaintsPage";
+import SystemLogsPage from "@/pages/SystemLogsPage";
 
 const queryClient = new QueryClient();
 
@@ -186,6 +187,13 @@ const AppRoutes = () => (
       
       {/* Settings - All authenticated users */}
       <Route path="/settings" element={<SettingsPage />} />
+
+      {/* System Logs - Admin only */}
+      <Route path="/system-logs" element={
+        <ProtectedRoute allowedRoles={['admin']}>
+          <SystemLogsPage />
+        </ProtectedRoute>
+      } />
 
       {/* AI Assistant - All authenticated users */}
       <Route path="/assistant" element={<AIAssistantPage />} />
