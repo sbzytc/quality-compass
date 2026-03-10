@@ -195,6 +195,24 @@ export function AppSidebar() {
       ]
     },
     {
+      labelKey: 'nav.customerFeedback',
+      icon: Star,
+      path: '/customer-feedback',
+      allowedRoles: ['admin', 'executive', 'branch_manager', 'assessor'] as AppRole[],
+      children: [
+        {
+          labelKey: 'nav.customerFeedback.ratings',
+          icon: Star,
+          path: '/customer-feedback',
+        },
+        {
+          labelKey: 'nav.customerFeedback.complaints',
+          icon: MessageSquareMore,
+          path: '/customer-complaints',
+        },
+      ]
+    },
+    {
       labelKey: 'nav.assistant',
       icon: Sparkles,
       path: '/assistant',
