@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Building2, TrendingUp, AlertTriangle, CheckCircle2, Clock, ShieldCheck } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, Legend } from 'recharts';
 import { QualityCircle } from '@/components/QualityCircle';
 import { StatCard } from '@/components/StatCard';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -71,6 +71,34 @@ export default function CEODashboard() {
         evaluatedBranches: uniqueBranchesEvaluated.size,
         totalSubmissions: submittedEvals?.length || 0,
       };
+    },
+  });
+
+  // Fetch performance trend per branch over time
+  const { data: branchTrendData } = useQuery({
+    queryKey: ['branch-performance-trends-all'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('evaluations')
+        .select('branch_id, overall_percentage, submitted_at, created_at, branches!inner(name, name_ar)')
+        .in('status', ['submitted', 'approved'])
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+
+      // Group by branch
+      const branchMap = new Map<string, { name: string; nameAr?: string; points: { date: string; score: number }[] }>();
+      for (const e of data || []) {
+        const bid = e.branch_id;
+        const branchInfo = e.branches as any;
+        if (!branchMap.has(bid)) {
+          branchMap.set(bid, { name: branchInfo?.name || '', nameAr: branchInfo?.name_ar, points: [] });
+        }
+        branchMap.get(bid)!.points.push({
+          date: format(new Date(e.submitted_at || e.created_at), 'dd/MM/yy'),
+          score: Number(e.overall_percentage) || 0,
+        });
+      }
+      return branchMap;
     },
   });
 
@@ -617,6 +645,77 @@ export default function CEODashboard() {
           </>
         )}
       </div>
+
+      {/* Performance Trend Over Time - All Branches */}
+      {branchTrendData && branchTrendData.size > 0 && (() => {
+        // Build unified timeline
+        const COLORS = ['hsl(var(--primary))', 'hsl(142, 76%, 36%)', 'hsl(45, 93%, 47%)', 'hsl(0, 84%, 50%)', 'hsl(280, 60%, 50%)', 'hsl(200, 80%, 50%)', 'hsl(30, 80%, 50%)', 'hsl(160, 60%, 40%)'];
+        const branchEntries = Array.from(branchTrendData.entries()).filter(([, v]) => v.points.length >= 2);
+        if (branchEntries.length === 0) return null;
+
+        // Merge all dates
+        const allDates = new Set<string>();
+        branchEntries.forEach(([, v]) => v.points.forEach(p => allDates.add(p.date)));
+        const sortedDates = Array.from(allDates);
+
+        const chartData = sortedDates.map(date => {
+          const row: any = { date };
+          branchEntries.forEach(([bid, v]) => {
+            const point = v.points.find(p => p.date === date);
+            if (point) row[bid] = point.score;
+          });
+          return row;
+        });
+
+        return (
+          <div className="bg-card rounded-xl border border-border p-6">
+            <h2 className="text-lg font-semibold text-foreground mb-4">
+              <TrendingUp className="w-5 h-5 inline-block me-2 text-primary" />
+              {language === 'ar' ? 'اتجاه الأداء عبر الزمن' : 'Performance Trend Over Time'}
+            </h2>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+                  <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px',
+                      fontSize: '12px',
+                    }}
+                    formatter={(value: number, name: string) => {
+                      const branch = branchTrendData.get(name);
+                      const label = language === 'ar' ? (branch?.nameAr || branch?.name || name) : (branch?.name || name);
+                      return [`${value}%`, label];
+                    }}
+                  />
+                  <Legend
+                    formatter={(value: string) => {
+                      const branch = branchTrendData.get(value);
+                      return language === 'ar' ? (branch?.nameAr || branch?.name || value) : (branch?.name || value);
+                    }}
+                    wrapperStyle={{ fontSize: '11px' }}
+                  />
+                  {branchEntries.map(([bid], idx) => (
+                    <Line
+                      key={bid}
+                      type="monotone"
+                      dataKey={bid}
+                      stroke={COLORS[idx % COLORS.length]}
+                      strokeWidth={2}
+                      dot={{ r: 3 }}
+                      connectNulls
+                    />
+                  ))}
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Branch Circles Grid */}
       <div className="bg-card rounded-xl border border-border p-6">

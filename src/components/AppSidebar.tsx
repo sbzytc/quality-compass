@@ -31,6 +31,7 @@ import {
   Star,
   MessageSquareMore,
   ScrollText,
+  Repeat,
 } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -152,6 +153,12 @@ export function AppSidebar() {
       icon: AlertTriangle, 
       path: '/findings', 
       badge: openFindingsCount > 0 ? openFindingsCount : undefined 
+    },
+    {
+      labelKey: 'nav.recurringProblems',
+      icon: Repeat,
+      path: '/recurring-problems',
+      allowedRoles: ['admin', 'executive', 'branch_manager'] as AppRole[],
     },
     { 
       labelKey: 'nav.correctiveActions', 

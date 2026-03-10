@@ -38,6 +38,7 @@ import CustomerFeedbackPage from "@/pages/CustomerFeedbackPage";
 import CustomerFeedbackListPage from "@/pages/CustomerFeedbackListPage";
 import CustomerComplaintsPage from "@/pages/CustomerComplaintsPage";
 import SystemLogsPage from "@/pages/SystemLogsPage";
+import RecurringProblemsPage from "@/pages/RecurringProblemsPage";
 
 const queryClient = new QueryClient();
 
@@ -162,6 +163,13 @@ const AppRoutes = () => (
 
       {/* Findings - All authenticated users */}
       <Route path="/findings" element={<FindingsPage />} />
+      
+      {/* Recurring Problems - Branch Manager, Admin, Executive */}
+      <Route path="/recurring-problems" element={
+        <ProtectedRoute allowedRoles={['admin', 'executive', 'branch_manager']}>
+          <RecurringProblemsPage />
+        </ProtectedRoute>
+      } />
       
       {/* Corrective Actions - All authenticated users */}
       <Route path="/corrective-actions" element={<CorrectiveActionsPage />} />

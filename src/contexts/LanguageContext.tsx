@@ -33,6 +33,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.templates': 'Templates',
     'nav.settings': 'Settings',
     'nav.systemLogs': 'System Logs',
+    'nav.recurringProblems': 'Recurring Problems',
     
     // CEO Dashboard
     'dashboard.ceo.title': 'Executive Dashboard',
@@ -248,6 +249,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.templates': 'القوالب',
     'nav.settings': 'الإعدادات',
     'nav.systemLogs': 'سجل النظام',
+    'nav.recurringProblems': 'المشاكل المتكررة',
     
     // CEO Dashboard
     'dashboard.ceo.title': 'لوحة التحكم التنفيذية',
