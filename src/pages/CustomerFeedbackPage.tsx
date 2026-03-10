@@ -262,17 +262,32 @@ export default function CustomerFeedbackPage() {
                   <div className="w-14 h-14 rounded-full bg-[hsl(214,65%,28%)]/10 flex items-center justify-center mx-auto mb-3">
                     <MessageSquare className="w-7 h-7 text-[hsl(214,65%,28%)]" />
                   </div>
-                  <h2 className="text-lg font-bold text-foreground">شكوى أو اقتراح</h2>
+                  <h2 className="text-lg font-bold text-foreground">ملاحظات إضافية</h2>
                   <p className="text-sm text-muted-foreground mt-1">هل لديك شكوى أو اقتراح تود مشاركته؟ (اختياري)</p>
                 </div>
 
-                <Textarea
-                  placeholder="اكتب شكواك أو اقتراحك هنا..."
-                  value={complaintText}
-                  onChange={e => setComplaintText(e.target.value)}
-                  rows={4}
-                  className="text-right resize-none"
-                />
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5 text-red-600">🔴 شكوى</label>
+                    <Textarea
+                      placeholder="اكتب شكواك هنا إن وجدت..."
+                      value={complaintText}
+                      onChange={e => setComplaintText(e.target.value)}
+                      rows={3}
+                      className="text-right resize-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5 text-emerald-600">💡 اقتراح</label>
+                    <Textarea
+                      placeholder="اكتب اقتراحك هنا إن وجد..."
+                      value={suggestionText}
+                      onChange={e => setSuggestionText(e.target.value)}
+                      rows={3}
+                      className="text-right resize-none"
+                    />
+                  </div>
+                </div>
 
                 <div className="flex gap-3">
                   <Button variant="outline" onClick={() => setStep('rating')} className="flex-1">
