@@ -394,6 +394,7 @@ export function useResolveFinding() {
 export function useManagerApproveFinding() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const logAction = useLogAction();
 
   return useMutation({
     mutationFn: async ({ findingId, assessorId, notes, attachments }: { 
