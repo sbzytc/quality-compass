@@ -49,6 +49,59 @@ export default function CustomerFeedbackListPage() {
     setDetailOpen(true);
   };
 
+  const handleExportFeedbacks = async () => {
+    if (!feedbacks?.length) {
+      toast.error(isAr ? 'لا توجد بيانات للتصدير' : 'No data to export');
+      return;
+    }
+    // Fetch all scores with questions for export
+    const feedbackIds = feedbacks.map(f => f.id);
+    const { data: allScores } = await supabase
+      .from('customer_feedback_scores')
+      .select('feedback_id, score, question:customer_feedback_questions(question_text, question_text_ar)')
+      .in('feedback_id', feedbackIds);
+
+    // Get unique questions
+    const questionsMap = new Map<string, string>();
+    allScores?.forEach((s: any) => {
+      const qText = isAr ? (s.question?.question_text_ar || s.question?.question_text) : s.question?.question_text;
+      if (qText && !questionsMap.has(s.question?.question_text)) {
+        questionsMap.set(s.question?.question_text, qText);
+      }
+    });
+    const questionKeys = Array.from(questionsMap.keys());
+    const questionLabels = Array.from(questionsMap.values());
+
+    const headers = [
+      isAr ? 'التاريخ' : 'Date',
+      isAr ? 'العميل' : 'Customer',
+      isAr ? 'الجوال' : 'Phone',
+      isAr ? 'الفرع' : 'Branch',
+      isAr ? 'التقييم العام' : 'Overall Rating',
+      ...questionLabels,
+    ];
+
+    const rows = feedbacks.map(fb => {
+      const fbScores = allScores?.filter((s: any) => s.feedback_id === fb.id) || [];
+      const scoreMap = new Map<string, number>();
+      fbScores.forEach((s: any) => {
+        scoreMap.set(s.question?.question_text, s.score);
+      });
+
+      return [
+        format(new Date(fb.created_at), 'dd/MM/yyyy HH:mm'),
+        fb.customer_name,
+        fb.customer_phone,
+        isAr ? (fb.branch?.name_ar || fb.branch?.name || '') : (fb.branch?.name || ''),
+        fb.overall_rating?.toFixed(1) || '',
+        ...questionKeys.map(q => scoreMap.get(q) ?? ''),
+      ];
+    });
+
+    exportToExcel(headers, rows, `${isAr ? 'تقييمات-العملاء' : 'customer-feedback'}-${format(new Date(), 'yyyy-MM-dd')}`);
+    toast.success(isAr ? 'تم التصدير بنجاح' : 'Exported successfully');
+  };
+
   const renderStars = (rating: number) => {
     return (
       <div className="flex gap-0.5" dir="ltr">
