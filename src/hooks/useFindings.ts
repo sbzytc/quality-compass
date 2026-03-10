@@ -281,6 +281,7 @@ export function useAssignFinding() {
 export function useResolveFinding() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const logAction = useLogAction();
 
   return useMutation({
     mutationFn: async ({ findingId, assessorId, resolution, attachments, resolvedByManager, branchManagerId }: { 
