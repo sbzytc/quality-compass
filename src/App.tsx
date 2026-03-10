@@ -164,6 +164,13 @@ const AppRoutes = () => (
       {/* Findings - All authenticated users */}
       <Route path="/findings" element={<FindingsPage />} />
       
+      {/* Recurring Problems - Branch Manager, Admin, Executive */}
+      <Route path="/recurring-problems" element={
+        <ProtectedRoute allowedRoles={['admin', 'executive', 'branch_manager']}>
+          <RecurringProblemsPage />
+        </ProtectedRoute>
+      } />
+      
       {/* Corrective Actions - All authenticated users */}
       <Route path="/corrective-actions" element={<CorrectiveActionsPage />} />
       
