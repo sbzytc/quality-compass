@@ -37,6 +37,7 @@ import AIAssistantPage from "@/pages/AIAssistantPage";
 import CustomerFeedbackPage from "@/pages/CustomerFeedbackPage";
 import CustomerFeedbackListPage from "@/pages/CustomerFeedbackListPage";
 import CustomerComplaintsPage from "@/pages/CustomerComplaintsPage";
+import SystemLogsPage from "@/pages/SystemLogsPage";
 
 const queryClient = new QueryClient();
 
