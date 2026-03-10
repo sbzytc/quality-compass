@@ -616,13 +616,27 @@ export default function FindingsPage() {
                                     </p>
                                   )}
 
-                                  {/* Show resolved by indicator */}
+                                  {/* Show resolved by indicator + resolution time */}
                                   {finding.resolvedBy && (finding.status === 'pending_manager_review' || finding.status === 'pending_review' || finding.status === 'resolved') && (
-                                    <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                                    <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
                                       <CheckCircle2 className="w-3 h-3 text-score-excellent" />
                                       <span>{isAr ? 'حُل بواسطة:' : 'Resolved by:'} <span className="font-medium text-foreground">{getUserName(finding.resolvedBy)}</span></span>
                                       {finding.resolvedAt && (
-                                        <span>• {format(new Date(finding.resolvedAt), 'MMM d, yyyy')}</span>
+                                        <>
+                                          <span>• {format(new Date(finding.resolvedAt), 'MMM d, yyyy')}</span>
+                                          <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium">
+                                            <Timer className="w-3 h-3 inline me-0.5" />
+                                            {(() => {
+                                              const created = new Date(finding.createdAt).getTime();
+                                              const resolved = new Date(finding.resolvedAt).getTime();
+                                              const diffMs = resolved - created;
+                                              const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+                                              const diffDays = Math.floor(diffHours / 24);
+                                              if (diffDays > 0) return `${diffDays} ${isAr ? 'يوم' : 'd'} ${diffHours % 24} ${isAr ? 'ساعة' : 'h'}`;
+                                              return `${diffHours} ${isAr ? 'ساعة' : 'h'}`;
+                                            })()}
+                                          </span>
+                                        </>
                                       )}
                                     </div>
                                   )}

@@ -248,27 +248,81 @@ export default function BranchManagerDashboard() {
         </div>
       </div>
 
-      {/* Score Trend - only show when there's a previous evaluation to compare */}
-      {scoreDiff !== null && (
-        <div className="bg-card rounded-xl border border-border p-6">
-          <h2 className="text-lg font-semibold text-foreground mb-4">{t('dashboard.scoreTrend')}</h2>
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              {scoreDiff >= 0 ? (
-                <TrendingUp className="w-5 h-5 text-score-good" />
-              ) : (
-                <TrendingDown className="w-5 h-5 text-score-critical" />
-              )}
-              <span className={`text-lg font-bold ${scoreDiff >= 0 ? 'text-score-good' : 'text-score-critical'}`}>
-                {scoreDiff >= 0 ? '+' : ''}{scoreDiff}%
-              </span>
-              <span className="text-sm text-muted-foreground">
-                {isAr ? 'مقارنة بالتقييم السابق' : 'vs previous evaluation'}
-              </span>
-            </div>
+      {/* Performance Trend Over Time */}
+      <PerformanceTrendChart branchId={branchId!} isAr={isAr} />
+
+      {/* Quick Link to Recurring Problems */}
+      <Card
+        className="p-4 cursor-pointer hover:shadow-md transition-shadow border-score-average/20 bg-score-average/5"
+        onClick={() => navigate('/recurring-problems')}
+      >
+        <div className="flex items-center gap-3">
+          <Repeat className="w-6 h-6 text-score-average" />
+          <div>
+            <h3 className="font-semibold text-foreground">{isAr ? 'المشاكل المتكررة' : 'Recurring Problems'}</h3>
+            <p className="text-sm text-muted-foreground">{isAr ? 'عرض المعايير الأكثر تكراراً في الملاحظات' : 'View most frequently recurring criteria in findings'}</p>
           </div>
         </div>
-      )}
+      </Card>
+    </div>
+  );
+}
+
+function PerformanceTrendChart({ branchId, isAr }: { branchId: string; isAr: boolean }) {
+  const { data: trendData, isLoading } = useQuery({
+    queryKey: ['branch-performance-trend', branchId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('evaluations')
+        .select('overall_percentage, submitted_at, created_at')
+        .eq('branch_id', branchId)
+        .in('status', ['submitted', 'approved'])
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      return (data || []).map((e, i) => ({
+        date: format(new Date(e.submitted_at || e.created_at), 'dd/MM/yy'),
+        score: Number(e.overall_percentage) || 0,
+        index: i + 1,
+      }));
+    },
+    enabled: !!branchId,
+  });
+
+  if (isLoading) return <Skeleton className="h-[250px] rounded-xl" />;
+  if (!trendData || trendData.length < 2) return null;
+
+  return (
+    <div className="bg-card rounded-xl border border-border p-6">
+      <h2 className="text-lg font-semibold text-foreground mb-4">
+        <TrendingUp className="w-5 h-5 inline-block me-2 text-primary" />
+        {isAr ? 'اتجاه الأداء عبر الزمن' : 'Performance Trend Over Time'}
+      </h2>
+      <div className="h-[250px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={trendData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+            <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '8px',
+                fontSize: '12px',
+              }}
+              formatter={(value: number) => [`${value}%`, isAr ? 'النسبة' : 'Score']}
+            />
+            <Line
+              type="monotone"
+              dataKey="score"
+              stroke="hsl(var(--primary))"
+              strokeWidth={2.5}
+              dot={{ r: 4, fill: 'hsl(var(--primary))' }}
+              activeDot={{ r: 6 }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }
