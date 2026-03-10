@@ -112,6 +112,7 @@ export default function UsersPage() {
   const updateRole = useUpdateUserRole();
   const assignBranch = useAssignBranch();
   const toggleAIAssistant = useToggleAIAssistant();
+  const toggleFeatureAccess = useToggleFeatureAccess();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<AppRole | 'all'>('all');
