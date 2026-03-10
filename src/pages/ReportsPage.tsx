@@ -16,6 +16,8 @@ import { cn } from '@/lib/utils';
 import { QualityCircle } from '@/components/QualityCircle';
 import { getScoreLevel } from '@/types';
 import { Progress } from '@/components/ui/progress';
+import { exportToExcel } from '@/lib/exportExcel';
+import { toast } from 'sonner';
 
 type PeriodTab = 'weekly' | 'monthly' | 'yearly';
 
