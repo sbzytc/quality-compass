@@ -28,6 +28,8 @@ import {
   TrendingUp,
   Headset,
   Sparkles,
+  Star,
+  MessageSquareMore,
 } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
