@@ -372,6 +372,10 @@ export function useResolveFinding() {
           });
         }
       }
+
+      // System log
+      const statusDesc = resolvedByManager ? 'resolved_by_manager' : 'resolved_by_employee';
+      await logAction('resolved', 'finding', findingId, { resolution, resolvedByManager, status: statusDesc });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['findings'] });
