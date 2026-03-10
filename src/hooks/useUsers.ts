@@ -58,6 +58,9 @@ export function useUsers() {
         region_id: p.region_id,
         is_active: p.is_active,
         ai_assistant_enabled: p.ai_assistant_enabled ?? false,
+        can_view_customer_feedback: (p as any).can_view_customer_feedback ?? false,
+        can_view_complaints: (p as any).can_view_complaints ?? false,
+        can_view_suggestions: (p as any).can_view_suggestions ?? false,
         created_at: p.created_at,
         roles: rolesByUser.get(p.user_id) || [],
       })) as UserWithRole[];
