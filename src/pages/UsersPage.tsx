@@ -598,7 +598,6 @@ export default function UsersPage() {
                                     : (language === 'ar' ? 'منح صلاحية الاقتراحات' : 'Grant Suggestions Access')
                                   }
                                 </DropdownMenuItem>
-                                </DropdownMenuItem>
                               </>
                             )}
                             <DropdownMenuSeparator />
