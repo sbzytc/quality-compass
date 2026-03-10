@@ -550,6 +550,8 @@ export function useApproveFinding() {
           completed_at: new Date().toISOString(),
         }).eq('id', existingCA[0].id);
       }
+
+      await logAction('approved', 'finding', findingId, { notes });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['findings'] });
