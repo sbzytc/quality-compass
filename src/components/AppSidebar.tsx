@@ -247,6 +247,12 @@ export function AppSidebar() {
       icon: Settings, 
       path: '/settings' 
     },
+    {
+      labelKey: 'nav.systemLogs',
+      icon: ScrollText,
+      path: '/system-logs',
+      allowedRoles: ['admin'] as AppRole[]
+    },
   ] as NavItem[]).filter(item => !item.allowedRoles || item.allowedRoles.some(role => roles.includes(role)));
 
   const toggleExpanded = (path: string) => {
