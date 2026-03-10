@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, Clock, FileSearch, AlertCircle, Building2 } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, Clock, FileSearch, AlertCircle, Building2, Repeat } from 'lucide-react';
 import { QualityCircle } from '@/components/QualityCircle';
 import { StatCard } from '@/components/StatCard';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -15,6 +15,7 @@ import { getScoreLevel } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function BranchManagerDashboard() {
   const navigate = useNavigate();
