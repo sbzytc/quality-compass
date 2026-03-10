@@ -88,6 +88,7 @@ export default function CustomerFeedbackPage() {
           score: scores[q.id] || 3,
         })),
         complaintText: complaintText.trim() || undefined,
+        suggestionText: suggestionText.trim() || undefined,
       });
       setStep('success');
     } catch {
