@@ -247,6 +247,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.users': 'المستخدمين',
     'nav.templates': 'القوالب',
     'nav.settings': 'الإعدادات',
+    'nav.systemLogs': 'سجل النظام',
     
     // CEO Dashboard
     'dashboard.ceo.title': 'لوحة التحكم التنفيذية',
