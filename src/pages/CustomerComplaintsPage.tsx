@@ -27,7 +27,21 @@ export default function CustomerComplaintsPage() {
 
   const [selectedBranch, setSelectedBranch] = useState<string>('all');
   const [activeStatus, setActiveStatus] = useState<string>('all');
-  const [activeType, setActiveType] = useState<string>('complaints');
+  const canViewComplaints = isAdmin || profile?.can_view_complaints;
+  const canViewSuggestions = isAdmin || profile?.can_view_suggestions;
+
+  // If user has neither permission, show no access
+  if (!canViewComplaints && !canViewSuggestions) {
+    return (
+      <div className="p-6 text-center" dir={direction}>
+        <p className="text-muted-foreground">{isAr ? 'ليس لديك صلاحية الوصول لهذه الصفحة' : 'You do not have access to this page'}</p>
+      </div>
+    );
+  }
+
+  // Default to the first available tab
+  const defaultType = canViewComplaints ? 'complaints' : 'suggestions';
+  const [activeType, setActiveType] = useState<string>(defaultType);
   const [viewComplaint, setViewComplaint] = useState<CustomerComplaint | null>(null);
   const [viewOpen, setViewOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);

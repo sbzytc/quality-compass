@@ -194,24 +194,33 @@ export function AppSidebar() {
         ] : [])
       ]
     },
-    {
-      labelKey: 'nav.customerFeedback',
-      icon: Star,
-      path: '/customer-feedback',
-      allowedRoles: ['admin', 'executive', 'branch_manager', 'assessor'] as AppRole[],
-      children: [
-        {
+    // Customer Voice section - only show items user has access to
+    ...(() => {
+      const feedbackChildren: NavItem[] = [];
+      if (isAdmin || profile?.can_view_customer_feedback) {
+        feedbackChildren.push({
           labelKey: 'nav.customerFeedback.ratings',
           icon: Star,
           path: '/customer-feedback',
-        },
-        {
+        });
+      }
+      if (isAdmin || profile?.can_view_complaints || profile?.can_view_suggestions) {
+        feedbackChildren.push({
           labelKey: 'nav.customerFeedback.complaints',
           icon: MessageSquareMore,
           path: '/customer-complaints',
-        },
-      ]
-    },
+        });
+      }
+      if (feedbackChildren.length > 0) {
+        return [{
+          labelKey: 'nav.customerFeedback',
+          icon: Star,
+          path: '/customer-feedback',
+          children: feedbackChildren,
+        }];
+      }
+      return [];
+    })(),
     {
       labelKey: 'nav.assistant',
       icon: Sparkles,
