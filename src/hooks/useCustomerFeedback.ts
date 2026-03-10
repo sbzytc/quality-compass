@@ -72,6 +72,7 @@ export function useSubmitFeedback() {
       customerPhone: string;
       scores: { questionId: string; score: number }[];
       complaintText?: string;
+      suggestionText?: string;
     }) => {
       // Calculate overall rating
       const totalScore = params.scores.reduce((sum, s) => sum + s.score, 0);
@@ -112,6 +113,19 @@ export function useSubmitFeedback() {
             type: 'complaint',
           });
         if (complaintError) throw complaintError;
+      }
+
+      // Insert suggestion if provided
+      if (params.suggestionText?.trim()) {
+        const { error: suggestionError } = await supabase
+          .from('customer_complaints')
+          .insert({
+            feedback_id: feedback.id,
+            branch_id: params.branchId,
+            complaint_text: params.suggestionText.trim(),
+            type: 'suggestion',
+          });
+        if (suggestionError) throw suggestionError;
       }
 
       return feedback;

@@ -22,6 +22,7 @@ export default function CustomerFeedbackPage() {
   const [otpValue, setOtpValue] = useState('');
   const [scores, setScores] = useState<Record<string, number>>({});
   const [complaintText, setComplaintText] = useState('');
+  const [suggestionText, setSuggestionText] = useState('');
   const [branchName, setBranchName] = useState('');
   const [branchNameAr, setBranchNameAr] = useState('');
 
@@ -88,6 +89,7 @@ export default function CustomerFeedbackPage() {
           score: scores[q.id] || 3,
         })),
         complaintText: complaintText.trim() || undefined,
+        suggestionText: suggestionText.trim() || undefined,
       });
       setStep('success');
     } catch {
@@ -107,7 +109,7 @@ export default function CustomerFeedbackPage() {
     <div className="min-h-screen bg-gradient-to-br from-[hsl(214,65%,95%)] to-[hsl(214,65%,88%)]" dir="rtl">
       {/* Header */}
       <div className="bg-[hsl(214,65%,28%)] text-white py-6 px-4 text-center">
-        <img src={rasdahLogo} alt="Rasdah" className="w-14 h-14 mx-auto mb-3 rounded-xl" />
+        <img src={rasdahLogo} alt="Rasdah" className="w-24 h-24 mx-auto mb-3 rounded-xl" />
         <h1 className="text-xl font-bold">تقييم العملاء</h1>
         <p className="text-sm text-white/70 mt-1">{branchNameAr || branchName}</p>
       </div>
@@ -261,17 +263,32 @@ export default function CustomerFeedbackPage() {
                   <div className="w-14 h-14 rounded-full bg-[hsl(214,65%,28%)]/10 flex items-center justify-center mx-auto mb-3">
                     <MessageSquare className="w-7 h-7 text-[hsl(214,65%,28%)]" />
                   </div>
-                  <h2 className="text-lg font-bold text-foreground">شكوى أو اقتراح</h2>
+                  <h2 className="text-lg font-bold text-foreground">ملاحظات إضافية</h2>
                   <p className="text-sm text-muted-foreground mt-1">هل لديك شكوى أو اقتراح تود مشاركته؟ (اختياري)</p>
                 </div>
 
-                <Textarea
-                  placeholder="اكتب شكواك أو اقتراحك هنا..."
-                  value={complaintText}
-                  onChange={e => setComplaintText(e.target.value)}
-                  rows={4}
-                  className="text-right resize-none"
-                />
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5 text-red-600">🔴 شكوى</label>
+                    <Textarea
+                      placeholder="اكتب شكواك هنا إن وجدت..."
+                      value={complaintText}
+                      onChange={e => setComplaintText(e.target.value)}
+                      rows={3}
+                      className="text-right resize-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5 text-emerald-600">💡 اقتراح</label>
+                    <Textarea
+                      placeholder="اكتب اقتراحك هنا إن وجد..."
+                      value={suggestionText}
+                      onChange={e => setSuggestionText(e.target.value)}
+                      rows={3}
+                      className="text-right resize-none"
+                    />
+                  </div>
+                </div>
 
                 <div className="flex gap-3">
                   <Button variant="outline" onClick={() => setStep('rating')} className="flex-1">
