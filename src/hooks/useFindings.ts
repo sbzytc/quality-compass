@@ -448,6 +448,7 @@ export function useManagerApproveFinding() {
 export function useManagerRejectFinding() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const logAction = useLogAction();
 
   return useMutation({
     mutationFn: async ({ findingId, reason, attachments, assignedTo }: { 
