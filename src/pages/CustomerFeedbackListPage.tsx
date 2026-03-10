@@ -124,6 +124,11 @@ export default function CustomerFeedbackListPage() {
             {isAr ? 'عرض وإدارة تقييمات العملاء' : 'View and manage customer feedback'}
           </p>
         </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleExportFeedbacks}>
+            <Download className="w-4 h-4 me-1" />
+            {isAr ? 'تصدير Excel' : 'Export Excel'}
+          </Button>
         {showBranchFilter && (
           <Select value={selectedBranch} onValueChange={setSelectedBranch}>
             <SelectTrigger className="w-[200px]">
