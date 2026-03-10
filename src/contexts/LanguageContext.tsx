@@ -147,7 +147,12 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.support.myTickets': 'My Tickets',
     'nav.support.archived': 'Archived Tickets',
 
-    // AI Assistant
+    // Customer Feedback
+    'nav.customerFeedback': 'Customer Voice',
+    'nav.customerFeedback.ratings': 'Customer Ratings',
+    'nav.customerFeedback.complaints': 'Complaints & Suggestions',
+
+
     'nav.assistant': 'AI Assistant',
 
     // Settings
@@ -356,7 +361,12 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.support.myTickets': 'تذاكري',
     'nav.support.archived': 'الأرشيف',
 
-    // AI Assistant
+    // Customer Feedback
+    'nav.customerFeedback': 'صوت العميل',
+    'nav.customerFeedback.ratings': 'تقييمات العملاء',
+    'nav.customerFeedback.complaints': 'شكاوى واقتراحات',
+
+
     'nav.assistant': 'المساعد الذكي',
 
     // Settings

@@ -34,6 +34,9 @@ import SupportDashboard from "@/pages/support/SupportDashboard";
 import MyTickets from "@/pages/support/MyTickets";
 import ArchivedTickets from "@/pages/support/ArchivedTickets";
 import AIAssistantPage from "@/pages/AIAssistantPage";
+import CustomerFeedbackPage from "@/pages/CustomerFeedbackPage";
+import CustomerFeedbackListPage from "@/pages/CustomerFeedbackListPage";
+import CustomerComplaintsPage from "@/pages/CustomerComplaintsPage";
 
 const queryClient = new QueryClient();
 
@@ -50,9 +53,9 @@ function DefaultRedirect() {
 
 const AppRoutes = () => (
   <Routes>
-    {/* Public route */}
+    {/* Public routes */}
     <Route path="/login" element={<LoginPage />} />
-    
+    <Route path="/feedback/:branchId" element={<CustomerFeedbackPage />} />
     {/* Protected routes */}
     <Route element={
       <ProtectedRoute>
@@ -199,6 +202,18 @@ const AppRoutes = () => (
         </ProtectedRoute>
       } />
       <Route path="/support/my-tickets" element={<MyTickets />} />
+
+      {/* Customer Feedback - Admin, Executive, Branch Manager, Assessor */}
+      <Route path="/customer-feedback" element={
+        <ProtectedRoute allowedRoles={['admin', 'executive', 'branch_manager', 'assessor']}>
+          <CustomerFeedbackListPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/customer-complaints" element={
+        <ProtectedRoute allowedRoles={['admin', 'executive', 'branch_manager', 'assessor']}>
+          <CustomerComplaintsPage />
+        </ProtectedRoute>
+      } />
     </Route>
     
     <Route path="*" element={<NotFound />} />

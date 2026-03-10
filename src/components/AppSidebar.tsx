@@ -28,6 +28,8 @@ import {
   TrendingUp,
   Headset,
   Sparkles,
+  Star,
+  MessageSquareMore,
 } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -190,6 +192,24 @@ export function AppSidebar() {
             path: '/support/archived',
           }
         ] : [])
+      ]
+    },
+    {
+      labelKey: 'nav.customerFeedback',
+      icon: Star,
+      path: '/customer-feedback',
+      allowedRoles: ['admin', 'executive', 'branch_manager', 'assessor'] as AppRole[],
+      children: [
+        {
+          labelKey: 'nav.customerFeedback.ratings',
+          icon: Star,
+          path: '/customer-feedback',
+        },
+        {
+          labelKey: 'nav.customerFeedback.complaints',
+          icon: MessageSquareMore,
+          path: '/customer-complaints',
+        },
       ]
     },
     {

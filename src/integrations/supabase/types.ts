@@ -111,6 +111,176 @@ export type Database = {
           },
         ]
       }
+      customer_complaints: {
+        Row: {
+          assigned_to: string | null
+          branch_id: string
+          complaint_text: string
+          created_at: string
+          feedback_id: string
+          id: string
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          branch_id: string
+          complaint_text: string
+          created_at?: string
+          feedback_id: string
+          id?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          branch_id?: string
+          complaint_text?: string
+          created_at?: string
+          feedback_id?: string
+          id?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_complaints_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_complaints_feedback_id_fkey"
+            columns: ["feedback_id"]
+            isOneToOne: false
+            referencedRelation: "customer_feedbacks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_feedback_questions: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          question_text: string
+          question_text_ar: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          question_text: string
+          question_text_ar?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          question_text?: string
+          question_text_ar?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      customer_feedback_scores: {
+        Row: {
+          created_at: string
+          feedback_id: string
+          id: string
+          question_id: string
+          score: number
+        }
+        Insert: {
+          created_at?: string
+          feedback_id: string
+          id?: string
+          question_id: string
+          score: number
+        }
+        Update: {
+          created_at?: string
+          feedback_id?: string
+          id?: string
+          question_id?: string
+          score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_feedback_scores_feedback_id_fkey"
+            columns: ["feedback_id"]
+            isOneToOne: false
+            referencedRelation: "customer_feedbacks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_feedback_scores_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "customer_feedback_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_feedbacks: {
+        Row: {
+          branch_id: string
+          created_at: string
+          customer_name: string
+          customer_phone: string
+          id: string
+          overall_rating: number | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          branch_id: string
+          created_at?: string
+          customer_name: string
+          customer_phone: string
+          id?: string
+          overall_rating?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string
+          created_at?: string
+          customer_name?: string
+          customer_phone?: string
+          id?: string
+          overall_rating?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_feedbacks_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       evaluation_category_scores: {
         Row: {
           category_id: string
