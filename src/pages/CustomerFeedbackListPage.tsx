@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Star, MessageSquare, Eye, Calendar, User, Phone, Building2, TrendingUp, BarChart3 } from 'lucide-react';
+import { Star, MessageSquare, Eye, Calendar, User, Phone, Building2, TrendingUp, BarChart3, Download } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,9 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useGoBack } from '@/hooks/useGoBack';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import { exportToExcel } from '@/lib/exportExcel';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function CustomerFeedbackListPage() {
   const { direction, language } = useLanguage();
@@ -46,6 +49,59 @@ export default function CustomerFeedbackListPage() {
     setDetailOpen(true);
   };
 
+  const handleExportFeedbacks = async () => {
+    if (!feedbacks?.length) {
+      toast.error(isAr ? 'لا توجد بيانات للتصدير' : 'No data to export');
+      return;
+    }
+    // Fetch all scores with questions for export
+    const feedbackIds = feedbacks.map(f => f.id);
+    const { data: allScores } = await supabase
+      .from('customer_feedback_scores')
+      .select('feedback_id, score, question:customer_feedback_questions(question_text, question_text_ar)')
+      .in('feedback_id', feedbackIds);
+
+    // Get unique questions
+    const questionsMap = new Map<string, string>();
+    allScores?.forEach((s: any) => {
+      const qText = isAr ? (s.question?.question_text_ar || s.question?.question_text) : s.question?.question_text;
+      if (qText && !questionsMap.has(s.question?.question_text)) {
+        questionsMap.set(s.question?.question_text, qText);
+      }
+    });
+    const questionKeys = Array.from(questionsMap.keys());
+    const questionLabels = Array.from(questionsMap.values());
+
+    const headers = [
+      isAr ? 'التاريخ' : 'Date',
+      isAr ? 'العميل' : 'Customer',
+      isAr ? 'الجوال' : 'Phone',
+      isAr ? 'الفرع' : 'Branch',
+      isAr ? 'التقييم العام' : 'Overall Rating',
+      ...questionLabels,
+    ];
+
+    const rows = feedbacks.map(fb => {
+      const fbScores = allScores?.filter((s: any) => s.feedback_id === fb.id) || [];
+      const scoreMap = new Map<string, number>();
+      fbScores.forEach((s: any) => {
+        scoreMap.set(s.question?.question_text, s.score);
+      });
+
+      return [
+        format(new Date(fb.created_at), 'dd/MM/yyyy HH:mm'),
+        fb.customer_name,
+        fb.customer_phone,
+        isAr ? (fb.branch?.name_ar || fb.branch?.name || '') : (fb.branch?.name || ''),
+        fb.overall_rating?.toFixed(1) || '',
+        ...questionKeys.map(q => scoreMap.get(q) ?? ''),
+      ];
+    });
+
+    exportToExcel(headers, rows, `${isAr ? 'تقييمات-العملاء' : 'customer-feedback'}-${format(new Date(), 'yyyy-MM-dd')}`);
+    toast.success(isAr ? 'تم التصدير بنجاح' : 'Exported successfully');
+  };
+
   const renderStars = (rating: number) => {
     return (
       <div className="flex gap-0.5" dir="ltr">
@@ -68,6 +124,11 @@ export default function CustomerFeedbackListPage() {
             {isAr ? 'عرض وإدارة تقييمات العملاء' : 'View and manage customer feedback'}
           </p>
         </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleExportFeedbacks}>
+            <Download className="w-4 h-4 me-1" />
+            {isAr ? 'تصدير Excel' : 'Export Excel'}
+          </Button>
         {showBranchFilter && (
           <Select value={selectedBranch} onValueChange={setSelectedBranch}>
             <SelectTrigger className="w-[200px]">
@@ -83,6 +144,7 @@ export default function CustomerFeedbackListPage() {
             </SelectContent>
           </Select>
         )}
+        </div>
       </div>
 
       {/* Stats */}

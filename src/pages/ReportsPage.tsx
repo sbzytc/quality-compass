@@ -8,13 +8,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, TrendingDown, Minus, BarChart3, ArrowRight } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, BarChart3, ArrowRight, Download } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks, subMonths } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { QualityCircle } from '@/components/QualityCircle';
 import { getScoreLevel } from '@/types';
 import { Progress } from '@/components/ui/progress';
+import { exportToExcel } from '@/lib/exportExcel';
+import { toast } from 'sonner';
 
 type PeriodTab = 'weekly' | 'monthly' | 'yearly';
 
@@ -117,6 +120,29 @@ export default function ReportsPage() {
     return +(current - previous).toFixed(1);
   };
 
+  const handleExportReport = () => {
+    if (!buildPeriodData.length) {
+      toast.error(isAr ? 'لا توجد بيانات للتصدير' : 'No data to export');
+      return;
+    }
+    const periodLabels = buildPeriodData[0]?.periods.map(p => p.label) || [];
+    const headers = [
+      isAr ? 'الفرع' : 'Branch',
+      ...periodLabels,
+      isAr ? 'الاتجاه' : 'Trend',
+    ];
+    const rows = buildPeriodData.map(branch => {
+      const trend = getTrend(branch.periods);
+      return [
+        branch.branchName,
+        ...branch.periods.map(p => p.score !== null ? `${p.score}%` : '—'),
+        trend !== null ? `${trend > 0 ? '+' : ''}${trend}%` : '—',
+      ];
+    });
+    exportToExcel(headers, rows, `${isAr ? 'تقرير-الأداء' : 'performance-report'}-${activeTab}-${format(new Date(), 'yyyy-MM-dd')}`);
+    toast.success(isAr ? 'تم التصدير بنجاح' : 'Exported successfully');
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -124,16 +150,22 @@ export default function ReportsPage() {
           <h1 className="text-3xl font-bold text-foreground">{isAr ? 'التقارير والمقارنات' : 'Reports & Comparisons'}</h1>
           <p className="text-muted-foreground mt-1">{isAr ? 'مقارنة أداء الفروع عبر الفترات' : 'Compare branch performance across periods'}</p>
         </div>
-        <Select value={String(periodsToShow)} onValueChange={v => setPeriodsToShow(Number(v))}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="3">{isAr ? '3 فترات' : '3 periods'}</SelectItem>
-            <SelectItem value="4">{isAr ? '4 فترات' : '4 periods'}</SelectItem>
-            <SelectItem value="6">{isAr ? '6 فترات' : '6 periods'}</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleExportReport}>
+            <Download className="w-4 h-4 me-1" />
+            {isAr ? 'تصدير Excel' : 'Export Excel'}
+          </Button>
+          <Select value={String(periodsToShow)} onValueChange={v => setPeriodsToShow(Number(v))}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="3">{isAr ? '3 فترات' : '3 periods'}</SelectItem>
+              <SelectItem value="4">{isAr ? '4 فترات' : '4 periods'}</SelectItem>
+              <SelectItem value="6">{isAr ? '6 فترات' : '6 periods'}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={v => setActiveTab(v as PeriodTab)}>
