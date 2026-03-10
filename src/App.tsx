@@ -53,9 +53,9 @@ function DefaultRedirect() {
 
 const AppRoutes = () => (
   <Routes>
-    {/* Public route */}
+    {/* Public routes */}
     <Route path="/login" element={<LoginPage />} />
-    
+    <Route path="/feedback/:branchId" element={<CustomerFeedbackPage />} />
     {/* Protected routes */}
     <Route element={
       <ProtectedRoute>
