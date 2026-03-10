@@ -34,6 +34,9 @@ import SupportDashboard from "@/pages/support/SupportDashboard";
 import MyTickets from "@/pages/support/MyTickets";
 import ArchivedTickets from "@/pages/support/ArchivedTickets";
 import AIAssistantPage from "@/pages/AIAssistantPage";
+import CustomerFeedbackPage from "@/pages/CustomerFeedbackPage";
+import CustomerFeedbackListPage from "@/pages/CustomerFeedbackListPage";
+import CustomerComplaintsPage from "@/pages/CustomerComplaintsPage";
 
 const queryClient = new QueryClient();
 

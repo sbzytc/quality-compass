@@ -124,7 +124,7 @@ export default function CustomerComplaintsPage() {
               <SelectItem value="all">{isAr ? 'جميع الفروع' : 'All Branches'}</SelectItem>
               {branches?.map(b => (
                 <SelectItem key={b.id} value={b.id}>
-                  {isAr ? (b.name_ar || b.name) : b.name}
+                  {isAr ? (b.nameAr || b.name) : b.name}
                 </SelectItem>
               ))}
             </SelectContent>
