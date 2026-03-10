@@ -492,6 +492,8 @@ export function useManagerRejectFinding() {
           reference_id: findingId,
         });
       }
+
+      await logAction('manager_rejected', 'finding', findingId, { reason });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['findings'] });
