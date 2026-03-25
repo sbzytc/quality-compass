@@ -32,7 +32,7 @@ import {
   MessageSquareMore,
   ScrollText,
   Repeat,
-} from 'lucide-react';
+  Plug,
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
