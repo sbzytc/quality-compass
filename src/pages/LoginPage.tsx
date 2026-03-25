@@ -193,7 +193,7 @@ export default function LoginPage() {
                   {direction === 'rtl' ? 'الاسم الكامل' : 'Full Name'}
                 </Label>
                 <div className="relative">
-                  <User className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
+                  <User className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="fullName"
                     type="text"
