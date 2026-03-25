@@ -129,36 +129,45 @@
 
   /* ===== SIDEBAR ===== */
   .glass-sidebar {
-    width: 300px;
-    padding: 16px;
-    background: rgba(255, 255, 255, 0.12);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border-right: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 20px 16px;
+    background: rgba(255, 255, 255, 0.10);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 24px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 4px;
+    box-shadow:
+      0 8px 32px rgba(100, 120, 160, 0.10),
+      inset 0 1px 0 rgba(255, 255, 255, 0.30);
   }
 
   /* ===== MENU CONTAINER ===== */
   .glass-menu {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 2px;
   }
 
   /* ===== MENU ITEM ===== */
   .glass-menu-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    border-radius: 18px;
-    color: rgba(0, 0, 0, 0.6);
+    gap: 14px;
+    padding: 14px 18px;
+    border-radius: 20px;
+    color: rgba(0, 0, 0, 0.55);
     text-decoration: none;
     transition: all 0.25s ease;
     position: relative;
     border: 1px solid transparent;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+    margin-bottom: 2px;
+  }
+
+  .glass-menu-item:last-child {
+    border-bottom-color: transparent;
   }
 
   /* ===== ICON ===== */
@@ -168,7 +177,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    opacity: 0.8;
+    opacity: 0.7;
+    flex-shrink: 0;
   }
 
   /* ===== TEXT ===== */
@@ -176,24 +186,37 @@
     flex: 1;
     font-size: 15px;
     font-weight: 500;
+    letter-spacing: 0.01em;
   }
 
   /* ===== HOVER ===== */
   .glass-menu-item:hover {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.10);
     backdrop-filter: blur(10px);
     color: #2d3d57;
+    border-bottom-color: transparent;
+  }
+
+  .glass-menu-item:hover .icon {
+    opacity: 0.9;
   }
 
   /* ===== ACTIVE ===== */
   .glass-menu-item.active {
-    background: rgba(255, 255, 255, 0.32);
-    backdrop-filter: blur(18px);
-    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.35);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.50);
     color: #2d67b2;
+    font-weight: 600;
     box-shadow:
-      0 8px 20px rgba(0, 0, 0, 0.08),
-      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+      0 8px 24px rgba(0, 0, 0, 0.08),
+      0 2px 8px rgba(45, 103, 178, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.60);
+  }
+
+  .glass-menu-item.active .icon {
+    opacity: 1;
+    color: #2d67b2;
   }
 
   /* ===== ACTIVE GLOW ===== */
@@ -201,29 +224,58 @@
     content: "";
     position: absolute;
     inset: 0;
-    border-radius: 18px;
-    background: linear-gradient(120deg, rgba(255, 255, 255, 0.4), transparent);
-    opacity: 0.4;
+    border-radius: 20px;
+    background: linear-gradient(
+      120deg,
+      rgba(255, 255, 255, 0.50) 0%,
+      rgba(255, 255, 255, 0.15) 40%,
+      transparent 70%
+    );
+    opacity: 0.6;
     pointer-events: none;
   }
 
   /* ===== SUBMENU ===== */
   .glass-submenu {
-    margin-left: 14px;
-    padding-left: 12px;
-    border-left: 1px solid rgba(255, 255, 255, 0.2);
+    margin-inline-start: 0px;
+    padding-inline-start: 8px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 0px;
   }
 
-  [dir="rtl"] .glass-submenu {
-    margin-left: 0;
-    margin-right: 14px;
-    padding-left: 0;
-    padding-right: 12px;
-    border-left: none;
-    border-right: 1px solid rgba(255, 255, 255, 0.2);
+  .glass-submenu .glass-menu-item {
+    padding: 11px 18px 11px 28px;
+    font-size: 14px;
+    border-radius: 18px;
+    color: rgba(0, 0, 0, 0.50);
+  }
+
+  [dir="rtl"] .glass-submenu .glass-menu-item {
+    padding: 11px 28px 11px 18px;
+  }
+
+  .glass-submenu .glass-menu-item.active {
+    color: #2d67b2;
+  }
+
+  /* ===== BADGE ===== */
+  .glass-badge {
+    min-width: 38px;
+    height: 28px;
+    padding: 0 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(180deg, #ff6b8a, #ff3d6b);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+      0 6px 16px rgba(255, 77, 115, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.30);
+    flex-shrink: 0;
   }
 
   /* ── Glass Card ── */
@@ -476,6 +528,18 @@
     @apply bg-score-critical text-white;
     box-shadow: 0 0 20px -4px hsl(var(--score-critical) / 0.4);
   }
+}
+
+/* ── Scrollbar Styling ─────────────────────── */
+.glass-sidebar .scrollbar-thin::-webkit-scrollbar {
+  width: 3px;
+}
+.glass-sidebar .scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.glass-sidebar .scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 10px;
 }
 
 /* ── Utilities ────────────────────────────── */

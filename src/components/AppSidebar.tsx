@@ -113,118 +113,104 @@ export function AppSidebar() {
   return (
     <motion.aside
       initial={false}
-      animate={{ width: collapsed ? 72 : 280 }}
+      animate={{ width: collapsed ? 72 : 290 }}
       transition={{ duration: 0.2, ease: 'easeInOut' }}
-      className={cn(
-        "h-screen glass-sidebar shrink-0",
-        direction === 'rtl' && 'border-r-0 border-l border-l-[rgba(255,255,255,0.15)]'
-      )}
+      className="h-screen shrink-0 p-3 flex flex-col"
+      style={{ direction }}
     >
-      {/* Logo */}
-      <div className="h-16 flex items-center px-4 border-b border-[rgba(255,255,255,0.1)]">
-        <div className="flex items-center gap-3">
-          <img src={rasdahLogo} alt="Rasdah" className="w-9 h-9 rounded-lg object-contain" />
-          <AnimatePresence>
-            {!collapsed && (
-              <motion.div
-                initial={{ opacity: 0, width: 0 }}
-                animate={{ opacity: 1, width: 'auto' }}
-                exit={{ opacity: 0, width: 0 }}
-                className="overflow-hidden whitespace-nowrap"
-              >
-                <span className="font-bold text-[15px]" style={{ color: '#2d3d57' }}>Rasdah</span>
-                <p className="text-[11px]" style={{ color: 'rgba(0,0,0,0.4)' }}>
-                  {direction === 'rtl' ? 'نظام الجودة' : 'Quality System'}
-                </p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 p-3 overflow-y-auto scrollbar-thin">
-        <div className="glass-menu">
-          {mainNavItems.map((item) => (
-            <SidebarNavItem
-              key={item.path}
-              item={item}
-              collapsed={collapsed}
-              isActive={location.pathname === item.path || location.pathname.startsWith(item.path + '/')}
-              isExpanded={expandedItems.includes(item.path)}
-              onToggle={() => toggleExpanded(item.path)}
-              currentPath={location.pathname}
-            />
-          ))}
+      <div className={cn(
+        "glass-sidebar flex-1 min-h-0 overflow-hidden",
+        direction === 'rtl' && 'border-r-0'
+      )}>
+        {/* Logo */}
+        <div className="flex items-center px-2 pb-2 border-b border-[rgba(255,255,255,0.12)]">
+          <div className="flex items-center gap-3">
+            <img src={rasdahLogo} alt="Rasdah" className="w-9 h-9 rounded-lg object-contain" />
+            <AnimatePresence>
+              {!collapsed && (
+                <motion.div
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: 'auto' }}
+                  exit={{ opacity: 0, width: 0 }}
+                  className="overflow-hidden whitespace-nowrap"
+                >
+                  <span className="font-bold text-[15px]" style={{ color: '#2d3d57' }}>Rasdah</span>
+                  <p className="text-[11px]" style={{ color: 'rgba(0,0,0,0.4)' }}>
+                    {direction === 'rtl' ? 'نظام الجودة' : 'Quality System'}
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
 
-        {settingsNavItems.length > 0 && (
-          <div className="glass-menu mt-5">
-            {!collapsed && (
-              <p className="text-[10px] font-semibold px-4 py-2 uppercase tracking-widest" style={{ color: 'rgba(0,0,0,0.35)' }}>
-                {t('nav.settings')}
-              </p>
-            )}
-            {settingsNavItems.map((item) => (
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto scrollbar-thin py-2 px-1">
+          <div className="glass-menu">
+            {mainNavItems.map((item) => (
               <SidebarNavItem
                 key={item.path}
                 item={item}
                 collapsed={collapsed}
-                isActive={location.pathname === item.path}
-                isExpanded={false}
-                onToggle={() => {}}
+                isActive={location.pathname === item.path || location.pathname.startsWith(item.path + '/')}
+                isExpanded={expandedItems.includes(item.path)}
+                onToggle={() => toggleExpanded(item.path)}
                 currentPath={location.pathname}
               />
             ))}
           </div>
-        )}
-      </nav>
 
-      {/* User Profile & Logout */}
-      {profile && (
-        <div className="p-3 border-t border-[rgba(255,255,255,0.1)]">
-          <div className={cn("flex items-center gap-3 p-2 rounded-[18px]", collapsed ? "justify-center" : "")}>
-            <Avatar className="w-8 h-8 ring-2 ring-[rgba(255,255,255,0.15)]">
-              <AvatarImage src={profile.avatar_url || undefined} />
-              <AvatarFallback className="bg-[#2d67b2] text-white text-xs font-semibold">
-                {getInitials(profile.full_name)}
-              </AvatarFallback>
-            </Avatar>
-            {!collapsed && (
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate" style={{ color: '#2d3d57' }}>{profile.full_name}</p>
-                <p className="text-[11px]" style={{ color: 'rgba(0,0,0,0.4)' }}>{getRoleBadge()}</p>
-              </div>
-            )}
-          </div>
-          <button
-            onClick={handleSignOut}
-            className={cn(
-              "glass-menu-item w-full mt-1.5 text-[13px]",
-              collapsed ? "justify-center px-0" : ""
-            )}
-          >
-            <LogOut className="icon w-4 h-4" />
-            {!collapsed && <span className="label">{direction === 'rtl' ? 'تسجيل الخروج' : 'Sign Out'}</span>}
-          </button>
-        </div>
-      )}
-
-      {/* Collapse button */}
-      <div className="p-2.5 border-t border-[rgba(255,255,255,0.1)]">
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="glass-menu-item w-full justify-center text-[13px]"
-        >
-          {collapsed ? (
-            <ChevronRight className="icon w-4 h-4" />
-          ) : (
-            <>
-              <ChevronLeft className="icon w-4 h-4" />
-              <span className="label">{direction === 'rtl' ? 'طي' : 'Collapse'}</span>
-            </>
+          {settingsNavItems.length > 0 && (
+            <div className="glass-menu mt-4">
+              {!collapsed && (
+                <p className="text-[10px] font-semibold px-4 py-2 uppercase tracking-widest" style={{ color: 'rgba(0,0,0,0.30)' }}>
+                  {t('nav.settings')}
+                </p>
+              )}
+              {settingsNavItems.map((item) => (
+                <SidebarNavItem
+                  key={item.path}
+                  item={item}
+                  collapsed={collapsed}
+                  isActive={location.pathname === item.path}
+                  isExpanded={false}
+                  onToggle={() => {}}
+                  currentPath={location.pathname}
+                />
+              ))}
+            </div>
           )}
-        </button>
+        </nav>
+
+        {/* User Profile & Logout */}
+        {profile && (
+          <div className="pt-2 border-t border-[rgba(255,255,255,0.12)] px-1">
+            <div className={cn("flex items-center gap-3 p-3 rounded-[20px]", collapsed ? "justify-center" : "")}>
+              <Avatar className="w-9 h-9 ring-2 ring-[rgba(45,103,178,0.25)]">
+                <AvatarImage src={profile.avatar_url || undefined} />
+                <AvatarFallback className="bg-[#2d4a7c] text-white text-xs font-bold">
+                  {getInitials(profile.full_name)}
+                </AvatarFallback>
+              </Avatar>
+              {!collapsed && (
+                <div className="flex-1 min-w-0">
+                  <p className="text-[14px] font-semibold truncate" style={{ color: '#2d3d57' }}>{profile.full_name}</p>
+                  <p className="text-[11px] font-medium" style={{ color: 'rgba(0,0,0,0.38)' }}>{getRoleBadge()}</p>
+                </div>
+              )}
+            </div>
+            <button
+              onClick={handleSignOut}
+              className={cn(
+                "glass-menu-item w-full mt-1 text-[13px] justify-center border-b-0",
+                collapsed ? "px-0" : ""
+              )}
+            >
+              <LogOut className="icon w-4 h-4" />
+              {!collapsed && <span className="label text-center">{direction === 'rtl' ? 'تسجيل الخروج' : 'Sign Out'}</span>}
+            </button>
+          </div>
+        )}
       </div>
     </motion.aside>
   );
@@ -244,13 +230,13 @@ function SidebarNavItem({
       <div>
         <button
           onClick={onToggle}
-          className={cn("glass-menu-item w-full text-[13px]", isActive && "active")}
+          className={cn("glass-menu-item w-full text-[14px]", isActive && "active")}
         >
-          <Icon className="icon w-[18px] h-[18px] flex-shrink-0" />
+          <Icon className="icon w-[20px] h-[20px] flex-shrink-0" />
           <span className="label overflow-hidden whitespace-nowrap text-start">
             {t(item.labelKey)}
           </span>
-          <ChevronDown className={cn("w-3.5 h-3.5 transition-transform duration-200 opacity-60", isExpanded && "rotate-180")} />
+          <ChevronDown className={cn("w-4 h-4 transition-transform duration-200 opacity-50", isExpanded && "rotate-180")} />
         </button>
         <AnimatePresence>
           {isExpanded && (
@@ -268,9 +254,9 @@ function SidebarNavItem({
                     <Link
                       key={child.path}
                       to={child.path}
-                      className={cn("glass-menu-item text-[13px] py-2", isChildActive && "active")}
+                      className={cn("glass-menu-item text-[13px]", isChildActive && "active")}
                     >
-                      <child.icon className="icon w-4 h-4 flex-shrink-0" />
+                      <child.icon className="icon w-[18px] h-[18px] flex-shrink-0" />
                       <span className="label overflow-hidden whitespace-nowrap">{t(child.labelKey)}</span>
                     </Link>
                   );
@@ -286,9 +272,9 @@ function SidebarNavItem({
   return (
     <Link
       to={hasChildren ? item.children![0].path : item.path}
-      className={cn("glass-menu-item text-[13px]", isActive && "active")}
+      className={cn("glass-menu-item text-[14px]", isActive && "active")}
     >
-      <Icon className="icon w-[18px] h-[18px] flex-shrink-0" />
+      <Icon className="icon w-[20px] h-[20px] flex-shrink-0" />
       {!collapsed && (
         <span className="label overflow-hidden whitespace-nowrap">{t(item.labelKey)}</span>
       )}
