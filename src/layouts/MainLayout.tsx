@@ -36,7 +36,7 @@ export function MainLayout() {
   const roleBadge = getRoleBadge();
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <div className="flex h-screen overflow-hidden">
       <AppSidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
