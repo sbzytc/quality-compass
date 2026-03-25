@@ -71,7 +71,7 @@ export function MainLayout() {
                   </div>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuContent align="end" className="w-48 glass-popover text-white/90">
                 <DropdownMenuItem onClick={() => navigate('/settings')}>
                   <Settings className="me-2 h-4 w-4" />
                   {direction === 'rtl' ? 'الإعدادات' : 'Settings'}
