@@ -3,33 +3,10 @@ import rasdahLogo from '@/assets/rasdah-logo.png';
 import { cn } from '@/lib/utils';
 import { getInitials } from '@/lib/getInitials';
 import {
-  LayoutDashboard,
-  Building2,
-  ClipboardCheck,
-  AlertTriangle,
-  Settings,
-  Users,
-  FileText,
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
-  Briefcase,
-  UserCircle,
-  Wrench,
-  LogOut,
-  PlusCircle,
-  History,
-  Archive,
-  ListChecks,
-  BarChart3,
-  TrendingUp,
-  Headset,
-  Sparkles,
-  Star,
-  MessageSquareMore,
-  ScrollText,
-  Repeat,
-  Plug,
+  LayoutDashboard, Building2, ClipboardCheck, AlertTriangle, Settings, Users, FileText,
+  ChevronLeft, ChevronRight, ChevronDown, Briefcase, UserCircle, Wrench, LogOut,
+  PlusCircle, History, Archive, ListChecks, BarChart3, TrendingUp, Headset, Sparkles,
+  Star, MessageSquareMore, ScrollText, Repeat, Plug,
 } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -136,15 +113,15 @@ export function AppSidebar() {
   return (
     <motion.aside
       initial={false}
-      animate={{ width: collapsed ? 72 : 260 }}
+      animate={{ width: collapsed ? 72 : 280 }}
       transition={{ duration: 0.2, ease: 'easeInOut' }}
       className={cn(
         "h-screen glass-sidebar flex flex-col shrink-0",
-        direction === 'rtl' ? 'border-l border-l-[hsl(220_20%_22%)]' : 'border-r border-r-[hsl(220_20%_22%)]'
+        direction === 'rtl' ? 'border-l border-l-[rgba(255,255,255,0.15)]' : 'border-r border-r-[rgba(255,255,255,0.15)]'
       )}
     >
       {/* Logo */}
-      <div className="h-16 flex items-center px-4 border-b border-[hsl(220_20%_22%)]">
+      <div className="h-16 flex items-center px-4 border-b border-[rgba(255,255,255,0.1)]">
         <div className="flex items-center gap-3">
           <img src={rasdahLogo} alt="Rasdah" className="w-9 h-9 rounded-lg object-contain" />
           <AnimatePresence>
@@ -156,7 +133,7 @@ export function AppSidebar() {
                 className="overflow-hidden whitespace-nowrap"
               >
                 <span className="font-bold text-[15px] text-white">Rasdah</span>
-                <p className="text-[11px] text-[hsl(220_15%_55%)]">
+                <p className="text-[11px]" style={{ color: 'var(--text-muted-glass)' }}>
                   {direction === 'rtl' ? 'نظام الجودة' : 'Quality System'}
                 </p>
               </motion.div>
@@ -166,8 +143,8 @@ export function AppSidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-2.5 space-y-5 overflow-y-auto scrollbar-thin">
-        <div className="space-y-0.5">
+      <nav className="flex-1 p-3 space-y-5 overflow-y-auto scrollbar-thin">
+        <div className="space-y-1">
           {mainNavItems.map((item) => (
             <SidebarNavItem
               key={item.path}
@@ -182,9 +159,9 @@ export function AppSidebar() {
         </div>
 
         {settingsNavItems.length > 0 && (
-          <div className="space-y-0.5">
+          <div className="space-y-1">
             {!collapsed && (
-              <p className="text-[10px] font-semibold text-[hsl(220_15%_45%)] px-3 py-2 uppercase tracking-widest">
+              <p className="text-[10px] font-semibold px-3 py-2 uppercase tracking-widest" style={{ color: 'var(--text-muted-glass)' }}>
                 {t('nav.settings')}
               </p>
             )}
@@ -205,27 +182,30 @@ export function AppSidebar() {
 
       {/* User Profile & Logout */}
       {profile && (
-        <div className="p-3 border-t border-[hsl(220_20%_22%)]">
-          <div className={cn("flex items-center gap-3 p-2 rounded-lg", collapsed ? "justify-center" : "")}>
-            <Avatar className="w-8 h-8 ring-2 ring-[hsl(220_20%_28%)]">
+        <div className="p-3 border-t border-[rgba(255,255,255,0.1)]">
+          <div className={cn("flex items-center gap-3 p-2 rounded-[var(--radius-md)]", collapsed ? "justify-center" : "")}>
+            <Avatar className="w-8 h-8 ring-2 ring-[rgba(255,255,255,0.15)]">
               <AvatarImage src={profile.avatar_url || undefined} />
-              <AvatarFallback className="bg-[hsl(217_72%_42%)] text-white text-xs font-semibold">
+              <AvatarFallback className="bg-[var(--accent-glass)] text-white text-xs font-semibold">
                 {getInitials(profile.full_name)}
               </AvatarFallback>
             </Avatar>
             {!collapsed && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate text-white">{profile.full_name}</p>
-                <p className="text-[11px] text-[hsl(220_15%_50%)]">{getRoleBadge()}</p>
+                <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>{profile.full_name}</p>
+                <p className="text-[11px]" style={{ color: 'var(--text-muted-glass)' }}>{getRoleBadge()}</p>
               </div>
             )}
           </div>
           <button
             onClick={handleSignOut}
             className={cn(
-              "w-full mt-1.5 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-[13px] text-[hsl(220_15%_55%)] hover:bg-[hsl(220_20%_20%)] hover:text-[hsl(0_72%_60%)] transition-colors",
+              "w-full mt-1.5 flex items-center justify-center gap-2 px-3 py-2 rounded-[var(--radius-md)] text-[13px] transition-all",
               collapsed ? "px-0" : ""
             )}
+            style={{ color: 'var(--text-secondary)', transition: 'var(--transition)' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#e55'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
           >
             <LogOut className="w-4 h-4" />
             {!collapsed && <span>{direction === 'rtl' ? 'تسجيل الخروج' : 'Sign Out'}</span>}
@@ -234,10 +214,13 @@ export function AppSidebar() {
       )}
 
       {/* Collapse button */}
-      <div className="p-2.5 border-t border-[hsl(220_20%_22%)]">
+      <div className="p-2.5 border-t border-[rgba(255,255,255,0.1)]">
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-[hsl(220_15%_50%)] hover:bg-[hsl(220_20%_20%)] hover:text-white transition-colors"
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-[var(--radius-md)] transition-all"
+          style={{ color: 'var(--text-secondary)', transition: 'var(--transition)' }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
         >
           {collapsed ? (
             <ChevronRight className="w-4 h-4" />
@@ -262,17 +245,19 @@ function SidebarNavItem({
   const { t } = useLanguage();
   const hasChildren = item.children && item.children.length > 0;
 
+  const activeStyle: React.CSSProperties = isActive
+    ? { background: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.4)', color: 'var(--accent-glass)', boxShadow: '0 10px 26px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5)', fontWeight: 500 }
+    : { color: 'var(--text-secondary)', border: '1px solid transparent' };
+
   if (hasChildren && !collapsed) {
     return (
       <div>
         <button
           onClick={onToggle}
-          className={cn(
-            'w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 text-[13px]',
-            isActive
-              ? 'glass-nav-active text-white font-medium'
-              : 'text-[hsl(220_15%_65%)] glass-nav-hover'
-          )}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-md)] text-[13px] transition-all"
+          style={{ ...activeStyle, transition: 'var(--transition)' }}
+          onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
+          onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
         >
           <Icon className="w-[18px] h-[18px] flex-shrink-0" />
           <span className="font-medium overflow-hidden whitespace-nowrap flex-1 text-start">
@@ -289,22 +274,28 @@ function SidebarNavItem({
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
-              <div className="mt-0.5 ms-4 ps-3 border-s border-[hsl(220_20%_25%)] space-y-0.5">
-                {item.children!.map((child) => (
-                  <Link
-                    key={child.path}
-                    to={child.path}
-                    className={cn(
-                      'flex items-center gap-3 px-3 py-1.5 rounded-lg transition-all duration-200 text-[13px]',
-                      currentPath === child.path
-                        ? 'text-[hsl(217_72%_65%)] bg-[hsl(217_72%_42%/_0.12)] font-medium'
-                        : 'text-[hsl(220_15%_55%)] hover:text-[hsl(220_15%_75%)] hover:bg-[hsl(220_20%_20%)]'
-                    )}
-                  >
-                    <child.icon className="w-4 h-4 flex-shrink-0" />
-                    <span className="overflow-hidden whitespace-nowrap">{t(child.labelKey)}</span>
-                  </Link>
-                ))}
+              <div className="mt-0.5 ms-4 ps-3 border-s border-[rgba(255,255,255,0.12)] space-y-0.5">
+                {item.children!.map((child) => {
+                  const isChildActive = currentPath === child.path;
+                  return (
+                    <Link
+                      key={child.path}
+                      to={child.path}
+                      className="flex items-center gap-3 px-3 py-1.5 rounded-[var(--radius-md)] text-[13px] transition-all"
+                      style={{
+                        color: isChildActive ? 'var(--accent-glass)' : 'var(--text-secondary)',
+                        background: isChildActive ? 'rgba(45,103,178,0.12)' : 'transparent',
+                        fontWeight: isChildActive ? 500 : 400,
+                        transition: 'var(--transition)',
+                      }}
+                      onMouseEnter={(e) => { if (!isChildActive) { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = 'var(--text-primary)'; } }}
+                      onMouseLeave={(e) => { if (!isChildActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; } }}
+                    >
+                      <child.icon className="w-4 h-4 flex-shrink-0" />
+                      <span className="overflow-hidden whitespace-nowrap">{t(child.labelKey)}</span>
+                    </Link>
+                  );
+                })}
               </div>
             </motion.div>
           )}
@@ -316,12 +307,10 @@ function SidebarNavItem({
   return (
     <Link
       to={hasChildren ? item.children![0].path : item.path}
-      className={cn(
-        'flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 text-[13px]',
-        isActive
-          ? 'glass-nav-active text-white font-medium'
-          : 'text-[hsl(220_15%_65%)] glass-nav-hover'
-      )}
+      className="flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-md)] text-[13px] transition-all"
+      style={{ ...activeStyle, transition: 'var(--transition)' }}
+      onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
+      onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
     >
       <Icon className="w-[18px] h-[18px] flex-shrink-0" />
       {!collapsed && (
