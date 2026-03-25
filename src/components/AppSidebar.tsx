@@ -398,10 +398,10 @@ export function AppSidebar() {
       )}
 
       {/* Collapse button */}
-      <div className="p-3 border-t border-sidebar-border">
+      <div className="p-3 border-t border-border/50">
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
         >
           {collapsed ? (
             <ChevronRight className="w-5 h-5" />
