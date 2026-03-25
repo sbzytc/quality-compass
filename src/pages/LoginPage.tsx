@@ -224,7 +224,7 @@ export default function LoginPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">
+              <Label htmlFor="password" className="text-white/80">
                 {direction === 'rtl' ? 'كلمة المرور' : 'Password'}
               </Label>
               <div className="relative">
