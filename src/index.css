@@ -162,12 +162,29 @@
     transition: all 0.25s ease;
     position: relative;
     border: 1px solid transparent;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.18);
-    margin-bottom: 2px;
+    margin-bottom: 0px;
   }
 
-  .glass-menu-item:last-child {
-    border-bottom-color: transparent;
+  /* ===== ITEM DIVIDER (light line between each item) ===== */
+  .glass-menu-item + .glass-menu-item,
+  .glass-menu-item + div,
+  div + .glass-menu-item {
+    border-top: none;
+  }
+
+  .glass-item-divider {
+    height: 1px;
+    margin: 1px 12px;
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.00) 0%,
+      rgba(255, 255, 255, 0.28) 15%,
+      rgba(255, 255, 255, 0.40) 50%,
+      rgba(255, 255, 255, 0.28) 85%,
+      rgba(255, 255, 255, 0.00) 100%
+    );
+    opacity: 0.85;
+    flex-shrink: 0;
   }
 
   /* ===== ICON ===== */
