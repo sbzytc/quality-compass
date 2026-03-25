@@ -51,7 +51,7 @@
     --score-critical-bg: 0 84% 94%;
 
     /* Sidebar - Light glass */
-    --sidebar-background: 0 0% 100%;
+    --sidebar-background: 0 0% 100% / 0.3;
     --sidebar-foreground: 220 30% 25%;
     --sidebar-primary: 214 65% 35%;
     --sidebar-primary-foreground: 0 0% 100%;
