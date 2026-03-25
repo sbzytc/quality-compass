@@ -343,7 +343,7 @@ export function AppSidebar() {
         {settingsNavItems.length > 0 && (
           <div className="space-y-1">
             {!collapsed && (
-              <p className="text-xs font-medium text-sidebar-foreground/50 px-3 py-2 uppercase tracking-wider">
+              <p className="text-xs font-medium text-muted-foreground px-3 py-2 uppercase tracking-wider">
                 {t('nav.settings')}
               </p>
             )}
