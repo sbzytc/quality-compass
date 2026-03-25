@@ -477,7 +477,7 @@ export default function FindingsPage() {
                 key={group.branchId}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-card border border-border rounded-xl overflow-hidden"
+                className="glass-card overflow-hidden"
               >
                 {/* Branch Header */}
                 <button
@@ -731,7 +731,7 @@ export default function FindingsPage() {
             );
           })
         ) : (
-          <div className="text-center py-12 bg-card border border-border rounded-xl">
+          <div className="text-center py-12 glass-card">
             <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
             <p className="text-lg font-medium text-foreground">
               {isAr ? 'لا توجد ملاحظات' : 'No findings found'}

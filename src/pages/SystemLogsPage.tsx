@@ -129,7 +129,7 @@ export default function SystemLogsPage() {
         </div>
 
         {/* Logs List */}
-        <div className="bg-card border border-border rounded-xl overflow-hidden">
+        <div className="glass-card overflow-hidden">
           {isLoading ? (
             <div className="p-4 space-y-3">
               {Array.from({ length: 8 }).map((_, i) => (
