@@ -183,9 +183,6 @@ export default function LoginPage() {
                 : (direction === 'rtl' ? 'تسجيل الدخول إلى حسابك' : 'Sign in to your account')
               }
             </CardDescription>
-                : (direction === 'rtl' ? 'تسجيل الدخول إلى حسابك' : 'Sign in to your account')
-              }
-            </CardDescription>
           </div>
         </CardHeader>
         <CardContent>
