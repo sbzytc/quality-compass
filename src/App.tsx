@@ -204,6 +204,13 @@ const AppRoutes = () => (
         </ProtectedRoute>
       } />
 
+      {/* Integrations - Admin only */}
+      <Route path="/integrations" element={
+        <ProtectedRoute allowedRoles={['admin']}>
+          <IntegrationsPage />
+        </ProtectedRoute>
+      } />
+
       {/* AI Assistant - All authenticated users */}
       <Route path="/assistant" element={<AIAssistantPage />} />
 
