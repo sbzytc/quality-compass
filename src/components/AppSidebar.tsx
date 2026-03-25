@@ -33,6 +33,7 @@ import {
   ScrollText,
   Repeat,
   Plug,
+} from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
