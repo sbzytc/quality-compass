@@ -228,14 +228,14 @@ export default function LoginPage() {
                 {direction === 'rtl' ? 'كلمة المرور' : 'Password'}
               </Label>
               <div className="relative">
-                <Lock className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Lock className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
                 <Input
                   id="password"
                   type="password"
                   placeholder={direction === 'rtl' ? 'أدخل كلمة المرور' : 'Enter your password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="ps-10"
+                  className="ps-10 glass-input"
                   required
                   minLength={6}
                 />
