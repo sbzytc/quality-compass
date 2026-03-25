@@ -207,7 +207,7 @@ export default function LoginPage() {
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email">
+              <Label htmlFor="email" className="text-white/80">
                 {direction === 'rtl' ? 'البريد الإلكتروني' : 'Email'}
               </Label>
               <div className="relative">
