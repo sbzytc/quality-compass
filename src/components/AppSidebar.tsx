@@ -298,12 +298,12 @@ export function AppSidebar() {
       animate={{ width: collapsed ? 72 : 256 }}
       transition={{ duration: 0.2, ease: 'easeInOut' }}
       className={cn(
-        "h-screen glass-sidebar text-sidebar-foreground flex flex-col",
+        "h-screen glass-sidebar flex flex-col",
         direction === 'rtl' ? 'border-l' : 'border-r'
       )}
     >
       {/* Logo */}
-      <div className="h-16 flex items-center px-4 border-b border-sidebar-border">
+      <div className="h-16 flex items-center px-4 border-b border-border/50">
         <div className="flex items-center gap-3">
           <img src={rasdahLogo} alt="Rasdah" className="w-10 h-10 rounded-xl object-contain" />
           <AnimatePresence>
@@ -314,8 +314,8 @@ export function AppSidebar() {
                 exit={{ opacity: 0, width: 0 }}
                 className="overflow-hidden whitespace-nowrap"
               >
-                <span className="font-bold text-lg">Rasdah</span>
-                <p className="text-xs text-sidebar-foreground/60">
+                <span className="font-bold text-lg text-foreground">Rasdah</span>
+                <p className="text-xs text-muted-foreground">
                   {direction === 'rtl' ? 'نظام الجودة' : 'Quality System'}
                 </p>
               </motion.div>
@@ -343,7 +343,7 @@ export function AppSidebar() {
         {settingsNavItems.length > 0 && (
           <div className="space-y-1">
             {!collapsed && (
-              <p className="text-xs font-medium text-sidebar-foreground/50 px-3 py-2 uppercase tracking-wider">
+              <p className="text-xs font-medium text-muted-foreground px-3 py-2 uppercase tracking-wider">
                 {t('nav.settings')}
               </p>
             )}
@@ -364,21 +364,21 @@ export function AppSidebar() {
 
       {/* User Profile & Logout */}
       {profile && (
-        <div className="p-3 border-t border-sidebar-border">
+        <div className="p-3 border-t border-border/50">
           <div className={cn(
             "flex items-center gap-3 p-2 rounded-lg",
             collapsed ? "justify-center" : ""
           )}>
             <Avatar className="w-9 h-9">
               <AvatarImage src={profile.avatar_url || undefined} />
-              <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-sm">
+              <AvatarFallback className="bg-primary text-primary-foreground text-sm">
                 {getInitials(profile.full_name)}
               </AvatarFallback>
             </Avatar>
             {!collapsed && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{profile.full_name}</p>
-                <p className="text-xs text-sidebar-foreground/60">{getRoleBadge()}</p>
+                <p className="text-sm font-medium truncate text-foreground">{profile.full_name}</p>
+                <p className="text-xs text-muted-foreground">{getRoleBadge()}</p>
               </div>
             )}
           </div>
@@ -387,7 +387,7 @@ export function AppSidebar() {
             size="sm"
             onClick={handleSignOut}
             className={cn(
-              "w-full mt-2 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+              "w-full mt-2 text-muted-foreground hover:bg-muted hover:text-foreground",
               collapsed ? "px-0" : ""
             )}
           >
@@ -398,10 +398,10 @@ export function AppSidebar() {
       )}
 
       {/* Collapse button */}
-      <div className="p-3 border-t border-sidebar-border">
+      <div className="p-3 border-t border-border/50">
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
         >
           {collapsed ? (
             <ChevronRight className="w-5 h-5" />
@@ -444,8 +444,8 @@ function SidebarNavItem({
           className={cn(
             'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
             isActive
-              ? 'bg-sidebar-accent text-sidebar-foreground'
-              : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground'
+              ? 'glass-nav-active text-foreground font-medium'
+              : 'text-foreground/70 glass-nav-hover'
           )}
         >
           <Icon className="w-5 h-5 flex-shrink-0" />
@@ -466,7 +466,7 @@ function SidebarNavItem({
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
-              <div className="mt-1 ms-4 ps-3 border-s border-sidebar-border space-y-1">
+              <div className="mt-1 ms-4 ps-3 border-s border-border/50 space-y-1">
                 {item.children!.map((child) => (
                   <Link
                     key={child.path}
@@ -474,8 +474,8 @@ function SidebarNavItem({
                     className={cn(
                       'flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 text-sm',
                       currentPath === child.path
-                        ? 'bg-sidebar-primary text-sidebar-primary-foreground'
-                        : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground'
+                        ? 'glass-nav-active text-primary font-medium'
+                        : 'text-foreground/60 glass-nav-hover'
                     )}
                   >
                     <child.icon className="w-4 h-4 flex-shrink-0" />
@@ -498,8 +498,8 @@ function SidebarNavItem({
       className={cn(
         'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
         isActive
-          ? 'bg-sidebar-primary text-sidebar-primary-foreground'
-          : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground'
+          ? 'glass-nav-active text-primary font-medium'
+          : 'text-foreground/70 glass-nav-hover'
       )}
     >
       <Icon className="w-5 h-5 flex-shrink-0" />
