@@ -253,19 +253,22 @@ function SidebarNavItem({
               className="overflow-hidden"
             >
               <div className="glass-submenu mt-1">
-                {item.children!.map((child) => {
+                {item.children!.map((child, idx) => {
                   const isChildActive = currentPath === child.path;
                   return (
-                    <Link
-                      key={child.path}
-                      to={child.path}
-                      className={cn("glass-menu-item text-[13px]", isChildActive && "active")}
-                    >
-                      <child.icon className="icon w-[18px] h-[18px] flex-shrink-0" />
-                      <span className="label overflow-hidden whitespace-nowrap">{t(child.labelKey)}</span>
-                      {isChildActive && <span className="glass-corner-glow" />}
-                      {isChildActive && <span className="glass-bottom-light" />}
-                    </Link>
+                    <div key={child.path}>
+                      {idx > 0 && <div className="glass-item-divider" />}
+                      <Link
+                        to={child.path}
+                        className={cn("glass-menu-item text-[13px]", isChildActive && "active")}
+                      >
+                        <child.icon className="icon w-[18px] h-[18px] flex-shrink-0" />
+                        <span className="label overflow-hidden whitespace-nowrap">{t(child.labelKey)}</span>
+                        {isChildActive && <span className="glass-corner-glow" />}
+                        {isChildActive && <span className="glass-corner-glow-pink" />}
+                        {isChildActive && <span className="glass-bottom-light" />}
+                      </Link>
+                    </div>
                   );
                 })}
               </div>
