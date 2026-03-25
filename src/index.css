@@ -336,20 +336,20 @@
   /* ===== ACTIVE BOTTOM LIGHT LINE ===== */
   .glass-bottom-light {
     position: absolute;
-    left: 16px;
-    right: 16px;
-    bottom: 3px;
-    height: 8px;
+    left: 12px;
+    right: 12px;
+    bottom: 0px;
+    height: 12px;
     border-radius: 999px;
     pointer-events: none;
-    filter: blur(6px);
+    filter: blur(7px);
     background: linear-gradient(
       90deg,
-      rgba(100, 190, 255, 0.22) 0%,
-      rgba(255, 255, 255, 0.06) 50%,
-      rgba(255, 170, 210, 0.20) 100%
+      rgba(80, 170, 255, 0.32) 0%,
+      rgba(180, 220, 255, 0.12) 45%,
+      rgba(255, 150, 200, 0.30) 100%
     );
-    opacity: 0.85;
+    opacity: 1;
     z-index: 3;
   }
 
