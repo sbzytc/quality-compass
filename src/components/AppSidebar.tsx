@@ -314,8 +314,8 @@ export function AppSidebar() {
                 exit={{ opacity: 0, width: 0 }}
                 className="overflow-hidden whitespace-nowrap"
               >
-                <span className="font-bold text-lg">Rasdah</span>
-                <p className="text-xs text-sidebar-foreground/60">
+                <span className="font-bold text-lg text-foreground">Rasdah</span>
+                <p className="text-xs text-muted-foreground">
                   {direction === 'rtl' ? 'نظام الجودة' : 'Quality System'}
                 </p>
               </motion.div>
