@@ -101,38 +101,11 @@
       inset 0 1px 2px 0 hsl(0 0% 100% / 0.4);
   }
 
-  /* Auto-glass for rounded bordered containers */
+  /* Auto-glass for rounded bordered containers - visual only, no hover shine */
   [class*="rounded-xl"][class*="border"][class*="bg-card"],
   [class*="rounded-lg"][class*="border"][class*="bg-card"] {
-    position: relative;
-    overflow: hidden;
     border-top-color: hsl(0 0% 100% / 0.85) !important;
     border-left-color: hsl(0 0% 100% / 0.7) !important;
-  }
-
-  [class*="rounded-xl"][class*="border"][class*="bg-card"]::after,
-  [class*="rounded-lg"][class*="border"][class*="bg-card"]::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 60%;
-    height: 100%;
-    background: linear-gradient(
-      120deg,
-      hsl(0 0% 100% / 0) 0%,
-      hsl(0 0% 100% / 0.3) 50%,
-      hsl(0 0% 100% / 0) 100%
-    );
-    transition: left 0.6s ease;
-    pointer-events: none;
-    border-radius: inherit;
-    z-index: 1;
-  }
-
-  [class*="rounded-xl"][class*="border"][class*="bg-card"]:hover::after,
-  [class*="rounded-lg"][class*="border"][class*="bg-card"]:hover::after {
-    left: 130%;
   }
 }
 
