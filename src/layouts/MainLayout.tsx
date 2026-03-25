@@ -40,12 +40,12 @@ export function MainLayout() {
       <AppSidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="h-14 border-b glass-surface flex items-center justify-end px-4 gap-2 text-white/90">
+        <header className="h-14 border-b glass-surface flex items-center justify-end px-4 gap-2">
           {/* Language Toggle - Direct switch */}
             <Button
             variant="outline"
             size="sm"
-            className="h-9 px-3 gap-1.5 border-white/20 hover:bg-white/10 font-semibold text-sm text-white/80"
+            className="h-9 px-3 gap-1.5 glass-btn border border-border font-semibold text-sm"
             onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
             title={language === 'en' ? 'العربية' : 'English'}
           >
@@ -71,7 +71,7 @@ export function MainLayout() {
                   </div>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 glass-popover text-white/90">
+              <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem onClick={() => navigate('/settings')}>
                   <Settings className="me-2 h-4 w-4" />
                   {direction === 'rtl' ? 'الإعدادات' : 'Settings'}
@@ -87,7 +87,7 @@ export function MainLayout() {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto text-white/90">
+        <main className="flex-1 overflow-y-auto">
           <div className="p-6 lg:p-8">
             <Outlet />
           </div>

@@ -173,11 +173,11 @@ export default function LoginPage() {
   return (
     <>
     <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-md glass-card text-white">
+      <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-1">
           <img src={rasdaLogo} alt="Rasda" className="mx-auto w-52 h-52 object-contain" />
           <div>
-            <CardDescription className="text-white/60">
+            <CardDescription className="text-muted-foreground">
               {isSignUp
                 ? (direction === 'rtl' ? 'إنشاء حساب جديد' : 'Create a new account')
                 : (direction === 'rtl' ? 'تسجيل الدخول إلى حسابك' : 'Sign in to your account')
@@ -189,53 +189,53 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
               <div className="space-y-2">
-                <Label htmlFor="fullName" className="text-white/80">
+                <Label htmlFor="fullName">
                   {direction === 'rtl' ? 'الاسم الكامل' : 'Full Name'}
                 </Label>
                 <div className="relative">
-                  <User className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
+                  <User className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="fullName"
                     type="text"
                     placeholder={direction === 'rtl' ? 'أدخل اسمك الكامل' : 'Enter your full name'}
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="ps-10 glass-input"
+                    className="ps-10"
                     required
                   />
                 </div>
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-white/80">
+              <Label htmlFor="email">
                 {direction === 'rtl' ? 'البريد الإلكتروني' : 'Email'}
               </Label>
               <div className="relative">
-                <Mail className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
+                <Mail className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   id="email"
                   type="email"
                   placeholder={direction === 'rtl' ? 'أدخل بريدك الإلكتروني' : 'Enter your email'}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="ps-10 glass-input"
+                  className="ps-10"
                   required
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-white/80">
+              <Label htmlFor="password">
                 {direction === 'rtl' ? 'كلمة المرور' : 'Password'}
               </Label>
               <div className="relative">
-                <Lock className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
+                <Lock className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   id="password"
                   type="password"
                   placeholder={direction === 'rtl' ? 'أدخل كلمة المرور' : 'Enter your password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="ps-10 glass-input"
+                  className="ps-10"
                   required
                   minLength={6}
                 />
