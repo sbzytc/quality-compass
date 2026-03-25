@@ -466,7 +466,7 @@ function SidebarNavItem({
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
-              <div className="mt-1 ms-4 ps-3 border-s border-sidebar-border space-y-1">
+              <div className="mt-1 ms-4 ps-3 border-s border-border/50 space-y-1">
                 {item.children!.map((child) => (
                   <Link
                     key={child.path}
