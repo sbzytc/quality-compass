@@ -294,6 +294,7 @@ function SidebarNavItem({
           </span>
         )}
         {isActive && <span className="glass-corner-glow" />}
+        {isActive && <span className="glass-corner-glow-pink" />}
         {isActive && <span className="glass-bottom-light" />}
       </Link>
   );
