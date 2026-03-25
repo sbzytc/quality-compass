@@ -160,8 +160,9 @@ export function AppSidebar() {
             ))}
           </div>
 
-          {settingsNavItems.length > 0 && (
-            <div className="glass-menu mt-4">
+          {settingsNavItems.length > 0 && <>
+            <div className="glass-section-divider" />
+            <div className="glass-menu">
               {!collapsed && (
                 <p className="text-[10px] font-semibold px-4 py-2 uppercase tracking-widest" style={{ color: 'rgba(0,0,0,0.30)' }}>
                   {t('nav.settings')}
@@ -179,7 +180,7 @@ export function AppSidebar() {
                 />
               ))}
             </div>
-          )}
+          </>}
         </nav>
 
         {/* User Profile & Logout */}
@@ -258,6 +259,8 @@ function SidebarNavItem({
                     >
                       <child.icon className="icon w-[18px] h-[18px] flex-shrink-0" />
                       <span className="label overflow-hidden whitespace-nowrap">{t(child.labelKey)}</span>
+                      {isChildActive && <span className="glass-corner-glow" />}
+                      {isChildActive && <span className="glass-bottom-light" />}
                     </Link>
                   );
                 })}
@@ -270,19 +273,21 @@ function SidebarNavItem({
   }
 
   return (
-    <Link
-      to={hasChildren ? item.children![0].path : item.path}
-      className={cn("glass-menu-item text-[14px]", isActive && "active")}
-    >
-      <Icon className="icon w-[20px] h-[20px] flex-shrink-0" />
-      {!collapsed && (
-        <span className="label overflow-hidden whitespace-nowrap">{t(item.labelKey)}</span>
-      )}
-      {!collapsed && item.badge && (
-        <span className="glass-badge">
-          {item.badge}
-        </span>
-      )}
-    </Link>
+      <Link
+        to={hasChildren ? item.children![0].path : item.path}
+        className={cn("glass-menu-item text-[14px]", isActive && "active")}
+      >
+        <Icon className="icon w-[20px] h-[20px] flex-shrink-0" />
+        {!collapsed && (
+          <span className="label overflow-hidden whitespace-nowrap">{t(item.labelKey)}</span>
+        )}
+        {!collapsed && item.badge && (
+          <span className="glass-badge">
+            {item.badge}
+          </span>
+        )}
+        {isActive && <span className="glass-corner-glow" />}
+        {isActive && <span className="glass-bottom-light" />}
+      </Link>
   );
 }
