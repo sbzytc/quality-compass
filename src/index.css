@@ -142,11 +142,11 @@
 
   /* Glass popover/dropdown/dialog */
   .glass-popover {
-    background: hsl(0 0% 100% / 0.15) !important;
+    background: hsl(220 25% 15% / 0.9) !important;
     backdrop-filter: blur(24px) !important;
     -webkit-backdrop-filter: blur(24px) !important;
-    border: 1px solid hsl(0 0% 100% / 0.2) !important;
-    box-shadow: 0 8px 32px 0 hsl(220 30% 10% / 0.3) !important;
+    border: 1px solid hsl(0 0% 100% / 0.15) !important;
+    box-shadow: 0 8px 32px 0 hsl(0 0% 0% / 0.4) !important;
   }
 
   /* Glass input */
