@@ -270,19 +270,21 @@ function SidebarNavItem({
   }
 
   return (
-    <Link
-      to={hasChildren ? item.children![0].path : item.path}
-      className={cn("glass-menu-item text-[14px]", isActive && "active")}
-    >
-      <Icon className="icon w-[20px] h-[20px] flex-shrink-0" />
-      {!collapsed && (
-        <span className="label overflow-hidden whitespace-nowrap">{t(item.labelKey)}</span>
-      )}
-      {!collapsed && item.badge && (
-        <span className="glass-badge">
-          {item.badge}
-        </span>
-      )}
-    </Link>
+      <Link
+        to={hasChildren ? item.children![0].path : item.path}
+        className={cn("glass-menu-item text-[14px]", isActive && "active")}
+      >
+        <Icon className="icon w-[20px] h-[20px] flex-shrink-0" />
+        {!collapsed && (
+          <span className="label overflow-hidden whitespace-nowrap">{t(item.labelKey)}</span>
+        )}
+        {!collapsed && item.badge && (
+          <span className="glass-badge">
+            {item.badge}
+          </span>
+        )}
+        {isActive && <span className="glass-corner-glow" />}
+        {isActive && <span className="glass-bottom-light" />}
+      </Link>
   );
 }
