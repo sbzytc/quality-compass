@@ -170,16 +170,18 @@ export function AppSidebar() {
                   {t('nav.settings')}
                 </p>
               )}
-              {settingsNavItems.map((item) => (
-                <SidebarNavItem
-                  key={item.path}
-                  item={item}
-                  collapsed={collapsed}
-                  isActive={location.pathname === item.path}
-                  isExpanded={false}
-                  onToggle={() => {}}
-                  currentPath={location.pathname}
-                />
+              {settingsNavItems.map((item, index) => (
+                <div key={item.path}>
+                  {index > 0 && <div className="glass-item-divider" />}
+                  <SidebarNavItem
+                    item={item}
+                    collapsed={collapsed}
+                    isActive={location.pathname === item.path}
+                    isExpanded={false}
+                    onToggle={() => {}}
+                    currentPath={location.pathname}
+                  />
+                </div>
               ))}
             </div>
           </>}
