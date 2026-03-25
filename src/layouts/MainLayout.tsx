@@ -87,7 +87,7 @@ export function MainLayout() {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto text-white/90">
           <div className="p-6 lg:p-8">
             <Outlet />
           </div>
