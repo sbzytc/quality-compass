@@ -371,7 +371,7 @@ export function AppSidebar() {
           )}>
             <Avatar className="w-9 h-9">
               <AvatarImage src={profile.avatar_url || undefined} />
-              <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-sm">
+              <AvatarFallback className="bg-primary text-primary-foreground text-sm">
                 {getInitials(profile.full_name)}
               </AvatarFallback>
             </Avatar>
