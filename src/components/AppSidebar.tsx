@@ -377,8 +377,8 @@ export function AppSidebar() {
             </Avatar>
             {!collapsed && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{profile.full_name}</p>
-                <p className="text-xs text-sidebar-foreground/60">{getRoleBadge()}</p>
+                <p className="text-sm font-medium truncate text-foreground">{profile.full_name}</p>
+                <p className="text-xs text-muted-foreground">{getRoleBadge()}</p>
               </div>
             )}
           </div>
