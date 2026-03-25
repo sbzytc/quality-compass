@@ -5,26 +5,26 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius-md)] text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:scale-[0.98]",
+          "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:scale-[0.98] transition-all duration-[var(--transition)]",
         destructive:
-          "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 hover:shadow-md active:scale-[0.98]",
+          "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 hover:shadow-md active:scale-[0.98] transition-all duration-[var(--transition)]",
         outline:
-          "border border-input bg-[hsl(var(--glass-bg)/0.3)] backdrop-blur-sm hover:bg-[hsl(var(--glass-bg)/0.5)] hover:border-[hsl(var(--glass-border-highlight))] hover:shadow-sm active:scale-[0.98]",
+          "glass-btn text-[var(--text-primary)] active:scale-[0.98]",
         secondary:
-          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80 hover:shadow-md active:scale-[0.98]",
+          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80 hover:shadow-md active:scale-[0.98] transition-all duration-[var(--transition)]",
         ghost:
-          "hover:bg-[hsl(var(--glass-bg)/0.35)] hover:text-foreground active:scale-[0.98]",
+          "hover:bg-[rgba(255,255,255,0.15)] text-[var(--text-primary)] active:scale-[0.98] transition-all duration-[var(--transition)]",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
         default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-lg px-3 text-[13px]",
-        lg: "h-11 rounded-lg px-8",
+        sm: "h-9 rounded-[var(--radius-md)] px-3 text-[13px]",
+        lg: "h-11 rounded-[var(--radius-md)] px-8",
         icon: "h-10 w-10",
       },
     },

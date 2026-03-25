@@ -5,11 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { LogOut, Settings, Languages } from 'lucide-react';
 import { getInitials } from '@/lib/getInitials';
@@ -36,7 +33,7 @@ export function MainLayout() {
   const roleBadge = getRoleBadge();
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden glass-app">
       <AppSidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
@@ -45,7 +42,7 @@ export function MainLayout() {
           <Button
             variant="outline"
             size="sm"
-            className="h-8 px-3 gap-1.5 text-[13px] font-medium glass-btn border-[hsl(var(--glass-border))]"
+            className="h-8 px-3 gap-1.5 text-[13px] font-medium glass-btn"
             onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
             title={language === 'en' ? 'العربية' : 'English'}
           >
@@ -65,8 +62,8 @@ export function MainLayout() {
                     </AvatarFallback>
                   </Avatar>
                   <div className="hidden md:flex flex-col items-start text-sm">
-                    <span className="font-medium leading-none text-foreground">{profile.full_name}</span>
-                    {roleBadge && <span className="text-[11px] text-muted-foreground">{roleBadge}</span>}
+                    <span className="font-medium leading-none" style={{ color: 'var(--text-primary)' }}>{profile.full_name}</span>
+                    {roleBadge && <span className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>{roleBadge}</span>}
                   </div>
                 </Button>
               </DropdownMenuTrigger>
