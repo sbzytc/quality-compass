@@ -211,14 +211,14 @@ export default function LoginPage() {
                 {direction === 'rtl' ? 'البريد الإلكتروني' : 'Email'}
               </Label>
               <div className="relative">
-                <Mail className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Mail className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
                 <Input
                   id="email"
                   type="email"
                   placeholder={direction === 'rtl' ? 'أدخل بريدك الإلكتروني' : 'Enter your email'}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="ps-10"
+                  className="ps-10 glass-input"
                   required
                 />
               </div>
