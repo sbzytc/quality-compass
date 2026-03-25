@@ -530,6 +530,18 @@
   }
 }
 
+/* ── Scrollbar Styling ─────────────────────── */
+.glass-sidebar .scrollbar-thin::-webkit-scrollbar {
+  width: 3px;
+}
+.glass-sidebar .scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.glass-sidebar .scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 10px;
+}
+
 /* ── Utilities ────────────────────────────── */
 @layer utilities {
   .bg-score-excellent { background-color: hsl(var(--score-excellent)); }
