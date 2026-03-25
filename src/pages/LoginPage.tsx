@@ -200,7 +200,7 @@ export default function LoginPage() {
                     placeholder={direction === 'rtl' ? 'أدخل اسمك الكامل' : 'Enter your full name'}
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="ps-10 glass-input"
+                    className="ps-10"
                     required
                   />
                 </div>
