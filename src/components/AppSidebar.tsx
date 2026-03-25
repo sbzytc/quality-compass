@@ -298,7 +298,7 @@ export function AppSidebar() {
       animate={{ width: collapsed ? 72 : 256 }}
       transition={{ duration: 0.2, ease: 'easeInOut' }}
       className={cn(
-        "h-screen bg-sidebar text-sidebar-foreground flex flex-col border-sidebar-border",
+        "h-screen glass-sidebar text-sidebar-foreground flex flex-col",
         direction === 'rtl' ? 'border-l' : 'border-r'
       )}
     >
