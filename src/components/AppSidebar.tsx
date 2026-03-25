@@ -147,16 +147,18 @@ export function AppSidebar() {
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto scrollbar-thin py-2 px-1">
           <div className="glass-menu">
-            {mainNavItems.map((item) => (
-              <SidebarNavItem
-                key={item.path}
-                item={item}
-                collapsed={collapsed}
-                isActive={location.pathname === item.path || location.pathname.startsWith(item.path + '/')}
-                isExpanded={expandedItems.includes(item.path)}
-                onToggle={() => toggleExpanded(item.path)}
-                currentPath={location.pathname}
-              />
+            {mainNavItems.map((item, index) => (
+              <div key={item.path}>
+                {index > 0 && <div className="glass-item-divider" />}
+                <SidebarNavItem
+                  item={item}
+                  collapsed={collapsed}
+                  isActive={location.pathname === item.path || location.pathname.startsWith(item.path + '/')}
+                  isExpanded={expandedItems.includes(item.path)}
+                  onToggle={() => toggleExpanded(item.path)}
+                  currentPath={location.pathname}
+                />
+              </div>
             ))}
           </div>
 
@@ -168,16 +170,18 @@ export function AppSidebar() {
                   {t('nav.settings')}
                 </p>
               )}
-              {settingsNavItems.map((item) => (
-                <SidebarNavItem
-                  key={item.path}
-                  item={item}
-                  collapsed={collapsed}
-                  isActive={location.pathname === item.path}
-                  isExpanded={false}
-                  onToggle={() => {}}
-                  currentPath={location.pathname}
-                />
+              {settingsNavItems.map((item, index) => (
+                <div key={item.path}>
+                  {index > 0 && <div className="glass-item-divider" />}
+                  <SidebarNavItem
+                    item={item}
+                    collapsed={collapsed}
+                    isActive={location.pathname === item.path}
+                    isExpanded={false}
+                    onToggle={() => {}}
+                    currentPath={location.pathname}
+                  />
+                </div>
               ))}
             </div>
           </>}
@@ -249,19 +253,22 @@ function SidebarNavItem({
               className="overflow-hidden"
             >
               <div className="glass-submenu mt-1">
-                {item.children!.map((child) => {
+                {item.children!.map((child, idx) => {
                   const isChildActive = currentPath === child.path;
                   return (
-                    <Link
-                      key={child.path}
-                      to={child.path}
-                      className={cn("glass-menu-item text-[13px]", isChildActive && "active")}
-                    >
-                      <child.icon className="icon w-[18px] h-[18px] flex-shrink-0" />
-                      <span className="label overflow-hidden whitespace-nowrap">{t(child.labelKey)}</span>
-                      {isChildActive && <span className="glass-corner-glow" />}
-                      {isChildActive && <span className="glass-bottom-light" />}
-                    </Link>
+                    <div key={child.path}>
+                      {idx > 0 && <div className="glass-item-divider" />}
+                      <Link
+                        to={child.path}
+                        className={cn("glass-menu-item text-[13px]", isChildActive && "active")}
+                      >
+                        <child.icon className="icon w-[18px] h-[18px] flex-shrink-0" />
+                        <span className="label overflow-hidden whitespace-nowrap">{t(child.labelKey)}</span>
+                        {isChildActive && <span className="glass-corner-glow" />}
+                        {isChildActive && <span className="glass-corner-glow-pink" />}
+                        {isChildActive && <span className="glass-bottom-light" />}
+                      </Link>
+                    </div>
                   );
                 })}
               </div>
@@ -287,6 +294,7 @@ function SidebarNavItem({
           </span>
         )}
         {isActive && <span className="glass-corner-glow" />}
+        {isActive && <span className="glass-corner-glow-pink" />}
         {isActive && <span className="glass-bottom-light" />}
       </Link>
   );

@@ -162,12 +162,29 @@
     transition: all 0.25s ease;
     position: relative;
     border: 1px solid transparent;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.18);
-    margin-bottom: 2px;
+    margin-bottom: 0px;
   }
 
-  .glass-menu-item:last-child {
-    border-bottom-color: transparent;
+  /* ===== ITEM DIVIDER (light line between each item) ===== */
+  .glass-menu-item + .glass-menu-item,
+  .glass-menu-item + div,
+  div + .glass-menu-item {
+    border-top: none;
+  }
+
+  .glass-item-divider {
+    height: 1px;
+    margin: 1px 12px;
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.00) 0%,
+      rgba(255, 255, 255, 0.28) 15%,
+      rgba(255, 255, 255, 0.40) 50%,
+      rgba(255, 255, 255, 0.28) 85%,
+      rgba(255, 255, 255, 0.00) 100%
+    );
+    opacity: 0.85;
+    flex-shrink: 0;
   }
 
   /* ===== ICON ===== */
@@ -205,20 +222,21 @@
   .glass-menu-item.active {
     background: linear-gradient(
       180deg,
-      rgba(255, 255, 255, 0.34) 0%,
-      rgba(255, 255, 255, 0.18) 100%
+      rgba(255, 255, 255, 0.38) 0%,
+      rgba(255, 255, 255, 0.20) 100%
     );
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    border: 1px solid rgba(255, 255, 255, 0.42);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1.5px solid rgba(255, 255, 255, 0.52);
     color: #2d67b2;
     font-weight: 600;
     border-radius: 22px;
     overflow: hidden;
     box-shadow:
-      0 10px 24px rgba(90, 110, 140, 0.12),
-      inset 0 1px 0 rgba(255, 255, 255, 0.55),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.10);
+      0 10px 28px rgba(90, 110, 140, 0.13),
+      0 2px 8px rgba(45, 103, 178, 0.05),
+      inset 0 1.5px 0 rgba(255, 255, 255, 0.65),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.12);
   }
 
   .glass-menu-item.active .icon {
@@ -226,7 +244,7 @@
     color: #2d67b2;
   }
 
-  /* ===== ACTIVE EDGE HIGHLIGHT ===== */
+  /* ===== ACTIVE EDGE HIGHLIGHT (light rim on top/sides) ===== */
   .glass-menu-item.active::before {
     content: "";
     position: absolute;
@@ -235,16 +253,17 @@
     pointer-events: none;
     background: linear-gradient(
       135deg,
-      rgba(255, 255, 255, 0.42) 0%,
-      rgba(255, 255, 255, 0.20) 18%,
-      rgba(255, 255, 255, 0.08) 38%,
-      rgba(255, 255, 255, 0.02) 60%,
+      rgba(255, 255, 255, 0.48) 0%,
+      rgba(255, 255, 255, 0.22) 16%,
+      rgba(255, 255, 255, 0.08) 36%,
+      rgba(255, 255, 255, 0.02) 55%,
       transparent 100%
     );
     opacity: 0.9;
+    z-index: 1;
   }
 
-  /* ===== ACTIVE DIAGONAL REFLECTION ===== */
+  /* ===== ACTIVE DIAGONAL REFLECTION (glass surface shine) ===== */
   .glass-menu-item.active::after {
     content: "";
     position: absolute;
@@ -252,57 +271,86 @@
     border-radius: inherit;
     pointer-events: none;
     background: linear-gradient(
-      115deg,
+      110deg,
       rgba(255, 255, 255, 0.00) 0%,
-      rgba(255, 255, 255, 0.10) 22%,
-      rgba(255, 255, 255, 0.24) 34%,
-      rgba(255, 255, 255, 0.08) 48%,
-      rgba(255, 255, 255, 0.00) 62%
+      rgba(255, 255, 255, 0.06) 18%,
+      rgba(255, 255, 255, 0.22) 30%,
+      rgba(255, 255, 255, 0.30) 36%,
+      rgba(255, 255, 255, 0.10) 46%,
+      rgba(255, 255, 255, 0.00) 58%
     );
-    opacity: 0.75;
+    opacity: 0.8;
+    z-index: 2;
   }
 
-  /* ===== ACTIVE CORNER GLOW ===== */
+  /* ===== ACTIVE CORNER GLOW (blue on left) ===== */
   .glass-corner-glow {
     position: absolute;
-    width: 90px;
-    height: 90px;
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
     pointer-events: none;
-    filter: blur(22px);
-    opacity: 0.32;
+    filter: blur(18px);
+    opacity: 0.38;
     background: radial-gradient(
       circle,
-      rgba(110, 190, 255, 0.22) 0%,
-      rgba(255, 182, 220, 0.12) 42%,
-      rgba(255, 255, 255, 0.00) 75%
+      rgba(100, 180, 255, 0.30) 0%,
+      rgba(100, 180, 255, 0.10) 50%,
+      transparent 80%
     );
-    bottom: -24px;
-    left: 18px;
+    bottom: -20px;
+    left: 14px;
+    z-index: 3;
   }
 
   [dir="rtl"] .glass-corner-glow {
     left: auto;
-    right: 18px;
+    right: 14px;
   }
 
-  /* ===== ACTIVE BOTTOM LIGHT ===== */
+  /* ===== ACTIVE CORNER GLOW PINK (right side) ===== */
+  .glass-corner-glow-pink {
+    position: absolute;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    pointer-events: none;
+    filter: blur(18px);
+    opacity: 0.28;
+    background: radial-gradient(
+      circle,
+      rgba(255, 160, 200, 0.28) 0%,
+      rgba(255, 160, 200, 0.08) 50%,
+      transparent 80%
+    );
+    bottom: -18px;
+    right: 18px;
+    z-index: 3;
+  }
+
+  [dir="rtl"] .glass-corner-glow-pink {
+    right: auto;
+    left: 18px;
+  }
+
+  /* ===== ACTIVE BOTTOM LIGHT LINE ===== */
   .glass-bottom-light {
     position: absolute;
-    left: 20px;
-    right: 20px;
-    bottom: 4px;
-    height: 10px;
+    left: 16px;
+    right: 16px;
+    bottom: 3px;
+    height: 8px;
     border-radius: 999px;
     pointer-events: none;
-    filter: blur(8px);
+    filter: blur(6px);
     background: linear-gradient(
       90deg,
-      rgba(100, 200, 255, 0.18) 0%,
-      rgba(255, 255, 255, 0.04) 50%,
-      rgba(255, 180, 220, 0.16) 100%
+      rgba(100, 190, 255, 0.22) 0%,
+      rgba(255, 255, 255, 0.06) 50%,
+      rgba(255, 170, 210, 0.20) 100%
     );
-    opacity: 0.9;
+    opacity: 0.85;
+    z-index: 3;
   }
 
   /* ===== SECTION DIVIDER ===== */
@@ -345,23 +393,66 @@
     color: #2d67b2;
   }
 
-  /* ===== BADGE ===== */
+  /* ===== BADGE (3D glossy pill) ===== */
   .glass-badge {
-    min-width: 38px;
-    height: 28px;
-    padding: 0 12px;
+    min-width: 42px;
+    height: 30px;
+    padding: 0 14px;
     border-radius: 999px;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
     color: #fff;
-    background: linear-gradient(180deg, #ff6b8a, #ff3d6b);
+    background: linear-gradient(
+      180deg,
+      #ff7a95 0%,
+      #ff4d73 40%,
+      #e8365e 100%
+    );
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    overflow: hidden;
     box-shadow:
-      0 6px 16px rgba(255, 77, 115, 0.35),
-      inset 0 1px 0 rgba(255, 255, 255, 0.30);
+      0 6px 18px rgba(255, 70, 110, 0.40),
+      0 2px 6px rgba(255, 70, 110, 0.20),
+      inset 0 1px 1px rgba(255, 255, 255, 0.35);
     flex-shrink: 0;
+    text-shadow: 0 1px 2px rgba(180, 30, 60, 0.30);
+  }
+
+  /* Badge top shine reflection */
+  .glass-badge::before {
+    content: "";
+    position: absolute;
+    top: 1px;
+    left: 10%;
+    right: 10%;
+    height: 45%;
+    border-radius: 999px 999px 50% 50%;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.50) 0%,
+      rgba(255, 255, 255, 0.20) 50%,
+      rgba(255, 255, 255, 0.00) 100%
+    );
+    pointer-events: none;
+  }
+
+  /* Badge subtle pink outer glow */
+  .glass-badge::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: 999px;
+    background: radial-gradient(
+      ellipse at center,
+      rgba(255, 100, 140, 0.18) 0%,
+      transparent 70%
+    );
+    pointer-events: none;
+    z-index: -1;
+    filter: blur(4px);
   }
 
   /* ── Glass Card ── */
