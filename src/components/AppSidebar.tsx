@@ -387,7 +387,7 @@ export function AppSidebar() {
             size="sm"
             onClick={handleSignOut}
             className={cn(
-              "w-full mt-2 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+              "w-full mt-2 text-muted-foreground hover:bg-muted hover:text-foreground",
               collapsed ? "px-0" : ""
             )}
           >
