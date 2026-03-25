@@ -235,7 +235,7 @@ export default function LoginPage() {
                   placeholder={direction === 'rtl' ? 'أدخل كلمة المرور' : 'Enter your password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="ps-10 glass-input"
+                  className="ps-10"
                   required
                   minLength={6}
                 />
