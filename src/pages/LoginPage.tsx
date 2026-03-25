@@ -193,14 +193,14 @@ export default function LoginPage() {
                   {direction === 'rtl' ? 'الاسم الكامل' : 'Full Name'}
                 </Label>
                 <div className="relative">
-                  <User className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <User className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
                   <Input
                     id="fullName"
                     type="text"
                     placeholder={direction === 'rtl' ? 'أدخل اسمك الكامل' : 'Enter your full name'}
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="ps-10"
+                    className="ps-10 glass-input"
                     required
                   />
                 </div>
