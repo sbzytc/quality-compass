@@ -180,7 +180,7 @@ export function AppSidebar() {
                 />
               ))}
             </div>
-          )}
+          </>}
         </nav>
 
         {/* User Profile & Logout */}
