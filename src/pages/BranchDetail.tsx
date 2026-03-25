@@ -214,7 +214,7 @@ export default function BranchDetail() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <button
           onClick={() => handleStatClick('open')}
-          className="bg-card rounded-xl border border-border p-4 text-start hover:bg-muted/50 transition-colors"
+          className="glass-card p-4 text-start hover:bg-muted/50 transition-colors"
         >
           <div className="flex items-center gap-2 text-muted-foreground">
             <AlertTriangle className="w-4 h-4" />
@@ -224,7 +224,7 @@ export default function BranchDetail() {
         </button>
         <button
           onClick={() => handleStatClick('in_progress')}
-          className="bg-card rounded-xl border border-border p-4 text-start hover:bg-muted/50 transition-colors"
+          className="glass-card p-4 text-start hover:bg-muted/50 transition-colors"
         >
           <div className="flex items-center gap-2 text-muted-foreground">
             <Clock className="w-4 h-4" />
@@ -234,7 +234,7 @@ export default function BranchDetail() {
         </button>
         <button
           onClick={() => handleStatClick('pending_review')}
-          className="bg-card rounded-xl border border-border p-4 text-start hover:bg-muted/50 transition-colors"
+          className="glass-card p-4 text-start hover:bg-muted/50 transition-colors"
         >
           <div className="flex items-center gap-2 text-muted-foreground">
             <Clock className="w-4 h-4" />
@@ -244,7 +244,7 @@ export default function BranchDetail() {
         </button>
         <button
           onClick={() => handleStatClick('resolved')}
-          className="bg-card rounded-xl border border-border p-4 text-start hover:bg-muted/50 transition-colors"
+          className="glass-card p-4 text-start hover:bg-muted/50 transition-colors"
         >
           <div className="flex items-center gap-2 text-muted-foreground">
             <CheckCircle2 className="w-4 h-4" />
@@ -259,7 +259,7 @@ export default function BranchDetail() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-card rounded-xl border border-border p-6"
+          className="glass-card p-6"
         >
           <h2 className="text-lg font-semibold text-foreground mb-4">
             {direction === 'rtl' ? 'توزيع الدرجات' : 'Score Distribution'}
@@ -339,7 +339,7 @@ export default function BranchDetail() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-card rounded-xl border border-border p-6"
+          className="glass-card p-6"
         >
           <h2 className="text-lg font-semibold text-foreground mb-6">
             {direction === 'rtl' ? 'الملاحظات الأخيرة' : 'Recent Findings'}
@@ -399,7 +399,7 @@ export default function BranchDetail() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="bg-card rounded-xl border border-border overflow-hidden"
+        className="glass-card overflow-hidden"
       >
         <div className="p-6 border-b border-border flex items-center justify-between">
           <h2 className="text-lg font-semibold text-foreground">

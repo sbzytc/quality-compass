@@ -57,7 +57,7 @@ export default function ScoreAnalysisPage() {
       </div>
 
       {/* Overall Score Summary */}
-      <div className="bg-card rounded-xl border border-border p-8">
+      <div className="glass-card p-8">
         <div className="flex flex-col md:flex-row items-center gap-8">
           {isLoading ? (
             <Skeleton className="w-40 h-40 rounded-full" />
@@ -91,7 +91,7 @@ export default function ScoreAnalysisPage() {
       </div>
 
       {/* Branch Scores Grid */}
-      <div className="bg-card rounded-xl border border-border p-6">
+      <div className="glass-card p-6">
         <h2 className="text-lg font-semibold text-foreground mb-6">
           {language === 'ar' ? 'درجات الفروع' : 'Branch Scores'}
         </h2>
@@ -156,7 +156,7 @@ export default function ScoreAnalysisPage() {
 
       {/* Unevaluated Branches */}
       {!isLoading && unevaluatedBranches.length > 0 && (
-        <div className="bg-card rounded-xl border border-border p-6">
+        <div className="glass-card p-6">
           <h2 className="text-lg font-semibold text-foreground mb-6">
             {language === 'ar' ? 'فروع غير مُقيّمة' : 'Unevaluated Branches'}
           </h2>
@@ -188,7 +188,7 @@ export default function ScoreAnalysisPage() {
       )}
 
       {/* Score Legend */}
-      <div className="bg-card rounded-xl border border-border p-6">
+      <div className="glass-card p-6">
         <h2 className="text-lg font-semibold text-foreground mb-4">
           {language === 'ar' ? 'مفتاح الدرجات' : 'Score Legend'}
         </h2>

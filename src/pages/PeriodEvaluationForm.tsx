@@ -282,7 +282,7 @@ export default function PeriodEvaluationForm() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
-      <div className="bg-card rounded-xl border border-border p-6">
+      <div className="glass-card p-6">
         <div className="flex items-start gap-4">
           <Button variant="outline" size="icon" onClick={() => navigate(-1)} className="mt-1">
             <ArrowLeft className="w-4 h-4" />
@@ -322,7 +322,7 @@ export default function PeriodEvaluationForm() {
       </div>
 
       {!selectedBranch && (
-        <div className="bg-card rounded-xl border border-border p-8 text-center">
+        <div className="glass-card p-8 text-center">
           <MapPin className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
           <h3 className="text-lg font-medium">{isAr ? 'اختر فرعاً للبدء' : 'Select a Branch to Start'}</h3>
         </div>
@@ -336,7 +336,7 @@ export default function PeriodEvaluationForm() {
             const catStatus = catProg.percentage > 0 ? getScoreLevel(catProg.percentage) : null;
 
             return (
-              <motion.div key={category.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-card rounded-xl border border-border overflow-hidden">
+              <motion.div key={category.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card overflow-hidden">
                 <button onClick={() => setExpandedCategories(prev => prev.includes(category.id) ? prev.filter(id => id !== category.id) : [...prev, category.id])} className="w-full flex items-center justify-between p-4 hover:bg-muted/30 transition-colors">
                   <div className="flex items-center gap-3">
                     {isExpanded ? <ChevronDown className="w-5 h-5 text-muted-foreground" /> : <ChevronRight className="w-5 h-5 text-muted-foreground" />}

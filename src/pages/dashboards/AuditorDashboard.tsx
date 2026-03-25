@@ -91,7 +91,7 @@ export default function AuditorDashboard() {
 
       {/* Last Audit Results */}
       {lastAudit && (
-        <div className="bg-card rounded-xl border border-border p-6">
+        <div className="glass-card p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-lg font-semibold text-foreground">{t('dashboard.auditor.lastAuditResults')}</h2>
@@ -142,7 +142,7 @@ export default function AuditorDashboard() {
 
       {/* Last Audit Findings */}
       {lastAuditFindings.length > 0 && (
-        <div className="bg-card rounded-xl border border-border overflow-hidden">
+        <div className="glass-card overflow-hidden">
           <div className="p-6 border-b border-border">
             <h2 className="text-lg font-semibold text-foreground">{t('dashboard.auditor.findingsFromLastAudit')}</h2>
           </div>
@@ -176,7 +176,7 @@ export default function AuditorDashboard() {
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Audits */}
-        <div className="bg-card rounded-xl border border-border overflow-hidden">
+        <div className="glass-card overflow-hidden">
           <div className="p-6 border-b border-border">
             <h2 className="text-lg font-semibold text-foreground">{t('dashboard.auditor.recentAudits')}</h2>
           </div>
@@ -218,7 +218,7 @@ export default function AuditorDashboard() {
         </div>
 
         {/* Upcoming Schedule - Placeholder */}
-        <div className="bg-card rounded-xl border border-border overflow-hidden">
+        <div className="glass-card overflow-hidden">
           <div className="p-6 border-b border-border">
             <h2 className="text-lg font-semibold text-foreground">{t('dashboard.auditor.upcomingSchedule')}</h2>
           </div>

@@ -359,7 +359,7 @@ function KanbanColumn({
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.9 }}
-                  className="bg-card border rounded-lg p-3 cursor-pointer hover:shadow-md transition-shadow group"
+                  className="glass-card p-3 cursor-pointer hover:shadow-md transition-shadow group"
                   onClick={() => onTicketClick(ticket)}
                 >
                   {/* Priority Badge */}

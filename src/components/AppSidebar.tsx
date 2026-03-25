@@ -16,15 +16,12 @@ import {
   Briefcase,
   UserCircle,
   Wrench,
-  ClipboardList,
   LogOut,
   PlusCircle,
   History,
   Archive,
   ListChecks,
   BarChart3,
-  CalendarDays,
-  CalendarRange,
   TrendingUp,
   Headset,
   Sparkles,
@@ -40,7 +37,6 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth, AppRole } from '@/contexts/AuthContext';
 import { useFindingStats } from '@/hooks/useFindings';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
 
 interface NavItem {
   labelKey: string;
@@ -60,221 +56,66 @@ export function AppSidebar() {
   const { profile, roles, signOut, isAdmin, isExecutive, isBranchManager, isAssessor, isSupportAgent } = useAuth();
   const { data: findingStats } = useFindingStats();
 
-  // Get open findings count for badge
   const openFindingsCount = findingStats?.open || 0;
-
-  // Assessors should not see any dashboards
   const showDashboards = !isAssessor || isAdmin;
 
-  // Filter dashboard sub-items based on role
   const dashboardSubItems: NavItem[] = showDashboards ? ([
-    { 
-      labelKey: 'nav.dashboard.ceo', 
-      icon: Briefcase, 
-      path: '/dashboard/ceo',
-      allowedRoles: ['admin', 'executive'] as AppRole[]
-    },
-    { 
-      labelKey: 'nav.dashboard.branchManager', 
-      icon: UserCircle, 
-      path: '/dashboard/branch-manager',
-      allowedRoles: ['admin', 'branch_manager'] as AppRole[]
-    },
-    { 
-      labelKey: 'nav.dashboard.operations', 
-      icon: Wrench, 
-      path: '/dashboard/operations',
-      allowedRoles: ['admin', 'branch_manager'] as AppRole[]
-    },
+    { labelKey: 'nav.dashboard.ceo', icon: Briefcase, path: '/dashboard/ceo', allowedRoles: ['admin', 'executive'] as AppRole[] },
+    { labelKey: 'nav.dashboard.branchManager', icon: UserCircle, path: '/dashboard/branch-manager', allowedRoles: ['admin', 'branch_manager'] as AppRole[] },
+    { labelKey: 'nav.dashboard.operations', icon: Wrench, path: '/dashboard/operations', allowedRoles: ['admin', 'branch_manager'] as AppRole[] },
   ] as NavItem[]).filter(item => !item.allowedRoles || item.allowedRoles.some(role => roles.includes(role))) : [];
 
-  // Evaluation sub-items for assessors
   const evaluationSubItems: NavItem[] = [
-    { 
-      labelKey: 'nav.evaluations.new', 
-      icon: PlusCircle, 
-      path: '/evaluations/new',
-    },
-    { 
-      labelKey: 'nav.evaluations.previous', 
-      icon: History, 
-      path: '/evaluations/previous',
-    },
-    { 
-      labelKey: 'nav.evaluations.archived', 
-      icon: Archive, 
-      path: '/evaluations/archived',
-    },
+    { labelKey: 'nav.evaluations.new', icon: PlusCircle, path: '/evaluations/new' },
+    { labelKey: 'nav.evaluations.previous', icon: History, path: '/evaluations/previous' },
+    { labelKey: 'nav.evaluations.archived', icon: Archive, path: '/evaluations/archived' },
   ];
 
-  // Evaluation history sub-items for branch managers (view only, no create)
   const branchEvaluationSubItems: NavItem[] = [
-    { 
-      labelKey: 'nav.evaluations.previous', 
-      icon: History, 
-      path: '/evaluations/previous',
-    },
-    { 
-      labelKey: 'nav.evaluations.archived', 
-      icon: Archive, 
-      path: '/evaluations/archived',
-    },
+    { labelKey: 'nav.evaluations.previous', icon: History, path: '/evaluations/previous' },
+    { labelKey: 'nav.evaluations.archived', icon: Archive, path: '/evaluations/archived' },
   ];
 
   const mainNavItems: NavItem[] = ([
-    // Only show dashboard menu if user should see dashboards
-    ...(showDashboards ? [{ 
-      labelKey: 'nav.dashboard', 
-      icon: LayoutDashboard, 
-      path: '/dashboard', 
-      children: dashboardSubItems 
-    }] : []),
-    { 
-      labelKey: 'nav.branches', 
-      icon: Building2, 
-      path: '/branches',
-      allowedRoles: ['admin', 'executive'] as AppRole[]
-    },
-    { 
-      labelKey: 'nav.evaluations', 
-      icon: ClipboardCheck, 
-      path: '/evaluations',
-      allowedRoles: ['admin', 'assessor'] as AppRole[],
-      children: evaluationSubItems
-    },
-    // Branch manager: evaluation history (view only)
-    ...(isBranchManager && !isAdmin && !isAssessor ? [{ 
-      labelKey: 'nav.evaluations', 
-      icon: ClipboardCheck, 
-      path: '/evaluations',
-      children: branchEvaluationSubItems
-    }] : []),
-    { 
-      labelKey: 'nav.findings', 
-      icon: AlertTriangle, 
-      path: '/findings', 
-      badge: openFindingsCount > 0 ? openFindingsCount : undefined 
-    },
+    ...(showDashboards ? [{ labelKey: 'nav.dashboard', icon: LayoutDashboard, path: '/dashboard', children: dashboardSubItems }] : []),
+    { labelKey: 'nav.branches', icon: Building2, path: '/branches', allowedRoles: ['admin', 'executive'] as AppRole[] },
+    { labelKey: 'nav.evaluations', icon: ClipboardCheck, path: '/evaluations', allowedRoles: ['admin', 'assessor'] as AppRole[], children: evaluationSubItems },
+    ...(isBranchManager && !isAdmin && !isAssessor ? [{ labelKey: 'nav.evaluations', icon: ClipboardCheck, path: '/evaluations', children: branchEvaluationSubItems }] : []),
+    { labelKey: 'nav.findings', icon: AlertTriangle, path: '/findings', badge: openFindingsCount > 0 ? openFindingsCount : undefined },
+    { labelKey: 'nav.recurringProblems', icon: Repeat, path: '/recurring-problems', allowedRoles: ['admin', 'executive', 'branch_manager'] as AppRole[] },
+    { labelKey: 'nav.correctiveActions', icon: ListChecks, path: '/corrective-actions', allowedRoles: ['admin', 'executive', 'branch_manager'] as AppRole[] },
+    { labelKey: 'nav.reports', icon: BarChart3, path: '/reports', allowedRoles: ['admin', 'executive', 'branch_manager'] as AppRole[] },
+    { labelKey: 'nav.branchPerformance', icon: TrendingUp, path: '/branch-performance', allowedRoles: ['admin', 'executive', 'branch_manager'] as AppRole[] },
     {
-      labelKey: 'nav.recurringProblems',
-      icon: Repeat,
-      path: '/recurring-problems',
-      allowedRoles: ['admin', 'executive', 'branch_manager'] as AppRole[],
-    },
-    { 
-      labelKey: 'nav.correctiveActions', 
-      icon: ListChecks, 
-      path: '/corrective-actions',
-      allowedRoles: ['admin', 'executive', 'branch_manager'] as AppRole[],
-    },
-    { 
-      labelKey: 'nav.reports', 
-      icon: BarChart3, 
-      path: '/reports',
-      allowedRoles: ['admin', 'executive', 'branch_manager'] as AppRole[]
-    },
-    { 
-      labelKey: 'nav.branchPerformance', 
-      icon: TrendingUp, 
-      path: '/branch-performance',
-      allowedRoles: ['admin', 'executive', 'branch_manager'] as AppRole[]
-    },
-    { 
-      labelKey: 'nav.support', 
-      icon: Headset, 
-      path: '/support',
+      labelKey: 'nav.support', icon: Headset, path: '/support',
       children: [
-        {
-          labelKey: 'nav.support.myTickets',
-          icon: FileText,
-          path: '/support/my-tickets',
-        },
+        { labelKey: 'nav.support.myTickets', icon: FileText, path: '/support/my-tickets' },
         ...(isAdmin || isSupportAgent ? [
-          {
-            labelKey: 'nav.support.dashboard',
-            icon: LayoutDashboard,
-            path: '/support/dashboard',
-          },
-          {
-            labelKey: 'nav.support.archived',
-            icon: Archive,
-            path: '/support/archived',
-          }
-        ] : [])
-      ]
+          { labelKey: 'nav.support.dashboard', icon: LayoutDashboard, path: '/support/dashboard' },
+          { labelKey: 'nav.support.archived', icon: Archive, path: '/support/archived' },
+        ] : []),
+      ],
     },
-    // Customer Voice section - only show items user has access to
     ...(() => {
       const feedbackChildren: NavItem[] = [];
-      if (isAdmin || profile?.can_view_customer_feedback) {
-        feedbackChildren.push({
-          labelKey: 'nav.customerFeedback.ratings',
-          icon: Star,
-          path: '/customer-feedback',
-        });
-      }
-      if (isAdmin || profile?.can_view_complaints || profile?.can_view_suggestions) {
-        feedbackChildren.push({
-          labelKey: 'nav.customerFeedback.complaints',
-          icon: MessageSquareMore,
-          path: '/customer-complaints',
-        });
-      }
-      if (feedbackChildren.length > 0) {
-        return [{
-          labelKey: 'nav.customerFeedback',
-          icon: Star,
-          path: '/customer-feedback',
-          children: feedbackChildren,
-        }];
-      }
+      if (isAdmin || profile?.can_view_customer_feedback) feedbackChildren.push({ labelKey: 'nav.customerFeedback.ratings', icon: Star, path: '/customer-feedback' });
+      if (isAdmin || profile?.can_view_complaints || profile?.can_view_suggestions) feedbackChildren.push({ labelKey: 'nav.customerFeedback.complaints', icon: MessageSquareMore, path: '/customer-complaints' });
+      if (feedbackChildren.length > 0) return [{ labelKey: 'nav.customerFeedback', icon: Star, path: '/customer-feedback', children: feedbackChildren }];
       return [];
     })(),
-    {
-      labelKey: 'nav.assistant',
-      icon: Sparkles,
-      path: '/assistant',
-    },
+    { labelKey: 'nav.assistant', icon: Sparkles, path: '/assistant' },
   ] as NavItem[]).filter(item => !item.allowedRoles || item.allowedRoles.some(role => roles.includes(role)));
 
   const settingsNavItems: NavItem[] = ([
-    { 
-      labelKey: 'nav.users', 
-      icon: Users, 
-      path: '/users',
-      allowedRoles: ['admin'] as AppRole[]
-    },
-    { 
-      labelKey: 'nav.templates', 
-      icon: FileText, 
-      path: '/templates',
-      allowedRoles: ['admin'] as AppRole[]
-    },
-    { 
-      labelKey: 'nav.settings', 
-      icon: Settings, 
-      path: '/settings' 
-    },
-    {
-      labelKey: 'nav.systemLogs',
-      icon: ScrollText,
-      path: '/system-logs',
-      allowedRoles: ['admin'] as AppRole[]
-    },
-    {
-      labelKey: 'nav.integrations',
-      icon: Plug,
-      path: '/integrations',
-      allowedRoles: ['admin'] as AppRole[]
-    },
+    { labelKey: 'nav.users', icon: Users, path: '/users', allowedRoles: ['admin'] as AppRole[] },
+    { labelKey: 'nav.templates', icon: FileText, path: '/templates', allowedRoles: ['admin'] as AppRole[] },
+    { labelKey: 'nav.settings', icon: Settings, path: '/settings' },
+    { labelKey: 'nav.systemLogs', icon: ScrollText, path: '/system-logs', allowedRoles: ['admin'] as AppRole[] },
+    { labelKey: 'nav.integrations', icon: Plug, path: '/integrations', allowedRoles: ['admin'] as AppRole[] },
   ] as NavItem[]).filter(item => !item.allowedRoles || item.allowedRoles.some(role => roles.includes(role)));
 
   const toggleExpanded = (path: string) => {
-    setExpandedItems(prev => 
-      prev.includes(path) 
-        ? prev.filter(p => p !== path)
-        : [...prev, path]
-    );
+    setExpandedItems(prev => prev.includes(path) ? prev.filter(p => p !== path) : [...prev, path]);
   };
 
   const handleSignOut = async () => {
@@ -295,17 +136,17 @@ export function AppSidebar() {
   return (
     <motion.aside
       initial={false}
-      animate={{ width: collapsed ? 72 : 256 }}
+      animate={{ width: collapsed ? 72 : 260 }}
       transition={{ duration: 0.2, ease: 'easeInOut' }}
       className={cn(
-        "h-screen glass-sidebar flex flex-col",
-        direction === 'rtl' ? 'border-l' : 'border-r'
+        "h-screen glass-sidebar flex flex-col shrink-0",
+        direction === 'rtl' ? 'border-l border-l-[hsl(220_20%_22%)]' : 'border-r border-r-[hsl(220_20%_22%)]'
       )}
     >
       {/* Logo */}
-      <div className="h-16 flex items-center px-4 border-b border-border/50">
+      <div className="h-16 flex items-center px-4 border-b border-[hsl(220_20%_22%)]">
         <div className="flex items-center gap-3">
-          <img src={rasdahLogo} alt="Rasdah" className="w-10 h-10 rounded-xl object-contain" />
+          <img src={rasdahLogo} alt="Rasdah" className="w-9 h-9 rounded-lg object-contain" />
           <AnimatePresence>
             {!collapsed && (
               <motion.div
@@ -314,8 +155,8 @@ export function AppSidebar() {
                 exit={{ opacity: 0, width: 0 }}
                 className="overflow-hidden whitespace-nowrap"
               >
-                <span className="font-bold text-lg text-foreground">Rasdah</span>
-                <p className="text-xs text-muted-foreground">
+                <span className="font-bold text-[15px] text-white">Rasdah</span>
+                <p className="text-[11px] text-[hsl(220_15%_55%)]">
                   {direction === 'rtl' ? 'نظام الجودة' : 'Quality System'}
                 </p>
               </motion.div>
@@ -325,8 +166,8 @@ export function AppSidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-3 space-y-6 overflow-y-auto">
-        <div className="space-y-1">
+      <nav className="flex-1 p-2.5 space-y-5 overflow-y-auto scrollbar-thin">
+        <div className="space-y-0.5">
           {mainNavItems.map((item) => (
             <SidebarNavItem
               key={item.path}
@@ -341,9 +182,9 @@ export function AppSidebar() {
         </div>
 
         {settingsNavItems.length > 0 && (
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             {!collapsed && (
-              <p className="text-xs font-medium text-muted-foreground px-3 py-2 uppercase tracking-wider">
+              <p className="text-[10px] font-semibold text-[hsl(220_15%_45%)] px-3 py-2 uppercase tracking-widest">
                 {t('nav.settings')}
               </p>
             )}
@@ -364,51 +205,46 @@ export function AppSidebar() {
 
       {/* User Profile & Logout */}
       {profile && (
-        <div className="p-3 border-t border-border/50">
-          <div className={cn(
-            "flex items-center gap-3 p-2 rounded-lg",
-            collapsed ? "justify-center" : ""
-          )}>
-            <Avatar className="w-9 h-9">
+        <div className="p-3 border-t border-[hsl(220_20%_22%)]">
+          <div className={cn("flex items-center gap-3 p-2 rounded-lg", collapsed ? "justify-center" : "")}>
+            <Avatar className="w-8 h-8 ring-2 ring-[hsl(220_20%_28%)]">
               <AvatarImage src={profile.avatar_url || undefined} />
-              <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+              <AvatarFallback className="bg-[hsl(217_72%_42%)] text-white text-xs font-semibold">
                 {getInitials(profile.full_name)}
               </AvatarFallback>
             </Avatar>
             {!collapsed && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate text-foreground">{profile.full_name}</p>
-                <p className="text-xs text-muted-foreground">{getRoleBadge()}</p>
+                <p className="text-sm font-medium truncate text-white">{profile.full_name}</p>
+                <p className="text-[11px] text-[hsl(220_15%_50%)]">{getRoleBadge()}</p>
               </div>
             )}
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
+          <button
             onClick={handleSignOut}
             className={cn(
-              "w-full mt-2 text-muted-foreground hover:bg-muted hover:text-foreground",
+              "w-full mt-1.5 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-[13px] text-[hsl(220_15%_55%)] hover:bg-[hsl(220_20%_20%)] hover:text-[hsl(0_72%_60%)] transition-colors",
               collapsed ? "px-0" : ""
             )}
           >
             <LogOut className="w-4 h-4" />
-            {!collapsed && <span className="ms-2">{direction === 'rtl' ? 'تسجيل الخروج' : 'Sign Out'}</span>}
-          </Button>
+            {!collapsed && <span>{direction === 'rtl' ? 'تسجيل الخروج' : 'Sign Out'}</span>}
+          </button>
         </div>
       )}
 
       {/* Collapse button */}
-      <div className="p-3 border-t border-border/50">
+      <div className="p-2.5 border-t border-[hsl(220_20%_22%)]">
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-[hsl(220_15%_50%)] hover:bg-[hsl(220_20%_20%)] hover:text-white transition-colors"
         >
           {collapsed ? (
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="w-4 h-4" />
           ) : (
             <>
-              <ChevronLeft className="w-5 h-5" />
-              <span className="text-sm">{direction === 'rtl' ? 'طي' : 'Collapse'}</span>
+              <ChevronLeft className="w-4 h-4" />
+              <span className="text-[13px]">{direction === 'rtl' ? 'طي' : 'Collapse'}</span>
             </>
           )}
         </button>
@@ -418,44 +254,31 @@ export function AppSidebar() {
 }
 
 function SidebarNavItem({
-  item,
-  collapsed,
-  isActive,
-  isExpanded,
-  onToggle,
-  currentPath,
+  item, collapsed, isActive, isExpanded, onToggle, currentPath,
 }: {
-  item: NavItem;
-  collapsed: boolean;
-  isActive: boolean;
-  isExpanded: boolean;
-  onToggle: () => void;
-  currentPath: string;
+  item: NavItem; collapsed: boolean; isActive: boolean; isExpanded: boolean; onToggle: () => void; currentPath: string;
 }) {
   const Icon = item.icon;
   const { t } = useLanguage();
   const hasChildren = item.children && item.children.length > 0;
-  
+
   if (hasChildren && !collapsed) {
     return (
       <div>
         <button
           onClick={onToggle}
           className={cn(
-            'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
+            'w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 text-[13px]',
             isActive
-              ? 'glass-nav-active text-foreground font-medium'
-              : 'text-foreground/70 glass-nav-hover'
+              ? 'glass-nav-active text-white font-medium'
+              : 'text-[hsl(220_15%_65%)] glass-nav-hover'
           )}
         >
-          <Icon className="w-5 h-5 flex-shrink-0" />
-          <span className="text-sm font-medium overflow-hidden whitespace-nowrap flex-1 text-start">
+          <Icon className="w-[18px] h-[18px] flex-shrink-0" />
+          <span className="font-medium overflow-hidden whitespace-nowrap flex-1 text-start">
             {t(item.labelKey)}
           </span>
-          <ChevronDown className={cn(
-            "w-4 h-4 transition-transform duration-200",
-            isExpanded && "rotate-180"
-          )} />
+          <ChevronDown className={cn("w-3.5 h-3.5 transition-transform duration-200 opacity-60", isExpanded && "rotate-180")} />
         </button>
         <AnimatePresence>
           {isExpanded && (
@@ -466,22 +289,20 @@ function SidebarNavItem({
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
-              <div className="mt-1 ms-4 ps-3 border-s border-border/50 space-y-1">
+              <div className="mt-0.5 ms-4 ps-3 border-s border-[hsl(220_20%_25%)] space-y-0.5">
                 {item.children!.map((child) => (
                   <Link
                     key={child.path}
                     to={child.path}
                     className={cn(
-                      'flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 text-sm',
+                      'flex items-center gap-3 px-3 py-1.5 rounded-lg transition-all duration-200 text-[13px]',
                       currentPath === child.path
-                        ? 'glass-nav-active text-primary font-medium'
-                        : 'text-foreground/60 glass-nav-hover'
+                        ? 'text-[hsl(217_72%_65%)] bg-[hsl(217_72%_42%/_0.12)] font-medium'
+                        : 'text-[hsl(220_15%_55%)] hover:text-[hsl(220_15%_75%)] hover:bg-[hsl(220_20%_20%)]'
                     )}
                   >
                     <child.icon className="w-4 h-4 flex-shrink-0" />
-                    <span className="overflow-hidden whitespace-nowrap">
-                      {t(child.labelKey)}
-                    </span>
+                    <span className="overflow-hidden whitespace-nowrap">{t(child.labelKey)}</span>
                   </Link>
                 ))}
               </div>
@@ -491,25 +312,23 @@ function SidebarNavItem({
       </div>
     );
   }
-  
+
   return (
     <Link
       to={hasChildren ? item.children![0].path : item.path}
       className={cn(
-        'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
+        'flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 text-[13px]',
         isActive
-          ? 'glass-nav-active text-primary font-medium'
-          : 'text-foreground/70 glass-nav-hover'
+          ? 'glass-nav-active text-white font-medium'
+          : 'text-[hsl(220_15%_65%)] glass-nav-hover'
       )}
     >
-      <Icon className="w-5 h-5 flex-shrink-0" />
+      <Icon className="w-[18px] h-[18px] flex-shrink-0" />
       {!collapsed && (
-        <span className="text-sm font-medium overflow-hidden whitespace-nowrap flex-1">
-          {t(item.labelKey)}
-        </span>
+        <span className="font-medium overflow-hidden whitespace-nowrap flex-1">{t(item.labelKey)}</span>
       )}
       {!collapsed && item.badge && (
-        <span className="px-2 py-0.5 text-xs font-medium bg-score-critical text-white rounded-full">
+        <span className="glass-badge-notification px-1.5 py-0.5 text-[10px] font-bold rounded-full min-w-[20px] text-center">
           {item.badge}
         </span>
       )}

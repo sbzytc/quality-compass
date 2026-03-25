@@ -59,7 +59,7 @@ export default function ExecutiveDashboard() {
       </div>
 
       {/* Score Distribution */}
-      <div className="bg-card rounded-xl border border-border p-6">
+      <div className="glass-card p-6">
         <h2 className="text-lg font-semibold text-foreground mb-4">Score Distribution</h2>
         <div className="flex flex-wrap gap-4 justify-center md:justify-start">
           {[
@@ -96,7 +96,7 @@ export default function ExecutiveDashboard() {
       </div>
 
       {/* Branch Circles Grid */}
-      <div className="bg-card rounded-xl border border-border p-6">
+      <div className="glass-card p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold text-foreground">All Branches</h2>
           <button
@@ -143,7 +143,7 @@ export default function ExecutiveDashboard() {
       </div>
 
       {/* Recent Evaluations Table */}
-      <div className="bg-card rounded-xl border border-border overflow-hidden">
+      <div className="glass-card overflow-hidden">
         <div className="p-6 border-b border-border">
           <h2 className="text-lg font-semibold text-foreground">Recent Evaluations</h2>
         </div>

@@ -493,7 +493,7 @@ export default function CEODashboard() {
       </div>
 
       {/* Score Distribution - Column Chart */}
-      <div className="bg-card rounded-xl border border-border p-6">
+      <div className="glass-card p-6">
         <h2 className="text-lg font-semibold text-foreground mb-4">{t('dashboard.scoreDistribution')}</h2>
         {(() => {
           const scoreData = [
@@ -571,7 +571,7 @@ export default function CEODashboard() {
       </div>
 
       {/* Resolution Overview */}
-      <div className="bg-card rounded-xl border border-border p-6">
+      <div className="glass-card p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-foreground">
             {language === 'ar' ? 'حالة حل المشكلات' : 'Resolution Overview'}
@@ -668,7 +668,7 @@ export default function CEODashboard() {
         });
 
         return (
-          <div className="bg-card rounded-xl border border-border p-6">
+          <div className="glass-card p-6">
             <h2 className="text-lg font-semibold text-foreground mb-4">
               <TrendingUp className="w-5 h-5 inline-block me-2 text-primary" />
               {language === 'ar' ? 'اتجاه الأداء عبر الزمن' : 'Performance Trend Over Time'}
@@ -718,7 +718,7 @@ export default function CEODashboard() {
       })()}
 
       {/* Branch Circles Grid */}
-      <div className="bg-card rounded-xl border border-border p-6">
+      <div className="glass-card p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold text-foreground">{t('dashboard.allBranches')}</h2>
           <button
@@ -783,7 +783,7 @@ export default function CEODashboard() {
 
       {/* Regional Summary Table */}
       {regionalStats.length > 0 && (
-        <div className="bg-card rounded-xl border border-border overflow-hidden">
+        <div className="glass-card overflow-hidden">
           <div className="p-6 border-b border-border">
             <h2 className="text-lg font-semibold text-foreground">{t('dashboard.regionalSummary')}</h2>
           </div>

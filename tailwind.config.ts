@@ -62,6 +62,18 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
+        info: {
+          DEFAULT: "hsl(var(--info))",
+          foreground: "hsl(var(--info-foreground))",
+        },
         // Quality Score Colors
         score: {
           excellent: "hsl(var(--score-excellent))",
@@ -90,6 +102,7 @@ export default {
         lg: "var(--shadow-lg)",
         xl: "var(--shadow-xl)",
         glow: "var(--shadow-glow)",
+        glass: "0 2px 20px -6px hsl(220 30% 40% / 0.1), inset 0 1px 1px 0 hsl(0 0% 100% / 0.45)",
       },
       keyframes: {
         "accordion-down": {
@@ -101,13 +114,13 @@ export default {
           to: { height: "0" },
         },
         "pulse-glow": {
-          "0%, 100%": { 
+          "0%, 100%": {
             boxShadow: "0 0 20px -5px currentColor",
-            transform: "scale(1)"
+            transform: "scale(1)",
           },
-          "50%": { 
+          "50%": {
             boxShadow: "0 0 40px -5px currentColor",
-            transform: "scale(1.02)"
+            transform: "scale(1.02)",
           },
         },
       },

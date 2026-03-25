@@ -40,16 +40,16 @@ export function MainLayout() {
       <AppSidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="h-14 border-b glass-surface flex items-center justify-end px-4 gap-2">
-          {/* Language Toggle - Direct switch */}
-            <Button
+        <header className="h-14 border-b glass-surface flex items-center justify-end px-5 gap-2">
+          {/* Language Toggle */}
+          <Button
             variant="outline"
             size="sm"
-            className="h-9 px-3 gap-1.5 glass-btn border border-border font-semibold text-sm"
+            className="h-8 px-3 gap-1.5 text-[13px] font-medium glass-btn border-[hsl(var(--glass-border))]"
             onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
             title={language === 'en' ? 'العربية' : 'English'}
           >
-            <Languages className="h-4 w-4" />
+            <Languages className="h-3.5 w-3.5" />
             <span>{language === 'en' ? 'العربية' : 'English'}</span>
           </Button>
 
@@ -57,17 +57,16 @@ export function MainLayout() {
           {profile && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-9 gap-2 px-2">
+                <Button variant="ghost" className="h-9 gap-2 px-2 hover:bg-transparent">
                   <Avatar className="h-7 w-7">
                     <AvatarImage src={profile.avatar_url || undefined} />
-                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
                       {getInitials(profile.full_name)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="hidden md:flex flex-col items-start text-sm">
-                    <span className="font-medium leading-none">{profile.full_name}</span>
-                    {roleBadge && <span className="text-xs text-muted-foreground">{roleBadge}</span>}
-                    <span className="text-xs text-muted-foreground">{profile.email}</span>
+                    <span className="font-medium leading-none text-foreground">{profile.full_name}</span>
+                    {roleBadge && <span className="text-[11px] text-muted-foreground">{roleBadge}</span>}
                   </div>
                 </Button>
               </DropdownMenuTrigger>

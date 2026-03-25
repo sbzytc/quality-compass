@@ -353,7 +353,7 @@ export default function UsersPage() {
             key={stat.label}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-card rounded-xl border border-border p-4"
+            className="glass-card p-4"
           >
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-primary/10">
@@ -398,7 +398,7 @@ export default function UsersPage() {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="bg-card rounded-xl border border-border overflow-hidden"
+        className="glass-card overflow-hidden"
       >
         {isLoading ? (
           <div className="p-6 space-y-4">

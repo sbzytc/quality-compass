@@ -76,7 +76,7 @@ export default function ArchivedTickets() {
           <p className="text-muted-foreground">{t('common.loading')}</p>
         </div>
       ) : filteredTickets.length === 0 ? (
-        <div className="text-center p-12 bg-card rounded-lg border border-dashed">
+        <div className="text-center p-12 glass-card border-dashed">
           <Archive className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
           <h3 className="text-lg font-medium">
             {direction === 'rtl' ? 'لا توجد تذاكر مؤرشفة' : 'No archived tickets'}
