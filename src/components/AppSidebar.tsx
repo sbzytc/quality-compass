@@ -132,7 +132,7 @@ export function AppSidebar() {
                 exit={{ opacity: 0, width: 0 }}
                 className="overflow-hidden whitespace-nowrap"
               >
-                <span className="font-bold text-[15px]" style={{ color: var(--text-primary) ? '#fff' : '#fff' }}>Rasdah</span>
+                <span className="font-bold text-[15px] text-white">Rasdah</span>
                 <p className="text-[11px]" style={{ color: 'var(--text-muted-glass)' }}>
                   {direction === 'rtl' ? 'نظام الجودة' : 'Quality System'}
                 </p>
