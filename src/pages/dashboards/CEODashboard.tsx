@@ -613,25 +613,30 @@ export default function CEODashboard() {
             {/* Status breakdown */}
             <div className="flex flex-wrap gap-4 justify-center md:justify-start">
               {[
-                { label: language === 'ar' ? 'مفتوح' : 'Open', count: findingStats?.open || 0, color: 'bg-score-critical' },
-                { label: language === 'ar' ? 'قيد المعالجة' : 'In Progress', count: findingStats?.inProgress || 0, color: 'bg-score-average' },
-                { label: language === 'ar' ? 'بانتظار المراجعة' : 'Pending Review', count: findingStats?.pendingReview || 0, color: 'bg-primary' },
-                { label: language === 'ar' ? 'تم الحل' : 'Resolved', count: findingStats?.resolved || 0, color: 'bg-score-excellent' },
-                { label: language === 'ar' ? 'مرفوض' : 'Rejected', count: findingStats?.rejected || 0, color: 'bg-score-weak' },
-                { label: language === 'ar' ? 'متأخر' : 'Overdue', count: findingStats?.overdue || 0, color: 'bg-orange-500' },
+                { label: language === 'ar' ? 'مفتوح' : 'Open', count: findingStats?.open || 0, color: 'bg-score-critical', filter: 'open' },
+                { label: language === 'ar' ? 'قيد المعالجة' : 'In Progress', count: findingStats?.inProgress || 0, color: 'bg-score-average', filter: 'in_progress' },
+                { label: language === 'ar' ? 'بانتظار المراجعة' : 'Pending Review', count: findingStats?.pendingReview || 0, color: 'bg-primary', filter: 'pending_review' },
+                { label: language === 'ar' ? 'تم الحل' : 'Resolved', count: findingStats?.resolved || 0, color: 'bg-score-excellent', filter: 'resolved' },
+                { label: language === 'ar' ? 'مرفوض' : 'Rejected', count: findingStats?.rejected || 0, color: 'bg-score-weak', filter: 'rejected' },
+                { label: language === 'ar' ? 'متأخر' : 'Overdue', count: findingStats?.overdue || 0, color: 'bg-orange-500', filter: 'overdue' },
               ].map((item) => (
-                <div
+                <button
                   key={item.label}
-                  className="glass-btn flex items-center gap-3 px-5 py-3.5 rounded-[var(--radius-md)] cursor-default"
+                  onClick={() => navigate(`/findings?status=${item.filter}`)}
+                  className="glass-menu-item active flex items-center gap-3 px-5 py-3.5 text-start"
+                  style={{ marginBottom: 0 }}
                 >
-                  <div className={`w-4 h-4 rounded-full ${item.color} shadow-sm`} />
+                  <div className={`w-4 h-4 rounded-full ${item.color} shadow-sm shrink-0`} />
                   <div>
                     <p className="text-sm font-medium text-foreground">{item.label}</p>
                     <p className="text-2xl font-bold text-foreground">{item.count}</p>
                   </div>
-                </div>
+                  <span className="glass-corner-glow" />
+                  <span className="glass-corner-glow-pink" />
+                  <span className="glass-bottom-light" />
+                </button>
               ))}
-              <div className="glass-btn flex items-center gap-3 px-5 py-3.5 rounded-[var(--radius-md)] cursor-default">
+              <div className="glass-menu-item active flex items-center gap-3 px-5 py-3.5" style={{ marginBottom: 0, cursor: 'default' }}>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">
                     {language === 'ar' ? 'متوسط وقت الحل' : 'Avg Resolution Time'}
@@ -640,6 +645,9 @@ export default function CEODashboard() {
                     {findingStats?.avgResolutionDays || 0} <span className="text-sm font-normal text-muted-foreground">{language === 'ar' ? 'يوم' : 'days'}</span>
                   </p>
                 </div>
+                <span className="glass-corner-glow" />
+                <span className="glass-corner-glow-pink" />
+                <span className="glass-bottom-light" />
               </div>
             </div>
           </>
