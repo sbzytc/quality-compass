@@ -189,7 +189,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
               <div className="space-y-2">
-                <Label htmlFor="fullName">
+                <Label htmlFor="fullName" className="text-white/80">
                   {direction === 'rtl' ? 'الاسم الكامل' : 'Full Name'}
                 </Label>
                 <div className="relative">
