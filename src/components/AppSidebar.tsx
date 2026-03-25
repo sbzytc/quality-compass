@@ -258,6 +258,8 @@ function SidebarNavItem({
                     >
                       <child.icon className="icon w-[18px] h-[18px] flex-shrink-0" />
                       <span className="label overflow-hidden whitespace-nowrap">{t(child.labelKey)}</span>
+                      {isChildActive && <span className="glass-corner-glow" />}
+                      {isChildActive && <span className="glass-bottom-light" />}
                     </Link>
                   );
                 })}
