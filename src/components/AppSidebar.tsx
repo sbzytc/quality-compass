@@ -247,10 +247,10 @@ function SidebarNavItem({
           {isExpanded && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1, overflow: 'visible' }}
+              exit={{ height: 0, opacity: 0, overflow: 'hidden' }}
               transition={{ duration: 0.2 }}
-              className="overflow-hidden"
+              style={{ overflow: 'visible' }}
             >
               <div className="glass-submenu mt-1">
                 {item.children!.map((child, idx) => {
