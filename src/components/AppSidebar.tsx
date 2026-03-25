@@ -147,16 +147,18 @@ export function AppSidebar() {
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto scrollbar-thin py-2 px-1">
           <div className="glass-menu">
-            {mainNavItems.map((item) => (
-              <SidebarNavItem
-                key={item.path}
-                item={item}
-                collapsed={collapsed}
-                isActive={location.pathname === item.path || location.pathname.startsWith(item.path + '/')}
-                isExpanded={expandedItems.includes(item.path)}
-                onToggle={() => toggleExpanded(item.path)}
-                currentPath={location.pathname}
-              />
+            {mainNavItems.map((item, index) => (
+              <div key={item.path}>
+                {index > 0 && <div className="glass-item-divider" />}
+                <SidebarNavItem
+                  item={item}
+                  collapsed={collapsed}
+                  isActive={location.pathname === item.path || location.pathname.startsWith(item.path + '/')}
+                  isExpanded={expandedItems.includes(item.path)}
+                  onToggle={() => toggleExpanded(item.path)}
+                  currentPath={location.pathname}
+                />
+              </div>
             ))}
           </div>
 
