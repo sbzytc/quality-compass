@@ -746,7 +746,7 @@ export default function EvaluationForm() {
   if (isLoadingDraft || (selectedPeriodType && templateLoading)) {
     return (
       <div className="max-w-4xl mx-auto space-y-6">
-        <div className="bg-card rounded-xl border border-border p-6">
+        <div className="glass-card p-6">
           <div className="flex items-center justify-center py-12">
             <div className="flex flex-col items-center gap-4">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -764,7 +764,7 @@ export default function EvaluationForm() {
   if (selectedPeriodType && !templateLoading && !templateData) {
     return (
       <div className="max-w-4xl mx-auto space-y-6">
-        <div className="bg-card rounded-xl border border-border p-6">
+        <div className="glass-card p-6">
           <div className="flex items-center justify-center py-12">
             <div className="flex flex-col items-center gap-4 text-center">
               <AlertCircle className="w-12 h-12 text-destructive" />
@@ -789,7 +789,7 @@ export default function EvaluationForm() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
-      <div className="bg-card rounded-xl border border-border p-6">
+      <div className="glass-card p-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-start gap-4">
             <Button
@@ -859,7 +859,7 @@ export default function EvaluationForm() {
 
       {/* Show message if no branch selected */}
       {!selectedBranch && (
-        <div className="bg-card rounded-xl border border-border p-8 text-center">
+        <div className="glass-card p-8 text-center">
           <MapPin className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
             {direction === 'rtl' ? 'اختر فرعاً للبدء' : 'Select a Branch to Start'}
@@ -874,7 +874,7 @@ export default function EvaluationForm() {
 
       {/* Period Type Selector - show after branch is selected */}
       {selectedBranch && !selectedPeriodType && (
-        <div className="bg-card rounded-xl border border-border p-8">
+        <div className="glass-card p-8">
           <h3 className="text-lg font-semibold text-foreground text-center mb-2">
             {direction === 'rtl' ? 'اختر نوع التقييم' : 'Select Evaluation Type'}
           </h3>
@@ -947,7 +947,7 @@ export default function EvaluationForm() {
                 key={category.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-card rounded-xl border border-border overflow-hidden"
+                className="glass-card overflow-hidden"
               >
                 {/* Category Header */}
                 <button

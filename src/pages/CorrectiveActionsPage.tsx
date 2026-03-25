@@ -353,7 +353,7 @@ export default function CorrectiveActionsPage() {
         </div>
 
         <TabsContent value={activeTab} className="mt-0">
-          <div className="bg-card rounded-xl border border-border overflow-hidden">
+          <div className="glass-card overflow-hidden">
             {actionsLoading ? (
               <div className="p-6 space-y-4">
                 {[...Array(5)].map((_, i) => (
