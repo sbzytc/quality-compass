@@ -40,7 +40,7 @@ export function MainLayout() {
       <AppSidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="h-14 border-b glass-surface flex items-center justify-end px-4 gap-2 text-white/90">
+        <header className="h-14 border-b glass-surface flex items-center justify-end px-4 gap-2">
           {/* Language Toggle - Direct switch */}
             <Button
             variant="outline"
