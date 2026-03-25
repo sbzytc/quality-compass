@@ -2,42 +2,42 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Rasda Design System - Navy & Gold Quality Theme */
+/* Rasda Design System - Glassmorphism Theme */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 @layer base {
   :root {
-    /* Core brand colors - Navy blue & Gold from Rasda logo */
-    --background: 216 25% 97%;
-    --foreground: 217 45% 15%;
+    /* Glass-inspired light palette */
+    --background: 220 20% 95%;
+    --foreground: 220 30% 18%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 217 45% 15%;
+    --card: 0 0% 100% / 0.55;
+    --card-foreground: 220 30% 18%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 217 45% 15%;
+    --popover: 0 0% 100% / 0.8;
+    --popover-foreground: 220 30% 18%;
 
     --primary: 214 65% 28%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 30% 94%;
-    --secondary-foreground: 217 45% 15%;
+    --secondary: 220 20% 94% / 0.6;
+    --secondary-foreground: 220 30% 18%;
 
-    --muted: 210 25% 95%;
-    --muted-foreground: 215 15% 47%;
+    --muted: 220 15% 92% / 0.5;
+    --muted-foreground: 220 10% 46%;
 
     --accent: 43 90% 55%;
-    --accent-foreground: 217 45% 15%;
+    --accent-foreground: 220 30% 18%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 20% 90%;
-    --input: 214 20% 90%;
+    --border: 220 20% 88% / 0.6;
+    --input: 220 20% 88% / 0.6;
     --ring: 214 65% 28%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
     /* Quality Score Colors */
     --score-excellent: 142 76% 36%;
@@ -51,42 +51,48 @@
     --score-critical: 0 84% 50%;
     --score-critical-bg: 0 84% 95%;
 
-    /* Sidebar - Deep navy */
-    --sidebar-background: 214 65% 15%;
-    --sidebar-foreground: 210 25% 92%;
+    /* Sidebar - Frosted dark */
+    --sidebar-background: 220 25% 12% / 0.85;
+    --sidebar-foreground: 220 15% 92%;
     --sidebar-primary: 43 90% 55%;
-    --sidebar-primary-foreground: 217 45% 15%;
-    --sidebar-accent: 214 55% 22%;
-    --sidebar-accent-foreground: 210 25% 92%;
-    --sidebar-border: 214 55% 22%;
+    --sidebar-primary-foreground: 220 30% 12%;
+    --sidebar-accent: 220 25% 22% / 0.6;
+    --sidebar-accent-foreground: 220 15% 92%;
+    --sidebar-border: 220 20% 30% / 0.4;
     --sidebar-ring: 43 90% 55%;
 
-    /* Custom shadows */
-    --shadow-sm: 0 1px 2px 0 hsl(214 65% 15% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(214 65% 15% / 0.08), 0 2px 4px -2px hsl(214 65% 15% / 0.05);
-    --shadow-lg: 0 10px 15px -3px hsl(214 65% 15% / 0.08), 0 4px 6px -4px hsl(214 65% 15% / 0.05);
-    --shadow-xl: 0 20px 25px -5px hsl(214 65% 15% / 0.1), 0 8px 10px -6px hsl(214 65% 15% / 0.05);
-    --shadow-glow: 0 0 40px -10px hsl(var(--primary) / 0.3);
+    /* Glass tokens */
+    --glass-bg: 0 0% 100% / 0.45;
+    --glass-border: 0 0% 100% / 0.5;
+    --glass-highlight: 0 0% 100% / 0.25;
+    --glass-blur: 16px;
+
+    /* Custom shadows - softer for glass */
+    --shadow-sm: 0 2px 8px -2px hsl(220 30% 40% / 0.08);
+    --shadow-md: 0 8px 24px -4px hsl(220 30% 40% / 0.1), 0 2px 8px -2px hsl(220 30% 40% / 0.06);
+    --shadow-lg: 0 16px 40px -8px hsl(220 30% 40% / 0.12), 0 4px 12px -4px hsl(220 30% 40% / 0.06);
+    --shadow-xl: 0 24px 56px -12px hsl(220 30% 40% / 0.15), 0 8px 16px -6px hsl(220 30% 40% / 0.06);
+    --shadow-glow: 0 0 40px -10px hsl(var(--primary) / 0.25);
   }
 
   .dark {
-    --background: 217 45% 7%;
-    --foreground: 210 25% 95%;
+    --background: 220 30% 6%;
+    --foreground: 220 15% 92%;
 
-    --card: 217 40% 12%;
-    --card-foreground: 210 25% 95%;
+    --card: 220 25% 14% / 0.5;
+    --card-foreground: 220 15% 92%;
 
-    --popover: 217 40% 12%;
-    --popover-foreground: 210 25% 95%;
+    --popover: 220 25% 14% / 0.8;
+    --popover-foreground: 220 15% 92%;
 
     --primary: 210 55% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 217 40% 16%;
-    --secondary-foreground: 210 25% 95%;
+    --secondary: 220 25% 18% / 0.5;
+    --secondary-foreground: 220 15% 92%;
 
-    --muted: 217 40% 16%;
-    --muted-foreground: 215 15% 60%;
+    --muted: 220 25% 16% / 0.5;
+    --muted-foreground: 220 10% 55%;
 
     --accent: 43 85% 50%;
     --accent-foreground: 0 0% 100%;
@@ -94,8 +100,8 @@
     --destructive: 0 62% 40%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 217 40% 20%;
-    --input: 217 40% 20%;
+    --border: 220 20% 25% / 0.5;
+    --input: 220 20% 25% / 0.5;
     --ring: 210 55% 50%;
 
     /* Dark mode score colors */
@@ -109,6 +115,10 @@
     --score-weak-bg: 14 89% 12%;
     --score-critical: 0 84% 55%;
     --score-critical-bg: 0 84% 12%;
+
+    --glass-bg: 220 25% 14% / 0.35;
+    --glass-border: 220 20% 30% / 0.4;
+    --glass-highlight: 0 0% 100% / 0.06;
   }
 }
 
@@ -123,10 +133,59 @@
 
   body {
     @apply bg-background text-foreground antialiased;
+    background-image: 
+      radial-gradient(ellipse at 20% 50%, hsl(214 65% 60% / 0.06) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, hsl(43 90% 55% / 0.05) 0%, transparent 50%),
+      radial-gradient(ellipse at 60% 80%, hsl(200 60% 60% / 0.04) 0%, transparent 50%);
+    background-attachment: fixed;
   }
 }
 
 @layer components {
+  /* Glassmorphism card */
+  .glass-card {
+    background: hsl(var(--glass-bg));
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid hsl(var(--glass-border));
+    border-radius: var(--radius);
+    box-shadow: 
+      var(--shadow-md),
+      inset 0 1px 0 0 hsl(var(--glass-highlight));
+    transition: all 0.3s ease;
+  }
+
+  .glass-card:hover {
+    box-shadow: 
+      var(--shadow-lg),
+      inset 0 1px 0 0 hsl(var(--glass-highlight));
+  }
+
+  /* Stat card hover */
+  .stat-card {
+    @apply glass-card p-6;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-2px);
+  }
+
+  /* Glass surface - lighter variant */
+  .glass-surface {
+    background: hsl(var(--glass-bg));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--glass-border));
+  }
+
+  /* Glass sidebar */
+  .glass-sidebar {
+    background: hsl(var(--sidebar-background));
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-color: hsl(var(--sidebar-border));
+  }
+
   /* Quality Score Circle Variants */
   .quality-circle {
     @apply relative flex items-center justify-center rounded-full font-bold transition-all duration-300;
@@ -156,16 +215,6 @@
   .quality-circle-critical {
     @apply bg-score-critical text-white;
     box-shadow: 0 0 30px -5px hsl(var(--score-critical) / 0.5);
-  }
-
-  /* Glass card effect */
-  .glass-card {
-    @apply bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl shadow-lg;
-  }
-
-  /* Stat card hover */
-  .stat-card {
-    @apply glass-card p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
   }
 }
 

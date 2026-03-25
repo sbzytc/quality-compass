@@ -66,7 +66,7 @@ export function StatCard({
       transition={{ duration: 0.3 }}
       onClick={onClick}
       className={cn(
-        'bg-card rounded-xl border border-border p-6 shadow-sm hover:shadow-md transition-shadow',
+        'glass-card p-6 transition-all',
         styles.border,
         onClick && 'cursor-pointer',
         className
