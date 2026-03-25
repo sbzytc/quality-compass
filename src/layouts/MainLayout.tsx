@@ -45,7 +45,7 @@ export function MainLayout() {
             <Button
             variant="outline"
             size="sm"
-            className="h-9 px-3 gap-1.5 border-white/20 hover:bg-white/10 font-semibold text-sm text-white/80"
+            className="h-9 px-3 gap-1.5 glass-btn border border-border font-semibold text-sm"
             onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
             title={language === 'en' ? 'العربية' : 'English'}
           >
