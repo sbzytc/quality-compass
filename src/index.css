@@ -375,9 +375,11 @@
   .glass-submenu {
     margin-inline-start: 0px;
     padding-inline-start: 8px;
+    padding-bottom: 8px;
     display: flex;
     flex-direction: column;
     gap: 0px;
+    overflow: visible;
   }
 
   .glass-submenu .glass-menu-item {
