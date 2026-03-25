@@ -177,7 +177,7 @@ export default function LoginPage() {
         <CardHeader className="text-center space-y-1">
           <img src={rasdaLogo} alt="Rasda" className="mx-auto w-52 h-52 object-contain" />
           <div>
-            <CardDescription className="text-white/60">
+            <CardDescription className="text-muted-foreground">
               {isSignUp
                 ? (direction === 'rtl' ? 'إنشاء حساب جديد' : 'Create a new account')
                 : (direction === 'rtl' ? 'تسجيل الدخول إلى حسابك' : 'Sign in to your account')
