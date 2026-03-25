@@ -211,7 +211,7 @@ export default function LoginPage() {
                 {direction === 'rtl' ? 'البريد الإلكتروني' : 'Email'}
               </Label>
               <div className="relative">
-                <Mail className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
+                <Mail className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   id="email"
                   type="email"
