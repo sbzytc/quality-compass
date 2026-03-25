@@ -397,6 +397,14 @@
     color: #2d67b2;
   }
 
+  .glass-submenu .glass-menu-item.active .glass-bottom-light {
+    left: 12px;
+    right: 12px;
+    bottom: 0px;
+    height: 10px;
+    filter: blur(6px);
+  }
+
   /* ===== BADGE (3D glossy pill) ===== */
   .glass-badge {
     min-width: 42px;
