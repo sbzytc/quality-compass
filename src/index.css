@@ -8,8 +8,7 @@
 
 @layer base {
   :root {
-    /* Light palette with glass aesthetics */
-    --background: 210 30% 96%;
+    --background: 220 20% 92%;
     --foreground: 220 30% 18%;
 
     --card: 0 0% 100%;
@@ -18,7 +17,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 220 30% 18%;
 
-    --primary: 214 65% 28%;
+    --primary: 214 65% 35%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 210 25% 92%;
@@ -33,11 +32,11 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 210 20% 88%;
-    --input: 210 20% 88%;
-    --ring: 214 65% 28%;
+    --border: 210 15% 85%;
+    --input: 210 15% 85%;
+    --ring: 214 65% 35%;
 
-    --radius: 0.875rem;
+    --radius: 1rem;
 
     /* Quality Score Colors */
     --score-excellent: 142 76% 36%;
@@ -51,21 +50,21 @@
     --score-critical: 0 84% 50%;
     --score-critical-bg: 0 84% 94%;
 
-    /* Sidebar - Deep navy */
-    --sidebar-background: 220 30% 12%;
-    --sidebar-foreground: 0 0% 92%;
-    --sidebar-primary: 43 90% 55%;
-    --sidebar-primary-foreground: 220 30% 10%;
-    --sidebar-accent: 220 25% 20%;
-    --sidebar-accent-foreground: 0 0% 92%;
-    --sidebar-border: 220 20% 22%;
-    --sidebar-ring: 43 90% 55%;
+    /* Sidebar - Light glass */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 220 30% 25%;
+    --sidebar-primary: 214 65% 35%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 30% 93%;
+    --sidebar-accent-foreground: 220 30% 18%;
+    --sidebar-border: 210 15% 88%;
+    --sidebar-ring: 214 65% 35%;
 
-    /* Shadows for glass */
-    --shadow-sm: 0 1px 3px 0 hsl(210 20% 50% / 0.06), 0 1px 2px -1px hsl(210 20% 50% / 0.06);
-    --shadow-md: 0 4px 12px -2px hsl(210 20% 50% / 0.08), 0 2px 6px -2px hsl(210 20% 50% / 0.04);
-    --shadow-lg: 0 10px 30px -5px hsl(210 20% 50% / 0.1), 0 4px 10px -4px hsl(210 20% 50% / 0.05);
-    --shadow-xl: 0 20px 50px -10px hsl(210 20% 50% / 0.12), 0 8px 16px -6px hsl(210 20% 50% / 0.05);
+    /* Shadows */
+    --shadow-sm: 0 1px 3px 0 hsl(210 20% 50% / 0.06);
+    --shadow-md: 0 4px 16px -2px hsl(210 20% 50% / 0.08);
+    --shadow-lg: 0 10px 30px -5px hsl(210 20% 50% / 0.1);
+    --shadow-xl: 0 20px 50px -10px hsl(210 20% 50% / 0.12);
     --shadow-glow: 0 0 30px -8px hsl(var(--primary) / 0.15);
   }
 }
@@ -82,44 +81,41 @@
   body {
     @apply text-foreground antialiased;
     min-height: 100vh;
-    background-color: hsl(220 20% 90%);
+    background-color: hsl(220 18% 90%);
     background-image:
-      radial-gradient(circle 500px at 0% 0%, hsl(214 80% 75% / 0.55) 0%, transparent 100%),
-      radial-gradient(circle 400px at 100% 0%, hsl(43 90% 78% / 0.45) 0%, transparent 100%),
-      radial-gradient(circle 500px at 50% 100%, hsl(180 50% 80% / 0.45) 0%, transparent 100%),
-      radial-gradient(circle 350px at 85% 60%, hsl(280 50% 82% / 0.35) 0%, transparent 100%),
-      radial-gradient(circle 300px at 20% 60%, hsl(140 50% 80% / 0.3) 0%, transparent 100%);
+      radial-gradient(circle 600px at 0% 0%, hsl(214 70% 80% / 0.5) 0%, transparent 100%),
+      radial-gradient(circle 500px at 100% 0%, hsl(340 60% 85% / 0.35) 0%, transparent 100%),
+      radial-gradient(circle 500px at 50% 100%, hsl(180 50% 82% / 0.4) 0%, transparent 100%),
+      radial-gradient(circle 400px at 85% 55%, hsl(280 45% 85% / 0.3) 0%, transparent 100%),
+      radial-gradient(circle 350px at 15% 65%, hsl(140 45% 82% / 0.25) 0%, transparent 100%);
     background-attachment: fixed;
   }
 }
 
 @layer components {
   /* ========================================
-     GLASSMORPHISM CARD - Light Theme
-     Transparent with colored edge reflections
+     GLASS CARD
      ======================================== */
   .glass-card {
-    background: hsl(0 0% 100% / 0.3);
-    backdrop-filter: blur(14px) saturate(1.4);
-    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    background: hsl(0 0% 100% / 0.35);
+    backdrop-filter: blur(16px) saturate(1.5);
+    -webkit-backdrop-filter: blur(16px) saturate(1.5);
     border: 1.5px solid hsl(0 0% 100% / 0.6);
-    border-top: 1.5px solid hsl(0 0% 100% / 0.85);
-    border-left: 1.5px solid hsl(0 0% 100% / 0.7);
+    border-top-color: hsl(0 0% 100% / 0.9);
+    border-left-color: hsl(0 0% 100% / 0.75);
     border-radius: var(--radius);
     box-shadow:
-      0 4px 30px -4px hsl(210 30% 50% / 0.12),
-      0 1px 3px 0 hsl(210 30% 50% / 0.06),
-      inset 0 1px 2px 0 hsl(0 0% 100% / 0.4);
-    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      0 4px 24px -4px hsl(210 30% 50% / 0.1),
+      inset 0 1px 2px 0 hsl(0 0% 100% / 0.5);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .glass-card:hover {
-    background: hsl(0 0% 100% / 0.45);
-    border-top-color: hsl(0 0% 100% / 0.95);
+    background: hsl(0 0% 100% / 0.5);
+    border-top-color: hsl(0 0% 100% / 1);
     box-shadow:
-      0 8px 40px -4px hsl(210 30% 50% / 0.18),
-      0 2px 6px 0 hsl(210 30% 50% / 0.08),
-      inset 0 1px 3px 0 hsl(0 0% 100% / 0.5);
+      0 8px 32px -4px hsl(210 30% 50% / 0.15),
+      inset 0 1px 3px 0 hsl(0 0% 100% / 0.6);
     transform: translateY(-1px);
   }
 
@@ -127,7 +123,6 @@
   .stat-card {
     @apply glass-card p-6;
   }
-
   .stat-card:hover {
     transform: translateY(-3px);
   }
@@ -136,61 +131,60 @@
      GLASS SURFACE - Headers/Toolbars
      ======================================== */
   .glass-surface {
-    background: hsl(0 0% 100% / 0.6);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: hsl(0 0% 100% / 0.4);
+    backdrop-filter: blur(20px) saturate(1.5);
+    -webkit-backdrop-filter: blur(20px) saturate(1.5);
     border-color: hsl(0 0% 100% / 0.5);
-    box-shadow: 0 1px 3px 0 hsl(210 20% 50% / 0.06);
+    box-shadow:
+      0 1px 3px 0 hsl(210 20% 50% / 0.05),
+      inset 0 1px 0 0 hsl(0 0% 100% / 0.6);
   }
 
   /* ========================================
-     GLASS SIDEBAR - Dark frosted nav
+     GLASS SIDEBAR - Light frosted
      ======================================== */
   .glass-sidebar {
-    background: linear-gradient(
-      180deg,
-      hsl(220 30% 12%) 0%,
-      hsl(220 28% 10%) 100%
-    );
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border-color: hsl(220 20% 25%);
+    background: hsl(0 0% 100% / 0.35);
+    backdrop-filter: blur(24px) saturate(1.6);
+    -webkit-backdrop-filter: blur(24px) saturate(1.6);
+    border-color: hsl(0 0% 100% / 0.5);
+    box-shadow:
+      1px 0 20px -4px hsl(210 30% 50% / 0.08),
+      inset -1px 0 0 0 hsl(0 0% 100% / 0.4);
   }
 
   /* ========================================
-     GLASS POPOVER - Dropdowns/Dialogs
+     GLASS POPOVER
      ======================================== */
   .glass-popover {
-    background: hsl(0 0% 100% / 0.85) !important;
-    backdrop-filter: blur(20px) !important;
-    -webkit-backdrop-filter: blur(20px) !important;
-    border: 1px solid hsl(0 0% 100% / 0.6) !important;
+    background: hsl(0 0% 100% / 0.75) !important;
+    backdrop-filter: blur(24px) saturate(1.5) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(1.5) !important;
+    border: 1.5px solid hsl(0 0% 100% / 0.6) !important;
     box-shadow:
       0 10px 40px -8px hsl(210 30% 50% / 0.15),
-      0 2px 8px 0 hsl(210 30% 50% / 0.06),
-      inset 0 1px 0 0 hsl(0 0% 100% / 0.8) !important;
+      inset 0 1px 0 0 hsl(0 0% 100% / 0.7) !important;
   }
 
   /* ========================================
-     GLASS BUTTON - Normal, glass on hover
+     GLASS BUTTON - glass on hover
      ======================================== */
   .glass-btn {
     position: relative;
+    overflow: hidden;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .glass-btn:hover {
-    background: hsl(0 0% 100% / 0.5) !important;
+    background: hsl(0 0% 100% / 0.55) !important;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border-color: hsl(0 0% 100% / 0.6);
+    border-color: hsl(0 0% 100% / 0.7) !important;
     box-shadow:
-      0 4px 16px -2px hsl(210 30% 60% / 0.12),
-      inset 0 1px 0 0 hsl(0 0% 100% / 0.7),
-      inset 0 0 0 0.5px hsl(0 0% 100% / 0.3);
+      0 4px 16px -2px hsl(210 30% 60% / 0.1),
+      inset 0 1px 0 0 hsl(0 0% 100% / 0.7);
   }
 
-  /* Reflection shine effect on hover */
   .glass-btn::after {
     content: '';
     position: absolute;
@@ -201,34 +195,59 @@
     background: linear-gradient(
       120deg,
       hsl(0 0% 100% / 0) 0%,
-      hsl(0 0% 100% / 0.3) 50%,
+      hsl(0 0% 100% / 0.4) 50%,
       hsl(0 0% 100% / 0) 100%
     );
     transition: left 0.5s ease;
     pointer-events: none;
     border-radius: inherit;
   }
-
   .glass-btn:hover::after {
     left: 120%;
+  }
+
+  /* ========================================
+     GLASS TABS - Like reference image
+     ======================================== */
+  .glass-tabs {
+    background: hsl(0 0% 100% / 0.3);
+    backdrop-filter: blur(12px) saturate(1.3);
+    -webkit-backdrop-filter: blur(12px) saturate(1.3);
+    border: 1.5px solid hsl(0 0% 100% / 0.5);
+    border-top-color: hsl(0 0% 100% / 0.8);
+    border-radius: var(--radius);
+    padding: 4px;
+    box-shadow: inset 0 1px 2px 0 hsl(0 0% 100% / 0.4);
+  }
+
+  .glass-tab-active {
+    background: hsl(0 0% 100% / 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid hsl(0 0% 100% / 0.7);
+    border-radius: calc(var(--radius) - 4px);
+    box-shadow:
+      0 2px 8px -1px hsl(210 30% 50% / 0.1),
+      inset 0 1px 0 0 hsl(0 0% 100% / 0.6);
   }
 
   /* ========================================
      GLASS INPUT
      ======================================== */
   .glass-input {
-    background: hsl(0 0% 100% / 0.5);
+    background: hsl(0 0% 100% / 0.45);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    border: 1px solid hsl(210 20% 85%);
+    border: 1px solid hsl(0 0% 100% / 0.5);
+    border-top-color: hsl(0 0% 100% / 0.7);
     transition: all 0.3s ease;
   }
 
   .glass-input:focus {
-    background: hsl(0 0% 100% / 0.7);
-    border-color: hsl(214 65% 60%);
+    background: hsl(0 0% 100% / 0.65);
+    border-color: hsl(214 65% 60% / 0.5);
     box-shadow:
-      0 0 0 3px hsl(214 65% 28% / 0.1),
+      0 0 0 3px hsl(214 65% 35% / 0.08),
       inset 0 1px 0 0 hsl(0 0% 100% / 0.5);
   }
 
@@ -236,13 +255,33 @@
      GLASS TABLE
      ======================================== */
   .glass-table {
-    background: hsl(0 0% 100% / 0.4);
+    background: hsl(0 0% 100% / 0.3);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid hsl(0 0% 100% / 0.5);
+    border: 1.5px solid hsl(0 0% 100% / 0.5);
+    border-top-color: hsl(0 0% 100% / 0.8);
     border-radius: var(--radius);
     overflow: hidden;
-    box-shadow: 0 2px 12px -3px hsl(210 20% 50% / 0.08);
+    box-shadow: inset 0 1px 2px 0 hsl(0 0% 100% / 0.3);
+  }
+
+  /* ========================================
+     GLASS NAV ITEM (for sidebar)
+     ======================================== */
+  .glass-nav-active {
+    background: hsl(0 0% 100% / 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid hsl(0 0% 100% / 0.6);
+    box-shadow:
+      0 2px 8px -1px hsl(210 30% 50% / 0.08),
+      inset 0 1px 0 0 hsl(0 0% 100% / 0.5);
+  }
+
+  .glass-nav-hover:hover {
+    background: hsl(0 0% 100% / 0.35);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
   }
 
   /* ========================================
@@ -257,22 +296,18 @@
     @apply bg-score-excellent text-white;
     box-shadow: 0 0 24px -4px hsl(var(--score-excellent) / 0.4);
   }
-
   .quality-circle-good {
     @apply bg-score-good text-white;
     box-shadow: 0 0 24px -4px hsl(var(--score-good) / 0.4);
   }
-
   .quality-circle-average {
     @apply bg-score-average text-white;
     box-shadow: 0 0 24px -4px hsl(var(--score-average) / 0.4);
   }
-
   .quality-circle-weak {
     @apply bg-score-weak text-white;
     box-shadow: 0 0 24px -4px hsl(var(--score-weak) / 0.4);
   }
-
   .quality-circle-critical {
     @apply bg-score-critical text-white;
     box-shadow: 0 0 24px -4px hsl(var(--score-critical) / 0.4);
@@ -280,7 +315,6 @@
 }
 
 @layer utilities {
-  /* Score color utilities */
   .bg-score-excellent { background-color: hsl(var(--score-excellent)); }
   .bg-score-good { background-color: hsl(var(--score-good)); }
   .bg-score-average { background-color: hsl(var(--score-average)); }
@@ -305,7 +339,6 @@
   .border-score-weak { border-color: hsl(var(--score-weak)); }
   .border-score-critical { border-color: hsl(var(--score-critical)); }
 
-  /* Animation utilities */
   .animate-pulse-slow {
     animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
