@@ -123,7 +123,7 @@ export default function BranchesList() {
               }}
               whileHover={{ y: -4 }}
               onClick={() => navigate(`/branches/${branch.id}`)}
-              className="bg-card rounded-xl border border-border p-6 cursor-pointer hover:shadow-lg transition-shadow"
+              className="glass-card p-6 cursor-pointer"
             >
               <div className="flex items-start gap-4">
                 <QualityCircle
