@@ -42,10 +42,10 @@ export function MainLayout() {
         {/* Header */}
         <header className="h-14 border-b glass-surface flex items-center justify-end px-4 gap-2 text-white/90">
           {/* Language Toggle - Direct switch */}
-          <Button
+            <Button
             variant="outline"
             size="sm"
-            className="h-9 px-3 gap-1.5 border-primary/30 hover:bg-primary/10 font-semibold text-sm"
+            className="h-9 px-3 gap-1.5 border-white/20 hover:bg-white/10 font-semibold text-sm text-white/80"
             onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
             title={language === 'en' ? 'العربية' : 'English'}
           >
