@@ -622,16 +622,16 @@ export default function CEODashboard() {
               ].map((item) => (
                 <div
                   key={item.label}
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg bg-muted/50"
+                  className="glass-btn flex items-center gap-3 px-5 py-3.5 rounded-[var(--radius-md)] cursor-default"
                 >
-                  <div className={`w-4 h-4 rounded-full ${item.color}`} />
+                  <div className={`w-4 h-4 rounded-full ${item.color} shadow-sm`} />
                   <div>
                     <p className="text-sm font-medium text-foreground">{item.label}</p>
                     <p className="text-2xl font-bold text-foreground">{item.count}</p>
                   </div>
                 </div>
               ))}
-              <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-muted/50 border border-border">
+              <div className="glass-btn flex items-center gap-3 px-5 py-3.5 rounded-[var(--radius-md)] cursor-default">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">
                     {language === 'ar' ? 'متوسط وقت الحل' : 'Avg Resolution Time'}
