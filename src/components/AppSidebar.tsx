@@ -364,7 +364,7 @@ export function AppSidebar() {
 
       {/* User Profile & Logout */}
       {profile && (
-        <div className="p-3 border-t border-sidebar-border">
+        <div className="p-3 border-t border-border/50">
           <div className={cn(
             "flex items-center gap-3 p-2 rounded-lg",
             collapsed ? "justify-center" : ""
