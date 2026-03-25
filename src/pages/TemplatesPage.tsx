@@ -94,7 +94,7 @@ export default function TemplatesPage() {
                 }}
                 whileHover={{ y: -4 }}
                 onClick={() => setSelectedTemplateId(template.id)}
-                className="bg-card rounded-xl border border-border p-6 cursor-pointer hover:shadow-lg hover:border-primary/30 transition-all"
+                className="glass-card p-6 cursor-pointer hover:shadow-lg hover:border-primary/30 transition-all"
               >
                 <div className="flex items-start justify-between">
                   <div className="p-3 rounded-xl bg-primary/10">
@@ -135,7 +135,7 @@ export default function TemplatesPage() {
           })}
         </motion.div>
       ) : (
-        <div className="text-center py-12 bg-card rounded-xl border border-border">
+        <div className="text-center py-12 glass-card">
           <FileText className="w-12 h-12 mx-auto text-muted-foreground/50" />
           <h3 className="mt-4 text-lg font-medium text-foreground">
             {language === 'ar' ? 'لا توجد قوالب' : 'No templates yet'}

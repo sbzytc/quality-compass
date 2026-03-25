@@ -197,7 +197,7 @@ export default function BranchManagerDashboard() {
 
       {/* Branch Score & Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="bg-card rounded-xl border border-border p-6 flex flex-col items-center justify-center">
+        <div className="glass-card p-6 flex flex-col items-center justify-center">
           <QualityCircle
             score={currentScore ?? 0}
             status={scoreStatus}
@@ -292,7 +292,7 @@ function PerformanceTrendChart({ branchId, isAr }: { branchId: string; isAr: boo
   if (!trendData || trendData.length < 2) return null;
 
   return (
-    <div className="bg-card rounded-xl border border-border p-6">
+    <div className="glass-card p-6">
       <h2 className="text-lg font-semibold text-foreground mb-4">
         <TrendingUp className="w-5 h-5 inline-block me-2 text-primary" />
         {isAr ? 'اتجاه الأداء عبر الزمن' : 'Performance Trend Over Time'}

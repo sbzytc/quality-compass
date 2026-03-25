@@ -311,7 +311,7 @@ export default function MyTickets() {
       {isLoading ? (
         <div className="flex justify-center p-8"><p className="text-muted-foreground">{t('common.loading')}</p></div>
       ) : tickets?.length === 0 ? (
-        <div className="text-center p-12 bg-card rounded-lg border border-dashed">
+        <div className="text-center p-12 glass-card border-dashed">
           <Info className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
           <h3 className="text-lg font-medium">{direction === 'rtl' ? 'لا توجد تذاكر حالياً' : 'No tickets found'}</h3>
           <p className="text-muted-foreground mt-1">{direction === 'rtl' ? 'يمكنك رفع تذكرة جديدة لأي مشكلة تواجهك' : 'You can open a new ticket for any issue you face'}</p>

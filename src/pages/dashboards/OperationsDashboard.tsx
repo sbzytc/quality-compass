@@ -267,7 +267,7 @@ export default function OperationsDashboard() {
 
       {/* Branch Performance Section */}
       {branchId && (
-        <div className="bg-card rounded-xl border border-border overflow-hidden">
+        <div className="glass-card overflow-hidden">
           <div className="p-4 border-b border-border flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-primary" />
             <h2 className="text-lg font-semibold text-foreground">
@@ -381,7 +381,7 @@ export default function OperationsDashboard() {
       )}
 
       {/* Task List */}
-      <div className="bg-card rounded-xl border border-border overflow-hidden">
+      <div className="glass-card overflow-hidden">
         <div className="p-4 border-b border-border">
           <h2 className="text-lg font-semibold text-foreground">{isAr ? 'قائمة المهام' : 'Task List'}</h2>
         </div>
