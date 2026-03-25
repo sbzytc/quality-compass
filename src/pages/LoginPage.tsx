@@ -218,7 +218,7 @@ export default function LoginPage() {
                   placeholder={direction === 'rtl' ? 'أدخل بريدك الإلكتروني' : 'Enter your email'}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="ps-10 glass-input"
+                  className="ps-10"
                   required
                 />
               </div>
