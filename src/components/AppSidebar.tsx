@@ -230,13 +230,13 @@ function SidebarNavItem({
       <div>
         <button
           onClick={onToggle}
-          className={cn("glass-menu-item w-full text-[13px]", isActive && "active")}
+          className={cn("glass-menu-item w-full text-[14px]", isActive && "active")}
         >
-          <Icon className="icon w-[18px] h-[18px] flex-shrink-0" />
+          <Icon className="icon w-[20px] h-[20px] flex-shrink-0" />
           <span className="label overflow-hidden whitespace-nowrap text-start">
             {t(item.labelKey)}
           </span>
-          <ChevronDown className={cn("w-3.5 h-3.5 transition-transform duration-200 opacity-60", isExpanded && "rotate-180")} />
+          <ChevronDown className={cn("w-4 h-4 transition-transform duration-200 opacity-50", isExpanded && "rotate-180")} />
         </button>
         <AnimatePresence>
           {isExpanded && (
@@ -254,9 +254,9 @@ function SidebarNavItem({
                     <Link
                       key={child.path}
                       to={child.path}
-                      className={cn("glass-menu-item text-[13px] py-2", isChildActive && "active")}
+                      className={cn("glass-menu-item text-[13px]", isChildActive && "active")}
                     >
-                      <child.icon className="icon w-4 h-4 flex-shrink-0" />
+                      <child.icon className="icon w-[18px] h-[18px] flex-shrink-0" />
                       <span className="label overflow-hidden whitespace-nowrap">{t(child.labelKey)}</span>
                     </Link>
                   );
@@ -272,9 +272,9 @@ function SidebarNavItem({
   return (
     <Link
       to={hasChildren ? item.children![0].path : item.path}
-      className={cn("glass-menu-item text-[13px]", isActive && "active")}
+      className={cn("glass-menu-item text-[14px]", isActive && "active")}
     >
-      <Icon className="icon w-[18px] h-[18px] flex-shrink-0" />
+      <Icon className="icon w-[20px] h-[20px] flex-shrink-0" />
       {!collapsed && (
         <span className="label overflow-hidden whitespace-nowrap">{t(item.labelKey)}</span>
       )}
