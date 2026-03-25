@@ -160,8 +160,9 @@ export function AppSidebar() {
             ))}
           </div>
 
-          {settingsNavItems.length > 0 && (
-            <div className="glass-menu mt-4">
+          {settingsNavItems.length > 0 && <>
+            <div className="glass-section-divider" />
+            <div className="glass-menu">
               {!collapsed && (
                 <p className="text-[10px] font-semibold px-4 py-2 uppercase tracking-widest" style={{ color: 'rgba(0,0,0,0.30)' }}>
                   {t('nav.settings')}
