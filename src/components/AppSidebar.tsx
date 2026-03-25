@@ -303,7 +303,7 @@ export function AppSidebar() {
       )}
     >
       {/* Logo */}
-      <div className="h-16 flex items-center px-4 border-b border-sidebar-border">
+      <div className="h-16 flex items-center px-4 border-b border-border/50">
         <div className="flex items-center gap-3">
           <img src={rasdahLogo} alt="Rasdah" className="w-10 h-10 rounded-xl object-contain" />
           <AnimatePresence>
