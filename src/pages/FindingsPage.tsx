@@ -27,11 +27,20 @@ import { toast } from 'sonner';
 
 export default function FindingsPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const goBack = useGoBack('/dashboard/ceo');
   const { language, direction } = useLanguage();
   const isAr = language === 'ar';
 
-  const [activeTab, setActiveTab] = useState<string>('all');
+  const initialTab = searchParams.get('status') || 'all';
+  const [activeTab, setActiveTab] = useState<string>(initialTab);
+
+  useEffect(() => {
+    const statusParam = searchParams.get('status');
+    if (statusParam) {
+      setActiveTab(statusParam);
+    }
+  }, [searchParams]);
   const [expandedBranches, setExpandedBranches] = useState<Set<string>>(new Set());
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [resolveDialogOpen, setResolveDialogOpen] = useState(false);
