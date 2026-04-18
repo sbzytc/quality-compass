@@ -80,6 +80,7 @@ import {
 } from '@/hooks/useUsers';
 import { AppRole, useAuth } from '@/contexts/AuthContext';
 import { useBranches } from '@/hooks/useBranches';
+import { useCurrentCompany } from '@/contexts/CurrentCompanyContext';
 
 const roleLabels: Record<AppRole, { en: string; ar: string }> = {
   super_admin: { en: 'Super Admin', ar: 'مدير المنصة' },
@@ -104,11 +105,13 @@ const roleColors: Record<AppRole, string> = {
 export default function UsersPage() {
   const navigate = useNavigate();
   const { roles, refreshProfile, user: authUser } = useAuth();
+  const { currentCompany } = useCurrentCompany();
+  const isSuperAdmin = roles.includes('super_admin');
   const goBack = useGoBack('/dashboard/ceo');
   const { t, language } = useLanguage();
-  const { data: users, isLoading } = useUsers();
+  const { data: users, isLoading } = useUsers({ companyId: currentCompany?.id ?? null, isSuperAdmin });
   const { data: branches } = useBranches();
-  const stats = useUserStats();
+  const stats = useUserStats({ companyId: currentCompany?.id ?? null, isSuperAdmin });
   const inviteUser = useInviteUser();
   const createUser = useCreateUser();
   const resetPassword = useResetPassword();
