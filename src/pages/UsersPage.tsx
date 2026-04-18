@@ -176,6 +176,7 @@ export default function UsersPage() {
         email: inviteForm.email,
         fullName: inviteForm.fullName,
         role: inviteForm.role,
+        companyId: currentCompany?.id,
       });
       toast.success(
         language === 'ar' 
@@ -211,6 +212,7 @@ export default function UsersPage() {
         role: createForm.role,
         forcePasswordChange: createForm.forcePasswordChange,
         branchId: (createForm.role === 'branch_manager' || createForm.role === 'branch_employee') ? createForm.branchId : undefined,
+        companyId: currentCompany?.id,
       });
       toast.success(
         language === 'ar'
