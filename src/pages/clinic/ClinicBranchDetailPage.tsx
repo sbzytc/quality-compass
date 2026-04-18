@@ -6,6 +6,7 @@ import { useBranches } from '@/hooks/useBranches';
 import { useClinicDepartments, useUpsertDepartment, useDeleteDepartment, type ClinicDepartment } from '@/hooks/useClinicDepartments';
 import { useClinicRooms, useUpsertRoom, useDeleteRoom, type ClinicRoom, type RoomStatus } from '@/hooks/useClinicRooms';
 import { useCurrentCompany } from '@/contexts/CurrentCompanyContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -52,6 +53,9 @@ export default function ClinicBranchDetailPage() {
   const goBack = useGoBack();
   const ar = language === 'ar';
   const { isCompanyAdmin } = useCurrentCompany();
+  const { roles } = useAuth();
+  const isBranchManager = roles.includes('branch_manager');
+  const canManageStatus = isCompanyAdmin || isBranchManager || roles.includes('admin');
   const { data: branches = [] } = useBranches();
   const branch: any = branches.find((b: any) => b.id === branchId);
   const { data: depts = [], isLoading: ld } = useClinicDepartments(branchId);
@@ -143,7 +147,7 @@ export default function ClinicBranchDetailPage() {
                         ) : (
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                             {deptRooms.map(room => (
-                              <RoomCard key={room.id} room={room} ar={ar} canEdit={isCompanyAdmin} branchId={branchId!} />
+                              <RoomCard key={room.id} room={room} ar={ar} canEdit={isCompanyAdmin} canManageStatus={canManageStatus} branchId={branchId!} deptCode={dept.code} />
                             ))}
                           </div>
                         )}
@@ -177,7 +181,7 @@ function DepartmentActions({ branchId, dept, ar }: { branchId: string; dept: Cli
         description={ar ? 'سيتم حذف جميع الغرف داخل هذا القسم.' : 'All rooms inside will also be deleted.'}
         onConfirm={() => deleteDept.mutate(dept.id)}
       />
-      <RoomDialog branchId={branchId} departmentId={dept.id} ar={ar} />
+      <RoomDialog branchId={branchId} departmentId={dept.id} ar={ar} deptCode={dept.code} />
     </div>
   );
 }
@@ -202,13 +206,14 @@ function StatBox({ label, value, icon: Icon, tone }: { label: string; value: any
   );
 }
 
-function RoomCard({ room, ar, canEdit, branchId }: { room: ClinicRoom; ar: boolean; canEdit: boolean; branchId: string }) {
+function RoomCard({ room, ar, canEdit, canManageStatus, branchId, deptCode }: { room: ClinicRoom; ar: boolean; canEdit: boolean; canManageStatus: boolean; branchId: string; deptCode: string }) {
   const deleteRoom = useDeleteRoom();
   const upsertRoom = useUpsertRoom();
+  const isReception = deptCode === 'reception';
   const statusLabels: Record<RoomStatus, string> = {
     available: ar ? 'متاحة' : 'Available',
     occupied: ar ? 'مشغولة' : 'Occupied',
-    maintenance: ar ? 'صيانة' : 'Maintenance',
+    maintenance: ar ? 'تحت الصيانة' : 'Under Maintenance',
   };
 
   return (
@@ -220,34 +225,41 @@ function RoomCard({ room, ar, canEdit, branchId }: { room: ClinicRoom; ar: boole
               <DoorOpen className="w-4 h-4 text-muted-foreground" />
               <span className="font-semibold text-sm truncate">{ar ? (room.name_ar || room.name) : room.name}</span>
             </div>
-            {room.room_number && <div className="text-xs text-muted-foreground mt-0.5">#{room.room_number}</div>}
+            {!isReception && room.room_number && <div className="text-xs text-muted-foreground mt-0.5">#{room.room_number}</div>}
           </div>
           <Badge className={STATUS_STYLES[room.status]} variant="outline">{statusLabels[room.status]}</Badge>
         </div>
-        <div className="text-xs text-muted-foreground">
-          {ar ? 'السعة' : 'Capacity'}: {room.capacity}
-        </div>
-        {canEdit && (
+        {!isReception && (
+          <div className="text-xs text-muted-foreground">
+            {ar ? 'السعة' : 'Capacity'}: {room.capacity}
+          </div>
+        )}
+        {(canEdit || canManageStatus) && (
           <div className="flex items-center gap-1.5">
-            <Select
-              value={room.status}
-              onValueChange={(v) => upsertRoom.mutate({ id: room.id, department_id: room.department_id, branch_id: branchId, name: room.name, status: v as RoomStatus })}
-            >
-              <SelectTrigger className="h-8 text-xs flex-1"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="available">{statusLabels.available}</SelectItem>
-                <SelectItem value="occupied">{statusLabels.occupied}</SelectItem>
-                <SelectItem value="maintenance">{statusLabels.maintenance}</SelectItem>
-              </SelectContent>
-            </Select>
-            <RoomDialog branchId={branchId} departmentId={room.department_id} ar={ar} existing={room} iconOnly />
-            <DeleteConfirm
-              ar={ar}
-              title={ar ? 'حذف الغرفة؟' : 'Delete room?'}
-              description={ar ? 'لا يمكن التراجع عن هذا الإجراء.' : 'This action cannot be undone.'}
-              onConfirm={() => deleteRoom.mutate(room.id)}
-              iconOnly
-            />
+            {canManageStatus ? (
+              <Select
+                value={room.status === 'occupied' ? 'available' : room.status}
+                onValueChange={(v) => upsertRoom.mutate({ id: room.id, department_id: room.department_id, branch_id: branchId, name: room.name, status: v as RoomStatus })}
+              >
+                <SelectTrigger className="h-8 text-xs flex-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="available">{statusLabels.available}</SelectItem>
+                  <SelectItem value="maintenance">{statusLabels.maintenance}</SelectItem>
+                </SelectContent>
+              </Select>
+            ) : <div className="flex-1" />}
+            {canEdit && (
+              <>
+                <RoomDialog branchId={branchId} departmentId={room.department_id} ar={ar} existing={room} iconOnly deptCode={deptCode} />
+                <DeleteConfirm
+                  ar={ar}
+                  title={ar ? 'حذف الغرفة؟' : 'Delete room?'}
+                  description={ar ? 'لا يمكن التراجع عن هذا الإجراء.' : 'This action cannot be undone.'}
+                  onConfirm={() => deleteRoom.mutate(room.id)}
+                  iconOnly
+                />
+              </>
+            )}
           </div>
         )}
       </CardContent>
@@ -311,12 +323,13 @@ function DepartmentDialog({ branchId, ar, existing }: { branchId: string; ar: bo
   );
 }
 
-function RoomDialog({ branchId, departmentId, ar, existing, iconOnly }: { branchId: string; departmentId: string; ar: boolean; existing?: ClinicRoom; iconOnly?: boolean }) {
+function RoomDialog({ branchId, departmentId, ar, existing, iconOnly, deptCode }: { branchId: string; departmentId: string; ar: boolean; existing?: ClinicRoom; iconOnly?: boolean; deptCode?: string }) {
   const [open, setOpen] = useState(false);
+  const isReception = deptCode === 'reception';
   const [name, setName] = useState(existing?.name || '');
   const [nameAr, setNameAr] = useState(existing?.name_ar || '');
   const [roomNumber, setRoomNumber] = useState(existing?.room_number || '');
-  const [roomType, setRoomType] = useState(existing?.room_type || 'consultation');
+  const [roomType, setRoomType] = useState(existing?.room_type || (isReception ? 'reception' : 'consultation'));
   const [capacity, setCapacity] = useState(existing?.capacity || 1);
   const [status, setStatus] = useState<RoomStatus>(existing?.status || 'available');
   const upsert = useUpsertRoom();
@@ -329,7 +342,7 @@ function RoomDialog({ branchId, departmentId, ar, existing, iconOnly }: { branch
       branch_id: branchId,
       name,
       name_ar: nameAr || null,
-      room_number: roomNumber || null,
+      room_number: isReception ? null : (roomNumber || null),
       room_type: roomType,
       capacity: Number(capacity) || 1,
       status,
@@ -338,6 +351,11 @@ function RoomDialog({ branchId, departmentId, ar, existing, iconOnly }: { branch
     if (!existing) { setName(''); setNameAr(''); setRoomNumber(''); }
   };
 
+  const addLabel = isReception ? (ar ? 'إضافة استقبال' : 'Add Reception') : (ar ? 'إضافة غرفة' : 'Add Room');
+  const titleLabel = existing
+    ? (isReception ? (ar ? 'تعديل استقبال' : 'Edit Reception') : (ar ? 'تعديل غرفة' : 'Edit Room'))
+    : (isReception ? (ar ? 'استقبال جديد' : 'New Reception') : (ar ? 'غرفة جديدة' : 'New Room'));
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -345,35 +363,38 @@ function RoomDialog({ branchId, departmentId, ar, existing, iconOnly }: { branch
           ? <Button variant="ghost" size="icon" className="h-8 w-8"><Pencil className="w-3.5 h-3.5" /></Button>
           : (existing
             ? <Button variant="outline" size="sm"><Pencil className="w-3.5 h-3.5 me-1" />{ar ? 'تعديل' : 'Edit'}</Button>
-            : <Button size="sm" variant="secondary"><Plus className="w-4 h-4 me-1" />{ar ? 'إضافة غرفة' : 'Add Room'}</Button>)
+            : <Button size="sm" variant="secondary"><Plus className="w-4 h-4 me-1" />{addLabel}</Button>)
         }
       </DialogTrigger>
       <DialogContent>
-        <DialogHeader><DialogTitle>{existing ? (ar ? 'تعديل غرفة' : 'Edit Room') : (ar ? 'غرفة جديدة' : 'New Room')}</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{titleLabel}</DialogTitle></DialogHeader>
         <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-2">
-            <div><Label>{ar ? 'رقم الغرفة' : 'Room #'}</Label>
-              <Input value={roomNumber} onChange={e => setRoomNumber(e.target.value)} placeholder="E-01" /></div>
-            <div><Label>{ar ? 'السعة' : 'Capacity'}</Label>
-              <Input type="number" min={1} value={capacity} onChange={e => setCapacity(Number(e.target.value))} /></div>
-          </div>
+          {!isReception && (
+            <div className="grid grid-cols-2 gap-2">
+              <div><Label>{ar ? 'رقم الغرفة' : 'Room #'}</Label>
+                <Input value={roomNumber} onChange={e => setRoomNumber(e.target.value)} placeholder="E-01" /></div>
+              <div><Label>{ar ? 'السعة' : 'Capacity'}</Label>
+                <Input type="number" min={1} value={capacity} onChange={e => setCapacity(Number(e.target.value))} /></div>
+            </div>
+          )}
           <div><Label>{ar ? 'الاسم (إنجليزي)' : 'Name (English)'}</Label>
-            <Input value={name} onChange={e => setName(e.target.value)} required /></div>
+            <Input value={name} onChange={e => setName(e.target.value)} required placeholder={isReception ? 'Main Reception' : ''} /></div>
           <div><Label>{ar ? 'الاسم (عربي)' : 'Name (Arabic)'}</Label>
-            <Input value={nameAr} onChange={e => setNameAr(e.target.value)} dir="rtl" /></div>
+            <Input value={nameAr} onChange={e => setNameAr(e.target.value)} dir="rtl" placeholder={isReception ? 'الاستقبال الرئيسي' : ''} /></div>
           <div className="grid grid-cols-2 gap-2">
-            <div><Label>{ar ? 'النوع' : 'Type'}</Label>
-              <Select value={roomType} onValueChange={setRoomType}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{ROOM_TYPES.map(t => <SelectItem key={t.code} value={t.code}>{ar ? t.ar : t.en}</SelectItem>)}</SelectContent>
-              </Select></div>
-            <div><Label>{ar ? 'الحالة' : 'Status'}</Label>
-              <Select value={status} onValueChange={v => setStatus(v as RoomStatus)}>
+            {!isReception && (
+              <div><Label>{ar ? 'النوع' : 'Type'}</Label>
+                <Select value={roomType} onValueChange={setRoomType}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{ROOM_TYPES.map(t => <SelectItem key={t.code} value={t.code}>{ar ? t.ar : t.en}</SelectItem>)}</SelectContent>
+                </Select></div>
+            )}
+            <div className={isReception ? 'col-span-2' : ''}><Label>{ar ? 'الحالة' : 'Status'}</Label>
+              <Select value={status === 'occupied' ? 'available' : status} onValueChange={v => setStatus(v as RoomStatus)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="available">{ar ? 'متاحة' : 'Available'}</SelectItem>
-                  <SelectItem value="occupied">{ar ? 'مشغولة' : 'Occupied'}</SelectItem>
-                  <SelectItem value="maintenance">{ar ? 'صيانة' : 'Maintenance'}</SelectItem>
+                  <SelectItem value="maintenance">{ar ? 'تحت الصيانة' : 'Under Maintenance'}</SelectItem>
                 </SelectContent>
               </Select></div>
           </div>
