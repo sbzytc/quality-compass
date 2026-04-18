@@ -83,8 +83,8 @@ import { useBranches } from '@/hooks/useBranches';
 import { useCurrentCompany } from '@/contexts/CurrentCompanyContext';
 
 const roleLabels: Record<AppRole, { en: string; ar: string }> = {
-  super_admin: { en: 'Super Admin', ar: 'مدير المنصة' },
-  admin: { en: 'Admin', ar: 'مدير النظام' },
+  super_admin: { en: 'Platform Super Admin', ar: 'مدير المنصة' },
+  admin: { en: 'Workspace Admin', ar: 'أدمن المساحة' },
   executive: { en: 'Executive', ar: 'تنفيذي' },
   branch_manager: { en: 'Branch Manager', ar: 'مدير الفرع' },
   assessor: { en: 'Assessor', ar: 'مقيّم' },
