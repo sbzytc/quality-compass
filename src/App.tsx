@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { CurrentCompanyProvider } from "@/contexts/CurrentCompanyContext";
 import { AIAssistantProvider } from "@/contexts/AIAssistantContext";
 import { ProtectedRoute, getDefaultDashboard } from "@/components/ProtectedRoute";
 import { MainLayout } from "@/layouts/MainLayout";
@@ -248,6 +249,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <LanguageProvider>
       <AuthProvider>
+        <CurrentCompanyProvider>
         <AIAssistantProvider>
           <TooltipProvider>
             <Toaster />
@@ -257,6 +259,7 @@ const App = () => (
             </BrowserRouter>
           </TooltipProvider>
         </AIAssistantProvider>
+        </CurrentCompanyProvider>
       </AuthProvider>
     </LanguageProvider>
   </QueryClientProvider>

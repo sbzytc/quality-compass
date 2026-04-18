@@ -11,6 +11,7 @@ import {
 import { LogOut, Settings, Languages } from 'lucide-react';
 import { getInitials } from '@/lib/getInitials';
 import { AIAssistantButton } from '@/components/AIAssistant/AIAssistantButton';
+import { WorkspaceSwitcher } from '@/components/WorkspaceSwitcher';
 
 export function MainLayout() {
   const { language, setLanguage, direction, t } = useLanguage();
@@ -38,6 +39,9 @@ export function MainLayout() {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <header className="h-14 border-b glass-surface flex items-center justify-end px-5 gap-2">
+          {/* Workspace Switcher */}
+          <WorkspaceSwitcher />
+
           {/* Language Toggle */}
           <Button
             variant="outline"

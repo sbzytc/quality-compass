@@ -82,6 +82,7 @@ import { AppRole, useAuth } from '@/contexts/AuthContext';
 import { useBranches } from '@/hooks/useBranches';
 
 const roleLabels: Record<AppRole, { en: string; ar: string }> = {
+  super_admin: { en: 'Super Admin', ar: 'مدير المنصة' },
   admin: { en: 'Admin', ar: 'مدير النظام' },
   executive: { en: 'Executive', ar: 'تنفيذي' },
   branch_manager: { en: 'Branch Manager', ar: 'مدير الفرع' },
@@ -91,6 +92,7 @@ const roleLabels: Record<AppRole, { en: string; ar: string }> = {
 };
 
 const roleColors: Record<AppRole, string> = {
+  super_admin: 'bg-rose-500/10 text-rose-500 border-rose-500/30',
   admin: 'bg-purple-500/10 text-purple-500 border-purple-500/30',
   executive: 'bg-blue-500/10 text-blue-500 border-blue-500/30',
   branch_manager: 'bg-amber-500/10 text-amber-500 border-amber-500/30',
