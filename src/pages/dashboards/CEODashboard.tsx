@@ -241,6 +241,11 @@ export default function CEODashboard() {
     };
   }) || [];
 
+  // Sector-aware routing: clinic workspace → clinic dashboard
+  if (!companyLoading && currentCompany?.sector_type === 'clinic') {
+    return <Navigate to="/clinic/dashboard" replace />;
+  }
+
   return (
     <div className="space-y-8">
       {/* Header Title */}
