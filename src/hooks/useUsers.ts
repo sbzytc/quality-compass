@@ -108,9 +108,9 @@ export function useInviteUser() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ email, fullName, role }: { email: string; fullName: string; role: AppRole }) => {
+    mutationFn: async ({ email, fullName, role, companyId }: { email: string; fullName: string; role: AppRole; companyId?: string }) => {
       const response = await supabase.functions.invoke('invite-user', {
-        body: { email, fullName, role },
+        body: { email, fullName, role, companyId },
       });
 
       if (response.error) throw response.error;
@@ -126,11 +126,11 @@ export function useCreateUser() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ email, fullName, password, role, forcePasswordChange, branchId }: { 
-      email: string; fullName: string; password: string; role: AppRole; forcePasswordChange: boolean; branchId?: string 
+    mutationFn: async ({ email, fullName, password, role, forcePasswordChange, branchId, companyId }: { 
+      email: string; fullName: string; password: string; role: AppRole; forcePasswordChange: boolean; branchId?: string; companyId?: string 
     }) => {
       const response = await supabase.functions.invoke('create-user', {
-        body: { email, fullName, password, role, forcePasswordChange, branchId },
+        body: { email, fullName, password, role, forcePasswordChange, branchId, companyId },
       });
 
       if (response.error) throw response.error;
