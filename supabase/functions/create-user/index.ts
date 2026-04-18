@@ -14,6 +14,7 @@ interface CreateUserRequest {
   role: "admin" | "executive" | "branch_manager" | "assessor" | "branch_employee" | "support_agent";
   forcePasswordChange: boolean;
   branchId?: string;
+  companyId?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -64,7 +65,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { email, fullName, password, role, forcePasswordChange, branchId }: CreateUserRequest = await req.json();
+    const { email, fullName, password, role, forcePasswordChange, branchId, companyId }: CreateUserRequest = await req.json();
 
     if (!email || !fullName || !password || !role) {
       return new Response(
@@ -133,6 +134,26 @@ const handler = async (req: Request): Promise<Response> => {
       if (branchError) {
         console.error("Error updating branch manager:", branchError);
       }
+    }
+
+    // Add user as a member of the target workspace (current company)
+    if (companyId) {
+      const companyMemberRole = role === "admin" ? "admin" : "member";
+      const { error: membershipError } = await supabaseAdmin.from("company_users").insert({
+        user_id: newUser.user.id,
+        company_id: companyId,
+        role: companyMemberRole,
+        is_active: true,
+      });
+      if (membershipError) {
+        console.error("Error adding workspace membership:", membershipError);
+      }
+
+      // Set default workspace on profile
+      await supabaseAdmin
+        .from("profiles")
+        .update({ default_company_id: companyId })
+        .eq("user_id", newUser.user.id);
     }
 
     return new Response(

@@ -80,6 +80,7 @@ import {
 } from '@/hooks/useUsers';
 import { AppRole, useAuth } from '@/contexts/AuthContext';
 import { useBranches } from '@/hooks/useBranches';
+import { useCurrentCompany } from '@/contexts/CurrentCompanyContext';
 
 const roleLabels: Record<AppRole, { en: string; ar: string }> = {
   super_admin: { en: 'Super Admin', ar: 'مدير المنصة' },
@@ -104,11 +105,13 @@ const roleColors: Record<AppRole, string> = {
 export default function UsersPage() {
   const navigate = useNavigate();
   const { roles, refreshProfile, user: authUser } = useAuth();
+  const { currentCompany } = useCurrentCompany();
+  const isSuperAdmin = roles.includes('super_admin');
   const goBack = useGoBack('/dashboard/ceo');
   const { t, language } = useLanguage();
-  const { data: users, isLoading } = useUsers();
+  const { data: users, isLoading } = useUsers({ companyId: currentCompany?.id ?? null, isSuperAdmin });
   const { data: branches } = useBranches();
-  const stats = useUserStats();
+  const stats = useUserStats({ companyId: currentCompany?.id ?? null, isSuperAdmin });
   const inviteUser = useInviteUser();
   const createUser = useCreateUser();
   const resetPassword = useResetPassword();
@@ -173,6 +176,7 @@ export default function UsersPage() {
         email: inviteForm.email,
         fullName: inviteForm.fullName,
         role: inviteForm.role,
+        companyId: currentCompany?.id,
       });
       toast.success(
         language === 'ar' 
@@ -208,6 +212,7 @@ export default function UsersPage() {
         role: createForm.role,
         forcePasswordChange: createForm.forcePasswordChange,
         branchId: (createForm.role === 'branch_manager' || createForm.role === 'branch_employee') ? createForm.branchId : undefined,
+        companyId: currentCompany?.id,
       });
       toast.success(
         language === 'ar'
@@ -334,7 +339,21 @@ export default function UsersPage() {
           </Button>
           <div>
             <h1 className="text-3xl font-bold text-foreground">{t('users.title')}</h1>
-            <p className="text-muted-foreground mt-1">{t('users.subtitle')}</p>
+            <p className="text-muted-foreground mt-1">
+              {t('users.subtitle')}
+              {currentCompany && !isSuperAdmin && (
+                <span className="ms-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-medium">
+                  <Building className="w-3 h-3" />
+                  {language === 'ar' ? (currentCompany.name_ar || currentCompany.name) : currentCompany.name}
+                </span>
+              )}
+              {isSuperAdmin && (
+                <span className="ms-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-600 text-xs font-medium">
+                  <Shield className="w-3 h-3" />
+                  {language === 'ar' ? 'كل المستخدمين (سوبر أدمن)' : 'All users (Super Admin)'}
+                </span>
+              )}
+            </p>
           </div>
         </div>
         <Button onClick={() => setIsAddUserDialogOpen(true)} className="gap-2">
