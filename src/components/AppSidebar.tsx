@@ -88,6 +88,7 @@ export function AppSidebar() {
       path: '/clinic',
       children: [
         { labelKey: 'nav.clinic.dashboard', icon: LayoutDashboard, path: '/clinic/dashboard' },
+        { labelKey: 'nav.clinic.branches', icon: Building2, path: '/clinic/branches' },
         { labelKey: 'nav.clinic.patients', icon: Users, path: '/clinic/patients' },
         { labelKey: 'nav.clinic.appointments', icon: CalendarIcon, path: '/clinic/appointments' },
         { labelKey: 'nav.clinic.visits', icon: ClipboardList, path: '/clinic/visits' },
