@@ -14,6 +14,79 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointments: {
+        Row: {
+          appointment_type: string
+          branch_id: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          doctor_id: string | null
+          doctor_name: string | null
+          duration_minutes: number
+          id: string
+          notes: string | null
+          patient_id: string
+          scheduled_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          appointment_type?: string
+          branch_id?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          doctor_id?: string | null
+          doctor_name?: string | null
+          duration_minutes?: number
+          id?: string
+          notes?: string | null
+          patient_id: string
+          scheduled_at: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          appointment_type?: string
+          branch_id?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          doctor_id?: string | null
+          doctor_name?: string | null
+          duration_minutes?: number
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          scheduled_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -969,6 +1042,75 @@ export type Database = {
           },
         ]
       }
+      patients: {
+        Row: {
+          address: string | null
+          branch_id: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          date_of_birth: string | null
+          file_number: string | null
+          full_name: string
+          full_name_ar: string | null
+          gender: string | null
+          id: string
+          is_active: boolean
+          notes: string | null
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          branch_id?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          date_of_birth?: string | null
+          file_number?: string | null
+          full_name: string
+          full_name_ar?: string | null
+          gender?: string | null
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          branch_id?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          date_of_birth?: string | null
+          file_number?: string | null
+          full_name?: string
+          full_name_ar?: string | null
+          gender?: string | null
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patients_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patients_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plans: {
         Row: {
           code: string
@@ -1466,6 +1608,92 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      visits: {
+        Row: {
+          appointment_id: string | null
+          branch_id: string | null
+          chief_complaint: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          diagnosis: string | null
+          doctor_id: string | null
+          doctor_name: string | null
+          id: string
+          notes: string | null
+          patient_id: string
+          prescription: string | null
+          treatment: string | null
+          updated_at: string
+          visit_date: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          branch_id?: string | null
+          chief_complaint?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          diagnosis?: string | null
+          doctor_id?: string | null
+          doctor_name?: string | null
+          id?: string
+          notes?: string | null
+          patient_id: string
+          prescription?: string | null
+          treatment?: string | null
+          updated_at?: string
+          visit_date?: string
+        }
+        Update: {
+          appointment_id?: string | null
+          branch_id?: string | null
+          chief_complaint?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          diagnosis?: string | null
+          doctor_id?: string | null
+          doctor_name?: string | null
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          prescription?: string | null
+          treatment?: string | null
+          updated_at?: string
+          visit_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visits_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visits_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visits_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visits_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

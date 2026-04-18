@@ -6,13 +6,14 @@ import {
   LayoutDashboard, Building2, ClipboardCheck, AlertTriangle, Settings, Users, FileText,
   ChevronLeft, ChevronRight, ChevronDown, Briefcase, UserCircle, Wrench, LogOut,
   PlusCircle, History, Archive, ListChecks, BarChart3, TrendingUp, Headset, Sparkles,
-  Star, MessageSquareMore, ScrollText, Repeat, Plug,
+  Star, MessageSquareMore, ScrollText, Repeat, Plug, Stethoscope, Calendar as CalendarIcon, ClipboardList,
 } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth, AppRole } from '@/contexts/AuthContext';
 import { useFindingStats } from '@/hooks/useFindings';
+import { useCurrentCompany } from '@/contexts/CurrentCompanyContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface NavItem {
@@ -32,6 +33,7 @@ export function AppSidebar() {
   const { t, direction } = useLanguage();
   const { profile, roles, signOut, isAdmin, isExecutive, isBranchManager, isAssessor, isSupportAgent } = useAuth();
   const { data: findingStats } = useFindingStats();
+  const { hasModule } = useCurrentCompany();
 
   const openFindingsCount = findingStats?.open || 0;
   const showDashboards = !isAssessor || isAdmin;
@@ -80,6 +82,16 @@ export function AppSidebar() {
       if (feedbackChildren.length > 0) return [{ labelKey: 'nav.customerFeedback', icon: Star, path: '/customer-feedback', children: feedbackChildren }];
       return [];
     })(),
+    ...(hasModule('clinic_management') ? [{
+      labelKey: 'nav.clinic',
+      icon: Stethoscope,
+      path: '/clinic',
+      children: [
+        { labelKey: 'nav.clinic.patients', icon: Users, path: '/clinic/patients' },
+        { labelKey: 'nav.clinic.appointments', icon: CalendarIcon, path: '/clinic/appointments' },
+        { labelKey: 'nav.clinic.visits', icon: ClipboardList, path: '/clinic/visits' },
+      ],
+    }] : []),
     { labelKey: 'nav.assistant', icon: Sparkles, path: '/assistant' },
   ] as NavItem[]).filter(item => !item.allowedRoles || item.allowedRoles.some(role => roles.includes(role)));
 

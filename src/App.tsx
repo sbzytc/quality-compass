@@ -47,6 +47,10 @@ import CustomerComplaintsPage from "@/pages/CustomerComplaintsPage";
 import SystemLogsPage from "@/pages/SystemLogsPage";
 import RecurringProblemsPage from "@/pages/RecurringProblemsPage";
 import IntegrationsPage from "@/pages/IntegrationsPage";
+import { ModuleGuard } from "@/components/ModuleGuard";
+import PatientsPage from "@/pages/clinic/PatientsPage";
+import AppointmentsPage from "@/pages/clinic/AppointmentsPage";
+import VisitsPage from "@/pages/clinic/VisitsPage";
 
 const queryClient = new QueryClient();
 
@@ -258,6 +262,11 @@ const AppRoutes = () => (
           <CustomerComplaintsPage />
         </ProtectedRoute>
       } />
+
+      {/* Clinic Management Module */}
+      <Route path="/clinic/patients" element={<ModuleGuard module="clinic_management"><PatientsPage /></ModuleGuard>} />
+      <Route path="/clinic/appointments" element={<ModuleGuard module="clinic_management"><AppointmentsPage /></ModuleGuard>} />
+      <Route path="/clinic/visits" element={<ModuleGuard module="clinic_management"><VisitsPage /></ModuleGuard>} />
     </Route>
     
     <Route path="*" element={<NotFound />} />

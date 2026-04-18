@@ -196,6 +196,10 @@ const translations: Record<Language, Record<string, string>> = {
 
 
     'nav.assistant': 'AI Assistant',
+    'nav.clinic': 'Clinic',
+    'nav.clinic.patients': 'Patients',
+    'nav.clinic.appointments': 'Appointments',
+    'nav.clinic.visits': 'Visits',
 
     // Settings
     'settings.title': 'Settings',
@@ -452,6 +456,10 @@ const translations: Record<Language, Record<string, string>> = {
 
 
     'nav.assistant': 'المساعد الذكي',
+    'nav.clinic': 'العيادة',
+    'nav.clinic.patients': 'المرضى',
+    'nav.clinic.appointments': 'المواعيد',
+    'nav.clinic.visits': 'الزيارات',
 
     // Settings
     'settings.title': 'الإعدادات',
