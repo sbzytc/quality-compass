@@ -158,9 +158,22 @@ export function AppSidebar() {
                   exit={{ opacity: 0, width: 0 }}
                   className="overflow-hidden whitespace-nowrap"
                 >
-                  <span className="font-bold text-[15px]" style={{ color: '#2d3d57' }}>Rasdah</span>
-                  <p className="text-[11px]" style={{ color: 'rgba(0,0,0,0.4)' }}>
-                    {direction === 'rtl' ? 'نظام الجودة' : 'Quality System'}
+                  <span className="font-bold text-[15px]" style={{ color: '#2d3d57' }}>
+                    {currentCompany ? (direction === 'rtl' ? (currentCompany.name_ar || currentCompany.name) : currentCompany.name) : 'Rasdah'}
+                  </span>
+                  <p className="text-[11px] flex items-center gap-1.5" style={{ color: 'rgba(0,0,0,0.55)' }}>
+                    {currentCompany?.sector_type === 'clinic' ? (
+                      <>
+                        <Stethoscope className="w-3 h-3 text-emerald-600" />
+                        <span className="font-semibold text-emerald-700">
+                          {direction === 'rtl' ? 'قطاع العيادات' : 'Clinic Sector'}
+                        </span>
+                      </>
+                    ) : (
+                      <span style={{ color: 'rgba(0,0,0,0.4)' }}>
+                        {direction === 'rtl' ? 'نظام الجودة' : 'Quality System'}
+                      </span>
+                    )}
                   </p>
                 </motion.div>
               )}
