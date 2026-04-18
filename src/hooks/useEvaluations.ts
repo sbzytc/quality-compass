@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCompanyScope } from '@/hooks/useCompanyScope';
 
 export interface EvaluationWithDetails {
   id: string;
@@ -20,8 +21,9 @@ export interface EvaluationWithDetails {
 }
 
 export function useEvaluations() {
+  const { companyId, scopeKey } = useCompanyScope();
   return useQuery({
-    queryKey: ['evaluations'],
+    queryKey: ['evaluations', scopeKey],
     queryFn: async () => {
       // Cleanup expired drafts before fetching (non-blocking, ignore errors)
       try {
@@ -30,15 +32,16 @@ export function useEvaluations() {
         console.warn('Cleanup expired drafts failed:', e);
       }
 
-      const { data, error } = await supabase
+      let q = supabase
         .from('evaluations')
         .select(`
           *,
           branches:branch_id (name),
           evaluation_templates:template_id (name)
         `)
-        .eq('is_archived', false)
-        .order('created_at', { ascending: false });
+        .eq('is_archived', false);
+      if (companyId) q = q.eq('company_id', companyId);
+      const { data, error } = await q.order('created_at', { ascending: false });
 
       if (error) throw error;
 

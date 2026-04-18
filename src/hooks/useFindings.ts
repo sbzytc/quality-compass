@@ -94,8 +94,9 @@ const FINDINGS_SELECT = `
 `;
 
 export function useFindings(filters?: { status?: string; branchId?: string }) {
+  const { companyId, scopeKey } = useCompanyScope();
   return useQuery({
-    queryKey: ['findings', filters],
+    queryKey: ['findings', filters, scopeKey],
     queryFn: async () => {
       let query = supabase
         .from('non_conformities')
@@ -104,6 +105,7 @@ export function useFindings(filters?: { status?: string; branchId?: string }) {
         .eq('evaluations.is_archived', false)
         .order('created_at', { ascending: false });
 
+      if (companyId) query = query.eq('company_id', companyId);
       if (filters?.status) {
         query = query.eq('status', filters.status);
       }
@@ -120,8 +122,9 @@ export function useFindings(filters?: { status?: string; branchId?: string }) {
 
 // Critical findings: score 0-3 (out of 5), grouped by branch
 export function useCriticalFindings(filters?: { status?: string; branchId?: string }) {
+  const { companyId, scopeKey } = useCompanyScope();
   return useQuery({
-    queryKey: ['critical-findings', filters],
+    queryKey: ['critical-findings', filters, scopeKey],
     queryFn: async () => {
       let query = supabase
         .from('non_conformities')
@@ -132,6 +135,7 @@ export function useCriticalFindings(filters?: { status?: string; branchId?: stri
         .order('score', { ascending: true })
         .order('created_at', { ascending: false });
 
+      if (companyId) query = query.eq('company_id', companyId);
       if (filters?.status) {
         query = query.eq('status', filters.status);
       }
@@ -147,8 +151,9 @@ export function useCriticalFindings(filters?: { status?: string; branchId?: stri
 }
 
 export function useFindingStats() {
+  const { companyId, scopeKey } = useCompanyScope();
   return useQuery({
-    queryKey: ['finding-stats'],
+    queryKey: ['finding-stats', scopeKey],
     queryFn: async () => {
       const { data: allFindings, error } = await supabase
         .from('non_conformities')
