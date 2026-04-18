@@ -6,13 +6,14 @@ import {
   LayoutDashboard, Building2, ClipboardCheck, AlertTriangle, Settings, Users, FileText,
   ChevronLeft, ChevronRight, ChevronDown, Briefcase, UserCircle, Wrench, LogOut,
   PlusCircle, History, Archive, ListChecks, BarChart3, TrendingUp, Headset, Sparkles,
-  Star, MessageSquareMore, ScrollText, Repeat, Plug,
+  Star, MessageSquareMore, ScrollText, Repeat, Plug, Stethoscope, Calendar as CalendarIcon, ClipboardList,
 } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth, AppRole } from '@/contexts/AuthContext';
 import { useFindingStats } from '@/hooks/useFindings';
+import { useCurrentCompany } from '@/contexts/CurrentCompanyContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface NavItem {
