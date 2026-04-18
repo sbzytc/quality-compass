@@ -8,15 +8,16 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut, Settings, Languages } from 'lucide-react';
+import { LogOut, Settings, Languages, LayoutGrid } from 'lucide-react';
 import { getInitials } from '@/lib/getInitials';
 import { AIAssistantButton } from '@/components/AIAssistant/AIAssistantButton';
 import { WorkspaceSwitcher } from '@/components/WorkspaceSwitcher';
 
 export function MainLayout() {
   const { language, setLanguage, direction, t } = useLanguage();
-  const { profile, signOut, isAdmin, isExecutive, isBranchManager, isAssessor } = useAuth();
+  const { profile, signOut, roles, isAdmin, isExecutive, isBranchManager, isAssessor } = useAuth();
   const navigate = useNavigate();
+  const isSuperAdmin = roles.includes('super_admin');
 
   const handleSignOut = async () => {
     await signOut();
@@ -39,6 +40,20 @@ export function MainLayout() {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <header className="h-14 border-b glass-surface flex items-center justify-end px-5 gap-2">
+          {/* Super Admin: back to destination picker */}
+          {isSuperAdmin && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 px-3 gap-1.5 text-[13px] font-medium glass-btn"
+              onClick={() => navigate('/super-admin')}
+              title={direction === 'rtl' ? 'العودة لاختيار الوجهة' : 'Back to destination picker'}
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{direction === 'rtl' ? 'اختيار الوجهة' : 'Switch destination'}</span>
+            </Button>
+          )}
+
           {/* Workspace Switcher */}
           <WorkspaceSwitcher />
 

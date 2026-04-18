@@ -38,9 +38,9 @@ export default function AdminLayout() {
           </NavLink>
         ))}
         <div className="mt-auto flex flex-col gap-2">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard/ceo')} className="justify-start gap-2">
+          <Button variant="ghost" size="sm" onClick={() => navigate('/super-admin')} className="justify-start gap-2">
             <ArrowLeft className="w-4 h-4" />
-            {language === 'ar' ? 'العودة للتطبيق' : 'Back to app'}
+            {language === 'ar' ? 'اختيار الوجهة' : 'Destination picker'}
           </Button>
           <Button variant="ghost" size="sm" onClick={signOut} className="justify-start gap-2 text-destructive">
             <LogOut className="w-4 h-4" />
