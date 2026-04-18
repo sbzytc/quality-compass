@@ -159,10 +159,20 @@ export default function ClinicBranchDetailPage() {
   );
 }
 
-// Wrapper to use mutation outside hook context — actually use inline component
-function useDeleteDepartmentMutation(id: string) {
-  // placeholder — real call done inline below
-  return id;
+function DepartmentActions({ branchId, dept, ar }: { branchId: string; dept: ClinicDepartment; ar: boolean }) {
+  const deleteDept = useDeleteDepartment();
+  return (
+    <div className="flex flex-wrap items-center gap-2 justify-end">
+      <DepartmentDialog branchId={branchId} ar={ar} existing={dept} />
+      <DeleteConfirm
+        ar={ar}
+        title={ar ? 'حذف القسم؟' : 'Delete department?'}
+        description={ar ? 'سيتم حذف جميع الغرف داخل هذا القسم.' : 'All rooms inside will also be deleted.'}
+        onConfirm={() => deleteDept.mutate(dept.id)}
+      />
+      <RoomDialog branchId={branchId} departmentId={dept.id} ar={ar} />
+    </div>
+  );
 }
 
 function StatBox({ label, value, icon: Icon, tone }: { label: string; value: any; icon: any; tone: string }) {
