@@ -127,16 +127,7 @@ export default function ClinicBranchDetailPage() {
                     <AccordionContent>
                       <div className="space-y-3">
                         {isCompanyAdmin && (
-                          <div className="flex flex-wrap items-center gap-2 justify-end">
-                            <DepartmentDialog branchId={branchId!} ar={ar} existing={dept} />
-                            <DeleteConfirm
-                              ar={ar}
-                              title={ar ? 'حذف القسم؟' : 'Delete department?'}
-                              description={ar ? 'سيتم حذف جميع الغرف داخل هذا القسم.' : 'All rooms inside will also be deleted.'}
-                              onConfirm={() => useDeleteDepartmentMutation(dept.id)}
-                            />
-                            <RoomDialog branchId={branchId!} departmentId={dept.id} ar={ar} />
-                          </div>
+                          <DepartmentActions branchId={branchId!} dept={dept} ar={ar} />
                         )}
                         {deptRooms.length === 0 ? (
                           <p className="text-sm text-muted-foreground py-4 text-center">
