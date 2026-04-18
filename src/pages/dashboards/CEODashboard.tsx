@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { Building2, TrendingUp, AlertTriangle, CheckCircle2, Clock, ShieldCheck } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, Legend } from 'recharts';
 import { QualityCircle } from '@/components/QualityCircle';
@@ -14,10 +14,17 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useCurrentCompany } from '@/contexts/CurrentCompanyContext';
 
 export default function CEODashboard() {
   const navigate = useNavigate();
   const { t, direction, language } = useLanguage();
+  const { currentCompany, loading: companyLoading } = useCurrentCompany();
+
+  // Sector-aware routing: if the active workspace is a clinic, render the clinic dashboard instead.
+  if (!companyLoading && currentCompany?.sector_type === 'clinic') {
+    return <Navigate to="/clinic/dashboard" replace />;
+  }
   const { data: branches, isLoading: branchesLoading } = useBranches();
   const { data: stats, isLoading: statsLoading } = useBranchStats();
   const { data: findingStats, isLoading: findingStatsLoading } = useFindingStats();
