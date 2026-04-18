@@ -8,7 +8,8 @@ import {
   PlusCircle, History, Archive, ListChecks, BarChart3, TrendingUp, Headset, Sparkles,
   Star, MessageSquareMore, ScrollText, Repeat, Plug, Stethoscope, Calendar as CalendarIcon, ClipboardList,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth, AppRole } from '@/contexts/AuthContext';
@@ -33,7 +34,21 @@ export function AppSidebar() {
   const { t, direction } = useLanguage();
   const { profile, roles, signOut, isAdmin, isExecutive, isBranchManager, isAssessor, isSupportAgent } = useAuth();
   const { data: findingStats } = useFindingStats();
-  const { hasModule } = useCurrentCompany();
+  const { hasModule, currentCompany, companies, switchCompany } = useCurrentCompany();
+
+  // Auto-switch to a clinic workspace when navigating to /clinic/*
+  useEffect(() => {
+    if (!location.pathname.startsWith('/clinic')) return;
+    if (!currentCompany || currentCompany.sector_type === 'clinic') return;
+    const clinicWs = companies.find(c => c.sector_type === 'clinic');
+    if (!clinicWs) return;
+    switchCompany(clinicWs.id);
+    toast.success(
+      direction === 'rtl'
+        ? `تم التبديل إلى مساحة العيادات: ${clinicWs.name_ar || clinicWs.name}`
+        : `Switched to clinic workspace: ${clinicWs.name}`
+    );
+  }, [location.pathname, currentCompany, companies, switchCompany, direction]);
 
   const openFindingsCount = findingStats?.open || 0;
   const showDashboards = !isAssessor || isAdmin;
@@ -148,9 +163,22 @@ export function AppSidebar() {
                   exit={{ opacity: 0, width: 0 }}
                   className="overflow-hidden whitespace-nowrap"
                 >
-                  <span className="font-bold text-[15px]" style={{ color: '#2d3d57' }}>Rasdah</span>
-                  <p className="text-[11px]" style={{ color: 'rgba(0,0,0,0.4)' }}>
-                    {direction === 'rtl' ? 'نظام الجودة' : 'Quality System'}
+                  <span className="font-bold text-[15px]" style={{ color: '#2d3d57' }}>
+                    {currentCompany ? (direction === 'rtl' ? (currentCompany.name_ar || currentCompany.name) : currentCompany.name) : 'Rasdah'}
+                  </span>
+                  <p className="text-[11px] flex items-center gap-1.5" style={{ color: 'rgba(0,0,0,0.55)' }}>
+                    {currentCompany?.sector_type === 'clinic' ? (
+                      <>
+                        <Stethoscope className="w-3 h-3 text-emerald-600" />
+                        <span className="font-semibold text-emerald-700">
+                          {direction === 'rtl' ? 'قطاع العيادات' : 'Clinic Sector'}
+                        </span>
+                      </>
+                    ) : (
+                      <span style={{ color: 'rgba(0,0,0,0.4)' }}>
+                        {direction === 'rtl' ? 'نظام الجودة' : 'Quality System'}
+                      </span>
+                    )}
                   </p>
                 </motion.div>
               )}
