@@ -33,6 +33,7 @@ export function AppSidebar() {
   const { t, direction } = useLanguage();
   const { profile, roles, signOut, isAdmin, isExecutive, isBranchManager, isAssessor, isSupportAgent } = useAuth();
   const { data: findingStats } = useFindingStats();
+  const { hasModule } = useCurrentCompany();
 
   const openFindingsCount = findingStats?.open || 0;
   const showDashboards = !isAssessor || isAdmin;
