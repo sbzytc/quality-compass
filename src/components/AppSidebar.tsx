@@ -33,7 +33,17 @@ export function AppSidebar() {
   const { t, direction } = useLanguage();
   const { profile, roles, signOut, isAdmin, isExecutive, isBranchManager, isAssessor, isSupportAgent } = useAuth();
   const { data: findingStats } = useFindingStats();
-  const { hasModule } = useCurrentCompany();
+  const { hasModule, currentCompany, companies, switchCompany } = useCurrentCompany();
+
+  // Auto-switch to a clinic workspace when navigating to /clinic/*
+  // This prevents users from landing on /clinic pages while on a non-clinic workspace.
+  if (typeof window !== 'undefined' && location.pathname.startsWith('/clinic') && currentCompany && currentCompany.sector_type !== 'clinic') {
+    const clinicWs = companies.find(c => c.sector_type === 'clinic');
+    if (clinicWs) {
+      // fire-and-forget; provider will re-render with the new company
+      switchCompany(clinicWs.id);
+    }
+  }
 
   const openFindingsCount = findingStats?.open || 0;
   const showDashboards = !isAssessor || isAdmin;
