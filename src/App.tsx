@@ -47,6 +47,10 @@ import CustomerComplaintsPage from "@/pages/CustomerComplaintsPage";
 import SystemLogsPage from "@/pages/SystemLogsPage";
 import RecurringProblemsPage from "@/pages/RecurringProblemsPage";
 import IntegrationsPage from "@/pages/IntegrationsPage";
+import { ModuleGuard } from "@/components/ModuleGuard";
+import PatientsPage from "@/pages/clinic/PatientsPage";
+import AppointmentsPage from "@/pages/clinic/AppointmentsPage";
+import VisitsPage from "@/pages/clinic/VisitsPage";
 
 const queryClient = new QueryClient();
 
