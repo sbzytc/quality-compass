@@ -54,6 +54,7 @@ import VisitsPage from "@/pages/clinic/VisitsPage";
 import ClinicDashboard from "@/pages/clinic/ClinicDashboard";
 import ClinicBranchesPage from "@/pages/clinic/ClinicBranchesPage";
 import ClinicBranchDetailPage from "@/pages/clinic/ClinicBranchDetailPage";
+import SuperAdminLanding from "@/pages/SuperAdminLanding";
 
 const queryClient = new QueryClient();
 
@@ -73,6 +74,9 @@ const AppRoutes = () => (
     {/* Public routes */}
     <Route path="/login" element={<LoginPage />} />
     <Route path="/feedback/:branchId" element={<CustomerFeedbackPage />} />
+
+    {/* Super Admin Landing — pick destination */}
+    <Route path="/super-admin" element={<SuperAdminRoute><SuperAdminLanding /></SuperAdminRoute>} />
 
     {/* Super Admin Panel */}
     <Route path="/admin" element={<SuperAdminRoute><AdminLayout /></SuperAdminRoute>}>

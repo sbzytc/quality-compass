@@ -50,8 +50,8 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
 // Helper to determine default dashboard route based on role
 export function getDefaultDashboard(roles: AppRole[]): string {
   if (roles.includes('super_admin')) {
-    // Super admin defaults to CEO dashboard of current workspace; can navigate to /admin manually
-    return '/dashboard/ceo';
+    // Super admin lands on the destination picker (Default / Clinics / Admin Panel)
+    return '/super-admin';
   }
   if (roles.includes('admin') || roles.includes('executive')) {
     return '/dashboard/ceo';
