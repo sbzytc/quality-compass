@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getScoreLevel, ScoreLevel } from '@/types';
+import { useCompanyScope } from '@/hooks/useCompanyScope';
 
 export interface BranchWithScore {
   id: string;
@@ -16,11 +17,12 @@ export interface BranchWithScore {
 }
 
 export function useBranches() {
+  const { companyId, scopeKey } = useCompanyScope();
   return useQuery({
-    queryKey: ['branches'],
+    queryKey: ['branches', scopeKey],
     queryFn: async () => {
-      // Fetch branches with their regions
-      const { data: branches, error } = await supabase
+      // Fetch branches with their regions, scoped to current workspace
+      let q = supabase
         .from('branches')
         .select(`
           *,
@@ -30,8 +32,9 @@ export function useBranches() {
             name_ar
           )
         `)
-        .eq('is_active', true)
-        .order('name');
+        .eq('is_active', true);
+      if (companyId) q = q.eq('company_id', companyId);
+      const { data: branches, error } = await q.order('name');
 
       if (error) throw error;
 
@@ -102,14 +105,13 @@ export function useBranch(branchId: string) {
 }
 
 export function useRegions() {
+  const { companyId, scopeKey } = useCompanyScope();
   return useQuery({
-    queryKey: ['regions'],
+    queryKey: ['regions', scopeKey],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('regions')
-        .select('*')
-        .order('name');
-
+      let q = supabase.from('regions').select('*');
+      if (companyId) q = q.eq('company_id', companyId);
+      const { data, error } = await q.order('name');
       if (error) throw error;
       return data;
     },
@@ -117,32 +119,30 @@ export function useRegions() {
 }
 
 export function useBranchStats() {
+  const { companyId, scopeKey } = useCompanyScope();
   return useQuery({
-    queryKey: ['branch-stats'],
+    queryKey: ['branch-stats', scopeKey],
     queryFn: async () => {
-      // Get total branches
-      const { count: totalBranches } = await supabase
-        .from('branches')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_active', true);
+      // Get total branches scoped to current workspace
+      let branchesQ = supabase.from('branches').select('*', { count: 'exact', head: true }).eq('is_active', true);
+      if (companyId) branchesQ = branchesQ.eq('company_id', companyId);
+      const { count: totalBranches } = await branchesQ;
 
-      // Get all submitted evaluations with scores
-      const { data: evaluations } = await supabase
-        .from('evaluations')
-        .select('overall_percentage')
-        .eq('status', 'submitted');
+      // Get all submitted evaluations with scores (scoped)
+      let evalQ = supabase.from('evaluations').select('overall_percentage').eq('status', 'submitted');
+      if (companyId) evalQ = evalQ.eq('company_id', companyId);
+      const { data: evaluations } = await evalQ;
 
-      const avgScore = evaluations?.length 
+      const avgScore = evaluations?.length
         ? evaluations.reduce((sum, e) => sum + (Number(e.overall_percentage) || 0), 0) / evaluations.length
         : 0;
 
-      // Get open findings count
-      const { count: openFindings } = await supabase
-        .from('non_conformities')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'open');
+      // Get open findings count (scoped)
+      let openQ = supabase.from('non_conformities').select('*', { count: 'exact', head: true }).eq('status', 'open');
+      if (companyId) openQ = openQ.eq('company_id', companyId);
+      const { count: openFindings } = await openQ;
 
-      // Get overdue actions
+      // Get overdue actions (corrective_actions doesn't have company_id, joined via finding RLS)
       const { count: overdueActions } = await supabase
         .from('corrective_actions')
         .select('*', { count: 'exact', head: true })
