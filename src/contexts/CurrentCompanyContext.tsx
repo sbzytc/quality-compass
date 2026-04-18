@@ -43,7 +43,8 @@ const STORAGE_KEY = 'rasdah.current_company_id';
 const CurrentCompanyContext = createContext<CurrentCompanyContextValue | undefined>(undefined);
 
 export function CurrentCompanyProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, roles } = useAuth();
+  const isSuperAdmin = roles.includes('super_admin');
   const [currentCompany, setCurrentCompany] = useState<Company | null>(null);
   const [companies, setCompanies] = useState<CompanyMembership[]>([]);
   const [modules, setModules] = useState<ModuleInfo[]>([]);
