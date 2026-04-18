@@ -13,7 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Pencil, Trash2, Calendar, List, CalendarDays, CalendarRange } from 'lucide-react';
+import { Plus, Pencil, Trash2, Calendar, List, CalendarDays, CalendarRange, Clock } from 'lucide-react';
 import { useGoBack } from '@/hooks/useGoBack';
 import { AppointmentsCalendar } from '@/components/clinic/AppointmentsCalendar';
 
@@ -40,7 +40,7 @@ export default function AppointmentsPage() {
   const [editing, setEditing] = useState<Appointment | null>(null);
   const [open, setOpen] = useState(false);
   const [confirmDel, setConfirmDel] = useState<Appointment | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'week' | 'month'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'day' | 'week' | 'month'>('list');
   const [doctorFilter, setDoctorFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
@@ -114,6 +114,7 @@ export default function AppointmentsPage() {
         <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)}>
           <TabsList>
             <TabsTrigger value="list"><List className="w-4 h-4 me-1" />{language === 'ar' ? 'قائمة' : 'List'}</TabsTrigger>
+            <TabsTrigger value="day"><Clock className="w-4 h-4 me-1" />{language === 'ar' ? 'يوم' : 'Day'}</TabsTrigger>
             <TabsTrigger value="week"><CalendarDays className="w-4 h-4 me-1" />{language === 'ar' ? 'أسبوع' : 'Week'}</TabsTrigger>
             <TabsTrigger value="month"><CalendarRange className="w-4 h-4 me-1" />{language === 'ar' ? 'شهر' : 'Month'}</TabsTrigger>
           </TabsList>
@@ -188,7 +189,9 @@ export default function AppointmentsPage() {
               onReschedule={handleReschedule}
             />
             <p className="text-xs text-muted-foreground mt-3 text-center">
-              {language === 'ar' ? 'اسحب الموعد لتغيير اليوم · انقر للتعديل' : 'Drag an appointment to reschedule · Click to edit'}
+              {language === 'ar'
+                ? (viewMode === 'day' ? 'اسحب الموعد لتغيير الوقت · المواعيد المتعارضة بالأحمر' : 'اسحب الموعد لتغيير اليوم · انقر للتعديل')
+                : (viewMode === 'day' ? 'Drag to change time · Conflicts highlighted in red' : 'Drag an appointment to reschedule · Click to edit')}
             </p>
           </CardContent>
         </Card>
