@@ -12,8 +12,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Pencil, Trash2, Calendar } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Pencil, Trash2, Calendar, List, CalendarDays, CalendarRange } from 'lucide-react';
 import { useGoBack } from '@/hooks/useGoBack';
+import { AppointmentsCalendar } from '@/components/clinic/AppointmentsCalendar';
 
 const STATUS_COLORS: Record<string, string> = {
   scheduled: 'bg-blue-100 text-blue-700',
@@ -22,6 +24,8 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: 'bg-gray-200 text-gray-700',
   no_show: 'bg-red-100 text-red-700',
 };
+
+const STATUS_OPTIONS = ['scheduled', 'confirmed', 'completed', 'cancelled', 'no_show'] as const;
 
 export default function AppointmentsPage() {
   const { language } = useLanguage();
@@ -36,11 +40,24 @@ export default function AppointmentsPage() {
   const [editing, setEditing] = useState<Appointment | null>(null);
   const [open, setOpen] = useState(false);
   const [confirmDel, setConfirmDel] = useState<Appointment | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'week' | 'month'>('list');
+  const [doctorFilter, setDoctorFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
-  const filtered = useMemo(
-    () => filterPatient ? appts.filter(a => a.patient_id === filterPatient) : appts,
-    [appts, filterPatient]
-  );
+  const doctors = useMemo(() => {
+    const set = new Set<string>();
+    appts.forEach((a) => a.doctor_name && set.add(a.doctor_name));
+    return Array.from(set).sort();
+  }, [appts]);
+
+  const filtered = useMemo(() => {
+    return appts.filter((a) => {
+      if (filterPatient && a.patient_id !== filterPatient) return false;
+      if (doctorFilter !== 'all' && (a.doctor_name || '') !== doctorFilter) return false;
+      if (statusFilter !== 'all' && a.status !== statusFilter) return false;
+      return true;
+    });
+  }, [appts, filterPatient, doctorFilter, statusFilter]);
 
   function openNew() { setEditing(null); setOpen(true); }
   function openEdit(a: Appointment) { setEditing(a); setOpen(true); }
@@ -69,6 +86,10 @@ export default function AppointmentsPage() {
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 
+  async function handleReschedule(a: Appointment, newDate: Date) {
+    await update.mutateAsync({ id: a.id, scheduled_at: newDate.toISOString() });
+  }
+
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
       <div className="flex items-center gap-3">
@@ -88,39 +109,87 @@ export default function AppointmentsPage() {
         </Button>
       </div>
 
+      {/* Toolbar: view tabs + filters */}
+      <div className="flex flex-wrap items-center gap-3">
+        <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)}>
+          <TabsList>
+            <TabsTrigger value="list"><List className="w-4 h-4 me-1" />{language === 'ar' ? 'قائمة' : 'List'}</TabsTrigger>
+            <TabsTrigger value="week"><CalendarDays className="w-4 h-4 me-1" />{language === 'ar' ? 'أسبوع' : 'Week'}</TabsTrigger>
+            <TabsTrigger value="month"><CalendarRange className="w-4 h-4 me-1" />{language === 'ar' ? 'شهر' : 'Month'}</TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+        <div className="flex items-center gap-2 ms-auto">
+          <Select value={doctorFilter} onValueChange={setDoctorFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder={language === 'ar' ? 'الطبيب' : 'Doctor'} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{language === 'ar' ? 'كل الأطباء' : 'All doctors'}</SelectItem>
+              {doctors.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder={language === 'ar' ? 'الحالة' : 'Status'} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{language === 'ar' ? 'كل الحالات' : 'All statuses'}</SelectItem>
+              {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       {isLoading ? (
         <div className="text-center text-muted-foreground py-12">{language === 'ar' ? 'جاري التحميل...' : 'Loading...'}</div>
-      ) : filtered.length === 0 ? (
-        <Card>
-          <CardContent className="p-12 text-center text-muted-foreground">
-            <Calendar className="w-10 h-10 mx-auto mb-3 opacity-50" />
-            {language === 'ar' ? 'لا توجد مواعيد' : 'No appointments yet'}
-          </CardContent>
-        </Card>
+      ) : viewMode === 'list' ? (
+        filtered.length === 0 ? (
+          <Card>
+            <CardContent className="p-12 text-center text-muted-foreground">
+              <Calendar className="w-10 h-10 mx-auto mb-3 opacity-50" />
+              {language === 'ar' ? 'لا توجد مواعيد' : 'No appointments yet'}
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardContent className="p-0 divide-y">
+              {filtered.map(a => {
+                const d = new Date(a.scheduled_at);
+                return (
+                  <div key={a.id} className="p-4 flex items-center gap-4 hover:bg-muted/40">
+                    <div className="text-center w-16 shrink-0">
+                      <div className="text-xs text-muted-foreground">{d.toLocaleDateString(undefined, { month: 'short' })}</div>
+                      <div className="text-2xl font-bold">{d.getDate()}</div>
+                      <div className="text-xs">{d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold">{a.patient?.full_name || '—'}</div>
+                      <div className="text-sm text-muted-foreground truncate">
+                        {a.doctor_name || (language === 'ar' ? 'بدون طبيب محدد' : 'No doctor')} · {a.appointment_type} · {a.duration_minutes}m
+                      </div>
+                    </div>
+                    <Badge className={STATUS_COLORS[a.status]}>{a.status}</Badge>
+                    <Button size="icon" variant="ghost" onClick={() => openEdit(a)}><Pencil className="w-4 h-4" /></Button>
+                    <Button size="icon" variant="ghost" onClick={() => setConfirmDel(a)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+        )
       ) : (
         <Card>
-          <CardContent className="p-0 divide-y">
-            {filtered.map(a => {
-              const d = new Date(a.scheduled_at);
-              return (
-                <div key={a.id} className="p-4 flex items-center gap-4 hover:bg-muted/40">
-                  <div className="text-center w-16 shrink-0">
-                    <div className="text-xs text-muted-foreground">{d.toLocaleDateString(undefined, { month: 'short' })}</div>
-                    <div className="text-2xl font-bold">{d.getDate()}</div>
-                    <div className="text-xs">{d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold">{a.patient?.full_name || '—'}</div>
-                    <div className="text-sm text-muted-foreground truncate">
-                      {a.doctor_name || (language === 'ar' ? 'بدون طبيب محدد' : 'No doctor')} · {a.appointment_type} · {a.duration_minutes}m
-                    </div>
-                  </div>
-                  <Badge className={STATUS_COLORS[a.status]}>{a.status}</Badge>
-                  <Button size="icon" variant="ghost" onClick={() => openEdit(a)}><Pencil className="w-4 h-4" /></Button>
-                  <Button size="icon" variant="ghost" onClick={() => setConfirmDel(a)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
-                </div>
-              );
-            })}
+          <CardContent className="p-4">
+            <AppointmentsCalendar
+              appointments={filtered}
+              view={viewMode}
+              onSelect={openEdit}
+              onReschedule={handleReschedule}
+            />
+            <p className="text-xs text-muted-foreground mt-3 text-center">
+              {language === 'ar' ? 'اسحب الموعد لتغيير اليوم · انقر للتعديل' : 'Drag an appointment to reschedule · Click to edit'}
+            </p>
           </CardContent>
         </Card>
       )}
@@ -171,11 +240,7 @@ export default function AppointmentsPage() {
                 <Select name="status" defaultValue={editing?.status || 'scheduled'}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="scheduled">scheduled</SelectItem>
-                    <SelectItem value="confirmed">confirmed</SelectItem>
-                    <SelectItem value="completed">completed</SelectItem>
-                    <SelectItem value="cancelled">cancelled</SelectItem>
-                    <SelectItem value="no_show">no_show</SelectItem>
+                    {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
