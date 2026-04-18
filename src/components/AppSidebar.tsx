@@ -112,9 +112,12 @@ export function AppSidebar() {
     { labelKey: 'nav.assistant', icon: Sparkles, path: '/assistant' },
   ] as NavItem[]).filter(item => !item.allowedRoles || item.allowedRoles.some(role => roles.includes(role)));
 
+  const isClinicWorkspace = currentCompany?.sector_type === 'clinic';
+
   const settingsNavItems: NavItem[] = ([
     { labelKey: 'nav.users', icon: Users, path: '/users', allowedRoles: ['admin'] as AppRole[] },
-    { labelKey: 'nav.templates', icon: FileText, path: '/templates', allowedRoles: ['admin'] as AppRole[] },
+    // Templates are only relevant for the default (non-clinic) workspace
+    ...(!isClinicWorkspace ? [{ labelKey: 'nav.templates', icon: FileText, path: '/templates', allowedRoles: ['admin'] as AppRole[] }] : []),
     { labelKey: 'nav.settings', icon: Settings, path: '/settings' },
     { labelKey: 'nav.systemLogs', icon: ScrollText, path: '/system-logs', allowedRoles: ['admin'] as AppRole[] },
     { labelKey: 'nav.integrations', icon: Plug, path: '/integrations', allowedRoles: ['admin'] as AppRole[] },
