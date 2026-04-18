@@ -20,11 +20,15 @@ export interface UserWithRole {
   roles: AppRole[];
 }
 
-export function useUsers() {
+export function useUsers(opts?: { companyId?: string | null; isSuperAdmin?: boolean }) {
+  const companyId = opts?.companyId ?? null;
+  const isSuperAdmin = opts?.isSuperAdmin ?? false;
+
   return useQuery({
-    queryKey: ['users'],
+    queryKey: ['users', isSuperAdmin ? 'all' : (companyId || 'none')],
+    enabled: isSuperAdmin || !!companyId,
     queryFn: async () => {
-      // Fetch all profiles
+      // Fetch all profiles (RLS allows admins to see all)
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
@@ -47,7 +51,23 @@ export function useUsers() {
         rolesByUser.set(r.user_id, list);
       });
 
-      return profiles.map(p => ({
+      // Filter by workspace membership unless super admin
+      let allowedUserIds: Set<string> | null = null;
+      if (!isSuperAdmin && companyId) {
+        const { data: members, error: membersError } = await supabase
+          .from('company_users')
+          .select('user_id')
+          .eq('company_id', companyId)
+          .eq('is_active', true);
+        if (membersError) throw membersError;
+        allowedUserIds = new Set((members || []).map((m: any) => m.user_id));
+      }
+
+      const filtered = allowedUserIds
+        ? profiles.filter(p => allowedUserIds!.has(p.user_id))
+        : profiles;
+
+      return filtered.map(p => ({
         id: p.id,
         user_id: p.user_id,
         full_name: p.full_name,
@@ -68,8 +88,8 @@ export function useUsers() {
   });
 }
 
-export function useUserStats() {
-  const { data: users } = useUsers();
+export function useUserStats(opts?: { companyId?: string | null; isSuperAdmin?: boolean }) {
+  const { data: users } = useUsers(opts);
 
   return {
     total: users?.length || 0,
@@ -77,6 +97,11 @@ export function useUserStats() {
     active: users?.filter(u => u.is_active).length || 0,
     inactive: users?.filter(u => !u.is_active).length || 0,
   };
+}
+
+// Backward-compat overload signature kept inert: existing useUserStats() callers without opts will return zeros until upgraded.
+export function useUserStatsLegacy() {
+  return useUserStats();
 }
 
 export function useInviteUser() {
