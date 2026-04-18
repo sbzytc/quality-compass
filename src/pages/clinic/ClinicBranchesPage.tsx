@@ -8,7 +8,7 @@ import { useClinicRooms } from '@/hooks/useClinicRooms';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Building2, ChevronRight, DoorOpen, Layers } from 'lucide-react';
+import { Building2, ChevronRight, DoorOpen, Layers, Stethoscope } from 'lucide-react';
 
 export default function ClinicBranchesPage() {
   const { language, direction } = useLanguage();
