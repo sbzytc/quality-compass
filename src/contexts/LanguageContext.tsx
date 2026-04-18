@@ -196,6 +196,10 @@ const translations: Record<Language, Record<string, string>> = {
 
 
     'nav.assistant': 'AI Assistant',
+    'nav.clinic': 'Clinic',
+    'nav.clinic.patients': 'Patients',
+    'nav.clinic.appointments': 'Appointments',
+    'nav.clinic.visits': 'Visits',
 
     // Settings
     'settings.title': 'Settings',
