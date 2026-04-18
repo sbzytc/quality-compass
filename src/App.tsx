@@ -51,6 +51,7 @@ import { ModuleGuard } from "@/components/ModuleGuard";
 import PatientsPage from "@/pages/clinic/PatientsPage";
 import AppointmentsPage from "@/pages/clinic/AppointmentsPage";
 import VisitsPage from "@/pages/clinic/VisitsPage";
+import ClinicDashboard from "@/pages/clinic/ClinicDashboard";
 
 const queryClient = new QueryClient();
 
@@ -264,6 +265,8 @@ const AppRoutes = () => (
       } />
 
       {/* Clinic Management Module */}
+      <Route path="/clinic" element={<ModuleGuard module="clinic_management"><ClinicDashboard /></ModuleGuard>} />
+      <Route path="/clinic/dashboard" element={<ModuleGuard module="clinic_management"><ClinicDashboard /></ModuleGuard>} />
       <Route path="/clinic/patients" element={<ModuleGuard module="clinic_management"><PatientsPage /></ModuleGuard>} />
       <Route path="/clinic/appointments" element={<ModuleGuard module="clinic_management"><AppointmentsPage /></ModuleGuard>} />
       <Route path="/clinic/visits" element={<ModuleGuard module="clinic_management"><VisitsPage /></ModuleGuard>} />
