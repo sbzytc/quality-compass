@@ -1,0 +1,1 @@
+UPDATE public.company_modules SET enabled = false WHERE company_id = (SELECT id FROM companies WHERE slug = 'rasdah-default') AND module_id = (SELECT id FROM modules WHERE code = 'clinic_management');
