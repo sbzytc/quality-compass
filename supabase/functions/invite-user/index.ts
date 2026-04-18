@@ -14,6 +14,7 @@ interface InviteRequest {
   role: "admin" | "executive" | "branch_manager" | "assessor";
   branchId?: string;
   regionId?: string;
+  companyId?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -69,7 +70,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { email, fullName, role, branchId, regionId }: InviteRequest = await req.json();
+    const { email, fullName, role, branchId, regionId, companyId }: InviteRequest = await req.json();
 
     // Validate required fields
     if (!email || !fullName || !role) {
@@ -119,6 +120,23 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (roleError) {
       console.error("Error assigning role:", roleError);
+    }
+
+    // Add user as member of target workspace
+    if (companyId) {
+      const companyMemberRole = role === "admin" ? "admin" : "member";
+      const { error: membershipError } = await supabaseAdmin.from("company_users").insert({
+        user_id: newUser.user.id,
+        company_id: companyId,
+        role: companyMemberRole,
+        is_active: true,
+      });
+      if (membershipError) console.error("Error adding workspace membership:", membershipError);
+
+      await supabaseAdmin
+        .from("profiles")
+        .update({ default_company_id: companyId })
+        .eq("user_id", newUser.user.id);
     }
 
     // Send invitation email if Resend is configured
