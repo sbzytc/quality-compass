@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode, useCallback 
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
+
 export type SectorType = 'fnb' | 'clinic' | 'retail' | 'factory' | 'other';
 export type CompanyRole = 'owner' | 'admin' | 'member';
 
