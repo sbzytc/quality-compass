@@ -109,9 +109,10 @@ export default function UsersPage() {
   const isSuperAdmin = roles.includes('super_admin');
   const goBack = useGoBack('/dashboard/ceo');
   const { t, language } = useLanguage();
-  const { data: users, isLoading } = useUsers({ companyId: currentCompany?.id ?? null, isSuperAdmin });
+  // Always scope to current workspace (even for super admin) so each sector shows only its members
+  const { data: users, isLoading } = useUsers({ companyId: currentCompany?.id ?? null, isSuperAdmin: false });
   const { data: branches } = useBranches();
-  const stats = useUserStats({ companyId: currentCompany?.id ?? null, isSuperAdmin });
+  const stats = useUserStats({ companyId: currentCompany?.id ?? null, isSuperAdmin: false });
   const inviteUser = useInviteUser();
   const createUser = useCreateUser();
   const resetPassword = useResetPassword();
