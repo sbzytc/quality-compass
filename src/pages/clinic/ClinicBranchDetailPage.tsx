@@ -323,12 +323,13 @@ function DepartmentDialog({ branchId, ar, existing }: { branchId: string; ar: bo
   );
 }
 
-function RoomDialog({ branchId, departmentId, ar, existing, iconOnly }: { branchId: string; departmentId: string; ar: boolean; existing?: ClinicRoom; iconOnly?: boolean }) {
+function RoomDialog({ branchId, departmentId, ar, existing, iconOnly, deptCode }: { branchId: string; departmentId: string; ar: boolean; existing?: ClinicRoom; iconOnly?: boolean; deptCode?: string }) {
   const [open, setOpen] = useState(false);
+  const isReception = deptCode === 'reception';
   const [name, setName] = useState(existing?.name || '');
   const [nameAr, setNameAr] = useState(existing?.name_ar || '');
   const [roomNumber, setRoomNumber] = useState(existing?.room_number || '');
-  const [roomType, setRoomType] = useState(existing?.room_type || 'consultation');
+  const [roomType, setRoomType] = useState(existing?.room_type || (isReception ? 'reception' : 'consultation'));
   const [capacity, setCapacity] = useState(existing?.capacity || 1);
   const [status, setStatus] = useState<RoomStatus>(existing?.status || 'available');
   const upsert = useUpsertRoom();
@@ -341,7 +342,7 @@ function RoomDialog({ branchId, departmentId, ar, existing, iconOnly }: { branch
       branch_id: branchId,
       name,
       name_ar: nameAr || null,
-      room_number: roomNumber || null,
+      room_number: isReception ? null : (roomNumber || null),
       room_type: roomType,
       capacity: Number(capacity) || 1,
       status,
@@ -350,6 +351,11 @@ function RoomDialog({ branchId, departmentId, ar, existing, iconOnly }: { branch
     if (!existing) { setName(''); setNameAr(''); setRoomNumber(''); }
   };
 
+  const addLabel = isReception ? (ar ? 'إضافة استقبال' : 'Add Reception') : (ar ? 'إضافة غرفة' : 'Add Room');
+  const titleLabel = existing
+    ? (isReception ? (ar ? 'تعديل استقبال' : 'Edit Reception') : (ar ? 'تعديل غرفة' : 'Edit Room'))
+    : (isReception ? (ar ? 'استقبال جديد' : 'New Reception') : (ar ? 'غرفة جديدة' : 'New Room'));
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -357,35 +363,38 @@ function RoomDialog({ branchId, departmentId, ar, existing, iconOnly }: { branch
           ? <Button variant="ghost" size="icon" className="h-8 w-8"><Pencil className="w-3.5 h-3.5" /></Button>
           : (existing
             ? <Button variant="outline" size="sm"><Pencil className="w-3.5 h-3.5 me-1" />{ar ? 'تعديل' : 'Edit'}</Button>
-            : <Button size="sm" variant="secondary"><Plus className="w-4 h-4 me-1" />{ar ? 'إضافة غرفة' : 'Add Room'}</Button>)
+            : <Button size="sm" variant="secondary"><Plus className="w-4 h-4 me-1" />{addLabel}</Button>)
         }
       </DialogTrigger>
       <DialogContent>
-        <DialogHeader><DialogTitle>{existing ? (ar ? 'تعديل غرفة' : 'Edit Room') : (ar ? 'غرفة جديدة' : 'New Room')}</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{titleLabel}</DialogTitle></DialogHeader>
         <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-2">
-            <div><Label>{ar ? 'رقم الغرفة' : 'Room #'}</Label>
-              <Input value={roomNumber} onChange={e => setRoomNumber(e.target.value)} placeholder="E-01" /></div>
-            <div><Label>{ar ? 'السعة' : 'Capacity'}</Label>
-              <Input type="number" min={1} value={capacity} onChange={e => setCapacity(Number(e.target.value))} /></div>
-          </div>
+          {!isReception && (
+            <div className="grid grid-cols-2 gap-2">
+              <div><Label>{ar ? 'رقم الغرفة' : 'Room #'}</Label>
+                <Input value={roomNumber} onChange={e => setRoomNumber(e.target.value)} placeholder="E-01" /></div>
+              <div><Label>{ar ? 'السعة' : 'Capacity'}</Label>
+                <Input type="number" min={1} value={capacity} onChange={e => setCapacity(Number(e.target.value))} /></div>
+            </div>
+          )}
           <div><Label>{ar ? 'الاسم (إنجليزي)' : 'Name (English)'}</Label>
-            <Input value={name} onChange={e => setName(e.target.value)} required /></div>
+            <Input value={name} onChange={e => setName(e.target.value)} required placeholder={isReception ? 'Main Reception' : ''} /></div>
           <div><Label>{ar ? 'الاسم (عربي)' : 'Name (Arabic)'}</Label>
-            <Input value={nameAr} onChange={e => setNameAr(e.target.value)} dir="rtl" /></div>
+            <Input value={nameAr} onChange={e => setNameAr(e.target.value)} dir="rtl" placeholder={isReception ? 'الاستقبال الرئيسي' : ''} /></div>
           <div className="grid grid-cols-2 gap-2">
-            <div><Label>{ar ? 'النوع' : 'Type'}</Label>
-              <Select value={roomType} onValueChange={setRoomType}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{ROOM_TYPES.map(t => <SelectItem key={t.code} value={t.code}>{ar ? t.ar : t.en}</SelectItem>)}</SelectContent>
-              </Select></div>
-            <div><Label>{ar ? 'الحالة' : 'Status'}</Label>
-              <Select value={status} onValueChange={v => setStatus(v as RoomStatus)}>
+            {!isReception && (
+              <div><Label>{ar ? 'النوع' : 'Type'}</Label>
+                <Select value={roomType} onValueChange={setRoomType}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{ROOM_TYPES.map(t => <SelectItem key={t.code} value={t.code}>{ar ? t.ar : t.en}</SelectItem>)}</SelectContent>
+                </Select></div>
+            )}
+            <div className={isReception ? 'col-span-2' : ''}><Label>{ar ? 'الحالة' : 'Status'}</Label>
+              <Select value={status === 'occupied' ? 'available' : status} onValueChange={v => setStatus(v as RoomStatus)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="available">{ar ? 'متاحة' : 'Available'}</SelectItem>
-                  <SelectItem value="occupied">{ar ? 'مشغولة' : 'Occupied'}</SelectItem>
-                  <SelectItem value="maintenance">{ar ? 'صيانة' : 'Maintenance'}</SelectItem>
+                  <SelectItem value="maintenance">{ar ? 'تحت الصيانة' : 'Under Maintenance'}</SelectItem>
                 </SelectContent>
               </Select></div>
           </div>
