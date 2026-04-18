@@ -53,6 +53,9 @@ export default function ClinicBranchDetailPage() {
   const goBack = useGoBack();
   const ar = language === 'ar';
   const { isCompanyAdmin } = useCurrentCompany();
+  const { roles } = useAuth();
+  const isBranchManager = roles.includes('branch_manager');
+  const canManageStatus = isCompanyAdmin || isBranchManager || roles.includes('admin');
   const { data: branches = [] } = useBranches();
   const branch: any = branches.find((b: any) => b.id === branchId);
   const { data: depts = [], isLoading: ld } = useClinicDepartments(branchId);
