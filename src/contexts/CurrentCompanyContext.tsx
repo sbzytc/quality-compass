@@ -127,7 +127,7 @@ export function CurrentCompanyProvider({ children }: { children: ReactNode }) {
       await loadModules(picked.id);
     }
     setLoading(false);
-  }, [user, loadModules]);
+  }, [user, isSuperAdmin, loadModules]);
 
   useEffect(() => {
     loadCompanies();
