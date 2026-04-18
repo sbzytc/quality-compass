@@ -156,12 +156,14 @@ export function useFindingStats() {
   return useQuery({
     queryKey: ['finding-stats', scopeKey],
     queryFn: async () => {
-      const { data: allFindings, error } = await supabase
+      let q = supabase
         .from('non_conformities')
         .select('status, score, assigned_to, due_date, resolved_at, created_at, evaluations!inner(status, is_archived)')
         .lte('score', 3)
         .in('evaluations.status', ['submitted', 'approved'])
         .eq('evaluations.is_archived', false);
+      if (companyId) q = q.eq('company_id', companyId);
+      const { data: allFindings, error } = await q;
 
       if (error) throw error;
 
