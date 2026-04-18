@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode, useCallback 
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
+
 export type SectorType = 'fnb' | 'clinic' | 'retail' | 'factory' | 'other';
 export type CompanyRole = 'owner' | 'admin' | 'member';
 
@@ -42,7 +43,8 @@ const STORAGE_KEY = 'rasdah.current_company_id';
 const CurrentCompanyContext = createContext<CurrentCompanyContextValue | undefined>(undefined);
 
 export function CurrentCompanyProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, roles } = useAuth();
+  const isSuperAdmin = roles.includes('super_admin');
   const [currentCompany, setCurrentCompany] = useState<Company | null>(null);
   const [companies, setCompanies] = useState<CompanyMembership[]>([]);
   const [modules, setModules] = useState<ModuleInfo[]>([]);
@@ -80,21 +82,38 @@ export function CurrentCompanyProvider({ children }: { children: ReactNode }) {
     }
 
     setLoading(true);
-    const { data, error } = await supabase
-      .from('company_users')
-      .select('role, companies(id, name, name_ar, slug, sector_type, logo_url, status)')
-      .eq('user_id', user.id)
-      .eq('is_active', true);
 
-    if (error) {
-      console.error('Error loading companies:', error);
-      setLoading(false);
-      return;
+    let list: CompanyMembership[] = [];
+
+    if (isSuperAdmin) {
+      // Super admin sees ALL companies
+      const { data, error } = await supabase
+        .from('companies')
+        .select('id, name, name_ar, slug, sector_type, logo_url, status')
+        .order('name');
+      if (error) {
+        console.error('Error loading companies (super admin):', error);
+        setLoading(false);
+        return;
+      }
+      list = (data || []).map((c: any) => ({ ...c, membership_role: 'admin' as CompanyRole }));
+    } else {
+      const { data, error } = await supabase
+        .from('company_users')
+        .select('role, companies(id, name, name_ar, slug, sector_type, logo_url, status)')
+        .eq('user_id', user.id)
+        .eq('is_active', true);
+
+      if (error) {
+        console.error('Error loading companies:', error);
+        setLoading(false);
+        return;
+      }
+
+      list = (data || [])
+        .filter((row: any) => row.companies)
+        .map((row: any) => ({ ...row.companies, membership_role: row.role }));
     }
-
-    const list: CompanyMembership[] = (data || [])
-      .filter((row: any) => row.companies)
-      .map((row: any) => ({ ...row.companies, membership_role: row.role }));
 
     setCompanies(list);
 
@@ -108,7 +127,7 @@ export function CurrentCompanyProvider({ children }: { children: ReactNode }) {
       await loadModules(picked.id);
     }
     setLoading(false);
-  }, [user, loadModules]);
+  }, [user, isSuperAdmin, loadModules]);
 
   useEffect(() => {
     loadCompanies();
