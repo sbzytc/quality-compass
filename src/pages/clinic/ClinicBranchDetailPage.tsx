@@ -77,8 +77,15 @@ export default function ClinicBranchDetailPage() {
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={goBack}>←</Button>
         <div className="flex-1 min-w-0">
+          <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1.5 flex-wrap">
+            <span>{ar ? 'العيادة' : 'Clinic'}</span>
+            <span>›</span>
+            <a href="/clinic/branches" className="hover:underline">{ar ? 'الفروع' : 'Branches'}</a>
+            <span>›</span>
+            <span className="font-semibold text-foreground">{branchName}</span>
+          </p>
           <h1 className="text-2xl font-bold flex items-center gap-2 truncate">
-            <Building2 className="w-6 h-6 shrink-0" />
+            <Building2 className="w-6 h-6 shrink-0 text-primary" />
             {branchName}
           </h1>
           {branch.city && <p className="text-sm text-muted-foreground">{branch.city}</p>}
