@@ -6,6 +6,7 @@ import { useBranches } from '@/hooks/useBranches';
 import { useClinicDepartments, useUpsertDepartment, useDeleteDepartment, type ClinicDepartment } from '@/hooks/useClinicDepartments';
 import { useClinicRooms, useUpsertRoom, useDeleteRoom, type ClinicRoom, type RoomStatus } from '@/hooks/useClinicRooms';
 import { useCurrentCompany } from '@/contexts/CurrentCompanyContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
