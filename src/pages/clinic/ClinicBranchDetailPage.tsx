@@ -206,13 +206,14 @@ function StatBox({ label, value, icon: Icon, tone }: { label: string; value: any
   );
 }
 
-function RoomCard({ room, ar, canEdit, branchId }: { room: ClinicRoom; ar: boolean; canEdit: boolean; branchId: string }) {
+function RoomCard({ room, ar, canEdit, canManageStatus, branchId, deptCode }: { room: ClinicRoom; ar: boolean; canEdit: boolean; canManageStatus: boolean; branchId: string; deptCode: string }) {
   const deleteRoom = useDeleteRoom();
   const upsertRoom = useUpsertRoom();
+  const isReception = deptCode === 'reception';
   const statusLabels: Record<RoomStatus, string> = {
     available: ar ? 'متاحة' : 'Available',
     occupied: ar ? 'مشغولة' : 'Occupied',
-    maintenance: ar ? 'صيانة' : 'Maintenance',
+    maintenance: ar ? 'تحت الصيانة' : 'Under Maintenance',
   };
 
   return (
@@ -224,34 +225,41 @@ function RoomCard({ room, ar, canEdit, branchId }: { room: ClinicRoom; ar: boole
               <DoorOpen className="w-4 h-4 text-muted-foreground" />
               <span className="font-semibold text-sm truncate">{ar ? (room.name_ar || room.name) : room.name}</span>
             </div>
-            {room.room_number && <div className="text-xs text-muted-foreground mt-0.5">#{room.room_number}</div>}
+            {!isReception && room.room_number && <div className="text-xs text-muted-foreground mt-0.5">#{room.room_number}</div>}
           </div>
           <Badge className={STATUS_STYLES[room.status]} variant="outline">{statusLabels[room.status]}</Badge>
         </div>
-        <div className="text-xs text-muted-foreground">
-          {ar ? 'السعة' : 'Capacity'}: {room.capacity}
-        </div>
-        {canEdit && (
+        {!isReception && (
+          <div className="text-xs text-muted-foreground">
+            {ar ? 'السعة' : 'Capacity'}: {room.capacity}
+          </div>
+        )}
+        {(canEdit || canManageStatus) && (
           <div className="flex items-center gap-1.5">
-            <Select
-              value={room.status}
-              onValueChange={(v) => upsertRoom.mutate({ id: room.id, department_id: room.department_id, branch_id: branchId, name: room.name, status: v as RoomStatus })}
-            >
-              <SelectTrigger className="h-8 text-xs flex-1"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="available">{statusLabels.available}</SelectItem>
-                <SelectItem value="occupied">{statusLabels.occupied}</SelectItem>
-                <SelectItem value="maintenance">{statusLabels.maintenance}</SelectItem>
-              </SelectContent>
-            </Select>
-            <RoomDialog branchId={branchId} departmentId={room.department_id} ar={ar} existing={room} iconOnly />
-            <DeleteConfirm
-              ar={ar}
-              title={ar ? 'حذف الغرفة؟' : 'Delete room?'}
-              description={ar ? 'لا يمكن التراجع عن هذا الإجراء.' : 'This action cannot be undone.'}
-              onConfirm={() => deleteRoom.mutate(room.id)}
-              iconOnly
-            />
+            {canManageStatus ? (
+              <Select
+                value={room.status === 'occupied' ? 'available' : room.status}
+                onValueChange={(v) => upsertRoom.mutate({ id: room.id, department_id: room.department_id, branch_id: branchId, name: room.name, status: v as RoomStatus })}
+              >
+                <SelectTrigger className="h-8 text-xs flex-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="available">{statusLabels.available}</SelectItem>
+                  <SelectItem value="maintenance">{statusLabels.maintenance}</SelectItem>
+                </SelectContent>
+              </Select>
+            ) : <div className="flex-1" />}
+            {canEdit && (
+              <>
+                <RoomDialog branchId={branchId} departmentId={room.department_id} ar={ar} existing={room} iconOnly deptCode={deptCode} />
+                <DeleteConfirm
+                  ar={ar}
+                  title={ar ? 'حذف الغرفة؟' : 'Delete room?'}
+                  description={ar ? 'لا يمكن التراجع عن هذا الإجراء.' : 'This action cannot be undone.'}
+                  onConfirm={() => deleteRoom.mutate(room.id)}
+                  iconOnly
+                />
+              </>
+            )}
           </div>
         )}
       </CardContent>
