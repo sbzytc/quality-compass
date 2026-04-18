@@ -20,11 +20,6 @@ export default function CEODashboard() {
   const navigate = useNavigate();
   const { t, direction, language } = useLanguage();
   const { currentCompany, loading: companyLoading } = useCurrentCompany();
-
-  // Sector-aware routing: if the active workspace is a clinic, render the clinic dashboard instead.
-  if (!companyLoading && currentCompany?.sector_type === 'clinic') {
-    return <Navigate to="/clinic/dashboard" replace />;
-  }
   const { data: branches, isLoading: branchesLoading } = useBranches();
   const { data: stats, isLoading: statsLoading } = useBranchStats();
   const { data: findingStats, isLoading: findingStatsLoading } = useFindingStats();
