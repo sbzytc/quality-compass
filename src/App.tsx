@@ -8,6 +8,12 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { CurrentCompanyProvider } from "@/contexts/CurrentCompanyContext";
 import { AIAssistantProvider } from "@/contexts/AIAssistantContext";
 import { ProtectedRoute, getDefaultDashboard } from "@/components/ProtectedRoute";
+import { SuperAdminRoute } from "@/components/SuperAdminRoute";
+import AdminLayout from "@/pages/admin/AdminLayout";
+import CompaniesPage from "@/pages/admin/CompaniesPage";
+import ModulesPage from "@/pages/admin/ModulesPage";
+import PlansPage from "@/pages/admin/PlansPage";
+import AuditLogsPage from "@/pages/admin/AuditLogsPage";
 import { MainLayout } from "@/layouts/MainLayout";
 import LoginPage from "@/pages/LoginPage";
 import CEODashboard from "@/pages/dashboards/CEODashboard";
@@ -60,6 +66,19 @@ const AppRoutes = () => (
     {/* Public routes */}
     <Route path="/login" element={<LoginPage />} />
     <Route path="/feedback/:branchId" element={<CustomerFeedbackPage />} />
+
+    {/* Super Admin Panel */}
+    <Route path="/admin" element={<SuperAdminRoute><AdminLayout /></SuperAdminRoute>}>
+      <Route index element={<Navigate to="/admin/companies" replace />} />
+      <Route path="companies" element={<CompaniesPage />} />
+      <Route path="modules" element={<ModulesPage />} />
+      <Route path="plans" element={<PlansPage />} />
+      <Route path="audit-logs" element={<AuditLogsPage />} />
+    </Route>
+
+    {/* Tenant App routes (alias /app/* → existing routes) */}
+    <Route path="/app" element={<Navigate to="/" replace />} />
+
     {/* Protected routes */}
     <Route element={
       <ProtectedRoute>
