@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLogAction } from '@/hooks/useSystemLogs';
+import { useCompanyScope } from '@/hooks/useCompanyScope';
 
 export interface Finding {
   id: string;
@@ -94,8 +95,9 @@ const FINDINGS_SELECT = `
 `;
 
 export function useFindings(filters?: { status?: string; branchId?: string }) {
+  const { companyId, scopeKey } = useCompanyScope();
   return useQuery({
-    queryKey: ['findings', filters],
+    queryKey: ['findings', filters, scopeKey],
     queryFn: async () => {
       let query = supabase
         .from('non_conformities')
@@ -104,6 +106,7 @@ export function useFindings(filters?: { status?: string; branchId?: string }) {
         .eq('evaluations.is_archived', false)
         .order('created_at', { ascending: false });
 
+      if (companyId) query = query.eq('company_id', companyId);
       if (filters?.status) {
         query = query.eq('status', filters.status);
       }
@@ -120,8 +123,9 @@ export function useFindings(filters?: { status?: string; branchId?: string }) {
 
 // Critical findings: score 0-3 (out of 5), grouped by branch
 export function useCriticalFindings(filters?: { status?: string; branchId?: string }) {
+  const { companyId, scopeKey } = useCompanyScope();
   return useQuery({
-    queryKey: ['critical-findings', filters],
+    queryKey: ['critical-findings', filters, scopeKey],
     queryFn: async () => {
       let query = supabase
         .from('non_conformities')
@@ -132,6 +136,7 @@ export function useCriticalFindings(filters?: { status?: string; branchId?: stri
         .order('score', { ascending: true })
         .order('created_at', { ascending: false });
 
+      if (companyId) query = query.eq('company_id', companyId);
       if (filters?.status) {
         query = query.eq('status', filters.status);
       }
@@ -147,15 +152,18 @@ export function useCriticalFindings(filters?: { status?: string; branchId?: stri
 }
 
 export function useFindingStats() {
+  const { companyId, scopeKey } = useCompanyScope();
   return useQuery({
-    queryKey: ['finding-stats'],
+    queryKey: ['finding-stats', scopeKey],
     queryFn: async () => {
-      const { data: allFindings, error } = await supabase
+      let q = supabase
         .from('non_conformities')
         .select('status, score, assigned_to, due_date, resolved_at, created_at, evaluations!inner(status, is_archived)')
         .lte('score', 3)
         .in('evaluations.status', ['submitted', 'approved'])
         .eq('evaluations.is_archived', false);
+      if (companyId) q = q.eq('company_id', companyId);
+      const { data: allFindings, error } = await q;
 
       if (error) throw error;
 
