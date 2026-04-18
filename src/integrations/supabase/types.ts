@@ -14,10 +14,55 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          actor_user_id: string
+          company_id: string | null
+          created_at: string
+          details: Json | null
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          ip_address: string | null
+        }
+        Insert: {
+          action: string
+          actor_user_id: string
+          company_id?: string | null
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          ip_address?: string | null
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string
+          company_id?: string | null
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          ip_address?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       branches: {
         Row: {
           address: string | null
           city: string | null
+          company_id: string | null
           created_at: string
           id: string
           is_active: boolean
@@ -30,6 +75,7 @@ export type Database = {
         Insert: {
           address?: string | null
           city?: string | null
+          company_id?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
@@ -42,6 +88,7 @@ export type Database = {
         Update: {
           address?: string | null
           city?: string | null
+          company_id?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
@@ -57,6 +104,119 @@ export type Database = {
             columns: ["region_id"]
             isOneToOne: false
             referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      companies: {
+        Row: {
+          created_at: string
+          id: string
+          logo_url: string | null
+          name: string
+          name_ar: string | null
+          sector_type: Database["public"]["Enums"]["sector_type"]
+          settings: Json
+          slug: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name: string
+          name_ar?: string | null
+          sector_type?: Database["public"]["Enums"]["sector_type"]
+          settings?: Json
+          slug: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name?: string
+          name_ar?: string | null
+          sector_type?: Database["public"]["Enums"]["sector_type"]
+          settings?: Json
+          slug?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      company_modules: {
+        Row: {
+          company_id: string
+          created_at: string
+          enabled: boolean
+          id: string
+          module_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          module_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          module_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_modules_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_modules_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_users: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          role: Database["public"]["Enums"]["company_role"]
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          role?: Database["public"]["Enums"]["company_role"]
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          role?: Database["public"]["Enums"]["company_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_users_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -115,6 +275,7 @@ export type Database = {
         Row: {
           assigned_to: string | null
           branch_id: string
+          company_id: string | null
           complaint_text: string
           created_at: string
           feedback_id: string
@@ -129,6 +290,7 @@ export type Database = {
         Insert: {
           assigned_to?: string | null
           branch_id: string
+          company_id?: string | null
           complaint_text: string
           created_at?: string
           feedback_id: string
@@ -143,6 +305,7 @@ export type Database = {
         Update: {
           assigned_to?: string | null
           branch_id?: string
+          company_id?: string | null
           complaint_text?: string
           created_at?: string
           feedback_id?: string
@@ -243,6 +406,7 @@ export type Database = {
       customer_feedbacks: {
         Row: {
           branch_id: string
+          company_id: string | null
           created_at: string
           customer_name: string
           customer_phone: string
@@ -253,6 +417,7 @@ export type Database = {
         }
         Insert: {
           branch_id: string
+          company_id?: string | null
           created_at?: string
           customer_name: string
           customer_phone: string
@@ -263,6 +428,7 @@ export type Database = {
         }
         Update: {
           branch_id?: string
+          company_id?: string | null
           created_at?: string
           customer_name?: string
           customer_phone?: string
@@ -373,6 +539,7 @@ export type Database = {
       }
       evaluation_templates: {
         Row: {
+          company_id: string | null
           created_at: string
           description: string | null
           id: string
@@ -384,6 +551,7 @@ export type Database = {
           version: string
         }
         Insert: {
+          company_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -395,6 +563,7 @@ export type Database = {
           version?: string
         }
         Update: {
+          company_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -413,6 +582,7 @@ export type Database = {
           approved_by: string | null
           assessor_id: string
           branch_id: string
+          company_id: string | null
           created_at: string
           duration_minutes: number | null
           id: string
@@ -432,6 +602,7 @@ export type Database = {
           approved_by?: string | null
           assessor_id: string
           branch_id: string
+          company_id?: string | null
           created_at?: string
           duration_minutes?: number | null
           id?: string
@@ -451,6 +622,7 @@ export type Database = {
           approved_by?: string | null
           assessor_id?: string
           branch_id?: string
+          company_id?: string | null
           created_at?: string
           duration_minutes?: number | null
           id?: string
@@ -482,12 +654,87 @@ export type Database = {
           },
         ]
       }
+      feature_flags: {
+        Row: {
+          company_id: string
+          config: Json | null
+          created_at: string
+          enabled: boolean
+          id: string
+          key: string
+        }
+        Insert: {
+          company_id: string
+          config?: Json | null
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          key: string
+        }
+        Update: {
+          company_id?: string
+          config?: Json | null
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feature_flags_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      modules: {
+        Row: {
+          available_for_sectors:
+            | Database["public"]["Enums"]["sector_type"][]
+            | null
+          code: string
+          created_at: string
+          description: string | null
+          id: string
+          is_core: boolean
+          name: string
+          name_ar: string | null
+        }
+        Insert: {
+          available_for_sectors?:
+            | Database["public"]["Enums"]["sector_type"][]
+            | null
+          code: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_core?: boolean
+          name: string
+          name_ar?: string | null
+        }
+        Update: {
+          available_for_sectors?:
+            | Database["public"]["Enums"]["sector_type"][]
+            | null
+          code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_core?: boolean
+          name?: string
+          name_ar?: string | null
+        }
+        Relationships: []
+      }
       non_conformities: {
         Row: {
           assessor_notes: string | null
           assigned_to: string | null
           attachments: string[] | null
           branch_id: string
+          company_id: string | null
           created_at: string
           criterion_id: string
           due_date: string | null
@@ -511,6 +758,7 @@ export type Database = {
           assigned_to?: string | null
           attachments?: string[] | null
           branch_id: string
+          company_id?: string | null
           created_at?: string
           criterion_id: string
           due_date?: string | null
@@ -534,6 +782,7 @@ export type Database = {
           assigned_to?: string | null
           attachments?: string[] | null
           branch_id?: string
+          company_id?: string | null
           created_at?: string
           criterion_id?: string
           due_date?: string | null
@@ -654,6 +903,7 @@ export type Database = {
         Row: {
           assigned_to: string | null
           branch_id: string | null
+          company_id: string | null
           completed_at: string | null
           created_at: string
           created_by: string
@@ -668,6 +918,7 @@ export type Database = {
         Insert: {
           assigned_to?: string | null
           branch_id?: string | null
+          company_id?: string | null
           completed_at?: string | null
           created_at?: string
           created_by: string
@@ -682,6 +933,7 @@ export type Database = {
         Update: {
           assigned_to?: string | null
           branch_id?: string | null
+          company_id?: string | null
           completed_at?: string | null
           created_at?: string
           created_by?: string
@@ -716,6 +968,48 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
         ]
+      }
+      plans: {
+        Row: {
+          code: string
+          created_at: string
+          features: Json
+          id: string
+          is_active: boolean
+          max_branches: number | null
+          max_users: number | null
+          name: string
+          name_ar: string | null
+          price_monthly: number
+          price_yearly: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          features?: Json
+          id?: string
+          is_active?: boolean
+          max_branches?: number | null
+          max_users?: number | null
+          name: string
+          name_ar?: string | null
+          price_monthly?: number
+          price_yearly?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          features?: Json
+          id?: string
+          is_active?: boolean
+          max_branches?: number | null
+          max_users?: number | null
+          name?: string
+          name_ar?: string | null
+          price_monthly?: number
+          price_yearly?: number
+        }
+        Relationships: []
       }
       profile_change_requests: {
         Row: {
@@ -765,6 +1059,7 @@ export type Database = {
           can_view_customer_feedback: boolean
           can_view_suggestions: boolean
           created_at: string
+          default_company_id: string | null
           email: string
           force_password_change: boolean
           full_name: string
@@ -783,6 +1078,7 @@ export type Database = {
           can_view_customer_feedback?: boolean
           can_view_suggestions?: boolean
           created_at?: string
+          default_company_id?: string | null
           email: string
           force_password_change?: boolean
           full_name: string
@@ -801,6 +1097,7 @@ export type Database = {
           can_view_customer_feedback?: boolean
           can_view_suggestions?: boolean
           created_at?: string
+          default_company_id?: string | null
           email?: string
           force_password_change?: boolean
           full_name?: string
@@ -815,6 +1112,7 @@ export type Database = {
       }
       regions: {
         Row: {
+          company_id: string | null
           created_at: string
           id: string
           name: string
@@ -822,6 +1120,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          company_id?: string | null
           created_at?: string
           id?: string
           name: string
@@ -829,6 +1128,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          company_id?: string | null
           created_at?: string
           id?: string
           name?: string
@@ -837,12 +1137,67 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriptions: {
+        Row: {
+          billing_cycle: string
+          cancelled_at: string | null
+          company_id: string
+          created_at: string
+          current_period_end: string | null
+          id: string
+          plan_id: string
+          started_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          billing_cycle?: string
+          cancelled_at?: string | null
+          company_id: string
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          plan_id: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          billing_cycle?: string
+          cancelled_at?: string | null
+          company_id?: string
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          plan_id?: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_tickets: {
         Row: {
           assigned_to: string | null
           attachments: string[] | null
           branch_id: string | null
           category: string
+          company_id: string | null
           created_at: string
           created_by: string
           description: string
@@ -861,6 +1216,7 @@ export type Database = {
           attachments?: string[] | null
           branch_id?: string | null
           category?: string
+          company_id?: string | null
           created_at?: string
           created_by: string
           description: string
@@ -879,6 +1235,7 @@ export type Database = {
           attachments?: string[] | null
           branch_id?: string | null
           category?: string
+          company_id?: string | null
           created_at?: string
           created_by?: string
           description?: string
@@ -926,6 +1283,7 @@ export type Database = {
       system_logs: {
         Row: {
           action: string
+          company_id: string | null
           created_at: string
           details: Json | null
           entity_id: string | null
@@ -937,6 +1295,7 @@ export type Database = {
         }
         Insert: {
           action: string
+          company_id?: string | null
           created_at?: string
           details?: Json | null
           entity_id?: string | null
@@ -948,6 +1307,7 @@ export type Database = {
         }
         Update: {
           action?: string
+          company_id?: string | null
           created_at?: string
           details?: Json | null
           entity_id?: string | null
@@ -1122,6 +1482,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      get_user_company_ids: { Args: { _user_id: string }; Returns: string[] }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
@@ -1131,6 +1492,15 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_company_admin: {
+        Args: { _company_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      user_belongs_to_company: {
+        Args: { _company_id: string; _user_id: string }
         Returns: boolean
       }
     }
@@ -1143,6 +1513,8 @@ export type Database = {
         | "branch_employee"
         | "support_agent"
         | "super_admin"
+      company_role: "owner" | "admin" | "member"
+      sector_type: "fnb" | "clinic" | "retail" | "factory" | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1279,6 +1651,8 @@ export const Constants = {
         "support_agent",
         "super_admin",
       ],
+      company_role: ["owner", "admin", "member"],
+      sector_type: ["fnb", "clinic", "retail", "factory", "other"],
     },
   },
 } as const
