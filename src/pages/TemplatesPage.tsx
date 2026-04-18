@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FileText, Plus, CheckCircle2, ChevronRight, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,15 +20,22 @@ import { Badge } from '@/components/ui/badge';
 import { useTemplates, useTemplateWithDetails, useTemplateStats, Template } from '@/hooks/useTemplates';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useGoBack } from '@/hooks/useGoBack';
+import { useCurrentCompany } from '@/contexts/CurrentCompanyContext';
 
 export default function TemplatesPage() {
   const navigate = useNavigate();
   const goBack = useGoBack('/dashboard/ceo');
   const { t, language } = useLanguage();
+  const { currentCompany } = useCurrentCompany();
   const { data: templates, isLoading } = useTemplates();
   const { data: templateStats } = useTemplateStats();
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const { data: selectedTemplate, isLoading: detailsLoading } = useTemplateWithDetails(selectedTemplateId || '');
+
+  // Templates are not used in clinic workspaces — redirect away
+  if (currentCompany?.sector_type === 'clinic') {
+    return <Navigate to="/clinic/dashboard" replace />;
+  }
 
   const getStats = (templateId: string) => {
     const stat = templateStats?.find(s => s.id === templateId);
