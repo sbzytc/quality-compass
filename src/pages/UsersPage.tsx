@@ -342,16 +342,10 @@ export default function UsersPage() {
             <h1 className="text-3xl font-bold text-foreground">{t('users.title')}</h1>
             <p className="text-muted-foreground mt-1">
               {t('users.subtitle')}
-              {currentCompany && !isSuperAdmin && (
+              {currentCompany && (
                 <span className="ms-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-medium">
                   <Building className="w-3 h-3" />
                   {language === 'ar' ? (currentCompany.name_ar || currentCompany.name) : currentCompany.name}
-                </span>
-              )}
-              {isSuperAdmin && (
-                <span className="ms-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-600 text-xs font-medium">
-                  <Shield className="w-3 h-3" />
-                  {language === 'ar' ? 'كل المستخدمين (سوبر أدمن)' : 'All users (Super Admin)'}
                 </span>
               )}
             </p>
