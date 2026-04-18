@@ -181,7 +181,7 @@ function DepartmentActions({ branchId, dept, ar }: { branchId: string; dept: Cli
         description={ar ? 'سيتم حذف جميع الغرف داخل هذا القسم.' : 'All rooms inside will also be deleted.'}
         onConfirm={() => deleteDept.mutate(dept.id)}
       />
-      <RoomDialog branchId={branchId} departmentId={dept.id} ar={ar} />
+      <RoomDialog branchId={branchId} departmentId={dept.id} ar={ar} deptCode={dept.code} />
     </div>
   );
 }
