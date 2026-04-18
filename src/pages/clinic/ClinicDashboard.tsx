@@ -5,12 +5,13 @@ import { useGoBack } from '@/hooks/useGoBack';
 import { usePatients } from '@/hooks/usePatients';
 import { useAppointments } from '@/hooks/useAppointments';
 import { useVisits } from '@/hooks/useVisits';
+import { useClinicRooms } from '@/hooks/useClinicRooms';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   Stethoscope, Users, Calendar as CalendarIcon, ClipboardList,
-  TrendingUp, AlertTriangle, ArrowRight,
+  TrendingUp, AlertTriangle, ArrowRight, DoorOpen,
 } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell } from 'recharts';
 
@@ -23,6 +24,7 @@ export default function ClinicDashboard() {
   const { data: patients = [], isLoading: lp } = usePatients();
   const { data: appts = [], isLoading: la } = useAppointments();
   const { data: visits = [], isLoading: lv } = useVisits();
+  const { data: rooms = [] } = useClinicRooms();
 
   const isLoading = lp || la || lv;
   const ar = language === 'ar';
@@ -119,7 +121,7 @@ export default function ClinicDashboard() {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <KpiCard
           icon={Users}
           label={ar ? 'إجمالي المرضى' : 'Total Patients'}
@@ -137,6 +139,13 @@ export default function ClinicDashboard() {
           label={ar ? 'مواعيد قادمة (7 أيام)' : 'Upcoming (7 days)'}
           value={isLoading ? '—' : String(stats.upcomingCount)}
           tone="indigo"
+        />
+        <KpiCard
+          icon={DoorOpen}
+          label={ar ? 'الغرف المتاحة' : 'Available Rooms'}
+          value={isLoading ? '—' : `${rooms.filter(r => r.status === 'available').length} / ${rooms.length}`}
+          sub={ar ? 'في كل الفروع' : 'across branches'}
+          tone="emerald"
         />
         <KpiCard
           icon={AlertTriangle}

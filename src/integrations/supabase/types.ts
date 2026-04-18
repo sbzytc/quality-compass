@@ -27,6 +27,7 @@ export type Database = {
           id: string
           notes: string | null
           patient_id: string
+          room_id: string | null
           scheduled_at: string
           status: string
           updated_at: string
@@ -43,6 +44,7 @@ export type Database = {
           id?: string
           notes?: string | null
           patient_id: string
+          room_id?: string | null
           scheduled_at: string
           status?: string
           updated_at?: string
@@ -59,6 +61,7 @@ export type Database = {
           id?: string
           notes?: string | null
           patient_id?: string
+          room_id?: string | null
           scheduled_at?: string
           status?: string
           updated_at?: string
@@ -83,6 +86,13 @@ export type Database = {
             columns: ["patient_id"]
             isOneToOne: false
             referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "clinic_rooms"
             referencedColumns: ["id"]
           },
         ]
@@ -177,6 +187,101 @@ export type Database = {
             columns: ["region_id"]
             isOneToOne: false
             referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clinic_departments: {
+        Row: {
+          branch_id: string
+          code: string
+          company_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          name_ar: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          branch_id: string
+          code: string
+          company_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          name_ar?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string
+          code?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          name_ar?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      clinic_rooms: {
+        Row: {
+          branch_id: string
+          capacity: number
+          company_id: string
+          created_at: string
+          department_id: string
+          id: string
+          is_active: boolean
+          name: string
+          name_ar: string | null
+          room_number: string | null
+          room_type: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          branch_id: string
+          capacity?: number
+          company_id: string
+          created_at?: string
+          department_id: string
+          id?: string
+          is_active?: boolean
+          name: string
+          name_ar?: string | null
+          room_number?: string | null
+          room_type?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string
+          capacity?: number
+          company_id?: string
+          created_at?: string
+          department_id?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          name_ar?: string | null
+          room_number?: string | null
+          room_type?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinic_rooms_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "clinic_departments"
             referencedColumns: ["id"]
           },
         ]
