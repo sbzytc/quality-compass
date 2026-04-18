@@ -22,8 +22,11 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to="/login" replace />;
   }
 
+  // Super admin bypasses role checks (can view all tenant pages for support/QA)
+  const isSuperAdmin = roles.includes('super_admin');
+
   // If specific roles are required, check if user has at least one
-  if (allowedRoles && allowedRoles.length > 0) {
+  if (allowedRoles && allowedRoles.length > 0 && !isSuperAdmin) {
     const hasAllowedRole = allowedRoles.some(role => roles.includes(role));
     
     if (!hasAllowedRole) {
