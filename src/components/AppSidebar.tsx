@@ -8,7 +8,8 @@ import {
   PlusCircle, History, Archive, ListChecks, BarChart3, TrendingUp, Headset, Sparkles,
   Star, MessageSquareMore, ScrollText, Repeat, Plug, Stethoscope, Calendar as CalendarIcon, ClipboardList,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth, AppRole } from '@/contexts/AuthContext';
@@ -36,14 +37,18 @@ export function AppSidebar() {
   const { hasModule, currentCompany, companies, switchCompany } = useCurrentCompany();
 
   // Auto-switch to a clinic workspace when navigating to /clinic/*
-  // This prevents users from landing on /clinic pages while on a non-clinic workspace.
-  if (typeof window !== 'undefined' && location.pathname.startsWith('/clinic') && currentCompany && currentCompany.sector_type !== 'clinic') {
+  useEffect(() => {
+    if (!location.pathname.startsWith('/clinic')) return;
+    if (!currentCompany || currentCompany.sector_type === 'clinic') return;
     const clinicWs = companies.find(c => c.sector_type === 'clinic');
-    if (clinicWs) {
-      // fire-and-forget; provider will re-render with the new company
-      switchCompany(clinicWs.id);
-    }
-  }
+    if (!clinicWs) return;
+    switchCompany(clinicWs.id);
+    toast.success(
+      direction === 'rtl'
+        ? `تم التبديل إلى مساحة العيادات: ${clinicWs.name_ar || clinicWs.name}`
+        : `Switched to clinic workspace: ${clinicWs.name}`
+    );
+  }, [location.pathname, currentCompany, companies, switchCompany, direction]);
 
   const openFindingsCount = findingStats?.open || 0;
   const showDashboards = !isAssessor || isAdmin;
