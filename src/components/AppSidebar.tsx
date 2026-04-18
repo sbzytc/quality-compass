@@ -82,6 +82,16 @@ export function AppSidebar() {
       if (feedbackChildren.length > 0) return [{ labelKey: 'nav.customerFeedback', icon: Star, path: '/customer-feedback', children: feedbackChildren }];
       return [];
     })(),
+    ...(hasModule('clinic_management') ? [{
+      labelKey: 'nav.clinic',
+      icon: Stethoscope,
+      path: '/clinic',
+      children: [
+        { labelKey: 'nav.clinic.patients', icon: Users, path: '/clinic/patients' },
+        { labelKey: 'nav.clinic.appointments', icon: CalendarIcon, path: '/clinic/appointments' },
+        { labelKey: 'nav.clinic.visits', icon: ClipboardList, path: '/clinic/visits' },
+      ],
+    }] : []),
     { labelKey: 'nav.assistant', icon: Sparkles, path: '/assistant' },
   ] as NavItem[]).filter(item => !item.allowedRoles || item.allowedRoles.some(role => roles.includes(role)));
 
