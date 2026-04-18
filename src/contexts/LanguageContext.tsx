@@ -456,6 +456,10 @@ const translations: Record<Language, Record<string, string>> = {
 
 
     'nav.assistant': 'المساعد الذكي',
+    'nav.clinic': 'العيادة',
+    'nav.clinic.patients': 'المرضى',
+    'nav.clinic.appointments': 'المواعيد',
+    'nav.clinic.visits': 'الزيارات',
 
     // Settings
     'settings.title': 'الإعدادات',
