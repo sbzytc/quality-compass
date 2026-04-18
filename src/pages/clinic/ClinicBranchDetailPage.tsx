@@ -147,7 +147,7 @@ export default function ClinicBranchDetailPage() {
                         ) : (
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                             {deptRooms.map(room => (
-                              <RoomCard key={room.id} room={room} ar={ar} canEdit={isCompanyAdmin} branchId={branchId!} />
+                              <RoomCard key={room.id} room={room} ar={ar} canEdit={isCompanyAdmin} canManageStatus={canManageStatus} branchId={branchId!} deptCode={dept.code} />
                             ))}
                           </div>
                         )}
