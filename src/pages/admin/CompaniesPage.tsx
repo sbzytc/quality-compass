@@ -229,17 +229,11 @@ function CompanyDrawer({ company, onClose }: { company: any | null; onClose: () 
           <span>·</span>
           <span>{company && sectorLabel(company.sector_type, language)}</span>
           <span className="ms-auto">
-            <Button
-              size="sm"
-              variant={company?.status === 'active' ? 'destructive' : 'default'}
-              onClick={() => toggleStatus.mutate(company?.status === 'active' ? 'suspended' : 'active')}
-              disabled={toggleStatus.isPending}
-            >
-              <Power className="w-3.5 h-3.5 me-1" />
-              {company?.status === 'active'
-                ? (language === 'ar' ? 'تعليق' : 'Suspend')
-                : (language === 'ar' ? 'تفعيل' : 'Activate')}
-            </Button>
+            <ConfirmStatusButton
+              status={company?.status}
+              pending={toggleStatus.isPending}
+              onConfirm={() => toggleStatus.mutate(company?.status === 'active' ? 'suspended' : 'active')}
+            />
           </span>
         </div>
 
