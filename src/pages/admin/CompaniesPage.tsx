@@ -296,6 +296,48 @@ function CompanyDrawer({ company, onClose }: { company: any | null; onClose: () 
   );
 }
 
+function ConfirmStatusButton({ status, pending, onConfirm }: { status?: string; pending: boolean; onConfirm: () => void }) {
+  const { language } = useLanguage();
+  const [open, setOpen] = useState(false);
+  const isActive = status === 'active';
+  return (
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      <Button
+        size="sm"
+        variant={isActive ? 'destructive' : 'default'}
+        onClick={() => setOpen(true)}
+        disabled={pending}
+      >
+        <Power className="w-3.5 h-3.5 me-1" />
+        {isActive ? (language === 'ar' ? 'تعليق' : 'Suspend') : (language === 'ar' ? 'تفعيل' : 'Activate')}
+      </Button>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>
+            {isActive
+              ? (language === 'ar' ? 'تعليق الشركة؟' : 'Suspend company?')
+              : (language === 'ar' ? 'تفعيل الشركة؟' : 'Activate company?')}
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            {isActive
+              ? (language === 'ar' ? 'سيتم منع الأعضاء من الوصول للوركسبيس حتى يُعاد تفعيله. هل أنت متأكد؟' : 'Members will lose access until you re-activate. Are you sure?')
+              : (language === 'ar' ? 'سيُعاد تفعيل الوركسبيس وعودة الوصول لكل الأعضاء.' : 'The workspace will be re-enabled for all members.')}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>{language === 'ar' ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
+          <AlertDialogAction
+            className={isActive ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : ''}
+            onClick={() => { onConfirm(); setOpen(false); }}
+          >
+            {isActive ? (language === 'ar' ? 'نعم، علّق' : 'Yes, suspend') : (language === 'ar' ? 'نعم، فعّل' : 'Yes, activate')}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
 function CompanyMembersTab({ companyId }: { companyId: string }) {
   const { language } = useLanguage();
   const { data, isLoading } = useQuery({
