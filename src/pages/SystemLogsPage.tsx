@@ -9,6 +9,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useSystemLogs } from '@/hooks/useSystemLogs';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useGoBack } from '@/hooks/useGoBack';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCurrentCompany } from '@/contexts/CurrentCompanyContext';
 import { format } from 'date-fns';
 
 const ACTION_ICONS: Record<string, React.ElementType> = {
@@ -65,10 +67,16 @@ export default function SystemLogsPage() {
   const goBack = useGoBack('/dashboard/ceo');
   const { language, direction } = useLanguage();
   const isAr = language === 'ar';
+  const { roles } = useAuth();
+  const { currentCompany } = useCurrentCompany();
+  const isSuperAdmin = roles.includes('super_admin');
   const [entityFilter, setEntityFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  const { data: logs, isLoading } = useSystemLogs({ entityType: entityFilter });
+  const { data: logs, isLoading } = useSystemLogs({
+    entityType: entityFilter,
+    companyId: isSuperAdmin ? undefined : currentCompany?.id ?? null,
+  });
 
   const filteredLogs = (logs || []).filter(log => {
     if (!searchTerm) return true;
