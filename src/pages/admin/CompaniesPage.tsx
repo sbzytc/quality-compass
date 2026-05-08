@@ -162,6 +162,7 @@ export default function CompaniesPage() {
 function CompanyDrawer({ company, onClose }: { company: any | null; onClose: () => void }) {
   const { language } = useLanguage();
   const qc = useQueryClient();
+  const audit = useAuditLog();
   const companyId = company?.id;
 
   const { data: rows, isLoading } = useQuery({
@@ -197,6 +198,12 @@ function CompanyDrawer({ company, onClose }: { company: any | null; onClose: () 
           .insert({ company_id: companyId, module_id, enabled });
         if (error) throw error;
       }
+      await audit({
+        action: enabled ? 'module_enabled' : 'module_disabled',
+        entityType: 'module',
+        entityId: module_id,
+        companyId,
+      });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-company-modules', companyId] });
@@ -208,6 +215,12 @@ function CompanyDrawer({ company, onClose }: { company: any | null; onClose: () 
     mutationFn: async (next: 'active' | 'suspended') => {
       const { error } = await supabase.from('companies').update({ status: next }).eq('id', companyId);
       if (error) throw error;
+      await audit({
+        action: next === 'active' ? 'company_activated' : 'company_suspended',
+        entityType: 'company',
+        entityId: companyId,
+        companyId,
+      });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-companies'] });
