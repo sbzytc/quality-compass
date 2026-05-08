@@ -359,6 +359,18 @@ function ConfirmStatusButton({ status, pending, onConfirm }: { status?: string; 
 
 function CompanyMembersTab({ companyId }: { companyId: string }) {
   const { language } = useLanguage();
+  const qc = useQueryClient();
+  const audit = useAuditLog();
+  const createUser = useCreateUser();
+  const updateStatus = useUpdateUserStatus();
+  const updateRole = useUpdateUserRole();
+  const resetPassword = useResetPassword();
+
+  const [addOpen, setAddOpen] = useState(false);
+  const [form, setForm] = useState({ email: '', fullName: '', password: '', role: 'assessor' as AppRole });
+  const [confirmRemove, setConfirmRemove] = useState<{ id: string; name?: string } | null>(null);
+  const [changeRoleFor, setChangeRoleFor] = useState<{ userId: string; role: AppRole; name?: string } | null>(null);
+
   const { data, isLoading } = useQuery({
     queryKey: ['admin-company-members', companyId],
     enabled: !!companyId,
@@ -371,34 +383,258 @@ function CompanyMembersTab({ companyId }: { companyId: string }) {
       if (error) throw error;
       const userIds = (cu || []).map((r: any) => r.user_id);
       if (!userIds.length) return [];
-      const { data: profiles } = await supabase
+      const [{ data: profiles }, { data: ur }] = await Promise.all([
+        supabase
         .from('profiles')
         .select('user_id, full_name, email, avatar_url, is_active')
-        .in('user_id', userIds);
+        .in('user_id', userIds),
+        supabase.from('user_roles').select('user_id, role').in('user_id', userIds),
+      ]);
       const pmap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
-      return (cu || []).map((r: any) => ({ ...r, profile: pmap.get(r.user_id) }));
+      const rolesByUser = new Map<string, string[]>();
+      (ur || []).forEach((r: any) => {
+        const list = rolesByUser.get(r.user_id) || [];
+        list.push(r.role);
+        rolesByUser.set(r.user_id, list);
+      });
+      return (cu || []).map((r: any) => ({
+        ...r,
+        profile: pmap.get(r.user_id),
+        appRoles: rolesByUser.get(r.user_id) || [],
+      }));
     },
   });
 
-  if (isLoading) return <div className="text-sm text-muted-foreground">Loading…</div>;
-  if (!data?.length) return <div className="text-sm text-muted-foreground">{language === 'ar' ? 'لا يوجد أعضاء' : 'No members yet.'}</div>;
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: ['admin-company-members', companyId] });
+    qc.invalidateQueries({ queryKey: ['users'] });
+  };
+
+  const handleCreate = async () => {
+    if (!form.email || !form.password || form.password.length < 6) {
+      toast.error(language === 'ar' ? 'تحقق من البريد وكلمة المرور (6 أحرف على الأقل)' : 'Check email and password (min 6 chars)');
+      return;
+    }
+    try {
+      await createUser.mutateAsync({
+        email: form.email,
+        fullName: form.fullName || form.email,
+        password: form.password,
+        role: form.role,
+        forcePasswordChange: true,
+        companyId,
+      });
+      await audit({ action: 'member_added', entityType: 'user', companyId, details: { email: form.email, role: form.role } });
+      toast.success(language === 'ar' ? 'تم إضافة المستخدم' : 'User added');
+      setAddOpen(false);
+      setForm({ email: '', fullName: '', password: '', role: 'assessor' });
+      refresh();
+    } catch (e: any) {
+      toast.error(e?.message || (language === 'ar' ? 'فشل الإنشاء' : 'Failed'));
+    }
+  };
+
+  const handleToggleActive = async (m: any) => {
+    try {
+      await updateStatus.mutateAsync({ userId: m.user_id, isActive: !m.profile?.is_active });
+      await audit({
+        action: m.profile?.is_active ? 'member_suspended' : 'member_activated',
+        entityType: 'user',
+        entityId: m.user_id,
+        companyId,
+        details: { email: m.profile?.email },
+      });
+      toast.success(language === 'ar' ? 'تم التحديث' : 'Updated');
+      refresh();
+    } catch (e: any) {
+      toast.error(e?.message);
+    }
+  };
+
+  const handleResetPassword = async (m: any) => {
+    try {
+      const r = await resetPassword.mutateAsync({ userId: m.user_id, email: m.profile?.email });
+      await audit({ action: 'member_password_reset', entityType: 'user', entityId: m.user_id, companyId });
+      toast.success(
+        r?.tempPassword
+          ? `${language === 'ar' ? 'كلمة مرور مؤقتة:' : 'Temp password:'} ${r.tempPassword}`
+          : (language === 'ar' ? 'تم إرسال البريد' : 'Email sent')
+      );
+    } catch (e: any) {
+      toast.error(e?.message);
+    }
+  };
+
+  const handleRoleChange = async () => {
+    if (!changeRoleFor) return;
+    try {
+      await updateRole.mutateAsync({ userId: changeRoleFor.userId, newRole: changeRoleFor.role });
+      await audit({
+        action: 'member_role_changed',
+        entityType: 'user',
+        entityId: changeRoleFor.userId,
+        companyId,
+        details: { new_role: changeRoleFor.role },
+      });
+      toast.success(language === 'ar' ? 'تم تحديث الدور' : 'Role updated');
+      setChangeRoleFor(null);
+      refresh();
+    } catch (e: any) {
+      toast.error(e?.message);
+    }
+  };
+
+  const handleRemove = async () => {
+    if (!confirmRemove) return;
+    try {
+      const { error } = await supabase
+        .from('company_users')
+        .update({ is_active: false })
+        .eq('id', confirmRemove.id);
+      if (error) throw error;
+      await audit({ action: 'member_removed', entityType: 'user', companyId, details: { name: confirmRemove.name } });
+      toast.success(language === 'ar' ? 'تم إزالة العضو' : 'Member removed');
+      setConfirmRemove(null);
+      refresh();
+    } catch (e: any) {
+      toast.error(e?.message);
+    }
+  };
+
+  const ROLES: { v: AppRole; en: string; ar: string }[] = [
+    { v: 'admin', en: 'Workspace Admin', ar: 'أدمن المساحة' },
+    { v: 'executive', en: 'Executive', ar: 'تنفيذي' },
+    { v: 'branch_manager', en: 'Branch Manager', ar: 'مدير فرع' },
+    { v: 'assessor', en: 'Assessor', ar: 'مقيّم' },
+    { v: 'branch_employee', en: 'Branch Employee', ar: 'موظف فرع' },
+    { v: 'support_agent', en: 'Support Agent', ar: 'موظف دعم' },
+  ];
 
   return (
-    <div className="space-y-2">
-      {data.map((m: any) => (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="text-xs text-muted-foreground">
+          {language === 'ar' ? 'تحكم كامل في أعضاء هذه المساحة' : 'Full control over this workspace members'}
+        </div>
+        <Button size="sm" onClick={() => setAddOpen(true)}>
+          <UserPlus className="w-3.5 h-3.5 me-1" />
+          {language === 'ar' ? 'إضافة عضو' : 'Add member'}
+        </Button>
+      </div>
+
+      {isLoading && <div className="text-sm text-muted-foreground">Loading…</div>}
+      {!isLoading && !data?.length && (
+        <div className="text-sm text-muted-foreground">{language === 'ar' ? 'لا يوجد أعضاء' : 'No members yet.'}</div>
+      )}
+
+      {data?.map((m: any) => (
         <div key={m.id} className="flex items-center justify-between p-3 rounded-lg border">
           <div className="min-w-0">
             <div className="font-medium text-sm">{m.profile?.full_name || '—'}</div>
             <div className="text-xs text-muted-foreground truncate">{m.profile?.email}</div>
+            {m.appRoles?.length > 0 && (
+              <div className="text-[10px] text-muted-foreground mt-0.5">
+                {m.appRoles.join(' · ')}
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-[10px] uppercase">{m.role}</Badge>
-            <Badge variant={m.is_active ? 'default' : 'secondary'} className="text-[10px]">
-              {m.is_active ? (language === 'ar' ? 'نشط' : 'Active') : (language === 'ar' ? 'موقوف' : 'Inactive')}
+            <Badge variant={m.profile?.is_active ? 'default' : 'secondary'} className="text-[10px]">
+              {m.profile?.is_active ? (language === 'ar' ? 'نشط' : 'Active') : (language === 'ar' ? 'موقوف' : 'Inactive')}
             </Badge>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-7 w-7">
+                  <MoreHorizontal className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setChangeRoleFor({ userId: m.user_id, role: (m.appRoles?.[0] as AppRole) || 'assessor', name: m.profile?.full_name })}>
+                  <Shield className="w-3.5 h-3.5 me-2" />{language === 'ar' ? 'تغيير الصلاحية' : 'Change role'}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleResetPassword(m)}>
+                  <KeyRound className="w-3.5 h-3.5 me-2" />{language === 'ar' ? 'إعادة كلمة المرور' : 'Reset password'}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleToggleActive(m)}>
+                  {m.profile?.is_active ? (
+                    <><UserX className="w-3.5 h-3.5 me-2" />{language === 'ar' ? 'تعليق' : 'Suspend'}</>
+                  ) : (
+                    <><UserCheck className="w-3.5 h-3.5 me-2" />{language === 'ar' ? 'تفعيل' : 'Activate'}</>
+                  )}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-destructive"
+                  onClick={() => setConfirmRemove({ id: m.id, name: m.profile?.full_name })}
+                >
+                  <Trash2 className="w-3.5 h-3.5 me-2" />{language === 'ar' ? 'إزالة من المساحة' : 'Remove from workspace'}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       ))}
+
+      {/* Add member dialog */}
+      <Dialog open={addOpen} onOpenChange={setAddOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{language === 'ar' ? 'إضافة عضو للمساحة' : 'Add workspace member'}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div><Label>Email</Label><Input value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></div>
+            <div><Label>{language === 'ar' ? 'الاسم' : 'Full name'}</Label><Input value={form.fullName} onChange={e => setForm({ ...form, fullName: e.target.value })} /></div>
+            <div><Label>{language === 'ar' ? 'كلمة مرور مؤقتة' : 'Temp password'}</Label><Input type="text" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} /></div>
+            <div>
+              <Label>{language === 'ar' ? 'الصلاحية' : 'Role'}</Label>
+              <Select value={form.role} onValueChange={v => setForm({ ...form, role: v as AppRole })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {ROLES.map(r => <SelectItem key={r.v} value={r.v}>{language === 'ar' ? r.ar : r.en}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={handleCreate} disabled={createUser.isPending}>{language === 'ar' ? 'إنشاء' : 'Create'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Change role dialog */}
+      <Dialog open={!!changeRoleFor} onOpenChange={(o) => !o && setChangeRoleFor(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{language === 'ar' ? `تغيير صلاحية ${changeRoleFor?.name || ''}` : `Change role for ${changeRoleFor?.name || ''}`}</DialogTitle></DialogHeader>
+          {changeRoleFor && (
+            <Select value={changeRoleFor.role} onValueChange={v => setChangeRoleFor({ ...changeRoleFor, role: v as AppRole })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {ROLES.map(r => <SelectItem key={r.v} value={r.v}>{language === 'ar' ? r.ar : r.en}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          )}
+          <DialogFooter>
+            <Button onClick={handleRoleChange} disabled={updateRole.isPending}>{language === 'ar' ? 'حفظ' : 'Save'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirm remove */}
+      <AlertDialog open={!!confirmRemove} onOpenChange={(o) => !o && setConfirmRemove(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{language === 'ar' ? 'إزالة العضو من المساحة؟' : 'Remove member from workspace?'}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {language === 'ar' ? 'لن يتم حذف الحساب، فقط إلغاء عضويته في هذه المساحة.' : "The user account isn't deleted; only the workspace membership is revoked."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{language === 'ar' ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
+            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={handleRemove}>
+              {language === 'ar' ? 'إزالة' : 'Remove'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
