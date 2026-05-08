@@ -39,6 +39,7 @@ function sectorLabel(value: string, lang: string) {
 export default function CompaniesPage() {
   const qc = useQueryClient();
   const { language } = useLanguage();
+  const audit = useAuditLog();
   const [open, setOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<any | null>(null);
   const [form, setForm] = useState({ name: '', name_ar: '', slug: '', sector_type: 'clinic' as SectorValue });
@@ -57,13 +58,14 @@ export default function CompaniesPage() {
 
   const createCompany = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from('companies').insert({
+      const { data, error } = await supabase.from('companies').insert({
         name: form.name,
         name_ar: form.name_ar || null,
         slug: form.slug.toLowerCase().replace(/\s+/g, '-'),
         sector_type: form.sector_type,
-      });
+      }).select().single();
       if (error) throw error;
+      await audit({ action: 'company_created', entityType: 'company', entityId: data?.id, companyId: data?.id, details: { name: form.name, sector: form.sector_type } });
     },
     onSuccess: () => {
       toast.success(language === 'ar' ? 'تم إنشاء الشركة' : 'Company created');
