@@ -12,9 +12,13 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Plus, Building2, Stethoscope, Utensils, Store, Factory, Package, ChevronRight, Users, Activity, LifeBuoy, Power, Shield } from 'lucide-react';
+import { Plus, Building2, Stethoscope, Utensils, Store, Factory, Package, ChevronRight, Users, Activity, LifeBuoy, Power, Shield, MoreHorizontal, KeyRound, UserX, UserCheck, Trash2, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuditLog } from '@/hooks/useAuditLog';
+import { useCreateUser, useInviteUser, useResetPassword, useUpdateUserRole, useUpdateUserStatus } from '@/hooks/useUsers';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import type { AppRole } from '@/contexts/AuthContext';
 
 const SECTORS = [
   { value: 'clinic',  labelEn: 'Clinic / Healthcare',     labelAr: 'عيادة / رعاية صحية', icon: Stethoscope },
