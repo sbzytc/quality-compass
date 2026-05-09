@@ -325,54 +325,6 @@ export type Database = {
         }
         Relationships: []
       }
-      company_modules: {
-        Row: {
-          company_id: string
-          created_at: string
-          disabled_at: string | null
-          enabled: boolean
-          enabled_at: string | null
-          id: string
-          module_id: string
-          updated_at: string
-        }
-        Insert: {
-          company_id: string
-          created_at?: string
-          disabled_at?: string | null
-          enabled?: boolean
-          enabled_at?: string | null
-          id?: string
-          module_id: string
-          updated_at?: string
-        }
-        Update: {
-          company_id?: string
-          created_at?: string
-          disabled_at?: string | null
-          enabled?: boolean
-          enabled_at?: string | null
-          id?: string
-          module_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "company_modules_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "company_modules_module_id_fkey"
-            columns: ["module_id"]
-            isOneToOne: false
-            referencedRelation: "modules"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       company_users: {
         Row: {
           company_id: string
