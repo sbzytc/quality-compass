@@ -329,23 +329,32 @@ export type Database = {
         Row: {
           company_id: string
           created_at: string
+          disabled_at: string | null
           enabled: boolean
+          enabled_at: string | null
           id: string
           module_id: string
+          updated_at: string
         }
         Insert: {
           company_id: string
           created_at?: string
+          disabled_at?: string | null
           enabled?: boolean
+          enabled_at?: string | null
           id?: string
           module_id: string
+          updated_at?: string
         }
         Update: {
           company_id?: string
           created_at?: string
+          disabled_at?: string | null
           enabled?: boolean
+          enabled_at?: string | null
           id?: string
           module_id?: string
+          updated_at?: string
         }
         Relationships: [
           {
@@ -872,37 +881,52 @@ export type Database = {
           available_for_sectors:
             | Database["public"]["Enums"]["sector_type"][]
             | null
+          category: string | null
           code: string
           created_at: string
+          created_by: string | null
           description: string | null
           id: string
           is_core: boolean
+          is_system_module: boolean
           name: string
           name_ar: string | null
+          status: string
+          updated_at: string
         }
         Insert: {
           available_for_sectors?:
             | Database["public"]["Enums"]["sector_type"][]
             | null
+          category?: string | null
           code: string
           created_at?: string
+          created_by?: string | null
           description?: string | null
           id?: string
           is_core?: boolean
+          is_system_module?: boolean
           name: string
           name_ar?: string | null
+          status?: string
+          updated_at?: string
         }
         Update: {
           available_for_sectors?:
             | Database["public"]["Enums"]["sector_type"][]
             | null
+          category?: string | null
           code?: string
           created_at?: string
+          created_by?: string | null
           description?: string | null
           id?: string
           is_core?: boolean
+          is_system_module?: boolean
           name?: string
           name_ar?: string | null
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }
