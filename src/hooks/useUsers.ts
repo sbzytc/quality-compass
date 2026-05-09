@@ -136,18 +136,24 @@ export function useCreateUser() {
       if (response.error) {
         // Try to extract structured error body from non-2xx response
         const ctx: any = (response.error as any).context;
-        if (ctx && typeof ctx.json === 'function') {
+        let body: any = null;
+        if (ctx) {
           try {
-            const body = await ctx.json();
-            if (body?.error) {
-              const err: any = new Error(body.error);
-              err.code = body.code;
-              err.companies = body.companies;
-              throw err;
+            if (typeof ctx.clone === 'function') {
+              body = await ctx.clone().json();
+            } else if (typeof ctx.json === 'function') {
+              body = await ctx.json();
+            } else if (typeof ctx.text === 'function') {
+              const txt = await ctx.text();
+              try { body = JSON.parse(txt); } catch { /* ignore */ }
             }
-          } catch (parseErr: any) {
-            if (parseErr?.message) throw parseErr;
-          }
+          } catch { /* ignore */ }
+        }
+        if (body?.error) {
+          const err: any = new Error(body.error);
+          err.code = body.code;
+          err.companies = body.companies;
+          throw err;
         }
         throw response.error;
       }
