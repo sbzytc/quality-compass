@@ -133,7 +133,24 @@ export function useCreateUser() {
         body: { email, fullName, password, role, forcePasswordChange, branchId, companyId },
       });
 
-      if (response.error) throw response.error;
+      if (response.error) {
+        // Try to extract structured error body from non-2xx response
+        const ctx: any = (response.error as any).context;
+        if (ctx && typeof ctx.json === 'function') {
+          try {
+            const body = await ctx.json();
+            if (body?.error) {
+              const err: any = new Error(body.error);
+              err.code = body.code;
+              err.companies = body.companies;
+              throw err;
+            }
+          } catch (parseErr: any) {
+            if (parseErr?.message) throw parseErr;
+          }
+        }
+        throw response.error;
+      }
       return response.data;
     },
     onSuccess: () => {
