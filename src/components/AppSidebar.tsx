@@ -97,7 +97,7 @@ export function AppSidebar() {
       if (feedbackChildren.length > 0) return [{ labelKey: 'nav.customerFeedback', icon: Star, path: '/customer-feedback', children: feedbackChildren }];
       return [];
     })(),
-    ...(hasModule('clinic_management') ? [{
+    ...(hasModule('medical') ? [{
       labelKey: 'nav.clinic',
       icon: Stethoscope,
       path: '/clinic',

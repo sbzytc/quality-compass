@@ -271,13 +271,13 @@ const AppRoutes = () => (
       } />
 
       {/* Clinic Management Module */}
-      <Route path="/clinic" element={<ModuleGuard module="clinic_management"><ClinicDashboard /></ModuleGuard>} />
-      <Route path="/clinic/dashboard" element={<ModuleGuard module="clinic_management"><ClinicDashboard /></ModuleGuard>} />
-      <Route path="/clinic/patients" element={<ModuleGuard module="clinic_management"><PatientsPage /></ModuleGuard>} />
-      <Route path="/clinic/appointments" element={<ModuleGuard module="clinic_management"><AppointmentsPage /></ModuleGuard>} />
-      <Route path="/clinic/visits" element={<ModuleGuard module="clinic_management"><VisitsPage /></ModuleGuard>} />
-      <Route path="/clinic/branches" element={<ModuleGuard module="clinic_management"><ClinicBranchesPage /></ModuleGuard>} />
-      <Route path="/clinic/branches/:id" element={<ModuleGuard module="clinic_management"><ClinicBranchDetailPage /></ModuleGuard>} />
+      <Route path="/clinic" element={<ModuleGuard module="medical"><ClinicDashboard /></ModuleGuard>} />
+      <Route path="/clinic/dashboard" element={<ModuleGuard module="medical"><ClinicDashboard /></ModuleGuard>} />
+      <Route path="/clinic/patients" element={<ModuleGuard module="medical"><PatientsPage /></ModuleGuard>} />
+      <Route path="/clinic/appointments" element={<ModuleGuard module="medical"><AppointmentsPage /></ModuleGuard>} />
+      <Route path="/clinic/visits" element={<ModuleGuard module="medical"><VisitsPage /></ModuleGuard>} />
+      <Route path="/clinic/branches" element={<ModuleGuard module="medical"><ClinicBranchesPage /></ModuleGuard>} />
+      <Route path="/clinic/branches/:id" element={<ModuleGuard module="medical"><ClinicBranchDetailPage /></ModuleGuard>} />
     </Route>
     
     <Route path="*" element={<NotFound />} />
