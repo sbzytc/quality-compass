@@ -117,7 +117,15 @@ export default function CompaniesPage() {
               </div>
               <div><Label>Name (EN)</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
               <div><Label>الاسم (AR)</Label><Input value={form.name_ar} onChange={e => setForm({ ...form, name_ar: e.target.value })} /></div>
-              <div><Label>Slug</Label><Input value={form.slug} onChange={e => setForm({ ...form, slug: e.target.value })} placeholder="acme-clinics" /></div>
+              <div>
+                <Label>Slug</Label>
+                <Input value={form.slug} onChange={e => setForm({ ...form, slug: e.target.value })} placeholder="acme-clinics" />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {language === 'ar'
+                    ? 'رابط الشركة المختصر — يظهر في عنوان الموقع (URL) لسهولة الوصول. يحتوي على أحف إنجليزية وأرقام وشرطات فقط.'
+                    : 'Short URL-friendly identifier used in the web address. Only lowercase letters, numbers, and hyphens.'}
+                </p>
+              </div>
             </div>
             <DialogFooter>
               <Button onClick={() => createCompany.mutate()} disabled={!form.name || !form.slug || createCompany.isPending}>
