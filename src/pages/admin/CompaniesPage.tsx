@@ -12,7 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Plus, Building2, Stethoscope, Utensils, ChevronRight, Users, Activity, LifeBuoy, Power, Shield, MoreHorizontal, KeyRound, UserX, UserCheck, Trash2, UserPlus } from 'lucide-react';
+import { Plus, Building2, Stethoscope, Utensils, ChevronRight, Users, Activity, LifeBuoy, Power, Shield, MoreHorizontal, KeyRound, UserX, UserCheck, Trash2, UserPlus, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuditLog } from '@/hooks/useAuditLog';
@@ -235,6 +235,7 @@ function CompanyDrawer({ company, onClose }: { company: any | null; onClose: () 
               onConfirm={() => toggleStatus.mutate(company?.status === 'active' ? 'suspended' : 'active')}
             />
           </span>
+          <DeleteCompanyButton company={company} onDeleted={onClose} />
         </div>
 
         <Tabs defaultValue="members" className="mt-4">
