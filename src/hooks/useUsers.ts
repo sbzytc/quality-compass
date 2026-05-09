@@ -129,35 +129,28 @@ export function useCreateUser() {
     mutationFn: async ({ email, fullName, password, role, forcePasswordChange, branchId, companyId }: { 
       email: string; fullName: string; password: string; role: AppRole; forcePasswordChange: boolean; branchId?: string; companyId?: string 
     }) => {
-      const response = await supabase.functions.invoke('create-user', {
-        body: { email, fullName, password, role, forcePasswordChange, branchId, companyId },
+      // Use direct fetch to avoid supabase-js logging non-2xx responses to console
+      // (which would otherwise trigger the runtime error overlay).
+      const { data: { session } } = await supabase.auth.getSession();
+      const url = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.functions.supabase.co/create-user`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          Authorization: `Bearer ${session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ email, fullName, password, role, forcePasswordChange, branchId, companyId }),
       });
-
-      if (response.error) {
-        // Try to extract structured error body from non-2xx response
-        const ctx: any = (response.error as any).context;
-        let body: any = null;
-        if (ctx) {
-          try {
-            if (typeof ctx.clone === 'function') {
-              body = await ctx.clone().json();
-            } else if (typeof ctx.json === 'function') {
-              body = await ctx.json();
-            } else if (typeof ctx.text === 'function') {
-              const txt = await ctx.text();
-              try { body = JSON.parse(txt); } catch { /* ignore */ }
-            }
-          } catch { /* ignore */ }
-        }
-        if (body?.error) {
-          const err: any = new Error(body.error);
-          err.code = body.code;
-          err.companies = body.companies;
-          throw err;
-        }
-        throw response.error;
+      let body: any = null;
+      try { body = await res.json(); } catch { /* ignore */ }
+      if (!res.ok) {
+        const err: any = new Error(body?.error || `Request failed (${res.status})`);
+        err.code = body?.code;
+        err.companies = body?.companies;
+        throw err;
       }
-      return response.data;
+      return body;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });

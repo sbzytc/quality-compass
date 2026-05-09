@@ -224,9 +224,19 @@ export default function UsersPage() {
       setAddUserMode('choose');
       setCreateForm({ email: '', fullName: '', password: '', confirmPassword: '', role: 'assessor', forcePasswordChange: true, branchId: '' });
     } catch (error: any) {
-      // Show specific message for duplicate email (with company names) when available
       if (error?.code === 'email_exists' || /already.*registered|مسجّل/i.test(error?.message || '')) {
-        toast.error(error.message, { duration: 8000 });
+        const companyNames = (error?.companies || []).map((c: any) => c.name).join('، ');
+        toast.error(
+          language === 'ar'
+            ? `هذا البريد الإلكتروني مستخدم مسبقاً${companyNames ? ` في: ${companyNames}` : ''}`
+            : `This email is already registered${companyNames ? ` in: ${companyNames}` : ''}`,
+          {
+            description: language === 'ar'
+              ? 'يرجى استخدام بريد إلكتروني آخر لإنشاء المستخدم.'
+              : 'Please use a different email address to create the user.',
+            duration: 10000,
+          }
+        );
       } else {
         toast.error(
           (error?.message as string) ||
