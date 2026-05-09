@@ -14,10 +14,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 
 const sectorLabels: Record<string, { en: string; ar: string }> = {
-  fnb: { en: 'F&B', ar: 'مطاعم' },
-  clinic: { en: 'Clinic', ar: 'عيادات' },
-  retail: { en: 'Retail', ar: 'تجزئة' },
-  factory: { en: 'Factory', ar: 'مصانع' },
+  fnb: { en: 'F&B / Restaurants', ar: 'مطاعم وأغذية' },
+  clinic: { en: 'Healthcare', ar: 'رعاية صحية' },
   other: { en: 'Other', ar: 'أخرى' },
 };
 

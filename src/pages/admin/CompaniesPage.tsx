@@ -21,11 +21,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import type { AppRole } from '@/contexts/AuthContext';
 
 const SECTORS = [
-  { value: 'clinic',  labelEn: 'Clinic / Healthcare',     labelAr: 'عيادة / رعاية صحية', icon: Stethoscope },
-  { value: 'fnb',     labelEn: 'F&B / Restaurants',       labelAr: 'مطاعم وأغذية',       icon: Utensils },
-  { value: 'retail',  labelEn: 'Retail / Multi-branch',   labelAr: 'تجزئة / فروع متعددة', icon: Store },
-  { value: 'factory', labelEn: 'Factory / Manufacturing', labelAr: 'مصنع / تصنيع',       icon: Factory },
-  { value: 'other',   labelEn: 'Other',                   labelAr: 'أخرى',               icon: Building2 },
+  { value: 'clinic',  labelEn: 'Healthcare / Clinics',      labelAr: 'رعاية صحية / عيادات',      icon: Stethoscope },
+  { value: 'fnb',     labelEn: 'F&B / Restaurants / Retail', labelAr: 'مطاعم وأغذية / تجزئة',     icon: Utensils },
+  { value: 'other',   labelEn: 'Other',                      labelAr: 'أخرى',                     icon: Building2 },
 ] as const;
 
 type SectorValue = typeof SECTORS[number]['value'];
