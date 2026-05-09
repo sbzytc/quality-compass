@@ -227,7 +227,7 @@ function CompanyDrawer({ company, onClose }: { company: any | null; onClose: () 
         <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
           <span>/{company?.slug}</span>
           <span>·</span>
-          <span>{company && sectorLabel(company.sector_type, language)}</span>
+          <span>{company && workspaceTypeLabel(company.workspace_type || company.sector_type, language)}</span>
           <span className="ms-auto">
             <ConfirmStatusButton
               status={company?.status}
@@ -237,47 +237,12 @@ function CompanyDrawer({ company, onClose }: { company: any | null; onClose: () 
           </span>
         </div>
 
-        <Tabs defaultValue="modules" className="mt-4">
-          <TabsList className="grid grid-cols-4 w-full">
-            <TabsTrigger value="modules"><Package className="w-3.5 h-3.5 me-1" />{language === 'ar' ? 'الموديولات' : 'Modules'}</TabsTrigger>
+        <Tabs defaultValue="members" className="mt-4">
+          <TabsList className="grid grid-cols-3 w-full">
             <TabsTrigger value="members"><Users className="w-3.5 h-3.5 me-1" />{language === 'ar' ? 'الأعضاء' : 'Members'}</TabsTrigger>
             <TabsTrigger value="logs"><Activity className="w-3.5 h-3.5 me-1" />{language === 'ar' ? 'السجلات' : 'Logs'}</TabsTrigger>
             <TabsTrigger value="support"><LifeBuoy className="w-3.5 h-3.5 me-1" />{language === 'ar' ? 'دعم' : 'Support'}</TabsTrigger>
           </TabsList>
-
-          <TabsContent value="modules" className="mt-4">
-            {isLoading && <div className="text-sm text-muted-foreground">Loading…</div>}
-            <div className="space-y-2">
-              {rows?.map(({ module, link, enabled }) => {
-                const sectorOk = !module.available_for_sectors?.length
-                  || module.available_for_sectors.includes(company?.sector_type);
-                return (
-                  <div
-                    key={module.id}
-                    className={`flex items-center justify-between gap-3 p-3 rounded-lg border ${!sectorOk ? 'opacity-50' : ''}`}
-                  >
-                    <div className="min-w-0">
-                      <div className="font-medium text-sm flex items-center gap-2">
-                        {language === 'ar' && module.name_ar ? module.name_ar : module.name}
-                        {module.is_core && <Badge variant="secondary" className="text-[10px]">Core</Badge>}
-                      </div>
-                      <div className="text-[11px] font-mono text-muted-foreground">{module.code}</div>
-                      {!sectorOk && (
-                        <div className="text-[11px] text-muted-foreground mt-0.5">
-                          {language === 'ar' ? 'غير متاح لهذا النشاط' : 'Not available for this sector'}
-                        </div>
-                      )}
-                    </div>
-                    <Switch
-                      checked={module.is_core || enabled}
-                      disabled={module.is_core || !sectorOk || toggle.isPending}
-                      onCheckedChange={(v) => toggle.mutate({ module_id: module.id, link, enabled: v })}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          </TabsContent>
 
           <TabsContent value="members" className="mt-4">
             <CompanyMembersTab companyId={companyId} />
