@@ -12,7 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Plus, Building2, Stethoscope, Utensils, Package, ChevronRight, Users, Activity, LifeBuoy, Power, Shield, MoreHorizontal, KeyRound, UserX, UserCheck, Trash2, UserPlus } from 'lucide-react';
+import { Plus, Building2, Stethoscope, Utensils, ChevronRight, Users, Activity, LifeBuoy, Power, Shield, MoreHorizontal, KeyRound, UserX, UserCheck, Trash2, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuditLog } from '@/hooks/useAuditLog';
@@ -20,16 +20,29 @@ import { useCreateUser, useInviteUser, useResetPassword, useUpdateUserRole, useU
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import type { AppRole } from '@/contexts/AuthContext';
 
-const SECTORS = [
-  { value: 'clinic',  labelEn: 'Healthcare / Clinics',      labelAr: 'رعاية صحية / عيادات',      icon: Stethoscope },
-  { value: 'fnb',     labelEn: 'F&B / Restaurants / Retail', labelAr: 'مطاعم وأغذية / تجزئة',     icon: Utensils },
-  { value: 'other',   labelEn: 'Other',                      labelAr: 'أخرى',                     icon: Building2 },
+const WORKSPACE_TYPES = [
+  {
+    value: 'medical' as const,
+    primaryModule: 'medical_clinics' as const,
+    sectorType: 'clinic' as const,
+    labelEn: 'Medical / Clinics',
+    labelAr: 'الطبي / العيادات',
+    icon: Stethoscope,
+  },
+  {
+    value: 'food' as const,
+    primaryModule: 'food_restaurants' as const,
+    sectorType: 'fnb' as const,
+    labelEn: 'Food / Restaurants',
+    labelAr: 'الأغذية / المطاعم',
+    icon: Utensils,
+  },
 ] as const;
 
-type SectorValue = typeof SECTORS[number]['value'];
+type WorkspaceTypeValue = typeof WORKSPACE_TYPES[number]['value'];
 
-function sectorLabel(value: string, lang: string) {
-  const s = SECTORS.find(x => x.value === value);
+function workspaceTypeLabel(value: string, lang: string) {
+  const s = WORKSPACE_TYPES.find(x => x.value === value);
   if (!s) return value;
   return lang === 'ar' ? s.labelAr : s.labelEn;
 }
@@ -40,7 +53,7 @@ export default function CompaniesPage() {
   const audit = useAuditLog();
   const [open, setOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<any | null>(null);
-  const [form, setForm] = useState({ name: '', name_ar: '', slug: '', sector_type: 'clinic' as SectorValue });
+  const [form, setForm] = useState({ name: '', name_ar: '', slug: '', workspace_type: 'medical' as WorkspaceTypeValue });
 
   const { data: companies, isLoading } = useQuery({
     queryKey: ['admin-companies'],
@@ -56,20 +69,23 @@ export default function CompaniesPage() {
 
   const createCompany = useMutation({
     mutationFn: async () => {
+      const wt = WORKSPACE_TYPES.find(w => w.value === form.workspace_type)!;
       const { data, error } = await supabase.from('companies').insert({
         name: form.name,
         name_ar: form.name_ar || null,
         slug: form.slug.toLowerCase().replace(/\s+/g, '-'),
-        sector_type: form.sector_type,
+        sector_type: wt.sectorType,
+        workspace_type: wt.value,
+        primary_module: wt.primaryModule,
       }).select().single();
       if (error) throw error;
-      await audit({ action: 'company_created', entityType: 'company', entityId: data?.id, companyId: data?.id, details: { name: form.name, sector: form.sector_type } });
+      await audit({ action: 'company_created', entityType: 'company', entityId: data?.id, companyId: data?.id, details: { name: form.name, workspace_type: wt.value } });
     },
     onSuccess: () => {
       toast.success(language === 'ar' ? 'تم إنشاء الشركة' : 'Company created');
       qc.invalidateQueries({ queryKey: ['admin-companies'] });
       setOpen(false);
-      setForm({ name: '', name_ar: '', slug: '', sector_type: 'clinic' });
+      setForm({ name: '', name_ar: '', slug: '', workspace_type: 'medical' });
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -94,16 +110,21 @@ export default function CompaniesPage() {
             <DialogHeader><DialogTitle>{language === 'ar' ? 'شركة جديدة' : 'New Company'}</DialogTitle></DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label>{language === 'ar' ? 'نوع النشاط' : 'Business Type'}</Label>
+                <Label>{language === 'ar' ? 'نوع مساحة العمل' : 'Workspace Type'}</Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {language === 'ar'
+                    ? 'كل مساحة عمل تخدم نشاطاً واحداً فقط ولا يمكن تغييره لاحقاً.'
+                    : 'Each workspace serves one activity only and cannot be changed later.'}
+                </p>
                 <div className="grid grid-cols-2 gap-2 mt-2">
-                  {SECTORS.map(s => {
+                  {WORKSPACE_TYPES.map(s => {
                     const Icon = s.icon;
-                    const active = form.sector_type === s.value;
+                    const active = form.workspace_type === s.value;
                     return (
                       <button
                         key={s.value}
                         type="button"
-                        onClick={() => setForm({ ...form, sector_type: s.value })}
+                        onClick={() => setForm({ ...form, workspace_type: s.value })}
                         className={`flex items-center gap-2 p-3 rounded-lg border text-start transition ${
                           active ? 'border-primary bg-primary/10 text-primary' : 'border-border hover:bg-muted'
                         }`}
@@ -146,7 +167,7 @@ export default function CompaniesPage() {
           >
             <div>
               <div className="font-medium">{c.name} {c.name_ar && <span className="text-muted-foreground">— {c.name_ar}</span>}</div>
-              <div className="text-xs text-muted-foreground">/{c.slug} · {sectorLabel(c.sector_type, language)}</div>
+              <div className="text-xs text-muted-foreground">/{c.slug} · {workspaceTypeLabel(c.workspace_type || c.sector_type, language)}</div>
             </div>
             <div className="flex items-center gap-2">
               <Badge variant={c.status === 'active' ? 'default' : 'secondary'}>{c.status}</Badge>
@@ -170,52 +191,6 @@ function CompanyDrawer({ company, onClose }: { company: any | null; onClose: () 
   const qc = useQueryClient();
   const audit = useAuditLog();
   const companyId = company?.id;
-
-  const { data: rows, isLoading } = useQuery({
-    queryKey: ['admin-company-modules', companyId],
-    enabled: !!companyId,
-    queryFn: async () => {
-      const [{ data: modules, error: e1 }, { data: cms, error: e2 }] = await Promise.all([
-        supabase.from('modules').select('*').order('is_core', { ascending: false }),
-        supabase.from('company_modules').select('*').eq('company_id', companyId),
-      ]);
-      if (e1) throw e1;
-      if (e2) throw e2;
-      const map = new Map((cms || []).map((r: any) => [r.module_id, r]));
-      return (modules || []).map((m: any) => ({
-        module: m,
-        link: map.get(m.id) || null,
-        enabled: map.get(m.id)?.enabled ?? false,
-      }));
-    },
-  });
-
-  const toggle = useMutation({
-    mutationFn: async ({ module_id, link, enabled }: { module_id: string; link: any; enabled: boolean }) => {
-      if (link) {
-        const { error } = await supabase
-          .from('company_modules')
-          .update({ enabled })
-          .eq('id', link.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('company_modules')
-          .insert({ company_id: companyId, module_id, enabled });
-        if (error) throw error;
-      }
-      await audit({
-        action: enabled ? 'module_enabled' : 'module_disabled',
-        entityType: 'module',
-        entityId: module_id,
-        companyId,
-      });
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['admin-company-modules', companyId] });
-    },
-    onError: (e: any) => toast.error(e.message),
-  });
 
   const toggleStatus = useMutation({
     mutationFn: async (next: 'active' | 'suspended') => {
@@ -252,7 +227,7 @@ function CompanyDrawer({ company, onClose }: { company: any | null; onClose: () 
         <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
           <span>/{company?.slug}</span>
           <span>·</span>
-          <span>{company && sectorLabel(company.sector_type, language)}</span>
+          <span>{company && workspaceTypeLabel(company.workspace_type || company.sector_type, language)}</span>
           <span className="ms-auto">
             <ConfirmStatusButton
               status={company?.status}
@@ -262,47 +237,12 @@ function CompanyDrawer({ company, onClose }: { company: any | null; onClose: () 
           </span>
         </div>
 
-        <Tabs defaultValue="modules" className="mt-4">
-          <TabsList className="grid grid-cols-4 w-full">
-            <TabsTrigger value="modules"><Package className="w-3.5 h-3.5 me-1" />{language === 'ar' ? 'الموديولات' : 'Modules'}</TabsTrigger>
+        <Tabs defaultValue="members" className="mt-4">
+          <TabsList className="grid grid-cols-3 w-full">
             <TabsTrigger value="members"><Users className="w-3.5 h-3.5 me-1" />{language === 'ar' ? 'الأعضاء' : 'Members'}</TabsTrigger>
             <TabsTrigger value="logs"><Activity className="w-3.5 h-3.5 me-1" />{language === 'ar' ? 'السجلات' : 'Logs'}</TabsTrigger>
             <TabsTrigger value="support"><LifeBuoy className="w-3.5 h-3.5 me-1" />{language === 'ar' ? 'دعم' : 'Support'}</TabsTrigger>
           </TabsList>
-
-          <TabsContent value="modules" className="mt-4">
-            {isLoading && <div className="text-sm text-muted-foreground">Loading…</div>}
-            <div className="space-y-2">
-              {rows?.map(({ module, link, enabled }) => {
-                const sectorOk = !module.available_for_sectors?.length
-                  || module.available_for_sectors.includes(company?.sector_type);
-                return (
-                  <div
-                    key={module.id}
-                    className={`flex items-center justify-between gap-3 p-3 rounded-lg border ${!sectorOk ? 'opacity-50' : ''}`}
-                  >
-                    <div className="min-w-0">
-                      <div className="font-medium text-sm flex items-center gap-2">
-                        {language === 'ar' && module.name_ar ? module.name_ar : module.name}
-                        {module.is_core && <Badge variant="secondary" className="text-[10px]">Core</Badge>}
-                      </div>
-                      <div className="text-[11px] font-mono text-muted-foreground">{module.code}</div>
-                      {!sectorOk && (
-                        <div className="text-[11px] text-muted-foreground mt-0.5">
-                          {language === 'ar' ? 'غير متاح لهذا النشاط' : 'Not available for this sector'}
-                        </div>
-                      )}
-                    </div>
-                    <Switch
-                      checked={module.is_core || enabled}
-                      disabled={module.is_core || !sectorOk || toggle.isPending}
-                      onCheckedChange={(v) => toggle.mutate({ module_id: module.id, link, enabled: v })}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          </TabsContent>
 
           <TabsContent value="members" className="mt-4">
             <CompanyMembersTab companyId={companyId} />

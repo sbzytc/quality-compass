@@ -34,13 +34,13 @@ export function AppSidebar() {
   const { t, direction } = useLanguage();
   const { profile, roles, signOut, isAdmin, isExecutive, isBranchManager, isAssessor, isSupportAgent } = useAuth();
   const { data: findingStats } = useFindingStats();
-  const { hasModule, currentCompany, companies, switchCompany } = useCurrentCompany();
+  const { workspaceType, currentCompany, companies, switchCompany } = useCurrentCompany();
 
   // Auto-switch to a clinic workspace when navigating to /clinic/*
   useEffect(() => {
     if (!location.pathname.startsWith('/clinic')) return;
-    if (!currentCompany || currentCompany.sector_type === 'clinic') return;
-    const clinicWs = companies.find(c => c.sector_type === 'clinic');
+    if (!currentCompany || currentCompany.workspace_type === 'medical') return;
+    const clinicWs = companies.find(c => c.workspace_type === 'medical');
     if (!clinicWs) return;
     switchCompany(clinicWs.id);
     toast.success(
@@ -97,7 +97,7 @@ export function AppSidebar() {
       if (feedbackChildren.length > 0) return [{ labelKey: 'nav.customerFeedback', icon: Star, path: '/customer-feedback', children: feedbackChildren }];
       return [];
     })(),
-    ...(hasModule('medical') ? [{
+    ...(workspaceType === 'medical' ? [{
       labelKey: 'nav.clinic',
       icon: Stethoscope,
       path: '/clinic',
@@ -112,7 +112,7 @@ export function AppSidebar() {
     { labelKey: 'nav.assistant', icon: Sparkles, path: '/assistant' },
   ] as NavItem[]).filter(item => !item.allowedRoles || item.allowedRoles.some(role => roles.includes(role)));
 
-  const isClinicWorkspace = currentCompany?.sector_type === 'clinic';
+  const isClinicWorkspace = workspaceType === 'medical';
 
   const settingsNavItems: NavItem[] = ([
     { labelKey: 'nav.users', icon: Users, path: '/users', allowedRoles: ['admin'] as AppRole[] },
@@ -170,7 +170,7 @@ export function AppSidebar() {
                     {currentCompany ? (direction === 'rtl' ? (currentCompany.name_ar || currentCompany.name) : currentCompany.name) : 'Rasdah'}
                   </span>
                   <p className="text-[11px] flex items-center gap-1.5" style={{ color: 'rgba(0,0,0,0.55)' }}>
-                    {currentCompany?.sector_type === 'clinic' ? (
+                    {workspaceType === 'medical' ? (
                       <>
                         <Stethoscope className="w-3 h-3 text-emerald-600" />
                         <span className="font-semibold text-emerald-700">

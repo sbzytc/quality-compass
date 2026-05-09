@@ -241,8 +241,8 @@ export default function CEODashboard() {
     };
   }) || [];
 
-  // Sector-aware routing: clinic workspace → clinic dashboard
-  if (!companyLoading && currentCompany?.sector_type === 'clinic') {
+  // Workspace-type routing: medical workspace → clinic dashboard
+  if (!companyLoading && currentCompany?.workspace_type === 'medical') {
     return <Navigate to="/clinic/dashboard" replace />;
   }
 

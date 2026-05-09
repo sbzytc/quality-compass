@@ -32,8 +32,8 @@ export default function TemplatesPage() {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const { data: selectedTemplate, isLoading: detailsLoading } = useTemplateWithDetails(selectedTemplateId || '');
 
-  // Templates are not used in clinic workspaces — redirect away
-  if (currentCompany?.sector_type === 'clinic') {
+  // Templates are not used in medical workspaces — redirect away
+  if (currentCompany?.workspace_type === 'medical') {
     return <Navigate to="/clinic/dashboard" replace />;
   }
 

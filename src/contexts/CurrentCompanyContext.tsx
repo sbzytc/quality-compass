@@ -4,6 +4,8 @@ import { useAuth } from '@/contexts/AuthContext';
 
 
 export type SectorType = 'fnb' | 'clinic' | 'retail' | 'factory' | 'other';
+export type WorkspaceType = 'medical' | 'food';
+export type PrimaryModule = 'medical_clinics' | 'food_restaurants';
 export type CompanyRole = 'owner' | 'admin' | 'member';
 
 export interface Company {
@@ -12,6 +14,8 @@ export interface Company {
   name_ar: string | null;
   slug: string;
   sector_type: SectorType;
+  workspace_type: WorkspaceType;
+  primary_module: PrimaryModule;
   logo_url: string | null;
   status: string;
 }
@@ -20,20 +24,14 @@ export interface CompanyMembership extends Company {
   membership_role: CompanyRole;
 }
 
-export interface ModuleInfo {
-  code: string;
-  name: string;
-  name_ar: string | null;
-  enabled: boolean;
-  is_core: boolean;
-}
-
 interface CurrentCompanyContextValue {
   currentCompany: Company | null;
   companies: CompanyMembership[];
-  modules: ModuleInfo[];
   loading: boolean;
   switchCompany: (companyId: string) => Promise<void>;
+  workspaceType: WorkspaceType | null;
+  primaryModule: PrimaryModule | null;
+  /** @deprecated use workspaceType. Kept for legacy call sites. */
   hasModule: (code: string) => boolean;
   isCompanyAdmin: boolean;
   refresh: () => Promise<void>;
@@ -47,36 +45,12 @@ export function CurrentCompanyProvider({ children }: { children: ReactNode }) {
   const isSuperAdmin = roles.includes('super_admin');
   const [currentCompany, setCurrentCompany] = useState<Company | null>(null);
   const [companies, setCompanies] = useState<CompanyMembership[]>([]);
-  const [modules, setModules] = useState<ModuleInfo[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const loadModules = useCallback(async (companyId: string) => {
-    const { data, error } = await supabase
-      .from('company_modules')
-      .select('enabled, modules(code, name, name_ar, is_core)')
-      .eq('company_id', companyId);
-
-    if (error) {
-      console.error('Error loading modules:', error);
-      setModules([]);
-      return;
-    }
-
-    const list: ModuleInfo[] = (data || []).map((row: any) => ({
-      code: row.modules.code,
-      name: row.modules.name,
-      name_ar: row.modules.name_ar,
-      is_core: row.modules.is_core,
-      enabled: row.enabled || row.modules.is_core,
-    }));
-    setModules(list);
-  }, []);
 
   const loadCompanies = useCallback(async () => {
     if (!user) {
       setCompanies([]);
       setCurrentCompany(null);
-      setModules([]);
       setLoading(false);
       return;
     }
@@ -89,7 +63,7 @@ export function CurrentCompanyProvider({ children }: { children: ReactNode }) {
       // Super admin sees ALL companies
       const { data, error } = await supabase
         .from('companies')
-        .select('id, name, name_ar, slug, sector_type, logo_url, status')
+        .select('id, name, name_ar, slug, sector_type, workspace_type, primary_module, logo_url, status')
         .order('name');
       if (error) {
         console.error('Error loading companies (super admin):', error);
@@ -100,7 +74,7 @@ export function CurrentCompanyProvider({ children }: { children: ReactNode }) {
     } else {
       const { data, error } = await supabase
         .from('company_users')
-        .select('role, companies(id, name, name_ar, slug, sector_type, logo_url, status)')
+        .select('role, companies(id, name, name_ar, slug, sector_type, workspace_type, primary_module, logo_url, status)')
         .eq('user_id', user.id)
         .eq('is_active', true);
 
@@ -124,10 +98,9 @@ export function CurrentCompanyProvider({ children }: { children: ReactNode }) {
 
     if (picked) {
       localStorage.setItem(STORAGE_KEY, picked.id);
-      await loadModules(picked.id);
     }
     setLoading(false);
-  }, [user, isSuperAdmin, loadModules]);
+  }, [user, isSuperAdmin]);
 
   useEffect(() => {
     loadCompanies();
@@ -138,12 +111,15 @@ export function CurrentCompanyProvider({ children }: { children: ReactNode }) {
     if (!company) return;
     setCurrentCompany(company);
     localStorage.setItem(STORAGE_KEY, companyId);
-    await loadModules(companyId);
-  }, [companies, loadModules]);
+  }, [companies]);
 
+  const workspaceType = currentCompany?.workspace_type ?? null;
+  const primaryModule = currentCompany?.primary_module ?? null;
+
+  // Legacy compatibility: hasModule('medical') → workspace_type === 'medical'
   const hasModule = useCallback(
-    (code: string) => modules.some(m => m.code === code && (m.enabled || m.is_core)),
-    [modules]
+    (code: string) => workspaceType === code || primaryModule === code,
+    [workspaceType, primaryModule]
   );
 
   const isCompanyAdmin = !!currentCompany &&
@@ -154,9 +130,10 @@ export function CurrentCompanyProvider({ children }: { children: ReactNode }) {
       value={{
         currentCompany,
         companies,
-        modules,
         loading,
         switchCompany,
+        workspaceType,
+        primaryModule,
         hasModule,
         isCompanyAdmin,
         refresh: loadCompanies,

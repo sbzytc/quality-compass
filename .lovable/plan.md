@@ -1,86 +1,89 @@
+# Rasdah Architecture Refactor: Single-Module Workspaces
 
+## Goal
+Move from "company can enable many modules" to **one Workspace = one primary module** (Medical *or* Food). Eliminate the module switcher inside a workspace and the `company_modules` many-to-many.
 
-## المشكلة
-
-المستخدم لاحظ أن workspace "Demo Clinics" يعرض نفس هيكل Rasdah الافتراضي (تقييمات/فروع عامة)، بدون التقسيم الهرمي الخاص بالعيادات:
-
+## Final Model
 ```
-العيادة (Company)
-└── الفرع (Branch / موقع العيادة)
-    ├── الاستقبال (Reception)
-    ├── غرف الفحص (Exam Rooms)
-    ├── غرف العمليات (Operation Rooms)
-    ├── المختبر / الأشعة
-    └── الصيدلية
+Workspace (= company)
+  ├── workspace_type:    medical | food
+  ├── primary_module:    medical_clinics | food_restaurants
+  ├── branches/locations
+  ├── assessment templates  (filtered by workspace_type)
+  ├── assessments / findings / corrective actions / reports
+  └── users (via user_workspaces, role-scoped)
 ```
+A user can belong to many workspaces; each workspace shows only its own domain. Users with >1 workspace see a selector after login; users with 1 go straight in.
 
-حالياً الموجود فقط: `branches` + `patients` + `appointments` + `visits` بدون أي مفهوم "غرفة/قسم" داخل الفرع.
+---
 
-## الاستكشاف المطلوب قبل التنفيذ
+## Database Changes (single migration)
 
-أحتاج أتأكد من:
-1. ما يوجد فعلياً تحت `/clinic/*` وما الموديولات المفعّلة لـ Demo Clinics
-2. هل هناك جدول `rooms` أو `departments` موجود مسبقاً
-3. شكل `ClinicDashboard` و `BranchDetail` الحالي
+1. **`companies` (= workspaces)**
+   - Add `workspace_type` enum: `medical`, `food` (nullable for backfill, then NOT NULL).
+   - Add `primary_module` text: `medical_clinics` | `food_restaurants`.
+   - Backfill: `sector_type='clinic'` → `medical`/`medical_clinics`; `sector_type='fnb'` → `food`/`food_restaurants`; `other` → leave null and require Super Admin to set type.
+   - Keep `sector_type` for now (legacy), but stop using it as the source of truth.
 
-## الخطة المقترحة
+2. **`company_modules` — deprecate**
+   - Drop the table (or keep read-only and stop writing). Plan: drop after backfill since nothing should depend on it after the refactor.
+   - Drop `enforce_module_sector_compat` trigger and helper.
 
-### 1. قاعدة البيانات (Migration)
+3. **`modules` table — keep but simplified**
+   - Keep only the two system rows (`medical`, `food`). Future types (`retail`, etc.) can be added but each is still single-module-per-workspace.
+   - Remove the "create a custom module" admin flow.
 
-**جدول `clinic_departments`** (الأقسام داخل الفرع):
-- `id`, `branch_id`, `company_id`
-- `code` (reception/exam/operation/lab/radiology/pharmacy/other)
-- `name`, `name_ar`, `is_active`
+4. **Tenant-scope columns** (already mostly present): ensure `branches`, `evaluation_templates`, `evaluations`, `non_conformities`, `corrective_actions`, `operations_tasks` all have `company_id` and that RLS uses `user_belongs_to_company`. Add missing `company_id` on `corrective_actions` and `non_conformity_history` derived via parent if needed (most already inherit through joins — leave RLS as-is, just verify).
 
-**جدول `clinic_rooms`** (الغرف داخل القسم):
-- `id`, `department_id`, `branch_id`, `company_id`
-- `room_number`, `name`, `name_ar`
-- `room_type` (consultation/operation/recovery/imaging/triage)
-- `capacity`, `status` (available/occupied/maintenance), `is_active`
+5. **Templates filtering**
+   - Add `workspace_type` to `evaluation_templates` (nullable, backfill from owning company). UI filters templates list by current workspace's `workspace_type`.
 
-RLS: نفس نمط `appointments` (`user_belongs_to_company` + `is_company_admin` للحذف).
+6. **`user_workspaces`**
+   - Reuse existing `company_users` table — it already maps user→company with role. No new table; just rename in UI/types as "Workspace access".
 
-**ربط الموعد بالغرفة**: إضافة `room_id uuid` (nullable) لجدول `appointments` لجدولة الموعد في غرفة محددة.
+---
 
-**Seed لـ Demo Clinics**: إنشاء فرع نموذجي + 4 أقسام (Reception/Exam/Operations/Lab) + 6 غرف موزعة عليهم.
+## Frontend Changes
 
-### 2. واجهة المستخدم
+### Removed
+- `src/components/ModuleGuard.tsx` usage as a per-module gate inside a workspace. Replace with a `WorkspaceTypeGuard` that checks `currentCompany.workspace_type === 'medical' | 'food'`.
+- `src/pages/admin/ModulesPage.tsx` "create new module" dialog and the per-company module enable/disable matrix.
+- Any in-app module switcher.
 
-**أ. صفحة جديدة `/clinic/branches`**: قائمة فروع العيادة (نفس بيانات `branches` لكن مصفّاة على الـ company الحالي + ظاهرة فقط للقطاع clinic).
+### Updated
+- **`CurrentCompanyContext`**: expose `workspaceType` and `primaryModule`. `WorkspaceSwitcher` already exists — keep it (selecting between workspaces is allowed and required).
+- **`App.tsx` routes**:
+  - `/clinic/*` guarded by `WorkspaceTypeGuard type="medical"`.
+  - Add `/food/*` group guarded by `type="food"` (or keep current branches/evaluation pages and just hide medical-specific menus when type=food, and vice versa).
+- **`AppSidebar.tsx`**: render menu sections based on `workspaceType`. Medical workspace shows Clinics/Departments/Rooms; Food workspace shows Branches/Regions. Shared items (Assessments, Findings, Corrective Actions, Reports, Users, Settings) appear for both with type-aware labels.
+- **Login redirect** (`Index.tsx` / post-auth): if user has 1 workspace → go to that workspace's dashboard (`/clinic` for medical, `/` for food). If >1 → show workspace selector page.
+- **`CompaniesPage` (Super Admin)**: when creating a workspace, replace `sector_type` dropdown with a single `workspace_type` selector (Medical / Food). `primary_module` is set automatically. Hide "factory/retail/other" — only the 2 supported types.
+- **Templates page**: filter by current workspace's `workspace_type`; hide cross-domain templates.
+- **Dashboards**: keep `ClinicDashboard` for medical; food workspace lands on the existing CEO/Executive dashboard (rename labels). No type switching inside.
 
-**ب. صفحة جديدة `/clinic/branches/:id`**: تفاصيل فرع العيادة مع:
-- Tabs: نظرة عامة | الأقسام والغرف | الأطباء | المواعيد اليوم
-- Tab "الأقسام والغرف": عرض الأقسام كـ Accordion، وداخل كل قسم شبكة بطاقات للغرف مع حالتها (متاحة/مشغولة/صيانة) — مع CRUD كامل لـ admin.
+### Code Cleanup
+- Remove `company_modules` reads in `useCompanyScope`/sidebar/route guards.
+- Remove `available_for_sectors` checks.
+- Update `src/types/index.ts` to add `WorkspaceType` and `PrimaryModule`.
 
-**ج. تحديث Sidebar للقطاع clinic**: إضافة عنصر "فروع العيادة" + "الأقسام والغرف" تحت قسم Clinic عندما `sector_type='clinic'`.
+---
 
-**د. تحديث `ClinicDashboard`**: إضافة بطاقات "عدد الغرف المتاحة / المشغولة" + اختصار لإدارة الأقسام.
+## Migration Order
+1. SQL migration: add columns, backfill, drop `company_modules` table + trigger, seed/normalize `modules`.
+2. Update generated types (auto).
+3. Refactor frontend (context, guards, routes, sidebar, admin pages, templates filter, login redirect).
+4. Smoke-test: existing clinic company still loads `/clinic`; existing fnb company still loads root dashboard; super admin can create new workspace of either type.
 
-**هـ. تحديث نموذج الموعد** في `AppointmentsPage`: إضافة حقل اختيار "الغرفة" (مفلتر حسب الفرع المختار).
+## Out of Scope
+- Holding/group structures.
+- `retail` / `manufacturing` modules (schema-ready via `workspace_type` enum extension only).
+- Multi-module workspaces (explicitly forbidden).
+- Cross-workspace reporting.
 
-### 3. Hooks جديدة
-- `useClinicDepartments(branchId)`
-- `useClinicRooms(branchId | departmentId)`
+---
 
-### 4. الترجمة (AR/EN)
-كل المسميات الجديدة: الاستقبال/Reception، غرف الفحص/Exam Rooms، غرف العمليات/Operation Rooms، المختبر/Lab، الأشعة/Radiology، الصيدلية/Pharmacy.
+## Risk / Notes
+- Dropping `company_modules` is destructive; the migration backfills `companies.workspace_type` first so no functionality is lost.
+- Any company currently with `sector_type='other'` will need Super Admin to pick a `workspace_type` before users can use it — surface this as a banner in the admin Companies page.
 
-### تفاصيل تقنية
-- استخدام `Accordion` و `Card` و `Badge` للحالة
-- ألوان الحالة: متاحة (أخضر)، مشغولة (كهرماني)، صيانة (رمادي)
-- `ModuleGuard` للتأكد أن الموديول `clinic_rooms` مفعّل (سنضيفه لجدول `modules` كـ non-core متاح فقط لـ sector=clinic)
-- التحقق من isolation: Demo Clinics فقط ترى هذه الصفحات؛ Rasdah Default يفترض ترى رسالة "غير مفعّل"
-
-### الملفات المتوقع تعديلها/إنشاؤها
-- migration جديد: جداول + seed + موديول جديد
-- `src/hooks/useClinicDepartments.ts` (جديد)
-- `src/hooks/useClinicRooms.ts` (جديد)
-- `src/pages/clinic/ClinicBranchesPage.tsx` (جديد)
-- `src/pages/clinic/ClinicBranchDetailPage.tsx` (جديد)
-- `src/pages/clinic/ClinicRoomsPage.tsx` (جديد، optional standalone)
-- `src/components/AppSidebar.tsx` (تعديل)
-- `src/App.tsx` (إضافة routes)
-- `src/pages/clinic/ClinicDashboard.tsx` (تعديل بطاقات)
-- `src/pages/clinic/AppointmentsPage.tsx` (إضافة حقل الغرفة)
-- `src/contexts/LanguageContext.tsx` (مفاتيح ترجمة)
-
+Approve this plan and I'll execute the migration + code refactor in one pass.
