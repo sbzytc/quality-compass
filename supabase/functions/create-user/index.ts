@@ -91,6 +91,52 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (createError) {
       console.error("Error creating user:", createError);
+      const msg = (createError.message || "").toLowerCase();
+      const isDuplicate =
+        msg.includes("already been registered") ||
+        msg.includes("already registered") ||
+        msg.includes("user already exists") ||
+        msg.includes("duplicate");
+      if (isDuplicate) {
+        // Look up existing user and their workspace memberships
+        let existingUserId: string | null = null;
+        try {
+          const { data: list } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 200 });
+          const found = list?.users?.find((u: any) => (u.email || "").toLowerCase() === email.toLowerCase());
+          existingUserId = found?.id ?? null;
+        } catch (_) {}
+
+        let companies: { id: string; name: string }[] = [];
+        if (existingUserId) {
+          const { data: cu } = await supabaseAdmin
+            .from("company_users")
+            .select("company_id, companies:company_id(id, name)")
+            .eq("user_id", existingUserId);
+          companies = (cu || [])
+            .map((r: any) => r.companies)
+            .filter(Boolean)
+            .map((c: any) => ({ id: c.id, name: c.name }));
+        }
+
+        const names = companies.map((c) => c.name).join("، ");
+        const messageAr = companies.length
+          ? `هذا البريد مسجّل مسبقًا في: ${names}`
+          : "هذا البريد مسجّل مسبقًا في النظام (بدون انتماء لأي شركة)";
+        const messageEn = companies.length
+          ? `This email is already registered in: ${names}`
+          : "This email is already registered in the system (no workspace membership)";
+
+        return new Response(
+          JSON.stringify({
+            error: messageAr,
+            error_en: messageEn,
+            code: "email_exists",
+            existingUserId,
+            companies,
+          }),
+          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
       return new Response(
         JSON.stringify({ error: createError.message }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
