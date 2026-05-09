@@ -231,18 +231,16 @@ export default function UsersPage() {
       setCreateForm({ email: '', fullName: '', password: '', confirmPassword: '', role: 'assessor', forcePasswordChange: true, branchId: '' });
     } catch (error: any) {
       if (error?.code === 'email_exists' || /already.*registered|مسجّل/i.test(error?.message || '')) {
-        const companyNames = (error?.companies || []).map((c: any) => c.name).join('، ');
-        toast.error(
-          language === 'ar'
+        const companies = error?.companies || [];
+        const companyNames = companies.map((c: any) => c.name).join('، ');
+        setDuplicateEmailDialog({
+          open: true,
+          email: createForm.email,
+          companies,
+          message: language === 'ar'
             ? `هذا البريد الإلكتروني مستخدم مسبقاً${companyNames ? ` في: ${companyNames}` : ''}`
             : `This email is already registered${companyNames ? ` in: ${companyNames}` : ''}`,
-          {
-            description: language === 'ar'
-              ? 'يرجى استخدام بريد إلكتروني آخر لإنشاء المستخدم.'
-              : 'Please use a different email address to create the user.',
-            duration: 10000,
-          }
-        );
+        });
       } else {
         toast.error(
           (error?.message as string) ||
