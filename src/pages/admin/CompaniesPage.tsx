@@ -12,7 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Plus, Building2, Stethoscope, Utensils, Store, Factory, Package, ChevronRight, Users, Activity, LifeBuoy, Power, Shield, MoreHorizontal, KeyRound, UserX, UserCheck, Trash2, UserPlus } from 'lucide-react';
+import { Plus, Building2, Stethoscope, Utensils, Package, ChevronRight, Users, Activity, LifeBuoy, Power, Shield, MoreHorizontal, KeyRound, UserX, UserCheck, Trash2, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuditLog } from '@/hooks/useAuditLog';
@@ -21,11 +21,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import type { AppRole } from '@/contexts/AuthContext';
 
 const SECTORS = [
-  { value: 'clinic',  labelEn: 'Clinic / Healthcare',     labelAr: 'عيادة / رعاية صحية', icon: Stethoscope },
-  { value: 'fnb',     labelEn: 'F&B / Restaurants',       labelAr: 'مطاعم وأغذية',       icon: Utensils },
-  { value: 'retail',  labelEn: 'Retail / Multi-branch',   labelAr: 'تجزئة / فروع متعددة', icon: Store },
-  { value: 'factory', labelEn: 'Factory / Manufacturing', labelAr: 'مصنع / تصنيع',       icon: Factory },
-  { value: 'other',   labelEn: 'Other',                   labelAr: 'أخرى',               icon: Building2 },
+  { value: 'clinic',  labelEn: 'Healthcare / Clinics',      labelAr: 'رعاية صحية / عيادات',      icon: Stethoscope },
+  { value: 'fnb',     labelEn: 'F&B / Restaurants / Retail', labelAr: 'مطاعم وأغذية / تجزئة',     icon: Utensils },
+  { value: 'other',   labelEn: 'Other',                      labelAr: 'أخرى',                     icon: Building2 },
 ] as const;
 
 type SectorValue = typeof SECTORS[number]['value'];
@@ -119,7 +117,15 @@ export default function CompaniesPage() {
               </div>
               <div><Label>Name (EN)</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
               <div><Label>الاسم (AR)</Label><Input value={form.name_ar} onChange={e => setForm({ ...form, name_ar: e.target.value })} /></div>
-              <div><Label>Slug</Label><Input value={form.slug} onChange={e => setForm({ ...form, slug: e.target.value })} placeholder="acme-clinics" /></div>
+              <div>
+                <Label>Slug</Label>
+                <Input value={form.slug} onChange={e => setForm({ ...form, slug: e.target.value })} placeholder="acme-clinics" />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {language === 'ar'
+                    ? 'رابط الشركة المختصر — يظهر في عنوان الموقع (URL) لسهولة الوصول. يحتوي على أحف إنجليزية وأرقام وشرطات فقط.'
+                    : 'Short URL-friendly identifier used in the web address. Only lowercase letters, numbers, and hyphens.'}
+                </p>
+              </div>
             </div>
             <DialogFooter>
               <Button onClick={() => createCompany.mutate()} disabled={!form.name || !form.slug || createCompany.isPending}>
