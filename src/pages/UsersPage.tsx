@@ -223,12 +223,16 @@ export default function UsersPage() {
       setIsAddUserDialogOpen(false);
       setAddUserMode('choose');
       setCreateForm({ email: '', fullName: '', password: '', confirmPassword: '', role: 'assessor', forcePasswordChange: true, branchId: '' });
-    } catch (error) {
-      toast.error(
-        language === 'ar'
-          ? 'فشل إنشاء المستخدم'
-          : 'Failed to create user'
-      );
+    } catch (error: any) {
+      // Show specific message for duplicate email (with company names) when available
+      if (error?.code === 'email_exists' || /already.*registered|مسجّل/i.test(error?.message || '')) {
+        toast.error(error.message, { duration: 8000 });
+      } else {
+        toast.error(
+          (error?.message as string) ||
+          (language === 'ar' ? 'فشل إنشاء المستخدم' : 'Failed to create user')
+        );
+      }
     }
   };
 
