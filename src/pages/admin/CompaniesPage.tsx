@@ -671,3 +671,159 @@ function CompanySupportTab({ companyId }: { companyId: string }) {
     </div>
   );
 }
+
+function DeleteCompanyButton({ company, onDeleted }: { company: any; onDeleted: () => void }) {
+  const { language } = useLanguage();
+  const qc = useQueryClient();
+  const audit = useAuditLog();
+  const [step, setStep] = useState<null | 'confirm1' | 'confirm2'>(null);
+  const [counts, setCounts] = useState<{ users: number; branches: number; evaluations: number } | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const isSuspended = company?.status === 'suspended';
+
+  const fetchCountsAndAdvance = async () => {
+    if (!company?.id) return;
+    setLoading(true);
+    try {
+      const [u, b, e] = await Promise.all([
+        supabase.from('company_users').select('id', { count: 'exact', head: true }).eq('company_id', company.id),
+        supabase.from('branches').select('id', { count: 'exact', head: true }).eq('company_id', company.id),
+        supabase.from('evaluations').select('id', { count: 'exact', head: true }).eq('company_id', company.id),
+      ]);
+      setCounts({
+        users: u.count || 0,
+        branches: b.count || 0,
+        evaluations: e.count || 0,
+      });
+      setStep('confirm2');
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to load counts');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const performDelete = async () => {
+    if (!company?.id) return;
+    setLoading(true);
+    try {
+      // Best-effort cleanup of memberships, then delete the company.
+      await supabase.from('company_users').delete().eq('company_id', company.id);
+      const { error } = await supabase.from('companies').delete().eq('id', company.id);
+      if (error) throw error;
+      await audit({
+        action: 'company_deleted',
+        entityType: 'company',
+        entityId: company.id,
+        companyId: company.id,
+        details: { name: company.name, ...counts },
+      });
+      toast.success(language === 'ar' ? 'تم حذف الشركة' : 'Company deleted');
+      qc.invalidateQueries({ queryKey: ['admin-companies'] });
+      setStep(null);
+      onDeleted();
+    } catch (err: any) {
+      toast.error(err?.message || (language === 'ar' ? 'فشل الحذف' : 'Delete failed'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!company) return null;
+
+  return (
+    <>
+      <Button
+        size="sm"
+        variant="destructive"
+        className="ms-2"
+        disabled={!isSuspended || loading}
+        onClick={() => setStep('confirm1')}
+        title={
+          !isSuspended
+            ? (language === 'ar' ? 'علّق الشركة أولاً قبل الحذف' : 'Suspend the company before deleting')
+            : undefined
+        }
+      >
+        <Trash2 className="w-3.5 h-3.5 me-1" />
+        {language === 'ar' ? 'حذف' : 'Delete'}
+      </Button>
+
+      {/* Step 1: simple yes/no */}
+      <AlertDialog open={step === 'confirm1'} onOpenChange={(o) => !o && setStep(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {language === 'ar' ? 'هل تريد تأكيد حذف الشركة؟' : 'Confirm company deletion?'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {language === 'ar'
+                ? 'سنعرض لك ملخص الشركة قبل الحذف النهائي.'
+                : 'We will show you a summary before the final deletion.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{language === 'ar' ? 'لا' : 'No'}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={(e) => { e.preventDefault(); fetchCountsAndAdvance(); }}
+              disabled={loading}
+            >
+              {language === 'ar' ? 'نعم' : 'Yes'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Step 2: summary + final confirm */}
+      <AlertDialog open={step === 'confirm2'} onOpenChange={(o) => !o && setStep(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-destructive" />
+              {language === 'ar' ? 'تأكيد نهائي للحذف' : 'Final delete confirmation'}
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 pt-2">
+                <div className="text-sm text-foreground">
+                  <div className="font-semibold">{company.name}{company.name_ar ? ` — ${company.name_ar}` : ''}</div>
+                  <div className="text-xs text-muted-foreground">/{company.slug}</div>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="p-3 rounded-lg border bg-muted/30">
+                    <div className="text-2xl font-bold">{counts?.users ?? 0}</div>
+                    <div className="text-[11px] text-muted-foreground">{language === 'ar' ? 'مستخدم' : 'Users'}</div>
+                  </div>
+                  <div className="p-3 rounded-lg border bg-muted/30">
+                    <div className="text-2xl font-bold">{counts?.branches ?? 0}</div>
+                    <div className="text-[11px] text-muted-foreground">{language === 'ar' ? 'فرع' : 'Branches'}</div>
+                  </div>
+                  <div className="p-3 rounded-lg border bg-muted/30">
+                    <div className="text-2xl font-bold">{counts?.evaluations ?? 0}</div>
+                    <div className="text-[11px] text-muted-foreground">{language === 'ar' ? 'عملية تقييم' : 'Evaluations'}</div>
+                  </div>
+                </div>
+                <div className="text-sm text-destructive">
+                  {language === 'ar'
+                    ? 'هل أنت متأكد بأنك تريد حذف هذه الشركة؟ لا يمكن التراجع عن هذه العملية.'
+                    : 'Are you sure you want to delete this company? This cannot be undone.'}
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{language === 'ar' ? 'لا' : 'No'}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={(e) => { e.preventDefault(); performDelete(); }}
+              disabled={loading}
+            >
+              {language === 'ar' ? 'نعم، احذف الشركة' : 'Yes, delete company'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}
