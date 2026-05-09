@@ -11,7 +11,7 @@ interface ModuleGuardProps {
 }
 
 export function ModuleGuard({ module, children, fallbackTo }: ModuleGuardProps) {
-  const { hasModule, loading, currentCompany } = useCurrentCompany();
+  const { workspaceType, primaryModule, loading, currentCompany } = useCurrentCompany();
   const { language } = useLanguage();
 
   if (loading) {
@@ -26,7 +26,10 @@ export function ModuleGuard({ module, children, fallbackTo }: ModuleGuardProps) 
     return <Navigate to="/login" replace />;
   }
 
-  if (!hasModule(module)) {
+  // The `module` prop is checked against either the workspace_type (e.g. "medical")
+  // or the primary_module (e.g. "medical_clinics") so legacy call sites keep working.
+  const matches = workspaceType === module || primaryModule === module;
+  if (!matches) {
     if (fallbackTo) return <Navigate to={fallbackTo} replace />;
     return (
       <div className="min-h-[60vh] flex items-center justify-center p-6">
@@ -36,12 +39,12 @@ export function ModuleGuard({ module, children, fallbackTo }: ModuleGuardProps) 
               <Lock className="w-7 h-7 text-muted-foreground" />
             </div>
             <h2 className="text-xl font-semibold">
-              {language === 'ar' ? 'الموديول غير مفعّل' : 'Module not enabled'}
+              {language === 'ar' ? 'مساحة عمل غير مناسبة' : 'Workspace not compatible'}
             </h2>
             <p className="text-sm text-muted-foreground">
               {language === 'ar'
-                ? 'هذه الميزة غير متاحة في مساحة العمل الحالية. تواصل مع المسؤول لتفعيلها.'
-                : 'This feature is not available in the current workspace. Contact your admin to enable it.'}
+                ? 'هذه الصفحة لا تتطابق مع نوع مساحة العمل الحالية. بدّل لمساحة عمل من النوع الصحيح.'
+                : 'This page does not match the current workspace type. Switch to a workspace of the correct type.'}
             </p>
           </CardContent>
         </Card>
