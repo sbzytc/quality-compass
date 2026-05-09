@@ -1206,6 +1206,62 @@ export default function UsersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Duplicate Email Alert Dialog */}
+      <Dialog open={duplicateEmailDialog.open} onOpenChange={(open) => setDuplicateEmailDialog(prev => ({ ...prev, open }))}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader className="text-center">
+            <div className="mx-auto w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
+              <AlertTriangle className="w-8 h-8 text-destructive" />
+            </div>
+            <DialogTitle className="text-xl">
+              {language === 'ar' ? 'بريد إلكتروني مستخدم مسبقاً' : 'Email Already Registered'}
+            </DialogTitle>
+            <DialogDescription className="text-base">
+              {language === 'ar'
+                ? 'لا يمكن إنشاء مستخدم بهذا البريد الإلكتروني لأنه مسجّل مسبقاً في النظام.'
+                : 'Cannot create a user with this email because it is already registered in the system.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg border">
+              <Mail className="w-5 h-5 text-muted-foreground shrink-0" />
+              <div className="min-w-0">
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'البريد الإلكتروني' : 'Email'}</p>
+                <p className="font-medium truncate">{duplicateEmailDialog.email}</p>
+              </div>
+            </div>
+            {duplicateEmailDialog.companies.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-foreground">
+                  {language === 'ar' ? 'مسجّل في الشركات التالية:' : 'Registered in the following companies:'}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {duplicateEmailDialog.companies.map((company) => (
+                    <Badge key={company.id} variant="secondary" className="gap-1">
+                      <Building className="w-3 h-3" />
+                      {company.name}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
+              <p className="text-sm text-primary flex items-start gap-2">
+                <Lightbulb className="w-4 h-4 shrink-0 mt-0.5" />
+                {language === 'ar'
+                  ? 'يرجى استخدام بريد إلكتروني مختلف لإنشاء المستخدم الجديد.'
+                  : 'Please use a different email address to create the new user.'}
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setDuplicateEmailDialog(prev => ({ ...prev, open: false }))} className="w-full">
+              {language === 'ar' ? 'فهمت' : 'Understood'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
