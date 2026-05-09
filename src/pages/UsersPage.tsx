@@ -140,6 +140,12 @@ export default function UsersPage() {
   const [isChangeRoleDialogOpen, setIsChangeRoleDialogOpen] = useState(false);
   const [changeRoleUser, setChangeRoleUser] = useState<UserWithRole | null>(null);
   const [newRole, setNewRole] = useState<AppRole>('assessor');
+  const [duplicateEmailDialog, setDuplicateEmailDialog] = useState<{
+    open: boolean;
+    email: string;
+    companies: { id: string; name: string }[];
+    message: string;
+  }>({ open: false, email: '', companies: [], message: '' });
   const isAdmin = roles.includes('admin');
   const [inviteForm, setInviteForm] = useState({
     email: '',
