@@ -25,9 +25,9 @@ export default function SuperAdminLanding() {
     return <Navigate to="/" replace />;
   }
 
-  // Find workspaces by sector
-  const clinicWs = companies.find(c => c.sector_type === 'clinic');
-  const defaultWs = companies.find(c => c.sector_type !== 'clinic') || companies[0];
+  // Find workspaces by type
+  const clinicWs = companies.find(c => c.workspace_type === 'medical');
+  const defaultWs = companies.find(c => c.workspace_type === 'food') || companies[0];
 
   const enterWorkspace = async (companyId: string, route: string) => {
     await switchCompany(companyId);
