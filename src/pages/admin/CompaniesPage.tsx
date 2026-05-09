@@ -192,52 +192,6 @@ function CompanyDrawer({ company, onClose }: { company: any | null; onClose: () 
   const audit = useAuditLog();
   const companyId = company?.id;
 
-  const { data: rows, isLoading } = useQuery({
-    queryKey: ['admin-company-modules', companyId],
-    enabled: !!companyId,
-    queryFn: async () => {
-      const [{ data: modules, error: e1 }, { data: cms, error: e2 }] = await Promise.all([
-        supabase.from('modules').select('*').order('is_core', { ascending: false }),
-        supabase.from('company_modules').select('*').eq('company_id', companyId),
-      ]);
-      if (e1) throw e1;
-      if (e2) throw e2;
-      const map = new Map((cms || []).map((r: any) => [r.module_id, r]));
-      return (modules || []).map((m: any) => ({
-        module: m,
-        link: map.get(m.id) || null,
-        enabled: map.get(m.id)?.enabled ?? false,
-      }));
-    },
-  });
-
-  const toggle = useMutation({
-    mutationFn: async ({ module_id, link, enabled }: { module_id: string; link: any; enabled: boolean }) => {
-      if (link) {
-        const { error } = await supabase
-          .from('company_modules')
-          .update({ enabled })
-          .eq('id', link.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('company_modules')
-          .insert({ company_id: companyId, module_id, enabled });
-        if (error) throw error;
-      }
-      await audit({
-        action: enabled ? 'module_enabled' : 'module_disabled',
-        entityType: 'module',
-        entityId: module_id,
-        companyId,
-      });
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['admin-company-modules', companyId] });
-    },
-    onError: (e: any) => toast.error(e.message),
-  });
-
   const toggleStatus = useMutation({
     mutationFn: async (next: 'active' | 'suspended') => {
       const { error } = await supabase.from('companies').update({ status: next }).eq('id', companyId);
