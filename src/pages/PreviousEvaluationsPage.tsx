@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEvaluations, useArchiveEvaluations, useDeleteEvaluation } from '@/hooks/useEvaluations';
-import { ClipboardCheck, Search, Eye, Pencil, Clock, Calendar, Building2, User, Archive, Trash2 } from 'lucide-react';
+import { ClipboardCheck, Search, Eye, Pencil, Clock, Calendar, Building2, User, Archive, Trash2, FileText, CheckCircle2, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, differenceInHours } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
@@ -125,13 +125,29 @@ export default function PreviousEvaluationsPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'submitted':
-        return <Badge className="bg-primary/10 text-primary border-0">{language === 'ar' ? 'مرسل' : 'Submitted'}</Badge>;
+        return <Badge className="bg-emerald-500/10 text-emerald-600 border-0 hover:bg-emerald-500/15">{language === 'ar' ? 'مرسل' : 'Submitted'}</Badge>;
       case 'draft':
-        return <Badge variant="secondary">{language === 'ar' ? 'مسودة' : 'Draft'}</Badge>;
+        return <Badge className="bg-amber-500/10 text-amber-600 border-0 hover:bg-amber-500/15">{language === 'ar' ? 'مسودة' : 'Draft'}</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
   };
+
+  const getScoreColor = (score: number) => {
+    if (score >= 85) return 'text-emerald-600';
+    if (score >= 70) return 'text-blue-600';
+    if (score >= 50) return 'text-amber-600';
+    return 'text-destructive';
+  };
+
+  // Stats
+  const totalCount = filteredEvaluations.length;
+  const submittedCount = filteredEvaluations.filter(e => e.status === 'submitted').length;
+  const draftCount = filteredEvaluations.filter(e => e.status === 'draft').length;
+  const scoredEvals = filteredEvaluations.filter(e => e.overallPercentage != null);
+  const avgScore = scoredEvals.length > 0
+    ? Math.round(scoredEvals.reduce((sum, e) => sum + (e.overallPercentage || 0), 0) / scoredEvals.length)
+    : null;
 
   const handleViewEdit = (evaluation: typeof filteredEvaluations[0], mode: 'view' | 'edit') => {
     if (evaluation.status === 'draft' && mode === 'edit') {
@@ -228,9 +244,57 @@ export default function PreviousEvaluationsPage() {
         )}
       </div>
 
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+              <ClipboardCheck className="h-5 w-5 text-primary" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground truncate">{language === 'ar' ? 'إجمالي التقييمات' : 'Total'}</p>
+              <p className="text-xl font-bold">{totalCount}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="h-11 w-11 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
+              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground truncate">{language === 'ar' ? 'مكتملة' : 'Submitted'}</p>
+              <p className="text-xl font-bold">{submittedCount}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="h-11 w-11 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0">
+              <FileText className="h-5 w-5 text-amber-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground truncate">{language === 'ar' ? 'مسودات' : 'Drafts'}</p>
+              <p className="text-xl font-bold">{draftCount}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="h-11 w-11 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
+              <TrendingUp className="h-5 w-5 text-blue-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground truncate">{language === 'ar' ? 'متوسط النتيجة' : 'Avg Score'}</p>
+              <p className="text-xl font-bold">{avgScore != null ? `${avgScore}%` : '—'}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Filters */}
       <Card>
-        <CardContent className="pt-6">
+        <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
               <Search className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground ${direction === 'rtl' ? 'right-3' : 'left-3'}`} />
@@ -261,6 +325,7 @@ export default function PreviousEvaluationsPage() {
           <CardTitle className="flex items-center gap-2">
             <ClipboardCheck className="h-5 w-5" />
             {language === 'ar' ? 'التقييمات السابقة' : 'Previous Evaluations'}
+            <Badge variant="outline" className="ms-2">{filteredEvaluations.length}</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -310,18 +375,20 @@ export default function PreviousEvaluationsPage() {
                           )}
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Building2 className="h-4 w-4 text-muted-foreground" />
-                            <span className="font-medium">{evaluation.branchName}</span>
+                          <div className="flex items-center gap-2 min-w-[160px]">
+                            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                              <Building2 className="h-4 w-4 text-primary" />
+                            </div>
+                            <span className="font-medium whitespace-nowrap">{evaluation.branchName}</span>
                           </div>
                         </TableCell>
-                        <TableCell>{evaluation.templateName}</TableCell>
+                        <TableCell className="whitespace-nowrap text-sm">{evaluation.templateName}</TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 whitespace-nowrap">
                             <User className="h-4 w-4 text-muted-foreground" />
                             <span>{evaluation.assessorName}</span>
                             {isOwner && (
-                              <Badge variant="outline" className="text-xs">
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0">
                                 {language === 'ar' ? 'أنت' : 'You'}
                               </Badge>
                             )}
@@ -329,14 +396,16 @@ export default function PreviousEvaluationsPage() {
                         </TableCell>
                         <TableCell>
                           {evaluation.overallPercentage != null ? (
-                            <span className="font-semibold">{Math.round(evaluation.overallPercentage)}%</span>
+                            <span className={cn("font-bold text-base", getScoreColor(evaluation.overallPercentage))}>
+                              {Math.round(evaluation.overallPercentage)}%
+                            </span>
                           ) : (
                             <span className="text-muted-foreground">-</span>
                           )}
                         </TableCell>
                         <TableCell>
                           {evaluation.durationMinutes != null ? (
-                            <div className="flex items-center gap-1 text-sm">
+                            <div className="flex items-center gap-1 text-sm whitespace-nowrap">
                               <Clock className="h-3.5 w-3.5 text-muted-foreground" />
                               <span>
                                 {evaluation.durationMinutes >= 60
@@ -357,7 +426,7 @@ export default function PreviousEvaluationsPage() {
                             {getStatusBadge(evaluation.status)}
                             {evaluation.status === 'draft' && timeInfo && (
                               <span className={cn(
-                                "text-xs flex items-center gap-1",
+                                "text-xs flex items-center gap-1 whitespace-nowrap",
                                 timeInfo.expired ? "text-destructive" : "text-score-average"
                               )}>
                                 <Clock className="h-3 w-3" />
@@ -369,7 +438,7 @@ export default function PreviousEvaluationsPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground whitespace-nowrap">
                             <Calendar className="h-4 w-4" />
                             {format(new Date(evaluation.createdAt), 'MMM d, yyyy', { locale: dateLocale })}
                           </div>
