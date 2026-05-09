@@ -12,7 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Plus, Building2, Stethoscope, Utensils, Package, ChevronRight, Users, Activity, LifeBuoy, Power, Shield, MoreHorizontal, KeyRound, UserX, UserCheck, Trash2, UserPlus } from 'lucide-react';
+import { Plus, Building2, Stethoscope, Utensils, ChevronRight, Users, Activity, LifeBuoy, Power, MoreHorizontal, KeyRound, UserX, UserCheck, Trash2, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuditLog } from '@/hooks/useAuditLog';
@@ -20,16 +20,29 @@ import { useCreateUser, useInviteUser, useResetPassword, useUpdateUserRole, useU
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import type { AppRole } from '@/contexts/AuthContext';
 
-const SECTORS = [
-  { value: 'clinic',  labelEn: 'Healthcare / Clinics',      labelAr: 'رعاية صحية / عيادات',      icon: Stethoscope },
-  { value: 'fnb',     labelEn: 'F&B / Restaurants / Retail', labelAr: 'مطاعم وأغذية / تجزئة',     icon: Utensils },
-  { value: 'other',   labelEn: 'Other',                      labelAr: 'أخرى',                     icon: Building2 },
+const WORKSPACE_TYPES = [
+  {
+    value: 'medical' as const,
+    primaryModule: 'medical_clinics' as const,
+    sectorType: 'clinic' as const,
+    labelEn: 'Medical / Clinics',
+    labelAr: 'الطبي / العيادات',
+    icon: Stethoscope,
+  },
+  {
+    value: 'food' as const,
+    primaryModule: 'food_restaurants' as const,
+    sectorType: 'fnb' as const,
+    labelEn: 'Food / Restaurants',
+    labelAr: 'الأغذية / المطاعم',
+    icon: Utensils,
+  },
 ] as const;
 
-type SectorValue = typeof SECTORS[number]['value'];
+type WorkspaceTypeValue = typeof WORKSPACE_TYPES[number]['value'];
 
-function sectorLabel(value: string, lang: string) {
-  const s = SECTORS.find(x => x.value === value);
+function workspaceTypeLabel(value: string, lang: string) {
+  const s = WORKSPACE_TYPES.find(x => x.value === value);
   if (!s) return value;
   return lang === 'ar' ? s.labelAr : s.labelEn;
 }
@@ -40,7 +53,7 @@ export default function CompaniesPage() {
   const audit = useAuditLog();
   const [open, setOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<any | null>(null);
-  const [form, setForm] = useState({ name: '', name_ar: '', slug: '', sector_type: 'clinic' as SectorValue });
+  const [form, setForm] = useState({ name: '', name_ar: '', slug: '', workspace_type: 'medical' as WorkspaceTypeValue });
 
   const { data: companies, isLoading } = useQuery({
     queryKey: ['admin-companies'],
@@ -56,20 +69,23 @@ export default function CompaniesPage() {
 
   const createCompany = useMutation({
     mutationFn: async () => {
+      const wt = WORKSPACE_TYPES.find(w => w.value === form.workspace_type)!;
       const { data, error } = await supabase.from('companies').insert({
         name: form.name,
         name_ar: form.name_ar || null,
         slug: form.slug.toLowerCase().replace(/\s+/g, '-'),
-        sector_type: form.sector_type,
+        sector_type: wt.sectorType,
+        workspace_type: wt.value,
+        primary_module: wt.primaryModule,
       }).select().single();
       if (error) throw error;
-      await audit({ action: 'company_created', entityType: 'company', entityId: data?.id, companyId: data?.id, details: { name: form.name, sector: form.sector_type } });
+      await audit({ action: 'company_created', entityType: 'company', entityId: data?.id, companyId: data?.id, details: { name: form.name, workspace_type: wt.value } });
     },
     onSuccess: () => {
       toast.success(language === 'ar' ? 'تم إنشاء الشركة' : 'Company created');
       qc.invalidateQueries({ queryKey: ['admin-companies'] });
       setOpen(false);
-      setForm({ name: '', name_ar: '', slug: '', sector_type: 'clinic' });
+      setForm({ name: '', name_ar: '', slug: '', workspace_type: 'medical' });
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -94,16 +110,21 @@ export default function CompaniesPage() {
             <DialogHeader><DialogTitle>{language === 'ar' ? 'شركة جديدة' : 'New Company'}</DialogTitle></DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label>{language === 'ar' ? 'نوع النشاط' : 'Business Type'}</Label>
+                <Label>{language === 'ar' ? 'نوع مساحة العمل' : 'Workspace Type'}</Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {language === 'ar'
+                    ? 'كل مساحة عمل تخدم نشاطاً واحداً فقط ولا يمكن تغييره لاحقاً.'
+                    : 'Each workspace serves one activity only and cannot be changed later.'}
+                </p>
                 <div className="grid grid-cols-2 gap-2 mt-2">
-                  {SECTORS.map(s => {
+                  {WORKSPACE_TYPES.map(s => {
                     const Icon = s.icon;
-                    const active = form.sector_type === s.value;
+                    const active = form.workspace_type === s.value;
                     return (
                       <button
                         key={s.value}
                         type="button"
-                        onClick={() => setForm({ ...form, sector_type: s.value })}
+                        onClick={() => setForm({ ...form, workspace_type: s.value })}
                         className={`flex items-center gap-2 p-3 rounded-lg border text-start transition ${
                           active ? 'border-primary bg-primary/10 text-primary' : 'border-border hover:bg-muted'
                         }`}
@@ -146,7 +167,7 @@ export default function CompaniesPage() {
           >
             <div>
               <div className="font-medium">{c.name} {c.name_ar && <span className="text-muted-foreground">— {c.name_ar}</span>}</div>
-              <div className="text-xs text-muted-foreground">/{c.slug} · {sectorLabel(c.sector_type, language)}</div>
+              <div className="text-xs text-muted-foreground">/{c.slug} · {workspaceTypeLabel(c.workspace_type || c.sector_type, language)}</div>
             </div>
             <div className="flex items-center gap-2">
               <Badge variant={c.status === 'active' ? 'default' : 'secondary'}>{c.status}</Badge>
