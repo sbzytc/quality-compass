@@ -140,6 +140,12 @@ export default function UsersPage() {
   const [isChangeRoleDialogOpen, setIsChangeRoleDialogOpen] = useState(false);
   const [changeRoleUser, setChangeRoleUser] = useState<UserWithRole | null>(null);
   const [newRole, setNewRole] = useState<AppRole>('assessor');
+  const [duplicateEmailDialog, setDuplicateEmailDialog] = useState<{
+    open: boolean;
+    email: string;
+    companies: { id: string; name: string }[];
+    message: string;
+  }>({ open: false, email: '', companies: [], message: '' });
   const isAdmin = roles.includes('admin');
   const [inviteForm, setInviteForm] = useState({
     email: '',
@@ -225,18 +231,16 @@ export default function UsersPage() {
       setCreateForm({ email: '', fullName: '', password: '', confirmPassword: '', role: 'assessor', forcePasswordChange: true, branchId: '' });
     } catch (error: any) {
       if (error?.code === 'email_exists' || /already.*registered|مسجّل/i.test(error?.message || '')) {
-        const companyNames = (error?.companies || []).map((c: any) => c.name).join('، ');
-        toast.error(
-          language === 'ar'
+        const companies = error?.companies || [];
+        const companyNames = companies.map((c: any) => c.name).join('، ');
+        setDuplicateEmailDialog({
+          open: true,
+          email: createForm.email,
+          companies,
+          message: language === 'ar'
             ? `هذا البريد الإلكتروني مستخدم مسبقاً${companyNames ? ` في: ${companyNames}` : ''}`
             : `This email is already registered${companyNames ? ` in: ${companyNames}` : ''}`,
-          {
-            description: language === 'ar'
-              ? 'يرجى استخدام بريد إلكتروني آخر لإنشاء المستخدم.'
-              : 'Please use a different email address to create the user.',
-            duration: 10000,
-          }
-        );
+        });
       } else {
         toast.error(
           (error?.message as string) ||
@@ -1198,6 +1202,62 @@ export default function UsersPage() {
               {updateRole.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
               <Shield className="w-4 h-4 me-2" />
               {language === 'ar' ? 'تغيير الدور' : 'Change Role'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Duplicate Email Alert Dialog */}
+      <Dialog open={duplicateEmailDialog.open} onOpenChange={(open) => setDuplicateEmailDialog(prev => ({ ...prev, open }))}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader className="text-center">
+            <div className="mx-auto w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
+              <AlertTriangle className="w-8 h-8 text-destructive" />
+            </div>
+            <DialogTitle className="text-xl">
+              {language === 'ar' ? 'بريد إلكتروني مستخدم مسبقاً' : 'Email Already Registered'}
+            </DialogTitle>
+            <DialogDescription className="text-base">
+              {language === 'ar'
+                ? 'لا يمكن إنشاء مستخدم بهذا البريد الإلكتروني لأنه مسجّل مسبقاً في النظام.'
+                : 'Cannot create a user with this email because it is already registered in the system.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg border">
+              <Mail className="w-5 h-5 text-muted-foreground shrink-0" />
+              <div className="min-w-0">
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'البريد الإلكتروني' : 'Email'}</p>
+                <p className="font-medium truncate">{duplicateEmailDialog.email}</p>
+              </div>
+            </div>
+            {duplicateEmailDialog.companies.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-foreground">
+                  {language === 'ar' ? 'مسجّل في الشركات التالية:' : 'Registered in the following companies:'}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {duplicateEmailDialog.companies.map((company) => (
+                    <Badge key={company.id} variant="secondary" className="gap-1">
+                      <Building className="w-3 h-3" />
+                      {company.name}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
+              <p className="text-sm text-primary flex items-start gap-2">
+                <Lightbulb className="w-4 h-4 shrink-0 mt-0.5" />
+                {language === 'ar'
+                  ? 'يرجى استخدام بريد إلكتروني مختلف لإنشاء المستخدم الجديد.'
+                  : 'Please use a different email address to create the new user.'}
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setDuplicateEmailDialog(prev => ({ ...prev, open: false }))} className="w-full">
+              {language === 'ar' ? 'فهمت' : 'Understood'}
             </Button>
           </DialogFooter>
         </DialogContent>
