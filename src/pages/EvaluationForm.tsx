@@ -1143,10 +1143,21 @@ export default function EvaluationForm() {
                                     "px-2 py-0.5 text-xs font-medium rounded-full",
                                     criterion.priorityLevel === 'high' && 'bg-amber-100 text-amber-700',
                                     criterion.priorityLevel === 'medium' && 'bg-blue-100 text-blue-700',
+                                    criterion.priorityLevel === 'low' && 'bg-emerald-100 text-emerald-700',
                                   )}>
                                     {direction === 'rtl'
-                                      ? (criterion.priorityLevel === 'high' ? 'عالية' : 'متوسطة')
-                                      : (criterion.priorityLevel === 'high' ? 'High' : 'Medium')}
+                                      ? ({ high: 'عالية', medium: 'متوسطة', low: 'منخفضة' } as any)[criterion.priorityLevel]
+                                      : ({ high: 'High', medium: 'Medium', low: 'Low' } as any)[criterion.priorityLevel]}
+                                  </span>
+                                )}
+                                {(criterion as any).violationValue != null && (
+                                  <span
+                                    data-testid="badge-violation"
+                                    className="px-2 py-0.5 text-xs font-medium bg-destructive/10 text-destructive rounded-full"
+                                  >
+                                    {direction === 'rtl'
+                                      ? `قيمة المخالفة: ${(criterion as any).violationValue} ر.س`
+                                      : `Violation: ${(criterion as any).violationValue} SAR`}
                                   </span>
                                 )}
                               </div>
