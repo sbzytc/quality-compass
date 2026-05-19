@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronRight, ChevronDown, Camera, MessageSquare, AlertTriangle, Check, Save, ArrowLeft, MapPin, AlertCircle, Eye, Pencil, FileText, Clock, X, Image, CalendarDays, CalendarRange, Layers, Repeat } from 'lucide-react';
+import { ChevronRight, ChevronDown, Camera, MessageSquare, AlertTriangle, Check, Save, ArrowLeft, MapPin, AlertCircle, Eye, Pencil, FileText, Clock, X, Image, CalendarDays, CalendarRange, Layers, Repeat, Shirt, HeartPulse, FileCheck2, SeparatorHorizontal, FlaskConical, Truck, Megaphone, ScanBarcode, Wrench, Sparkles, Building2, Utensils, Users, ClipboardCheck, Store, Warehouse, Coffee, Soup, Banknote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -18,6 +18,41 @@ import { toast } from 'sonner';
 import { differenceInHours } from 'date-fns';
 
 type FrequencyType = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'semi_annual' | 'yearly';
+
+// Map a domain name (Arabic or English) to a suitable Lucide icon.
+function getDomainIcon(nameAr: string | null | undefined, nameEn: string | null | undefined) {
+  const s = `${nameAr || ''} ${nameEn || ''}`.toLowerCase();
+  const has = (...kw: string[]) => kw.some(k => s.includes(k.toLowerCase()));
+  if (has('زي', 'نظافة الشخصية', 'hygiene', 'uniform')) return Shirt;
+  if (has('شهادات', 'صحي', 'health')) return HeartPulse;
+  if (has('ترخيص', 'موقع', 'نشاط', 'license', 'licens')) return FileCheck2;
+  if (has('فصل', 'أقسام', 'separation', 'section')) return SeparatorHorizontal;
+  if (has('مضافات', 'مكونات', 'additive', 'ingredient')) return FlaskConical;
+  if (has('توصيل', 'نقل', 'delivery', 'transport', 'vehicle', 'سيارات')) return Truck;
+  if (has('لوحات', 'واجهة', 'signage', 'sign', 'facade')) return Megaphone;
+  if (has('تتبع', 'traceab', 'trace')) return ScanBarcode;
+  if (has('تصحيحية', 'إجراءات', 'corrective', 'action')) return Wrench;
+  if (has('نظافة', 'cleanl', 'clean')) return Sparkles;
+  if (has('مبنى', 'building')) return Building2;
+  if (has('سلامة', 'جودة', 'safety', 'quality')) return ClipboardCheck;
+  if (has('عميل', 'تجربة', 'customer', 'experience', 'تعامل')) return Users;
+  if (has('مظهر', 'appearance')) return Store;
+  if (has('خدمة', 'جاهزية', 'service', 'readiness')) return Coffee;
+  if (has('موظف', 'staff', 'عمليات', 'operation')) return Users;
+  if (has('كاش', 'cash', 'cashier')) return Banknote;
+  if (has('إدار', 'admin')) return ClipboardCheck;
+  if (has('صالة', 'dining', 'طعام')) return Utensils;
+  if (has('مطبخ', 'kitchen', 'خلفية', 'back')) return Soup;
+  if (has('إستلام', 'استلام', 'تخزين', 'receiv', 'storage')) return Warehouse;
+  return Layers;
+}
+
+// Answer sentinels: نعم=5 (compliant), لا=1 (non-compliant), لا ينطبق=-1 (N/A, excluded)
+const ANSWER_YES = 5;
+const ANSWER_NO = 1;
+const ANSWER_NA = -1;
+const isAnswered = (v: number | undefined) => v !== undefined;
+const isCounted = (v: number | undefined) => v !== undefined && v !== ANSWER_NA;
 
 interface Score {
   criterionId: string;
