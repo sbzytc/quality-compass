@@ -562,8 +562,8 @@ export default function EvaluationForm() {
           templateData.categories.forEach(category => {
             category.criteria.forEach(criterion => {
               const s = scores[criterion.id];
-              if (s?.score !== undefined) {
-                totalScore += s.score;
+              if (isCounted(s?.score)) {
+                totalScore += s!.score;
                 totalMaxScore += criterion.maxScore;
               }
             });
@@ -591,15 +591,16 @@ export default function EvaluationForm() {
           templateData.categories.forEach(category => {
             category.criteria.forEach(criterion => {
               const s = scores[criterion.id];
-              if (s?.score !== undefined && s.score <= 3) {
+              // Only "No" answers (non-compliant) become findings — N/A is excluded.
+              if (isCounted(s?.score) && s!.score <= 3) {
                 criticalFindings.push({
                   evaluation_id: evaluationId!,
                   branch_id: selectedBranchId,
                   criterion_id: criterion.id,
-                  score: s.score,
+                  score: s!.score,
                   max_score: criterion.maxScore,
-                  assessor_notes: s.notes || null,
-                  attachments: s.attachments || [],
+                  assessor_notes: s!.notes || null,
+                  attachments: s!.attachments || [],
                 });
               }
             });
@@ -815,14 +816,15 @@ export default function EvaluationForm() {
     const category = templateData.categories.find((c) => c.id === categoryId);
     if (!category) return { scored: 0, total: 0, percentage: 0 };
 
-    const scored = category.criteria.filter((c) => scores[c.id]?.score !== undefined).length;
+    const scored = category.criteria.filter((c) => isAnswered(scores[c.id]?.score)).length;
     const total = category.criteria.length;
 
     if (scored === 0) return { scored, total, percentage: 0 };
 
-    const totalScore = category.criteria.reduce((sum, c) => sum + (scores[c.id]?.score || 0), 0);
-    const maxScore = category.criteria.reduce((sum, c) => sum + c.maxScore, 0);
-    const percentage = Math.round((totalScore / maxScore) * 100);
+    const counted = category.criteria.filter((c) => isCounted(scores[c.id]?.score));
+    const totalScore = counted.reduce((sum, c) => sum + (scores[c.id]!.score), 0);
+    const maxScore = counted.reduce((sum, c) => sum + c.maxScore, 0);
+    const percentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
 
     return { scored, total, percentage };
   };
@@ -837,7 +839,7 @@ export default function EvaluationForm() {
     
     // Only count scores that belong to criteria in the current template
     const scoredCriteria = Object.keys(scores).filter(
-      (id) => validCriterionIds.has(id) && scores[id]?.score !== undefined
+      (id) => validCriterionIds.has(id) && isAnswered(scores[id]?.score)
     ).length;
     return { scored: scoredCriteria, total: totalCriteria };
   };
