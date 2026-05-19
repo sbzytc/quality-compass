@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Globe, Moon, Sun, Bell, Mail, Smartphone, ArrowLeft, User, Key, Lock, Settings, Shield, Phone, Clock, Check, X } from 'lucide-react';
 import RolePermissionsManager from '@/components/RolePermissionsManager';
 import CompanyOffDaysCard from '@/components/CompanyOffDaysCard';
+import UpcomingSchedulesCard from '@/components/UpcomingSchedulesCard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -609,6 +610,14 @@ export default function SettingsPage() {
               transition={{ delay: 0.4 }}
             >
               <CompanyOffDaysCard />
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.45 }}
+            >
+              <UpcomingSchedulesCard />
             </motion.div>
           </div>
         </div>
