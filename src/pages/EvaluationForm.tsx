@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronRight, ChevronDown, Camera, MessageSquare, AlertTriangle, Check, Save, ArrowLeft, MapPin, AlertCircle, Eye, Pencil, FileText, Clock, X, Image, CalendarDays, CalendarRange } from 'lucide-react';
+import { ChevronRight, ChevronDown, Camera, MessageSquare, AlertTriangle, Check, Save, ArrowLeft, MapPin, AlertCircle, Eye, Pencil, FileText, Clock, X, Image, CalendarDays, CalendarRange, Layers, Repeat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -12,12 +12,12 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGoBack } from '@/hooks/useGoBack';
 import { useBranches } from '@/hooks/useBranches';
-import { useTemplateByPeriod } from '@/hooks/useTemplateByPeriod';
+import { useTemplateHierarchy } from '@/hooks/useTemplateHierarchy';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { differenceInHours } from 'date-fns';
 
-type PeriodType = 'weekly' | 'monthly' | 'yearly';
+type FrequencyType = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'semi_annual' | 'yearly';
 
 interface Score {
   criterionId: string;
@@ -42,8 +42,44 @@ export default function EvaluationForm() {
   const { t, direction } = useLanguage();
   const { user } = useAuth();
   const { data: branches, isLoading: branchesLoading } = useBranches();
-  const [selectedPeriodType, setSelectedPeriodType] = useState<PeriodType | null>(null);
-  const { data: templateData, isLoading: templateLoading } = useTemplateByPeriod(selectedPeriodType || 'weekly');
+  const { data: hierarchy, isLoading: templateLoading } = useTemplateHierarchy();
+  const [selectedDomainId, setSelectedDomainId] = useState<string | null>(null);
+  const [selectedFrequencyId, setSelectedFrequencyId] = useState<string | null>(null);
+
+  const selectedDomain = useMemo(
+    () => hierarchy?.domains.find(d => d.id === selectedDomainId) || null,
+    [hierarchy, selectedDomainId]
+  );
+  const selectedFrequency = useMemo(
+    () => selectedDomain?.frequencies.find(f => f.id === selectedFrequencyId) || null,
+    [selectedDomain, selectedFrequencyId]
+  );
+
+  // Synthesize legacy templateData shape: priorities become "categories" inside the chosen frequency.
+  const templateData = useMemo(() => {
+    if (!hierarchy || !selectedDomain || !selectedFrequency) return null;
+    const prioLabelAr: Record<string, string> = { critical: 'حرجة', high: 'عالية', medium: 'متوسطة' };
+    const prioLabelEn: Record<string, string> = { critical: 'Critical', high: 'High', medium: 'Medium' };
+    return {
+      id: hierarchy.id,
+      name: hierarchy.name,
+      nameAr: hierarchy.nameAr,
+      description: hierarchy.description,
+      version: hierarchy.version,
+      categories: selectedFrequency.priorities.map(p => ({
+        id: p.id,
+        name: `${selectedDomain.name} — ${prioLabelEn[p.priorityLevel]}`,
+        nameAr: `${selectedDomain.nameAr || selectedDomain.name} — ${prioLabelAr[p.priorityLevel]}`,
+        weight: p.weight,
+        sortOrder: p.sortOrder,
+        criteria: p.criteria.map(c => ({
+          ...c,
+          priorityLevel: p.priorityLevel,
+          frequencyType: selectedFrequency.frequencyType,
+        })),
+      })),
+    } as any;
+  }, [hierarchy, selectedDomain, selectedFrequency]);
   
   const [selectedBranchId, setSelectedBranchId] = useState<string>('');
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
@@ -314,7 +350,7 @@ export default function EvaluationForm() {
             template_id: activeTemplateId,
             assessor_id: user.id,
             status: 'draft',
-            period_type: selectedPeriodType || 'weekly',
+            period_type: selectedFrequency?.frequencyType || 'yearly',
             started_at: evaluationStartTime?.toISOString() || new Date().toISOString(),
           })
           .select()
@@ -364,7 +400,8 @@ export default function EvaluationForm() {
 
       // Reset form
       setSelectedBranchId('');
-      setSelectedPeriodType(null);
+      setSelectedDomainId(null);
+      setSelectedFrequencyId(null);
       setScores({});
       setExpandedCategories(['cat-1']);
       setCurrentNotes(null);
@@ -449,7 +486,7 @@ export default function EvaluationForm() {
             submitted_at: now.toISOString(),
             started_at: startTime.toISOString(),
             duration_minutes: durationMinutes,
-            period_type: selectedPeriodType || 'weekly',
+            period_type: selectedFrequency?.frequencyType || 'yearly',
           })
           .select()
           .single();
@@ -551,49 +588,40 @@ export default function EvaluationForm() {
         }
       }
 
-      // Auto-schedule: upsert evaluation_schedules for each frequency in this template
+      // Auto-schedule: upsert evaluation_schedules only for the chosen frequency
       try {
         const { data: branchRow } = await supabase
           .from('branches').select('company_id').eq('id', selectedBranchId).maybeSingle();
         const companyId = branchRow?.company_id;
-        if (companyId && activeTemplateId) {
-          const { data: doms } = await supabase
-            .from('template_domains').select('id').eq('template_id', activeTemplateId);
-          const domIds = (doms || []).map((d: any) => d.id);
-          if (domIds.length) {
-            const { data: freqs } = await supabase
-              .from('template_frequencies').select('id, frequency_type').in('domain_id', domIds);
-            const today = new Date().toISOString().slice(0, 10);
-            for (const f of (freqs || []) as any[]) {
-              const { data: nextRpc } = await supabase
-                .rpc('compute_next_due_date', {
-                  _company_id: companyId,
-                  _frequency_type: f.frequency_type,
-                  _from_date: today,
-                });
-              const next = (nextRpc as any) || null;
-              const { data: existing } = await supabase
-                .from('evaluation_schedules')
-                .select('id, first_evaluation_date')
-                .eq('branch_id', selectedBranchId)
-                .eq('frequency_id', f.id)
-                .maybeSingle();
-              if (existing) {
-                await supabase.from('evaluation_schedules').update({
-                  last_completed_at: new Date().toISOString(),
-                  next_due_date: next,
-                }).eq('id', existing.id);
-              } else {
-                await supabase.from('evaluation_schedules').insert({
-                  company_id: companyId,
-                  branch_id: selectedBranchId,
-                  frequency_id: f.id,
-                  first_evaluation_date: today,
-                  next_due_date: next,
-                  last_completed_at: new Date().toISOString(),
-                });
-              }
-            }
+        if (companyId && selectedFrequency) {
+          const today = new Date().toISOString().slice(0, 10);
+          const { data: nextRpc } = await supabase
+            .rpc('compute_next_due_date', {
+              _company_id: companyId,
+              _frequency_type: selectedFrequency.frequencyType,
+              _from_date: today,
+            });
+          const next = (nextRpc as any) || null;
+          const { data: existing } = await supabase
+            .from('evaluation_schedules')
+            .select('id, first_evaluation_date')
+            .eq('branch_id', selectedBranchId)
+            .eq('frequency_id', selectedFrequency.id)
+            .maybeSingle();
+          if (existing) {
+            await supabase.from('evaluation_schedules').update({
+              last_completed_at: new Date().toISOString(),
+              next_due_date: next,
+            }).eq('id', existing.id);
+          } else {
+            await supabase.from('evaluation_schedules').insert({
+              company_id: companyId,
+              branch_id: selectedBranchId,
+              frequency_id: selectedFrequency.id,
+              first_evaluation_date: today,
+              next_due_date: next,
+              last_completed_at: new Date().toISOString(),
+            });
           }
         }
       } catch (schedErr) {
@@ -609,7 +637,8 @@ export default function EvaluationForm() {
 
       // Reset form to empty state
       setSelectedBranchId('');
-      setSelectedPeriodType(null);
+      setSelectedDomainId(null);
+      setSelectedFrequencyId(null);
       setScores({});
       setExpandedCategories(['cat-1']);
       setCurrentNotes(null);
@@ -792,7 +821,7 @@ export default function EvaluationForm() {
   const progress = getOverallProgress();
 
   // Show loading state when loading a draft or template
-  if (isLoadingDraft || (selectedPeriodType && templateLoading)) {
+  if (isLoadingDraft || (selectedFrequencyId && templateLoading)) {
     return (
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="glass-card p-6">
@@ -809,8 +838,8 @@ export default function EvaluationForm() {
     );
   }
 
-  // Show error if period selected but no template found
-  if (selectedPeriodType && !templateLoading && !templateData) {
+  // Show error if frequency selected but no template found
+  if (selectedFrequencyId && !templateLoading && !templateData) {
     return (
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="glass-card p-6">
@@ -825,7 +854,7 @@ export default function EvaluationForm() {
                   ? 'يرجى الاتصال بالمسؤول لإعداد قالب تقييم'
                   : 'Please contact an administrator to set up an evaluation template'}
               </p>
-              <Button variant="outline" onClick={() => setSelectedPeriodType(null)}>
+              <Button variant="outline" onClick={() => { setSelectedDomainId(null); setSelectedFrequencyId(null); }}>
                 {direction === 'rtl' ? 'اختيار فترة أخرى' : 'Choose Another Period'}
               </Button>
             </div>
@@ -887,9 +916,11 @@ export default function EvaluationForm() {
                 </Select>
               </div>
               
-              {selectedBranch && selectedPeriodType && templateData && (
+              {selectedBranch && selectedFrequency && templateData && (
                 <p className="text-sm text-muted-foreground mt-2">
                   {direction === 'rtl' ? 'القالب:' : 'Template:'} {direction === 'rtl' ? templateData.nameAr : templateData.name}
+                  {' · '}
+                  {direction === 'rtl' ? selectedDomain?.nameAr || selectedDomain?.name : selectedDomain?.name}
                 </p>
               )}
             </div>
@@ -921,70 +952,97 @@ export default function EvaluationForm() {
         </div>
       )}
 
-      {/* Period Type Selector - show after branch is selected */}
-      {selectedBranch && !selectedPeriodType && (
+      {/* Domain selector: pick which area to evaluate */}
+      {selectedBranch && !selectedDomainId && hierarchy && (
         <div className="glass-card p-8">
           <h3 className="text-lg font-semibold text-foreground text-center mb-2">
-            {direction === 'rtl' ? 'اختر نوع التقييم' : 'Select Evaluation Type'}
+            {direction === 'rtl' ? 'اختر المجال' : 'Select Domain'}
           </h3>
           <p className="text-sm text-muted-foreground text-center mb-6">
-            {direction === 'rtl' ? 'اختر الفترة الزمنية للتقييم' : 'Choose the evaluation period'}
+            {direction === 'rtl' ? 'اختر مجال الأسئلة الذي تريد تقييمه' : 'Choose the domain you want to evaluate'}
           </p>
-          <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto">
-            <button
-              onClick={() => {
-                setSelectedPeriodType('weekly');
-                setScores({});
-                setExpandedCategories([]);
-              }}
-              className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all"
-            >
-              <CalendarDays className="w-10 h-10 text-primary" />
-              <span className="font-semibold text-foreground">
-                {direction === 'rtl' ? 'أسبوعي' : 'Weekly'}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {direction === 'rtl' ? 'تقييم أسبوعي' : 'Weekly Evaluation'}
-              </span>
-            </button>
-            <button
-              onClick={() => {
-                setSelectedPeriodType('monthly');
-                setScores({});
-                setExpandedCategories([]);
-              }}
-              className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all"
-            >
-              <CalendarRange className="w-10 h-10 text-primary" />
-              <span className="font-semibold text-foreground">
-                {direction === 'rtl' ? 'شهري' : 'Monthly'}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {direction === 'rtl' ? 'تقييم شهري' : 'Monthly Evaluation'}
-              </span>
-            </button>
-            <button
-              onClick={() => {
-                setSelectedPeriodType('yearly');
-                setScores({});
-                setExpandedCategories([]);
-              }}
-              className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all"
-            >
-              <FileText className="w-10 h-10 text-primary" />
-              <span className="font-semibold text-foreground">
-                {direction === 'rtl' ? 'سنوي' : 'Yearly'}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {direction === 'rtl' ? 'تقييم سنوي' : 'Yearly Evaluation'}
-              </span>
-            </button>
-          </div>
+          {hierarchy.domains.length === 0 ? (
+            <p className="text-center text-muted-foreground">
+              {direction === 'rtl' ? 'لا توجد مجالات معرّفة في القالب النشط' : 'No domains defined in the active template'}
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+              {hierarchy.domains.map(d => (
+                <button
+                  key={d.id}
+                  onClick={() => {
+                    setSelectedDomainId(d.id);
+                    setSelectedFrequencyId(null);
+                    setScores({});
+                    setExpandedCategories([]);
+                  }}
+                  className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all"
+                >
+                  <Layers className="w-10 h-10 text-primary" />
+                  <span className="font-semibold text-foreground">
+                    {direction === 'rtl' ? (d.nameAr || d.name) : d.name}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {d.frequencies.length} {direction === 'rtl' ? 'تكرار' : 'frequencies'}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
-      {/* Categories - only show when branch is selected, period chosen, and template loaded */}
-      {selectedBranch && selectedPeriodType && templateData && (
+      {/* Frequency selector: appears after a domain is chosen */}
+      {selectedBranch && selectedDomain && !selectedFrequencyId && (
+        <div className="glass-card p-8">
+          <div className="flex items-center justify-between mb-2 gap-3">
+            <h3 className="text-lg font-semibold text-foreground">
+              {direction === 'rtl' ? 'اختر التكرار' : 'Select Frequency'}
+            </h3>
+            <Button variant="ghost" size="sm" onClick={() => setSelectedDomainId(null)}>
+              {direction === 'rtl' ? 'تغيير المجال' : 'Change Domain'}
+            </Button>
+          </div>
+          <p className="text-sm text-muted-foreground mb-6">
+            {direction === 'rtl'
+              ? `المجال: ${selectedDomain.nameAr || selectedDomain.name} — اختر دورية الأسئلة`
+              : `Domain: ${selectedDomain.name} — choose how often these questions run`}
+          </p>
+          {selectedDomain.frequencies.length === 0 ? (
+            <p className="text-center text-muted-foreground">
+              {direction === 'rtl' ? 'لا توجد تكرارات معرّفة لهذا المجال' : 'No frequencies defined for this domain'}
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
+              {selectedDomain.frequencies.map(f => {
+                const labelAr: Record<string, string> = { daily:'يومي', weekly:'أسبوعي', monthly:'شهري', quarterly:'ربعي', semi_annual:'نصف سنوي', yearly:'سنوي' };
+                return (
+                  <button
+                    key={f.id}
+                    onClick={() => {
+                      setSelectedFrequencyId(f.id);
+                      setScores({});
+                      setExpandedCategories([]);
+                    }}
+                    className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all"
+                  >
+                    <Repeat className="w-8 h-8 text-primary" />
+                    <span className="font-semibold text-foreground">
+                      {direction === 'rtl' ? labelAr[f.frequencyType] : f.frequencyType.replace('_', ' ')}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {f.priorities.reduce((n, p) => n + p.criteria.length, 0)} {direction === 'rtl' ? 'سؤال' : 'questions'}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Categories - only show when branch, domain, frequency are chosen and template loaded */}
+      {selectedBranch && selectedFrequency && templateData && (
         <div className="space-y-4">
           {templateData.categories.map((category) => {
             const isExpanded = expandedCategories.includes(category.id);
@@ -1236,7 +1294,7 @@ export default function EvaluationForm() {
       )}
 
       {/* Sticky Footer with Progress and Submit */}
-      {selectedBranch && selectedPeriodType && templateData && (
+      {selectedBranch && selectedFrequency && templateData && (
         <div className="sticky bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border p-4 -mx-6 mt-6">
           <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
             {/* Progress bar */}
