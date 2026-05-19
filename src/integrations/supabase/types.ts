@@ -1672,6 +1672,7 @@ export type Database = {
           name_ar: string | null
           priority_id: string | null
           sort_order: number
+          violation_value: number | null
           weight: number
         }
         Insert: {
@@ -1685,6 +1686,7 @@ export type Database = {
           name_ar?: string | null
           priority_id?: string | null
           sort_order?: number
+          violation_value?: number | null
           weight?: number
         }
         Update: {
@@ -1698,6 +1700,7 @@ export type Database = {
           name_ar?: string | null
           priority_id?: string | null
           sort_order?: number
+          violation_value?: number | null
           weight?: number
         }
         Relationships: [
