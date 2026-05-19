@@ -1023,6 +1023,24 @@ export default function EvaluationForm() {
                                     {direction === 'rtl' ? 'حرج' : 'Critical'}
                                   </span>
                                 )}
+                                {criterion.frequencyType && (
+                                  <span className="px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
+                                    {direction === 'rtl'
+                                      ? ({ daily:'يومي', weekly:'أسبوعي', monthly:'شهري', quarterly:'ربعي', semi_annual:'نصف سنوي', yearly:'سنوي' } as any)[criterion.frequencyType]
+                                      : criterion.frequencyType.replace('_',' ')}
+                                  </span>
+                                )}
+                                {criterion.priorityLevel && !criterion.isCritical && (
+                                  <span className={cn(
+                                    "px-2 py-0.5 text-xs font-medium rounded-full",
+                                    criterion.priorityLevel === 'high' && 'bg-amber-100 text-amber-700',
+                                    criterion.priorityLevel === 'medium' && 'bg-blue-100 text-blue-700',
+                                  )}>
+                                    {direction === 'rtl'
+                                      ? (criterion.priorityLevel === 'high' ? 'عالية' : 'متوسطة')
+                                      : (criterion.priorityLevel === 'high' ? 'High' : 'Medium')}
+                                  </span>
+                                )}
                               </div>
                               <p className="text-sm text-muted-foreground mt-1">
                                 {direction === 'rtl' ? 'أقصى درجة:' : 'Max score:'} {criterion.maxScore} • {direction === 'rtl' ? 'الوزن:' : 'Weight:'} {criterion.weight}x
