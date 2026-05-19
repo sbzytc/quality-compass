@@ -10,11 +10,12 @@ export interface HCriterion {
   weight: number;
   isCritical: boolean;
   sortOrder: number;
+  violationValue: number | null;
 }
 
 export interface HPriority {
   id: string;
-  priorityLevel: 'critical' | 'high' | 'medium';
+  priorityLevel: 'critical' | 'high' | 'medium' | 'low';
   weight: number;
   sortOrder: number;
   criteria: HCriterion[];
@@ -126,6 +127,7 @@ export function useTemplateHierarchy() {
                       weight: Number(c.weight),
                       isCritical: c.is_critical,
                       sortOrder: c.sort_order,
+                        violationValue: c.violation_value !== null && c.violation_value !== undefined ? Number(c.violation_value) : null,
                     })),
                 })),
             })),

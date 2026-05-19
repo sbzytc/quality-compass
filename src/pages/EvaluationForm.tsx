@@ -58,8 +58,8 @@ export default function EvaluationForm() {
   // Synthesize legacy templateData shape: priorities become "categories" inside the chosen frequency.
   const templateData = useMemo(() => {
     if (!hierarchy || !selectedDomain || !selectedFrequency) return null;
-    const prioLabelAr: Record<string, string> = { critical: 'حرجة', high: 'عالية', medium: 'متوسطة' };
-    const prioLabelEn: Record<string, string> = { critical: 'Critical', high: 'High', medium: 'Medium' };
+    const prioLabelAr: Record<string, string> = { critical: 'حرجة', high: 'عالية', medium: 'متوسطة', low: 'منخفضة' };
+    const prioLabelEn: Record<string, string> = { critical: 'Critical', high: 'High', medium: 'Medium', low: 'Low' };
     return {
       id: hierarchy.id,
       name: hierarchy.name,
@@ -76,6 +76,7 @@ export default function EvaluationForm() {
           ...c,
           priorityLevel: p.priorityLevel,
           frequencyType: selectedFrequency.frequencyType,
+          violationValue: c.violationValue ?? null,
         })),
       })),
     } as any;
@@ -1142,10 +1143,21 @@ export default function EvaluationForm() {
                                     "px-2 py-0.5 text-xs font-medium rounded-full",
                                     criterion.priorityLevel === 'high' && 'bg-amber-100 text-amber-700',
                                     criterion.priorityLevel === 'medium' && 'bg-blue-100 text-blue-700',
+                                    criterion.priorityLevel === 'low' && 'bg-emerald-100 text-emerald-700',
                                   )}>
                                     {direction === 'rtl'
-                                      ? (criterion.priorityLevel === 'high' ? 'عالية' : 'متوسطة')
-                                      : (criterion.priorityLevel === 'high' ? 'High' : 'Medium')}
+                                      ? ({ high: 'عالية', medium: 'متوسطة', low: 'منخفضة' } as any)[criterion.priorityLevel]
+                                      : ({ high: 'High', medium: 'Medium', low: 'Low' } as any)[criterion.priorityLevel]}
+                                  </span>
+                                )}
+                                {(criterion as any).violationValue != null && (
+                                  <span
+                                    data-testid="badge-violation"
+                                    className="px-2 py-0.5 text-xs font-medium bg-destructive/10 text-destructive rounded-full"
+                                  >
+                                    {direction === 'rtl'
+                                      ? `قيمة المخالفة: ${(criterion as any).violationValue} ر.س`
+                                      : `Violation: ${(criterion as any).violationValue} SAR`}
                                   </span>
                                 )}
                               </div>
