@@ -350,7 +350,7 @@ export default function EvaluationForm() {
             template_id: activeTemplateId,
             assessor_id: user.id,
             status: 'draft',
-            period_type: selectedPeriodType || 'weekly',
+            period_type: selectedFrequency?.frequencyType || 'yearly',
             started_at: evaluationStartTime?.toISOString() || new Date().toISOString(),
           })
           .select()
@@ -400,7 +400,8 @@ export default function EvaluationForm() {
 
       // Reset form
       setSelectedBranchId('');
-      setSelectedPeriodType(null);
+      setSelectedDomainId(null);
+      setSelectedFrequencyId(null);
       setScores({});
       setExpandedCategories(['cat-1']);
       setCurrentNotes(null);
@@ -485,7 +486,7 @@ export default function EvaluationForm() {
             submitted_at: now.toISOString(),
             started_at: startTime.toISOString(),
             duration_minutes: durationMinutes,
-            period_type: selectedPeriodType || 'weekly',
+            period_type: selectedFrequency?.frequencyType || 'yearly',
           })
           .select()
           .single();
