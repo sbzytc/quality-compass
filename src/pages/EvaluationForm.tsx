@@ -551,6 +551,55 @@ export default function EvaluationForm() {
         }
       }
 
+      // Auto-schedule: upsert evaluation_schedules for each frequency in this template
+      try {
+        const { data: branchRow } = await supabase
+          .from('branches').select('company_id').eq('id', selectedBranchId).maybeSingle();
+        const companyId = branchRow?.company_id;
+        if (companyId && activeTemplateId) {
+          const { data: doms } = await supabase
+            .from('template_domains').select('id').eq('template_id', activeTemplateId);
+          const domIds = (doms || []).map((d: any) => d.id);
+          if (domIds.length) {
+            const { data: freqs } = await supabase
+              .from('template_frequencies').select('id, frequency_type').in('domain_id', domIds);
+            const today = new Date().toISOString().slice(0, 10);
+            for (const f of (freqs || []) as any[]) {
+              const { data: nextRpc } = await supabase
+                .rpc('compute_next_due_date', {
+                  _company_id: companyId,
+                  _frequency_type: f.frequency_type,
+                  _from_date: today,
+                });
+              const next = (nextRpc as any) || null;
+              const { data: existing } = await supabase
+                .from('evaluation_schedules')
+                .select('id, first_evaluation_date')
+                .eq('branch_id', selectedBranchId)
+                .eq('frequency_id', f.id)
+                .maybeSingle();
+              if (existing) {
+                await supabase.from('evaluation_schedules').update({
+                  last_completed_at: new Date().toISOString(),
+                  next_due_date: next,
+                }).eq('id', existing.id);
+              } else {
+                await supabase.from('evaluation_schedules').insert({
+                  company_id: companyId,
+                  branch_id: selectedBranchId,
+                  frequency_id: f.id,
+                  first_evaluation_date: today,
+                  next_due_date: next,
+                  last_completed_at: new Date().toISOString(),
+                });
+              }
+            }
+          }
+        }
+      } catch (schedErr) {
+        console.error('Schedule upsert error:', schedErr);
+      }
+
       toast.success(
         direction === 'rtl' 
           ? 'تم إرسال التقييم بنجاح! يمكنك البدء بتقييم جديد.'
