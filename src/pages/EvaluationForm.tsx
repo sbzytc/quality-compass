@@ -830,7 +830,7 @@ export default function EvaluationForm() {
   const progress = getOverallProgress();
 
   // Show loading state when loading a draft or template
-  if (isLoadingDraft || (selectedPeriodType && templateLoading)) {
+  if (isLoadingDraft || (selectedFrequencyId && templateLoading)) {
     return (
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="glass-card p-6">
@@ -847,8 +847,8 @@ export default function EvaluationForm() {
     );
   }
 
-  // Show error if period selected but no template found
-  if (selectedPeriodType && !templateLoading && !templateData) {
+  // Show error if frequency selected but no template found
+  if (selectedFrequencyId && !templateLoading && !templateData) {
     return (
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="glass-card p-6">
@@ -863,7 +863,7 @@ export default function EvaluationForm() {
                   ? 'يرجى الاتصال بالمسؤول لإعداد قالب تقييم'
                   : 'Please contact an administrator to set up an evaluation template'}
               </p>
-              <Button variant="outline" onClick={() => setSelectedPeriodType(null)}>
+              <Button variant="outline" onClick={() => { setSelectedDomainId(null); setSelectedFrequencyId(null); }}>
                 {direction === 'rtl' ? 'اختيار فترة أخرى' : 'Choose Another Period'}
               </Button>
             </div>
