@@ -6,15 +6,16 @@ import React, { useMemo, useState } from 'react';
 // ---------------- Supabase mock (hierarchy fixture) ----------------
 const tableResponses: Record<string, any> = {};
 function makeBuilder(table: string) {
-  const builder: any = {
-    select: vi.fn(() => builder),
-    eq: vi.fn(() => builder),
-    in: vi.fn(() => builder),
-    limit: vi.fn(() => builder),
-    order: vi.fn(() => Promise.resolve(tableResponses[table] ?? { data: [], error: null })),
-    maybeSingle: vi.fn(() => Promise.resolve(tableResponses[table] ?? { data: null, error: null })),
-    then: (r: any) => Promise.resolve(tableResponses[table] ?? { data: [], error: null }).then(r),
-  };
+  const resolve = () => Promise.resolve(tableResponses[table] ?? { data: [], error: null });
+  const builder: any = {};
+  builder.select = vi.fn(() => builder);
+  builder.eq = vi.fn(() => builder);
+  builder.in = vi.fn(() => builder);
+  builder.limit = vi.fn(() => builder);
+  builder.order = vi.fn(() => builder);
+  builder.maybeSingle = vi.fn(() => resolve());
+  builder.then = (onF: any, onR: any) => resolve().then(onF, onR);
+  builder.catch = (onR: any) => resolve().catch(onR);
   return builder;
 }
 vi.mock('@/integrations/supabase/client', () => ({
