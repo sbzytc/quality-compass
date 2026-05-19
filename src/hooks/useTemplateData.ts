@@ -10,8 +10,9 @@ export interface TemplateCriterion {
   weight: number;
   isCritical: boolean;
   sortOrder: number;
-  priorityLevel?: 'critical' | 'high' | 'medium' | null;
+  priorityLevel?: 'critical' | 'high' | 'medium' | 'low' | null;
   frequencyType?: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'semi_annual' | 'yearly' | null;
+  violationValue?: number | null;
 }
 
 export interface TemplateCategory {
