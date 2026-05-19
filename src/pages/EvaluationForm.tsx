@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronRight, ChevronDown, Camera, MessageSquare, AlertTriangle, Check, Save, ArrowLeft, MapPin, AlertCircle, Eye, Pencil, FileText, Clock, X, Image, CalendarDays, CalendarRange } from 'lucide-react';
+import { ChevronRight, ChevronDown, Camera, MessageSquare, AlertTriangle, Check, Save, ArrowLeft, MapPin, AlertCircle, Eye, Pencil, FileText, Clock, X, Image, CalendarDays, CalendarRange, Layers, Repeat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -12,12 +12,12 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGoBack } from '@/hooks/useGoBack';
 import { useBranches } from '@/hooks/useBranches';
-import { useTemplateByPeriod } from '@/hooks/useTemplateByPeriod';
+import { useTemplateHierarchy } from '@/hooks/useTemplateHierarchy';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { differenceInHours } from 'date-fns';
 
-type PeriodType = 'weekly' | 'monthly' | 'yearly';
+type FrequencyType = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'semi_annual' | 'yearly';
 
 interface Score {
   criterionId: string;
@@ -42,8 +42,44 @@ export default function EvaluationForm() {
   const { t, direction } = useLanguage();
   const { user } = useAuth();
   const { data: branches, isLoading: branchesLoading } = useBranches();
-  const [selectedPeriodType, setSelectedPeriodType] = useState<PeriodType | null>(null);
-  const { data: templateData, isLoading: templateLoading } = useTemplateByPeriod(selectedPeriodType || 'weekly');
+  const { data: hierarchy, isLoading: templateLoading } = useTemplateHierarchy();
+  const [selectedDomainId, setSelectedDomainId] = useState<string | null>(null);
+  const [selectedFrequencyId, setSelectedFrequencyId] = useState<string | null>(null);
+
+  const selectedDomain = useMemo(
+    () => hierarchy?.domains.find(d => d.id === selectedDomainId) || null,
+    [hierarchy, selectedDomainId]
+  );
+  const selectedFrequency = useMemo(
+    () => selectedDomain?.frequencies.find(f => f.id === selectedFrequencyId) || null,
+    [selectedDomain, selectedFrequencyId]
+  );
+
+  // Synthesize legacy templateData shape: priorities become "categories" inside the chosen frequency.
+  const templateData = useMemo(() => {
+    if (!hierarchy || !selectedDomain || !selectedFrequency) return null;
+    const prioLabelAr: Record<string, string> = { critical: 'حرجة', high: 'عالية', medium: 'متوسطة' };
+    const prioLabelEn: Record<string, string> = { critical: 'Critical', high: 'High', medium: 'Medium' };
+    return {
+      id: hierarchy.id,
+      name: hierarchy.name,
+      nameAr: hierarchy.nameAr,
+      description: hierarchy.description,
+      version: hierarchy.version,
+      categories: selectedFrequency.priorities.map(p => ({
+        id: p.id,
+        name: `${selectedDomain.name} — ${prioLabelEn[p.priorityLevel]}`,
+        nameAr: `${selectedDomain.nameAr || selectedDomain.name} — ${prioLabelAr[p.priorityLevel]}`,
+        weight: p.weight,
+        sortOrder: p.sortOrder,
+        criteria: p.criteria.map(c => ({
+          ...c,
+          priorityLevel: p.priorityLevel,
+          frequencyType: selectedFrequency.frequencyType,
+        })),
+      })),
+    } as any;
+  }, [hierarchy, selectedDomain, selectedFrequency]);
   
   const [selectedBranchId, setSelectedBranchId] = useState<string>('');
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
