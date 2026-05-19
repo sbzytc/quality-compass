@@ -331,6 +331,33 @@ export type Database = {
         }
         Relationships: []
       }
+      company_off_days: {
+        Row: {
+          company_id: string
+          created_at: string
+          day_of_week: number | null
+          id: string
+          label: string | null
+          specific_date: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          day_of_week?: number | null
+          id?: string
+          label?: string | null
+          specific_date?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          day_of_week?: number | null
+          id?: string
+          label?: string | null
+          specific_date?: string | null
+        }
+        Relationships: []
+      }
       company_users: {
         Row: {
           company_id: string
@@ -678,6 +705,50 @@ export type Database = {
             columns: ["evaluation_id"]
             isOneToOne: false
             referencedRelation: "evaluations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evaluation_schedules: {
+        Row: {
+          branch_id: string
+          company_id: string
+          created_at: string
+          first_evaluation_date: string
+          frequency_id: string
+          id: string
+          last_completed_at: string | null
+          next_due_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          branch_id: string
+          company_id: string
+          created_at?: string
+          first_evaluation_date: string
+          frequency_id: string
+          id?: string
+          last_completed_at?: string | null
+          next_due_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string
+          company_id?: string
+          created_at?: string
+          first_evaluation_date?: string
+          frequency_id?: string
+          id?: string
+          last_completed_at?: string | null
+          next_due_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluation_schedules_frequency_id_fkey"
+            columns: ["frequency_id"]
+            isOneToOne: false
+            referencedRelation: "template_frequencies"
             referencedColumns: ["id"]
           },
         ]
@@ -1599,6 +1670,7 @@ export type Database = {
           max_score: number
           name: string
           name_ar: string | null
+          priority_id: string | null
           sort_order: number
           weight: number
         }
@@ -1611,6 +1683,7 @@ export type Database = {
           max_score?: number
           name: string
           name_ar?: string | null
+          priority_id?: string | null
           sort_order?: number
           weight?: number
         }
@@ -1623,6 +1696,7 @@ export type Database = {
           max_score?: number
           name?: string
           name_ar?: string | null
+          priority_id?: string | null
           sort_order?: number
           weight?: number
         }
@@ -1632,6 +1706,116 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "template_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "template_criteria_priority_id_fkey"
+            columns: ["priority_id"]
+            isOneToOne: false
+            referencedRelation: "template_priorities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      template_domains: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          name_ar: string | null
+          sort_order: number
+          template_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          name_ar?: string | null
+          sort_order?: number
+          template_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          name_ar?: string | null
+          sort_order?: number
+          template_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      template_frequencies: {
+        Row: {
+          created_at: string
+          domain_id: string
+          frequency_type: string
+          id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          domain_id: string
+          frequency_type: string
+          id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          domain_id?: string
+          frequency_type?: string
+          id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "template_frequencies_domain_id_fkey"
+            columns: ["domain_id"]
+            isOneToOne: false
+            referencedRelation: "template_domains"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      template_priorities: {
+        Row: {
+          created_at: string
+          frequency_id: string
+          id: string
+          priority_level: string
+          sort_order: number
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          frequency_id: string
+          id?: string
+          priority_level: string
+          sort_order?: number
+          updated_at?: string
+          weight?: number
+        }
+        Update: {
+          created_at?: string
+          frequency_id?: string
+          id?: string
+          priority_level?: string
+          sort_order?: number
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "template_priorities_frequency_id_fkey"
+            columns: ["frequency_id"]
+            isOneToOne: false
+            referencedRelation: "template_frequencies"
             referencedColumns: ["id"]
           },
         ]
@@ -1791,6 +1975,14 @@ export type Database = {
     }
     Functions: {
       cleanup_expired_drafts: { Args: never; Returns: undefined }
+      compute_next_due_date: {
+        Args: {
+          _company_id: string
+          _frequency_type: string
+          _from_date: string
+        }
+        Returns: string
+      }
       create_user_profile: {
         Args: {
           _email: string
