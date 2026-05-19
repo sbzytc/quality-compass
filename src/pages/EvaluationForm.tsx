@@ -874,7 +874,21 @@ export default function EvaluationForm() {
             <Button
               variant="outline"
               size="icon"
-              onClick={() => navigate('/')}
+              onClick={() => {
+                // Stepwise back: frequency → domain → branch → home
+                if (selectedFrequencyId) {
+                  setSelectedFrequencyId(null);
+                  setScores({});
+                  setExpandedCategories([]);
+                  setValidationErrors([]);
+                } else if (selectedDomainId) {
+                  setSelectedDomainId(null);
+                } else if (selectedBranchId) {
+                  setSelectedBranchId('');
+                } else {
+                  navigate('/');
+                }
+              }}
               className="mt-1"
             >
               <ArrowLeft className="w-4 h-4" />
