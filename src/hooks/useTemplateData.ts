@@ -10,6 +10,8 @@ export interface TemplateCriterion {
   weight: number;
   isCritical: boolean;
   sortOrder: number;
+  priorityLevel?: 'critical' | 'high' | 'medium' | null;
+  frequencyType?: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'semi_annual' | 'yearly' | null;
 }
 
 export interface TemplateCategory {
@@ -63,6 +65,27 @@ export function useActiveTemplate() {
 
       if (critError) throw critError;
 
+      // Fetch hierarchy metadata (priority + frequency) for each criterion via priority_id
+      const priorityIds = Array.from(
+        new Set((criteria || []).map(c => c.priority_id).filter(Boolean) as string[])
+      );
+      const priorityMap: Record<string, { level: string; frequencyType: string | null }> = {};
+      if (priorityIds.length > 0) {
+        const { data: prios } = await supabase
+          .from('template_priorities')
+          .select('id, priority_level, frequency_id')
+          .in('id', priorityIds);
+        const freqIds = Array.from(new Set((prios || []).map(p => p.frequency_id)));
+        const { data: freqs } = freqIds.length
+          ? await supabase.from('template_frequencies').select('id, frequency_type').in('id', freqIds)
+          : { data: [] as any[] };
+        const freqById: Record<string, string> = {};
+        (freqs || []).forEach((f: any) => { freqById[f.id] = f.frequency_type; });
+        (prios || []).forEach((p: any) => {
+          priorityMap[p.id] = { level: p.priority_level, frequencyType: freqById[p.frequency_id] ?? null };
+        });
+      }
+
       // Build the nested structure
       const categoriesWithCriteria: TemplateCategory[] = (categories || []).map(cat => ({
         id: cat.id,
@@ -72,16 +95,21 @@ export function useActiveTemplate() {
         sortOrder: cat.sort_order,
         criteria: (criteria || [])
           .filter(c => c.category_id === cat.id)
-          .map(c => ({
-            id: c.id,
-            name: c.name,
-            nameAr: c.name_ar,
-            description: c.description,
-            maxScore: c.max_score,
-            weight: Number(c.weight),
-            isCritical: c.is_critical,
-            sortOrder: c.sort_order,
-          })),
+          .map(c => {
+            const meta = c.priority_id ? priorityMap[c.priority_id] : undefined;
+            return {
+              id: c.id,
+              name: c.name,
+              nameAr: c.name_ar,
+              description: c.description,
+              maxScore: c.max_score,
+              weight: Number(c.weight),
+              isCritical: c.is_critical,
+              sortOrder: c.sort_order,
+              priorityLevel: (meta?.level as any) ?? null,
+              frequencyType: (meta?.frequencyType as any) ?? null,
+            };
+          }),
       }));
 
       return {
