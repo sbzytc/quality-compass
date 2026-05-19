@@ -1210,30 +1210,29 @@ export default function EvaluationForm() {
                                   </span>
                                 )}
                               </div>
-                              <p className="text-sm text-muted-foreground mt-1">
-                                {direction === 'rtl' ? 'أقصى درجة:' : 'Max score:'} {criterion.maxScore} • {direction === 'rtl' ? 'الوزن:' : 'Weight:'} {criterion.weight}x
-                              </p>
                             </div>
 
-                            {/* Score buttons */}
-                            <div className="flex items-center gap-2">
-                              {[0, 1, 2, 3, 4, 5].map((score) => (
-                                <button
-                                  key={score}
-                                  onClick={() => setScoreWithValidation(criterion.id, score)}
+                            {/* Answer buttons: نعم / لا / لا ينطبق */}
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {([
+                                { value: ANSWER_YES, ar: 'نعم', en: 'Yes', cls: 'bg-emerald-500 text-white border-emerald-500', idle: 'hover:border-emerald-400 hover:text-emerald-600' },
+                                { value: ANSWER_NO, ar: 'لا', en: 'No', cls: 'bg-red-500 text-white border-red-500', idle: 'hover:border-red-400 hover:text-red-600' },
+                                { value: ANSWER_NA, ar: 'لا ينطبق', en: 'N/A', cls: 'bg-muted-foreground text-white border-muted-foreground', idle: 'hover:border-muted-foreground/60' },
+                              ] as const).map((opt) => {
+                                const active = currentScore === opt.value;
+                                return (
+                                  <button
+                                    key={opt.value}
+                                    onClick={() => setScoreWithValidation(criterion.id, opt.value)}
                                     className={cn(
-                                      'w-10 h-10 rounded-lg font-medium transition-all',
-                                      currentScore === score
-                                        ? cn(
-                                            'text-white',
-                                            getScoreCategoryColor(getScoreCategory(score))
-                                          )
-                                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                                      'px-4 h-10 rounded-lg text-sm font-medium border-2 transition-all',
+                                      active ? opt.cls : `bg-background text-foreground border-border ${opt.idle}`
                                     )}
-                                >
-                                  {score}
-                                </button>
-                              ))}
+                                  >
+                                    {direction === 'rtl' ? opt.ar : opt.en}
+                                  </button>
+                                );
+                              })}
                             </div>
 
                             {/* Action buttons */}
