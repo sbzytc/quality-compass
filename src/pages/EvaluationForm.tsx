@@ -925,9 +925,11 @@ export default function EvaluationForm() {
                 </Select>
               </div>
               
-              {selectedBranch && selectedPeriodType && templateData && (
+              {selectedBranch && selectedFrequency && templateData && (
                 <p className="text-sm text-muted-foreground mt-2">
                   {direction === 'rtl' ? 'القالب:' : 'Template:'} {direction === 'rtl' ? templateData.nameAr : templateData.name}
+                  {' · '}
+                  {direction === 'rtl' ? selectedDomain?.nameAr || selectedDomain?.name : selectedDomain?.name}
                 </p>
               )}
             </div>
@@ -959,70 +961,97 @@ export default function EvaluationForm() {
         </div>
       )}
 
-      {/* Period Type Selector - show after branch is selected */}
-      {selectedBranch && !selectedPeriodType && (
+      {/* Domain selector: pick which area to evaluate */}
+      {selectedBranch && !selectedDomainId && hierarchy && (
         <div className="glass-card p-8">
           <h3 className="text-lg font-semibold text-foreground text-center mb-2">
-            {direction === 'rtl' ? 'اختر نوع التقييم' : 'Select Evaluation Type'}
+            {direction === 'rtl' ? 'اختر المجال' : 'Select Domain'}
           </h3>
           <p className="text-sm text-muted-foreground text-center mb-6">
-            {direction === 'rtl' ? 'اختر الفترة الزمنية للتقييم' : 'Choose the evaluation period'}
+            {direction === 'rtl' ? 'اختر مجال الأسئلة الذي تريد تقييمه' : 'Choose the domain you want to evaluate'}
           </p>
-          <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto">
-            <button
-              onClick={() => {
-                setSelectedPeriodType('weekly');
-                setScores({});
-                setExpandedCategories([]);
-              }}
-              className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all"
-            >
-              <CalendarDays className="w-10 h-10 text-primary" />
-              <span className="font-semibold text-foreground">
-                {direction === 'rtl' ? 'أسبوعي' : 'Weekly'}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {direction === 'rtl' ? 'تقييم أسبوعي' : 'Weekly Evaluation'}
-              </span>
-            </button>
-            <button
-              onClick={() => {
-                setSelectedPeriodType('monthly');
-                setScores({});
-                setExpandedCategories([]);
-              }}
-              className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all"
-            >
-              <CalendarRange className="w-10 h-10 text-primary" />
-              <span className="font-semibold text-foreground">
-                {direction === 'rtl' ? 'شهري' : 'Monthly'}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {direction === 'rtl' ? 'تقييم شهري' : 'Monthly Evaluation'}
-              </span>
-            </button>
-            <button
-              onClick={() => {
-                setSelectedPeriodType('yearly');
-                setScores({});
-                setExpandedCategories([]);
-              }}
-              className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all"
-            >
-              <FileText className="w-10 h-10 text-primary" />
-              <span className="font-semibold text-foreground">
-                {direction === 'rtl' ? 'سنوي' : 'Yearly'}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {direction === 'rtl' ? 'تقييم سنوي' : 'Yearly Evaluation'}
-              </span>
-            </button>
-          </div>
+          {hierarchy.domains.length === 0 ? (
+            <p className="text-center text-muted-foreground">
+              {direction === 'rtl' ? 'لا توجد مجالات معرّفة في القالب النشط' : 'No domains defined in the active template'}
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+              {hierarchy.domains.map(d => (
+                <button
+                  key={d.id}
+                  onClick={() => {
+                    setSelectedDomainId(d.id);
+                    setSelectedFrequencyId(null);
+                    setScores({});
+                    setExpandedCategories([]);
+                  }}
+                  className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all"
+                >
+                  <Layers className="w-10 h-10 text-primary" />
+                  <span className="font-semibold text-foreground">
+                    {direction === 'rtl' ? (d.nameAr || d.name) : d.name}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {d.frequencies.length} {direction === 'rtl' ? 'تكرار' : 'frequencies'}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
-      {/* Categories - only show when branch is selected, period chosen, and template loaded */}
-      {selectedBranch && selectedPeriodType && templateData && (
+      {/* Frequency selector: appears after a domain is chosen */}
+      {selectedBranch && selectedDomain && !selectedFrequencyId && (
+        <div className="glass-card p-8">
+          <div className="flex items-center justify-between mb-2 gap-3">
+            <h3 className="text-lg font-semibold text-foreground">
+              {direction === 'rtl' ? 'اختر التكرار' : 'Select Frequency'}
+            </h3>
+            <Button variant="ghost" size="sm" onClick={() => setSelectedDomainId(null)}>
+              {direction === 'rtl' ? 'تغيير المجال' : 'Change Domain'}
+            </Button>
+          </div>
+          <p className="text-sm text-muted-foreground mb-6">
+            {direction === 'rtl'
+              ? `المجال: ${selectedDomain.nameAr || selectedDomain.name} — اختر دورية الأسئلة`
+              : `Domain: ${selectedDomain.name} — choose how often these questions run`}
+          </p>
+          {selectedDomain.frequencies.length === 0 ? (
+            <p className="text-center text-muted-foreground">
+              {direction === 'rtl' ? 'لا توجد تكرارات معرّفة لهذا المجال' : 'No frequencies defined for this domain'}
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
+              {selectedDomain.frequencies.map(f => {
+                const labelAr: Record<string, string> = { daily:'يومي', weekly:'أسبوعي', monthly:'شهري', quarterly:'ربعي', semi_annual:'نصف سنوي', yearly:'سنوي' };
+                return (
+                  <button
+                    key={f.id}
+                    onClick={() => {
+                      setSelectedFrequencyId(f.id);
+                      setScores({});
+                      setExpandedCategories([]);
+                    }}
+                    className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all"
+                  >
+                    <Repeat className="w-8 h-8 text-primary" />
+                    <span className="font-semibold text-foreground">
+                      {direction === 'rtl' ? labelAr[f.frequencyType] : f.frequencyType.replace('_', ' ')}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {f.priorities.reduce((n, p) => n + p.criteria.length, 0)} {direction === 'rtl' ? 'سؤال' : 'questions'}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Categories - only show when branch, domain, frequency are chosen and template loaded */}
+      {selectedBranch && selectedFrequency && templateData && (
         <div className="space-y-4">
           {templateData.categories.map((category) => {
             const isExpanded = expandedCategories.includes(category.id);
