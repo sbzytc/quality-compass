@@ -58,8 +58,8 @@ export default function EvaluationForm() {
   // Synthesize legacy templateData shape: priorities become "categories" inside the chosen frequency.
   const templateData = useMemo(() => {
     if (!hierarchy || !selectedDomain || !selectedFrequency) return null;
-    const prioLabelAr: Record<string, string> = { critical: 'حرجة', high: 'عالية', medium: 'متوسطة' };
-    const prioLabelEn: Record<string, string> = { critical: 'Critical', high: 'High', medium: 'Medium' };
+    const prioLabelAr: Record<string, string> = { critical: 'حرجة', high: 'عالية', medium: 'متوسطة', low: 'منخفضة' };
+    const prioLabelEn: Record<string, string> = { critical: 'Critical', high: 'High', medium: 'Medium', low: 'Low' };
     return {
       id: hierarchy.id,
       name: hierarchy.name,
@@ -76,6 +76,7 @@ export default function EvaluationForm() {
           ...c,
           priorityLevel: p.priorityLevel,
           frequencyType: selectedFrequency.frequencyType,
+          violationValue: c.violationValue ?? null,
         })),
       })),
     } as any;
