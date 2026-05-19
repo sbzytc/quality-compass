@@ -1335,7 +1335,7 @@ export default function EvaluationForm() {
                           )}
 
                           {/* Warning for low critical scores */}
-                          {criterion.isCritical && currentScore !== undefined && currentScore < 3 && (
+                          {criterion.isCritical && currentScore === ANSWER_NO && (
                             <motion.div
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}
