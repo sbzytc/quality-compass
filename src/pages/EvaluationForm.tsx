@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronRight, ChevronDown, Camera, MessageSquare, AlertTriangle, Check, Save, ArrowLeft, MapPin, AlertCircle, Eye, Pencil, FileText, Clock, X, Image, CalendarDays, CalendarRange, Layers, Repeat } from 'lucide-react';
+import { ChevronRight, ChevronDown, Camera, MessageSquare, AlertTriangle, Check, Save, ArrowLeft, MapPin, AlertCircle, Eye, Pencil, FileText, Clock, X, Image, CalendarDays, CalendarRange, Layers, Repeat, Shirt, HeartPulse, FileCheck2, SeparatorHorizontal, FlaskConical, Truck, Megaphone, ScanBarcode, Wrench, Sparkles, Building2, Utensils, Users, ClipboardCheck, Store, Warehouse, Coffee, Soup, Banknote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -18,6 +18,41 @@ import { toast } from 'sonner';
 import { differenceInHours } from 'date-fns';
 
 type FrequencyType = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'semi_annual' | 'yearly';
+
+// Map a domain name (Arabic or English) to a suitable Lucide icon.
+function getDomainIcon(nameAr: string | null | undefined, nameEn: string | null | undefined) {
+  const s = `${nameAr || ''} ${nameEn || ''}`.toLowerCase();
+  const has = (...kw: string[]) => kw.some(k => s.includes(k.toLowerCase()));
+  if (has('زي', 'نظافة الشخصية', 'hygiene', 'uniform')) return Shirt;
+  if (has('شهادات', 'صحي', 'health')) return HeartPulse;
+  if (has('ترخيص', 'موقع', 'نشاط', 'license', 'licens')) return FileCheck2;
+  if (has('فصل', 'أقسام', 'separation', 'section')) return SeparatorHorizontal;
+  if (has('مضافات', 'مكونات', 'additive', 'ingredient')) return FlaskConical;
+  if (has('توصيل', 'نقل', 'delivery', 'transport', 'vehicle', 'سيارات')) return Truck;
+  if (has('لوحات', 'واجهة', 'signage', 'sign', 'facade')) return Megaphone;
+  if (has('تتبع', 'traceab', 'trace')) return ScanBarcode;
+  if (has('تصحيحية', 'إجراءات', 'corrective', 'action')) return Wrench;
+  if (has('نظافة', 'cleanl', 'clean')) return Sparkles;
+  if (has('مبنى', 'building')) return Building2;
+  if (has('سلامة', 'جودة', 'safety', 'quality')) return ClipboardCheck;
+  if (has('عميل', 'تجربة', 'customer', 'experience', 'تعامل')) return Users;
+  if (has('مظهر', 'appearance')) return Store;
+  if (has('خدمة', 'جاهزية', 'service', 'readiness')) return Coffee;
+  if (has('موظف', 'staff', 'عمليات', 'operation')) return Users;
+  if (has('كاش', 'cash', 'cashier')) return Banknote;
+  if (has('إدار', 'admin')) return ClipboardCheck;
+  if (has('صالة', 'dining', 'طعام')) return Utensils;
+  if (has('مطبخ', 'kitchen', 'خلفية', 'back')) return Soup;
+  if (has('إستلام', 'استلام', 'تخزين', 'receiv', 'storage')) return Warehouse;
+  return Layers;
+}
+
+// Answer sentinels: نعم=5 (compliant), لا=1 (non-compliant), لا ينطبق=-1 (N/A, excluded)
+const ANSWER_YES = 5;
+const ANSWER_NO = 1;
+const ANSWER_NA = -1;
+const isAnswered = (v: number | undefined) => v !== undefined;
+const isCounted = (v: number | undefined) => v !== undefined && v !== ANSWER_NA;
 
 interface Score {
   criterionId: string;
@@ -527,8 +562,8 @@ export default function EvaluationForm() {
           templateData.categories.forEach(category => {
             category.criteria.forEach(criterion => {
               const s = scores[criterion.id];
-              if (s?.score !== undefined) {
-                totalScore += s.score;
+              if (isCounted(s?.score)) {
+                totalScore += s!.score;
                 totalMaxScore += criterion.maxScore;
               }
             });
@@ -556,15 +591,16 @@ export default function EvaluationForm() {
           templateData.categories.forEach(category => {
             category.criteria.forEach(criterion => {
               const s = scores[criterion.id];
-              if (s?.score !== undefined && s.score <= 3) {
+              // Only "No" answers (non-compliant) become findings — N/A is excluded.
+              if (isCounted(s?.score) && s!.score <= 3) {
                 criticalFindings.push({
                   evaluation_id: evaluationId!,
                   branch_id: selectedBranchId,
                   criterion_id: criterion.id,
-                  score: s.score,
+                  score: s!.score,
                   max_score: criterion.maxScore,
-                  assessor_notes: s.notes || null,
-                  attachments: s.attachments || [],
+                  assessor_notes: s!.notes || null,
+                  attachments: s!.attachments || [],
                 });
               }
             });
@@ -780,14 +816,15 @@ export default function EvaluationForm() {
     const category = templateData.categories.find((c) => c.id === categoryId);
     if (!category) return { scored: 0, total: 0, percentage: 0 };
 
-    const scored = category.criteria.filter((c) => scores[c.id]?.score !== undefined).length;
+    const scored = category.criteria.filter((c) => isAnswered(scores[c.id]?.score)).length;
     const total = category.criteria.length;
 
     if (scored === 0) return { scored, total, percentage: 0 };
 
-    const totalScore = category.criteria.reduce((sum, c) => sum + (scores[c.id]?.score || 0), 0);
-    const maxScore = category.criteria.reduce((sum, c) => sum + c.maxScore, 0);
-    const percentage = Math.round((totalScore / maxScore) * 100);
+    const counted = category.criteria.filter((c) => isCounted(scores[c.id]?.score));
+    const totalScore = counted.reduce((sum, c) => sum + (scores[c.id]!.score), 0);
+    const maxScore = counted.reduce((sum, c) => sum + c.maxScore, 0);
+    const percentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
 
     return { scored, total, percentage };
   };
@@ -802,7 +839,7 @@ export default function EvaluationForm() {
     
     // Only count scores that belong to criteria in the current template
     const scoredCriteria = Object.keys(scores).filter(
-      (id) => validCriterionIds.has(id) && scores[id]?.score !== undefined
+      (id) => validCriterionIds.has(id) && isAnswered(scores[id]?.score)
     ).length;
     return { scored: scoredCriteria, total: totalCriteria };
   };
@@ -982,7 +1019,9 @@ export default function EvaluationForm() {
             </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-              {hierarchy.domains.map(d => (
+              {hierarchy.domains.map(d => {
+                const DomainIcon = getDomainIcon(d.nameAr, d.name);
+                return (
                 <button
                   key={d.id}
                   onClick={() => {
@@ -991,17 +1030,20 @@ export default function EvaluationForm() {
                     setScores({});
                     setExpandedCategories([]);
                   }}
-                  className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all"
+                  className="group flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all"
                 >
-                  <Layers className="w-10 h-10 text-primary" />
-                  <span className="font-semibold text-foreground">
+                  <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                    <DomainIcon className="w-7 h-7" />
+                  </div>
+                  <span className="font-semibold text-foreground text-center">
                     {direction === 'rtl' ? (d.nameAr || d.name) : d.name}
                   </span>
                   <span className="text-xs text-muted-foreground">
                     {d.frequencies.length} {direction === 'rtl' ? 'تكرار' : 'frequencies'}
                   </span>
                 </button>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -1175,30 +1217,29 @@ export default function EvaluationForm() {
                                   </span>
                                 )}
                               </div>
-                              <p className="text-sm text-muted-foreground mt-1">
-                                {direction === 'rtl' ? 'أقصى درجة:' : 'Max score:'} {criterion.maxScore} • {direction === 'rtl' ? 'الوزن:' : 'Weight:'} {criterion.weight}x
-                              </p>
                             </div>
 
-                            {/* Score buttons */}
-                            <div className="flex items-center gap-2">
-                              {[0, 1, 2, 3, 4, 5].map((score) => (
-                                <button
-                                  key={score}
-                                  onClick={() => setScoreWithValidation(criterion.id, score)}
+                            {/* Answer buttons: نعم / لا / لا ينطبق */}
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {([
+                                { value: ANSWER_YES, ar: 'نعم', en: 'Yes', cls: 'bg-emerald-500 text-white border-emerald-500', idle: 'hover:border-emerald-400 hover:text-emerald-600' },
+                                { value: ANSWER_NO, ar: 'لا', en: 'No', cls: 'bg-red-500 text-white border-red-500', idle: 'hover:border-red-400 hover:text-red-600' },
+                                { value: ANSWER_NA, ar: 'لا ينطبق', en: 'N/A', cls: 'bg-muted-foreground text-white border-muted-foreground', idle: 'hover:border-muted-foreground/60' },
+                              ] as const).map((opt) => {
+                                const active = currentScore === opt.value;
+                                return (
+                                  <button
+                                    key={opt.value}
+                                    onClick={() => setScoreWithValidation(criterion.id, opt.value)}
                                     className={cn(
-                                      'w-10 h-10 rounded-lg font-medium transition-all',
-                                      currentScore === score
-                                        ? cn(
-                                            'text-white',
-                                            getScoreCategoryColor(getScoreCategory(score))
-                                          )
-                                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                                      'px-4 h-10 rounded-lg text-sm font-medium border-2 transition-all',
+                                      active ? opt.cls : `bg-background text-foreground border-border ${opt.idle}`
                                     )}
-                                >
-                                  {score}
-                                </button>
-                              ))}
+                                  >
+                                    {direction === 'rtl' ? opt.ar : opt.en}
+                                  </button>
+                                );
+                              })}
                             </div>
 
                             {/* Action buttons */}
@@ -1294,7 +1335,7 @@ export default function EvaluationForm() {
                           )}
 
                           {/* Warning for low critical scores */}
-                          {criterion.isCritical && currentScore !== undefined && currentScore < 3 && (
+                          {criterion.isCritical && currentScore === ANSWER_NO && (
                             <motion.div
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}
