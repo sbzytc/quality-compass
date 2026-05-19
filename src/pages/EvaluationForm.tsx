@@ -1017,7 +1017,9 @@ export default function EvaluationForm() {
             </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-              {hierarchy.domains.map(d => (
+              {hierarchy.domains.map(d => {
+                const DomainIcon = getDomainIcon(d.nameAr, d.name);
+                return (
                 <button
                   key={d.id}
                   onClick={() => {
@@ -1026,17 +1028,20 @@ export default function EvaluationForm() {
                     setScores({});
                     setExpandedCategories([]);
                   }}
-                  className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all"
+                  className="group flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all"
                 >
-                  <Layers className="w-10 h-10 text-primary" />
-                  <span className="font-semibold text-foreground">
+                  <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                    <DomainIcon className="w-7 h-7" />
+                  </div>
+                  <span className="font-semibold text-foreground text-center">
                     {direction === 'rtl' ? (d.nameAr || d.name) : d.name}
                   </span>
                   <span className="text-xs text-muted-foreground">
                     {d.frequencies.length} {direction === 'rtl' ? 'تكرار' : 'frequencies'}
                   </span>
                 </button>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
