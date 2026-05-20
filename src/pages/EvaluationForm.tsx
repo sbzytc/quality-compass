@@ -1230,28 +1230,85 @@ export default function EvaluationForm() {
                               </div>
                             </div>
 
-                            {/* Answer buttons: نعم / لا / لا ينطبق */}
-                            <div className="flex items-center gap-2 flex-wrap">
-                              {([
-                                { value: ANSWER_YES, ar: 'نعم', en: 'Yes', cls: 'bg-emerald-500 text-white border-emerald-500', idle: 'hover:border-emerald-400 hover:text-emerald-600' },
-                                { value: ANSWER_NO, ar: 'لا', en: 'No', cls: 'bg-red-500 text-white border-red-500', idle: 'hover:border-red-400 hover:text-red-600' },
-                                { value: ANSWER_NA, ar: 'لا ينطبق', en: 'N/A', cls: 'bg-muted-foreground text-white border-muted-foreground', idle: 'hover:border-muted-foreground/60' },
-                              ] as const).map((opt) => {
-                                const active = currentScore === opt.value;
+                            {/* Answer controls: Yes/No (with configurable polarity) OR Rating 1–5 */}
+                            {(() => {
+                              const answerType = (criterion as any).answerType ?? 'yes_no';
+                              const yesIsPositive = (criterion as any).yesIsPositive ?? true;
+                              if (answerType === 'rating') {
                                 return (
-                                  <button
-                                    key={opt.value}
-                                    onClick={() => setScoreWithValidation(criterion.id, opt.value)}
-                                    className={cn(
-                                      'px-4 h-10 rounded-lg text-sm font-medium border-2 transition-all',
-                                      active ? opt.cls : `bg-background text-foreground border-border ${opt.idle}`
-                                    )}
-                                  >
-                                    {direction === 'rtl' ? opt.ar : opt.en}
-                                  </button>
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    {[1, 2, 3, 4, 5].map((val) => {
+                                      const active = currentScore === val;
+                                      const goodCls = val >= 4
+                                        ? 'bg-emerald-500 text-white border-emerald-500'
+                                        : val === 3
+                                          ? 'bg-amber-500 text-white border-amber-500'
+                                          : 'bg-red-500 text-white border-red-500';
+                                      return (
+                                        <button
+                                          key={val}
+                                          onClick={() => setScoreWithValidation(criterion.id, val)}
+                                          className={cn(
+                                            'w-10 h-10 rounded-lg text-sm font-semibold border-2 transition-all',
+                                            active ? goodCls : 'bg-background text-foreground border-border hover:border-primary'
+                                          )}
+                                        >
+                                          {val}
+                                        </button>
+                                      );
+                                    })}
+                                    <button
+                                      onClick={() => setScoreWithValidation(criterion.id, ANSWER_NA)}
+                                      className={cn(
+                                        'px-4 h-10 rounded-lg text-sm font-medium border-2 transition-all',
+                                        currentScore === ANSWER_NA
+                                          ? 'bg-muted-foreground text-white border-muted-foreground'
+                                          : 'bg-background text-foreground border-border hover:border-muted-foreground/60'
+                                      )}
+                                    >
+                                      {direction === 'rtl' ? 'لا ينطبق' : 'N/A'}
+                                    </button>
+                                  </div>
                                 );
-                              })}
-                            </div>
+                              }
+                              // yes_no
+                              const yesVal = yesIsPositive ? ANSWER_YES : ANSWER_NO;
+                              const noVal = yesIsPositive ? ANSWER_NO : ANSWER_YES;
+                              const opts = [
+                                { storedValue: yesVal, ar: 'نعم', en: 'Yes', positive: yesIsPositive },
+                                { storedValue: noVal, ar: 'لا', en: 'No', positive: !yesIsPositive },
+                                { storedValue: ANSWER_NA, ar: 'لا ينطبق', en: 'N/A', positive: null as boolean | null },
+                              ];
+                              return (
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  {opts.map((opt) => {
+                                    const active = currentScore === opt.storedValue;
+                                    const activeCls = opt.positive === null
+                                      ? 'bg-muted-foreground text-white border-muted-foreground'
+                                      : opt.positive
+                                        ? 'bg-emerald-500 text-white border-emerald-500'
+                                        : 'bg-red-500 text-white border-red-500';
+                                    const idleCls = opt.positive === null
+                                      ? 'hover:border-muted-foreground/60'
+                                      : opt.positive
+                                        ? 'hover:border-emerald-400 hover:text-emerald-600'
+                                        : 'hover:border-red-400 hover:text-red-600';
+                                    return (
+                                      <button
+                                        key={`${opt.en}-${opt.storedValue}`}
+                                        onClick={() => setScoreWithValidation(criterion.id, opt.storedValue)}
+                                        className={cn(
+                                          'px-4 h-10 rounded-lg text-sm font-medium border-2 transition-all',
+                                          active ? activeCls : `bg-background text-foreground border-border ${idleCls}`
+                                        )}
+                                      >
+                                        {direction === 'rtl' ? opt.ar : opt.en}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              );
+                            })()}
 
                             {/* Action buttons */}
                             <div className="flex items-center gap-2">
