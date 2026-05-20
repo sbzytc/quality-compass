@@ -511,6 +511,30 @@ export default function CreateTemplatePage() {
                                     />
                                     <div className="flex items-center gap-3 flex-wrap">
                                       <div className="flex items-center gap-1">
+                                        <Label className="text-xs">{isAr ? 'نوع الإجابة' : 'Answer Type'}</Label>
+                                        <select
+                                          value={q.answerType}
+                                          onChange={e => updateQuestion(d.localId, f.localId, p.localId, q.localId, { answerType: e.target.value as 'yes_no' | 'rating' })}
+                                          className="h-8 rounded-md border bg-white px-2 text-xs"
+                                        >
+                                          <option value="yes_no">{isAr ? 'نعم / لا' : 'Yes / No'}</option>
+                                          <option value="rating">{isAr ? 'تقييم 1–5' : 'Rating 1–5'}</option>
+                                        </select>
+                                      </div>
+                                      {q.answerType === 'yes_no' && (
+                                        <div className="flex items-center gap-1">
+                                          <Label className="text-xs">{isAr ? 'الإجابة الصحيحة' : 'Correct Answer'}</Label>
+                                          <select
+                                            value={q.yesIsPositive ? 'yes' : 'no'}
+                                            onChange={e => updateQuestion(d.localId, f.localId, p.localId, q.localId, { yesIsPositive: e.target.value === 'yes' })}
+                                            className="h-8 rounded-md border bg-white px-2 text-xs"
+                                          >
+                                            <option value="yes">{isAr ? 'نعم' : 'Yes'}</option>
+                                            <option value="no">{isAr ? 'لا' : 'No'}</option>
+                                          </select>
+                                        </div>
+                                      )}
+                                      <div className="flex items-center gap-1">
                                         <Label className="text-xs">{isAr ? 'أعلى درجة' : 'Max'}</Label>
                                         <Input
                                           type="number"
