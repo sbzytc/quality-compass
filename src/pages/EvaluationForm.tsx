@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronRight, ChevronDown, Camera, MessageSquare, AlertTriangle, Check, Save, ArrowLeft, MapPin, AlertCircle, Eye, Pencil, FileText, Clock, X, Image, CalendarDays, CalendarRange, Layers, Repeat, Shirt, HeartPulse, FileCheck2, SeparatorHorizontal, FlaskConical, Truck, Megaphone, ScanBarcode, Wrench, Sparkles, Building2, Utensils, Users, ClipboardCheck, Store, Warehouse, Coffee, Soup, Banknote } from 'lucide-react';
+import { ChevronRight, ChevronDown, Camera, MessageSquare, AlertTriangle, Check, Save, ArrowLeft, MapPin, AlertCircle, Eye, Pencil, FileText, Clock, X, Image, CalendarDays, CalendarRange, Layers, Repeat, Shirt, HeartPulse, FileCheck2, SeparatorHorizontal, FlaskConical, Truck, Megaphone, ScanBarcode, Wrench, Sparkles, Building2, Utensils, Users, ClipboardCheck, Store, Warehouse, Coffee, Soup, Banknote, Sun, Calendar, CalendarClock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -1073,6 +1073,15 @@ export default function EvaluationForm() {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
               {selectedDomain.frequencies.map(f => {
                 const labelAr: Record<string, string> = { daily:'يومي', weekly:'أسبوعي', monthly:'شهري', quarterly:'ربعي', semi_annual:'نصف سنوي', yearly:'سنوي' };
+                const frequencyIcons: Record<string, typeof Sun> = {
+                  daily: Sun,
+                  weekly: CalendarRange,
+                  monthly: CalendarDays,
+                  quarterly: Layers,
+                  semi_annual: CalendarClock,
+                  yearly: Calendar,
+                };
+                const FreqIcon = frequencyIcons[f.frequencyType] || Repeat;
                 return (
                   <button
                     key={f.id}
@@ -1081,9 +1090,11 @@ export default function EvaluationForm() {
                       setScores({});
                       setExpandedCategories([]);
                     }}
-                    className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all"
+                    className="group flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all"
                   >
-                    <Repeat className="w-8 h-8 text-primary" />
+                    <div className="w-14 h-14 rounded-full bg-primary/10 group-hover:bg-primary/20 flex items-center justify-center transition-colors">
+                      <FreqIcon className="w-7 h-7 text-primary" />
+                    </div>
                     <span className="font-semibold text-foreground">
                       {direction === 'rtl' ? labelAr[f.frequencyType] : f.frequencyType.replace('_', ' ')}
                     </span>
