@@ -1402,8 +1402,8 @@ export default function EvaluationForm() {
                             </motion.div>
                           )}
 
-                          {/* Warning for low critical scores */}
-                          {criterion.isCritical && currentScore === ANSWER_NO && (
+                          {/* Warning for low critical scores (works for Yes/No and Rating) */}
+                          {criterion.isCritical && isCounted(currentScore) && (currentScore as number) <= 3 && (
                             <motion.div
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}
