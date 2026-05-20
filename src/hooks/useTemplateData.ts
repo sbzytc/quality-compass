@@ -13,6 +13,8 @@ export interface TemplateCriterion {
   priorityLevel?: 'critical' | 'high' | 'medium' | 'low' | null;
   frequencyType?: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'semi_annual' | 'yearly' | null;
   violationValue?: number | null;
+  answerType?: 'yes_no' | 'rating';
+  yesIsPositive?: boolean;
 }
 
 export interface TemplateCategory {
@@ -109,6 +111,8 @@ export function useActiveTemplate() {
               sortOrder: c.sort_order,
               priorityLevel: (meta?.level as any) ?? null,
               frequencyType: (meta?.frequencyType as any) ?? null,
+              answerType: ((c as any).answer_type as any) ?? 'yes_no',
+              yesIsPositive: (c as any).yes_is_positive ?? true,
             };
           }),
       }));
