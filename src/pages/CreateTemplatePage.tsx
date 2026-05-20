@@ -40,6 +40,8 @@ interface QuestionForm {
   description: string;
   maxScore: number;
   weight: number;
+  answerType: 'yes_no' | 'rating';
+  yesIsPositive: boolean;
 }
 
 interface PriorityForm {
@@ -69,6 +71,8 @@ const makeQuestion = (): QuestionForm => ({
   description: '',
   maxScore: 5,
   weight: 100,
+  answerType: 'yes_no',
+  yesIsPositive: true,
 });
 
 const makePriority = (level: PriorityLevel = 'medium'): PriorityForm => ({
@@ -281,6 +285,8 @@ export default function CreateTemplatePage() {
               weight: q.weight,
               is_critical: p.level === 'critical',
               sort_order: qIdx,
+              answer_type: q.answerType,
+              yes_is_positive: q.yesIsPositive,
             }));
             const { error: critErr } = await supabase.from('template_criteria').insert(rows);
             if (critErr) throw critErr;
