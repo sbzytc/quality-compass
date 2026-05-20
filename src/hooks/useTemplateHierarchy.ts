@@ -11,6 +11,8 @@ export interface HCriterion {
   isCritical: boolean;
   sortOrder: number;
   violationValue: number | null;
+  answerType: 'yes_no' | 'rating';
+  yesIsPositive: boolean;
 }
 
 export interface HPriority {
@@ -128,6 +130,8 @@ export function useTemplateHierarchy() {
                       isCritical: c.is_critical,
                       sortOrder: c.sort_order,
                         violationValue: c.violation_value !== null && c.violation_value !== undefined ? Number(c.violation_value) : null,
+                        answerType: (c.answer_type as any) ?? 'yes_no',
+                        yesIsPositive: c.yes_is_positive ?? true,
                     })),
                 })),
             })),

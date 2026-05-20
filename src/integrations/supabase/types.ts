@@ -1662,6 +1662,7 @@ export type Database = {
       }
       template_criteria: {
         Row: {
+          answer_type: string
           category_id: string
           created_at: string
           description: string | null
@@ -1674,8 +1675,10 @@ export type Database = {
           sort_order: number
           violation_value: number | null
           weight: number
+          yes_is_positive: boolean
         }
         Insert: {
+          answer_type?: string
           category_id: string
           created_at?: string
           description?: string | null
@@ -1688,8 +1691,10 @@ export type Database = {
           sort_order?: number
           violation_value?: number | null
           weight?: number
+          yes_is_positive?: boolean
         }
         Update: {
+          answer_type?: string
           category_id?: string
           created_at?: string
           description?: string | null
@@ -1702,6 +1707,7 @@ export type Database = {
           sort_order?: number
           violation_value?: number | null
           weight?: number
+          yes_is_positive?: boolean
         }
         Relationships: [
           {

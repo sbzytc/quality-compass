@@ -40,6 +40,8 @@ interface QuestionForm {
   description: string;
   maxScore: number;
   weight: number;
+  answerType: 'yes_no' | 'rating';
+  yesIsPositive: boolean;
 }
 
 interface PriorityForm {
@@ -69,6 +71,8 @@ const makeQuestion = (): QuestionForm => ({
   description: '',
   maxScore: 5,
   weight: 100,
+  answerType: 'yes_no',
+  yesIsPositive: true,
 });
 
 const makePriority = (level: PriorityLevel = 'medium'): PriorityForm => ({
@@ -281,6 +285,8 @@ export default function CreateTemplatePage() {
               weight: q.weight,
               is_critical: p.level === 'critical',
               sort_order: qIdx,
+              answer_type: q.answerType,
+              yes_is_positive: q.yesIsPositive,
             }));
             const { error: critErr } = await supabase.from('template_criteria').insert(rows);
             if (critErr) throw critErr;
@@ -504,6 +510,30 @@ export default function CreateTemplatePage() {
                                       className="h-9"
                                     />
                                     <div className="flex items-center gap-3 flex-wrap">
+                                      <div className="flex items-center gap-1">
+                                        <Label className="text-xs">{isAr ? 'نوع الإجابة' : 'Answer Type'}</Label>
+                                        <select
+                                          value={q.answerType}
+                                          onChange={e => updateQuestion(d.localId, f.localId, p.localId, q.localId, { answerType: e.target.value as 'yes_no' | 'rating' })}
+                                          className="h-8 rounded-md border bg-white px-2 text-xs"
+                                        >
+                                          <option value="yes_no">{isAr ? 'نعم / لا' : 'Yes / No'}</option>
+                                          <option value="rating">{isAr ? 'تقييم 1–5' : 'Rating 1–5'}</option>
+                                        </select>
+                                      </div>
+                                      {q.answerType === 'yes_no' && (
+                                        <div className="flex items-center gap-1">
+                                          <Label className="text-xs">{isAr ? 'الإجابة الصحيحة' : 'Correct Answer'}</Label>
+                                          <select
+                                            value={q.yesIsPositive ? 'yes' : 'no'}
+                                            onChange={e => updateQuestion(d.localId, f.localId, p.localId, q.localId, { yesIsPositive: e.target.value === 'yes' })}
+                                            className="h-8 rounded-md border bg-white px-2 text-xs"
+                                          >
+                                            <option value="yes">{isAr ? 'نعم' : 'Yes'}</option>
+                                            <option value="no">{isAr ? 'لا' : 'No'}</option>
+                                          </select>
+                                        </div>
+                                      )}
                                       <div className="flex items-center gap-1">
                                         <Label className="text-xs">{isAr ? 'أعلى درجة' : 'Max'}</Label>
                                         <Input
