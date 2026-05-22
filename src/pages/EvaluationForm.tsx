@@ -1629,7 +1629,7 @@ export default function EvaluationForm() {
                 size="lg"
                 className="gap-2 min-w-[140px]" 
                 disabled={!selectedBranch || isSavingDraft || isSubmitting}
-                onClick={handleSubmit}
+                onClick={() => handleSubmit()}
               >
                 {isSubmitting ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
