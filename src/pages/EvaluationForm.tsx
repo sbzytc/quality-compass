@@ -1742,6 +1742,38 @@ export default function EvaluationForm() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Uniform Answers Confirmation Dialog */}
+      <Dialog open={showUniformConfirm} onOpenChange={setShowUniformConfirm}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-score-average">
+              <AlertTriangle className="w-5 h-5" />
+              {direction === 'rtl' ? 'تأكيد الإرسال' : 'Confirm Submission'}
+            </DialogTitle>
+            <DialogDescription className="pt-2">
+              {direction === 'rtl'
+                ? 'جميع إجاباتك موحدة على كل الأسئلة. هل أنت متأكد أنك تريد إرسال التقييم بهذا الشكل؟'
+                : 'All your answers are identical across every question. Are you sure you want to submit?'}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 mt-4">
+            <Button variant="outline" onClick={() => setShowUniformConfirm(false)}>
+              {direction === 'rtl' ? 'مراجعة' : 'Review'}
+            </Button>
+            <Button
+              onClick={() => {
+                setShowUniformConfirm(false);
+                handleSubmit(true);
+              }}
+              className="gap-2"
+            >
+              <Check className="w-4 h-4" />
+              {direction === 'rtl' ? 'نعم، إرسال' : 'Yes, submit'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
