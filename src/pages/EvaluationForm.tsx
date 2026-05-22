@@ -1028,7 +1028,7 @@ export default function EvaluationForm() {
                       domainName: direction === 'rtl' ? (d.nameAr || d.name) : d.name,
                       freqId: f.id,
                       freqType: f.frequencyType,
-                      priorityName: direction === 'rtl' ? (p.nameAr || p.name) : p.name,
+                      priorityName: p.priorityLevel,
                       criterionName: direction === 'rtl' ? (c.nameAr || c.name) : c.name,
                     });
                     if (hits.length >= 30) break;
