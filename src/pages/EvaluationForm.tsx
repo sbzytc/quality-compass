@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronRight, ChevronDown, Camera, MessageSquare, AlertTriangle, Check, Save, ArrowLeft, MapPin, AlertCircle, Eye, Pencil, FileText, Clock, X, Image, CalendarDays, CalendarRange, Layers, Repeat, Shirt, HeartPulse, FileCheck2, SeparatorHorizontal, FlaskConical, Truck, Megaphone, ScanBarcode, Wrench, Sparkles, Building2, Utensils, Users, ClipboardCheck, Store, Warehouse, Coffee, Soup, Banknote, Sun, Calendar, CalendarClock } from 'lucide-react';
+import { ChevronRight, ChevronDown, Camera, MessageSquare, AlertTriangle, Check, Save, ArrowLeft, MapPin, AlertCircle, Eye, Pencil, FileText, Clock, X, Image, CalendarDays, CalendarRange, Layers, Repeat, Shirt, HeartPulse, FileCheck2, SeparatorHorizontal, FlaskConical, Truck, Megaphone, ScanBarcode, Wrench, Sparkles, Building2, Utensils, Users, ClipboardCheck, Store, Warehouse, Coffee, Soup, Banknote, Sun, Calendar, CalendarClock, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
@@ -80,6 +81,7 @@ export default function EvaluationForm() {
   const { data: hierarchy, isLoading: templateLoading } = useTemplateHierarchy();
   const [selectedDomainId, setSelectedDomainId] = useState<string | null>(null);
   const [selectedFrequencyId, setSelectedFrequencyId] = useState<string | null>(null);
+  const [questionSearch, setQuestionSearch] = useState<string>('');
 
   const selectedDomain = useMemo(
     () => hierarchy?.domains.find(d => d.id === selectedDomainId) || null,
@@ -1005,7 +1007,102 @@ export default function EvaluationForm() {
       )}
 
       {/* Domain selector: pick which area to evaluate */}
-      {selectedBranch && !selectedDomainId && hierarchy && (
+      {selectedBranch && !selectedDomainId && hierarchy && (() => {
+        const q = questionSearch.trim().toLowerCase();
+        type Hit = {
+          domainId: string; domainName: string;
+          freqId: string; freqType: string;
+          priorityName: string;
+          criterionName: string;
+        };
+        const hits: Hit[] = [];
+        if (q.length >= 2) {
+          for (const d of hierarchy.domains) {
+            for (const f of d.frequencies) {
+              for (const p of f.priorities) {
+                for (const c of p.criteria) {
+                  const txt = `${c.name || ''} ${c.nameAr || ''}`.toLowerCase();
+                  if (txt.includes(q)) {
+                    hits.push({
+                      domainId: d.id,
+                      domainName: direction === 'rtl' ? (d.nameAr || d.name) : d.name,
+                      freqId: f.id,
+                      freqType: f.frequencyType,
+                      priorityName: p.priorityLevel,
+                      criterionName: direction === 'rtl' ? (c.nameAr || c.name) : c.name,
+                    });
+                    if (hits.length >= 30) break;
+                  }
+                }
+                if (hits.length >= 30) break;
+              }
+              if (hits.length >= 30) break;
+            }
+            if (hits.length >= 30) break;
+          }
+        }
+        const freqLabelAr: Record<string, string> = { daily:'يومي', weekly:'أسبوعي', monthly:'شهري', quarterly:'ربعي', semi_annual:'نصف سنوي', yearly:'سنوي' };
+        const priorityLabelAr: Record<string, string> = { critical:'حرج', high:'عالي', medium:'متوسط', low:'منخفض' };
+        return (
+        <>
+        {/* Question search */}
+        <div className="glass-card p-6">
+          <label className="text-sm font-medium text-foreground block mb-2">
+            {direction === 'rtl' ? 'ابحث عن سؤال محدد' : 'Search for a specific question'}
+          </label>
+          <div className="relative">
+            <Search className="absolute top-1/2 -translate-y-1/2 start-3 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <Input
+              value={questionSearch}
+              onChange={(e) => setQuestionSearch(e.target.value)}
+              placeholder={direction === 'rtl'
+                ? 'اكتب الموضوع لمعرفة في أي تقييم يقع السؤال...'
+                : 'Type a topic to find which evaluation contains the question...'}
+              className="ps-9"
+            />
+          </div>
+          {q.length >= 2 && (
+            <div className="mt-4 space-y-2 max-h-80 overflow-y-auto">
+              {hits.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  {direction === 'rtl' ? 'لا توجد أسئلة مطابقة' : 'No matching questions'}
+                </p>
+              ) : (
+                hits.map((h, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      setSelectedDomainId(h.domainId);
+                      setSelectedFrequencyId(h.freqId);
+                      setQuestionSearch('');
+                      setScores({});
+                      setExpandedCategories([]);
+                    }}
+                    className="w-full text-start p-3 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-all"
+                  >
+                    <p className="font-medium text-foreground text-sm leading-snug">
+                      {h.criterionName}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-1.5 mt-2 text-xs">
+                      <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                        {h.domainName}
+                      </span>
+                      <span className="text-muted-foreground">›</span>
+                      <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                        {direction === 'rtl' ? freqLabelAr[h.freqType] : h.freqType.replace('_',' ')}
+                      </span>
+                      <span className="text-muted-foreground">›</span>
+                      <span className="text-muted-foreground">
+                        {direction === 'rtl' ? (priorityLabelAr[h.priorityName] || h.priorityName) : h.priorityName}
+                      </span>
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+
         <div className="glass-card p-8">
           <h3 className="text-lg font-semibold text-foreground text-center mb-2">
             {direction === 'rtl' ? 'اختر المجال' : 'Select Domain'}
@@ -1047,7 +1144,9 @@ export default function EvaluationForm() {
             </div>
           )}
         </div>
-      )}
+        </>
+        );
+      })()}
 
       {/* Frequency selector: appears after a domain is chosen */}
       {selectedBranch && selectedDomain && !selectedFrequencyId && (
