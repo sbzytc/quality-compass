@@ -456,7 +456,56 @@ export default function EvaluationForm() {
     }
   };
 
-  const handleSubmit = async () => {
+  // Normalize a criterion's score into a label so we can detect uniform answers
+  // across mixed answer types (Yes/No vs Rating) and polarities.
+  const normalizeAnswer = (criterion: any, score: number): string => {
+    if (score === ANSWER_NA) return 'na';
+    if (criterion.answerType === 'yes_no') {
+      const yesVal = criterion.yesIsPositive === false ? ANSWER_NO : ANSWER_YES;
+      return score === yesVal ? 'yes' : 'no';
+    }
+    return `r${score}`;
+  };
+
+  // Apply a single answer to every criterion in the current template.
+  const applyBulkAnswer = (kind: 'yes' | 'no' | 'na' | number) => {
+    if (!templateData) return;
+    if (!evaluationStartTime) setEvaluationStartTime(new Date());
+    const next: Record<string, Score> = { ...scores };
+    templateData.categories.forEach((cat: any) => {
+      cat.criteria.forEach((c: any) => {
+        let value: number;
+        if (kind === 'na') {
+          value = ANSWER_NA;
+        } else if (c.answerType === 'yes_no') {
+          // Map kind to yes/no semantics for this criterion
+          let wantYes: boolean;
+          if (kind === 'yes') wantYes = true;
+          else if (kind === 'no') wantYes = false;
+          else wantYes = (kind as number) >= 3; // numeric → derive yes/no
+          const yesVal = c.yesIsPositive === false ? ANSWER_NO : ANSWER_YES;
+          const noVal = c.yesIsPositive === false ? ANSWER_YES : ANSWER_NO;
+          value = wantYes ? yesVal : noVal;
+        } else {
+          // rating
+          if (kind === 'yes') value = ANSWER_YES;
+          else if (kind === 'no') value = ANSWER_NO;
+          else value = kind as number;
+        }
+        next[c.id] = {
+          ...next[c.id],
+          criterionId: c.id,
+          score: value,
+          notes: next[c.id]?.notes || '',
+        };
+      });
+    });
+    setScores(next);
+    setValidationErrors([]);
+    toast.success(direction === 'rtl' ? 'تم تعميم الإجابة على كل الأسئلة' : 'Answer applied to all questions');
+  };
+
+  const handleSubmit = async (skipUniformCheck = false) => {
     const unanswered = getUnansweredCriteria();
     
     if (unanswered.length > 0) {
