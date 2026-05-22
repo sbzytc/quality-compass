@@ -81,6 +81,7 @@ export default function EvaluationForm() {
   const { data: hierarchy, isLoading: templateLoading } = useTemplateHierarchy();
   const [selectedDomainId, setSelectedDomainId] = useState<string | null>(null);
   const [selectedFrequencyId, setSelectedFrequencyId] = useState<string | null>(null);
+  const [questionSearch, setQuestionSearch] = useState<string>('');
 
   const selectedDomain = useMemo(
     () => hierarchy?.domains.find(d => d.id === selectedDomainId) || null,
