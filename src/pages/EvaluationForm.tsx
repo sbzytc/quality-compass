@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronRight, ChevronDown, Camera, MessageSquare, AlertTriangle, Check, Save, ArrowLeft, MapPin, AlertCircle, Eye, Pencil, FileText, Clock, X, Image, CalendarDays, CalendarRange, Layers, Repeat, Shirt, HeartPulse, FileCheck2, SeparatorHorizontal, FlaskConical, Truck, Megaphone, ScanBarcode, Wrench, Sparkles, Building2, Utensils, Users, ClipboardCheck, Store, Warehouse, Coffee, Soup, Banknote, Sun, Calendar, CalendarClock } from 'lucide-react';
+import { ChevronRight, ChevronDown, Camera, MessageSquare, AlertTriangle, Check, Save, ArrowLeft, MapPin, AlertCircle, Eye, Pencil, FileText, Clock, X, Image, CalendarDays, CalendarRange, Layers, Repeat, Shirt, HeartPulse, FileCheck2, SeparatorHorizontal, FlaskConical, Truck, Megaphone, ScanBarcode, Wrench, Sparkles, Building2, Utensils, Users, ClipboardCheck, Store, Warehouse, Coffee, Soup, Banknote, Sun, Calendar, CalendarClock, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
