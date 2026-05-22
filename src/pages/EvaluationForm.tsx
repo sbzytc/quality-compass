@@ -1277,6 +1277,57 @@ export default function EvaluationForm() {
       {/* Categories - only show when branch, domain, frequency are chosen and template loaded */}
       {selectedBranch && selectedFrequency && templateData && (
         <div className="space-y-4">
+          {/* Bulk-fill panel: apply one answer to every question */}
+          <div className="glass-card p-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-medium text-foreground me-2">
+                {direction === 'rtl' ? 'تعميم الإجابة على الكل:' : 'Apply to all:'}
+              </span>
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-emerald-500/40 text-emerald-700 hover:bg-emerald-500/10"
+                onClick={() => applyBulkAnswer('yes')}
+              >
+                {direction === 'rtl' ? 'نعم' : 'Yes'}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-red-500/40 text-red-700 hover:bg-red-500/10"
+                onClick={() => applyBulkAnswer('no')}
+              >
+                {direction === 'rtl' ? 'لا' : 'No'}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => applyBulkAnswer('na')}
+              >
+                {direction === 'rtl' ? 'لا ينطبق' : 'N/A'}
+              </Button>
+              <span className="mx-1 text-muted-foreground text-sm">
+                {direction === 'rtl' ? '— أو رقم:' : '— or rating:'}
+              </span>
+              {[1, 2, 3, 4, 5].map((n) => (
+                <Button
+                  key={n}
+                  size="sm"
+                  variant="outline"
+                  className="w-9 px-0"
+                  onClick={() => applyBulkAnswer(n)}
+                >
+                  {n}
+                </Button>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              {direction === 'rtl'
+                ? 'يتم تطبيق الاختيار على جميع الأسئلة، ويمكنك تعديل أي سؤال يدوياً قبل الإرسال.'
+                : 'The selected value is applied to every question. You can still edit any answer manually before submitting.'}
+            </p>
+          </div>
+
           {templateData.categories.map((category) => {
             const isExpanded = expandedCategories.includes(category.id);
             const catProgress = getCategoryProgress(category.id);
