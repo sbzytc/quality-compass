@@ -130,6 +130,7 @@ export default function EvaluationForm() {
   const [currentDraftId, setCurrentDraftId] = useState<string | null>(draftId);
   const [isLoadingDraft, setIsLoadingDraft] = useState(!!draftId);
   const [evaluationStartTime, setEvaluationStartTime] = useState<Date | null>(null);
+  const [showUniformConfirm, setShowUniformConfirm] = useState(false);
   
   // Duplicate evaluation check state
   const [existingEvaluation, setExistingEvaluation] = useState<ExistingEvaluation | null>(null);
@@ -455,7 +456,56 @@ export default function EvaluationForm() {
     }
   };
 
-  const handleSubmit = async () => {
+  // Normalize a criterion's score into a label so we can detect uniform answers
+  // across mixed answer types (Yes/No vs Rating) and polarities.
+  const normalizeAnswer = (criterion: any, score: number): string => {
+    if (score === ANSWER_NA) return 'na';
+    if (criterion.answerType === 'yes_no') {
+      const yesVal = criterion.yesIsPositive === false ? ANSWER_NO : ANSWER_YES;
+      return score === yesVal ? 'yes' : 'no';
+    }
+    return `r${score}`;
+  };
+
+  // Apply a single answer to every criterion in the current template.
+  const applyBulkAnswer = (kind: 'yes' | 'no' | 'na' | number) => {
+    if (!templateData) return;
+    if (!evaluationStartTime) setEvaluationStartTime(new Date());
+    const next: Record<string, Score> = { ...scores };
+    templateData.categories.forEach((cat: any) => {
+      cat.criteria.forEach((c: any) => {
+        let value: number;
+        if (kind === 'na') {
+          value = ANSWER_NA;
+        } else if (c.answerType === 'yes_no') {
+          // Map kind to yes/no semantics for this criterion
+          let wantYes: boolean;
+          if (kind === 'yes') wantYes = true;
+          else if (kind === 'no') wantYes = false;
+          else wantYes = (kind as number) >= 3; // numeric → derive yes/no
+          const yesVal = c.yesIsPositive === false ? ANSWER_NO : ANSWER_YES;
+          const noVal = c.yesIsPositive === false ? ANSWER_YES : ANSWER_NO;
+          value = wantYes ? yesVal : noVal;
+        } else {
+          // rating
+          if (kind === 'yes') value = ANSWER_YES;
+          else if (kind === 'no') value = ANSWER_NO;
+          else value = kind as number;
+        }
+        next[c.id] = {
+          ...next[c.id],
+          criterionId: c.id,
+          score: value,
+          notes: next[c.id]?.notes || '',
+        };
+      });
+    });
+    setScores(next);
+    setValidationErrors([]);
+    toast.success(direction === 'rtl' ? 'تم تعميم الإجابة على كل الأسئلة' : 'Answer applied to all questions');
+  };
+
+  const handleSubmit = async (skipUniformCheck = false) => {
     const unanswered = getUnansweredCriteria();
     
     if (unanswered.length > 0) {
@@ -482,8 +532,24 @@ export default function EvaluationForm() {
       return;
     }
     
-    // Clear validation errors and proceed with submission
+    // Clear validation errors
     setValidationErrors([]);
+
+    // Detect uniform answers across the whole form and ask for confirmation
+    if (!skipUniformCheck && templateData) {
+      const labels = new Set<string>();
+      templateData.categories.forEach((cat: any) => {
+        cat.criteria.forEach((c: any) => {
+          const s = scores[c.id]?.score;
+          if (s !== undefined) labels.add(normalizeAnswer(c, s));
+        });
+      });
+      if (labels.size === 1) {
+        setShowUniformConfirm(true);
+        return;
+      }
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -1211,6 +1277,57 @@ export default function EvaluationForm() {
       {/* Categories - only show when branch, domain, frequency are chosen and template loaded */}
       {selectedBranch && selectedFrequency && templateData && (
         <div className="space-y-4">
+          {/* Bulk-fill panel: apply one answer to every question */}
+          <div className="glass-card p-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-medium text-foreground me-2">
+                {direction === 'rtl' ? 'تعميم الإجابة على الكل:' : 'Apply to all:'}
+              </span>
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-emerald-500/40 text-emerald-700 hover:bg-emerald-500/10"
+                onClick={() => applyBulkAnswer('yes')}
+              >
+                {direction === 'rtl' ? 'نعم' : 'Yes'}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-red-500/40 text-red-700 hover:bg-red-500/10"
+                onClick={() => applyBulkAnswer('no')}
+              >
+                {direction === 'rtl' ? 'لا' : 'No'}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => applyBulkAnswer('na')}
+              >
+                {direction === 'rtl' ? 'لا ينطبق' : 'N/A'}
+              </Button>
+              <span className="mx-1 text-muted-foreground text-sm">
+                {direction === 'rtl' ? '— أو رقم:' : '— or rating:'}
+              </span>
+              {[1, 2, 3, 4, 5].map((n) => (
+                <Button
+                  key={n}
+                  size="sm"
+                  variant="outline"
+                  className="w-9 px-0"
+                  onClick={() => applyBulkAnswer(n)}
+                >
+                  {n}
+                </Button>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              {direction === 'rtl'
+                ? 'يتم تطبيق الاختيار على جميع الأسئلة، ويمكنك تعديل أي سؤال يدوياً قبل الإرسال.'
+                : 'The selected value is applied to every question. You can still edit any answer manually before submitting.'}
+            </p>
+          </div>
+
           {templateData.categories.map((category) => {
             const isExpanded = expandedCategories.includes(category.id);
             const catProgress = getCategoryProgress(category.id);
@@ -1579,7 +1696,7 @@ export default function EvaluationForm() {
                 size="lg"
                 className="gap-2 min-w-[140px]" 
                 disabled={!selectedBranch || isSavingDraft || isSubmitting}
-                onClick={handleSubmit}
+                onClick={() => handleSubmit()}
               >
                 {isSubmitting ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -1623,6 +1740,38 @@ export default function EvaluationForm() {
               {direction === 'rtl' ? 'اختر فرعاً آخر' : 'Choose Another Branch'}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Uniform Answers Confirmation Dialog */}
+      <Dialog open={showUniformConfirm} onOpenChange={setShowUniformConfirm}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-score-average">
+              <AlertTriangle className="w-5 h-5" />
+              {direction === 'rtl' ? 'تأكيد الإرسال' : 'Confirm Submission'}
+            </DialogTitle>
+            <DialogDescription className="pt-2">
+              {direction === 'rtl'
+                ? 'جميع إجاباتك موحدة على كل الأسئلة. هل أنت متأكد أنك تريد إرسال التقييم بهذا الشكل؟'
+                : 'All your answers are identical across every question. Are you sure you want to submit?'}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 mt-4">
+            <Button variant="outline" onClick={() => setShowUniformConfirm(false)}>
+              {direction === 'rtl' ? 'مراجعة' : 'Review'}
+            </Button>
+            <Button
+              onClick={() => {
+                setShowUniformConfirm(false);
+                handleSubmit(true);
+              }}
+              className="gap-2"
+            >
+              <Check className="w-4 h-4" />
+              {direction === 'rtl' ? 'نعم، إرسال' : 'Yes, submit'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
