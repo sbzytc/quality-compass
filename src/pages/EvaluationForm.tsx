@@ -1042,6 +1042,7 @@ export default function EvaluationForm() {
           }
         }
         const freqLabelAr: Record<string, string> = { daily:'يومي', weekly:'أسبوعي', monthly:'شهري', quarterly:'ربعي', semi_annual:'نصف سنوي', yearly:'سنوي' };
+        const priorityLabelAr: Record<string, string> = { critical:'حرج', high:'عالي', medium:'متوسط', low:'منخفض' };
         return (
         <>
         {/* Question search */}
@@ -1091,7 +1092,9 @@ export default function EvaluationForm() {
                         {direction === 'rtl' ? freqLabelAr[h.freqType] : h.freqType.replace('_',' ')}
                       </span>
                       <span className="text-muted-foreground">›</span>
-                      <span className="text-muted-foreground">{h.priorityName}</span>
+                      <span className="text-muted-foreground">
+                        {direction === 'rtl' ? (priorityLabelAr[h.priorityName] || h.priorityName) : h.priorityName}
+                      </span>
                     </div>
                   </button>
                 ))
