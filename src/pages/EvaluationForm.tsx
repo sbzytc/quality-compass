@@ -130,6 +130,7 @@ export default function EvaluationForm() {
   const [currentDraftId, setCurrentDraftId] = useState<string | null>(draftId);
   const [isLoadingDraft, setIsLoadingDraft] = useState(!!draftId);
   const [evaluationStartTime, setEvaluationStartTime] = useState<Date | null>(null);
+  const [showUniformConfirm, setShowUniformConfirm] = useState(false);
   
   // Duplicate evaluation check state
   const [existingEvaluation, setExistingEvaluation] = useState<ExistingEvaluation | null>(null);
