@@ -532,8 +532,24 @@ export default function EvaluationForm() {
       return;
     }
     
-    // Clear validation errors and proceed with submission
+    // Clear validation errors
     setValidationErrors([]);
+
+    // Detect uniform answers across the whole form and ask for confirmation
+    if (!skipUniformCheck && templateData) {
+      const labels = new Set<string>();
+      templateData.categories.forEach((cat: any) => {
+        cat.criteria.forEach((c: any) => {
+          const s = scores[c.id]?.score;
+          if (s !== undefined) labels.add(normalizeAnswer(c, s));
+        });
+      });
+      if (labels.size === 1) {
+        setShowUniformConfirm(true);
+        return;
+      }
+    }
+
     setIsSubmitting(true);
 
     try {
