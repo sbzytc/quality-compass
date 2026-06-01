@@ -176,7 +176,8 @@ export function useFindingStats() {
       const total = allFindings.length;
 
       const assigned = allFindings.filter(f => f.assigned_to).length;
-      const unassigned = allFindings.filter(f => !f.assigned_to && !['resolved', 'pending_review', 'pending_manager_review'].includes(f.status)).length;
+      // Unassigned is shown as a sub-count under the "Open" stat, so scope it strictly to open findings.
+      const unassigned = allFindings.filter(f => !f.assigned_to && f.status === 'open').length;
 
       const now = new Date();
       const overdue = allFindings.filter(f => 
