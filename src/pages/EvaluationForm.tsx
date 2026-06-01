@@ -21,6 +21,8 @@ import { differenceInHours } from 'date-fns';
 
 type FrequencyType = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'semi_annual' | 'yearly';
 
+const frequencyLabelAr: Record<string, string> = { daily: 'يومي', weekly: 'أسبوعي', monthly: 'شهري', quarterly: 'ربعي', semi_annual: 'نصف سنوي', yearly: 'سنوي' };
+
 // Map a domain name (Arabic or English) to a suitable Lucide icon.
 function getDomainIcon(nameAr: string | null | undefined, nameEn: string | null | undefined) {
   const s = `${nameAr || ''} ${nameEn || ''}`.toLowerCase();
