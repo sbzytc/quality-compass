@@ -130,14 +130,19 @@ export default function CEODashboard() {
 
   const resolutionLegendItems = useMemo(() => ([
     {
-      name: language === 'ar' ? 'تم الحل' : 'Resolved',
+      name: language === 'ar' ? 'تم الاعتماد' : 'Approved',
       value: findingStats?.resolved || 0,
       color: 'hsl(var(--score-excellent))',
     },
     {
-      name: language === 'ar' ? 'بانتظار المراجعة' : 'Pending Review',
+      name: language === 'ar' ? 'مراجعة المقيّم' : 'Assessor Review',
       value: findingStats?.pendingReview || 0,
       color: 'hsl(var(--primary))',
+    },
+    {
+      name: language === 'ar' ? 'موافقة المدير' : 'Manager Review',
+      value: findingStats?.pendingManagerReview || 0,
+      color: 'hsl(var(--score-average))',
     },
     {
       name: language === 'ar' ? 'قيد المعالجة' : 'In Progress',
@@ -622,8 +627,9 @@ export default function CEODashboard() {
               {[
                 { label: language === 'ar' ? 'مفتوح' : 'Open', count: findingStats?.open || 0, color: 'bg-score-critical', filter: 'open' },
                 { label: language === 'ar' ? 'قيد المعالجة' : 'In Progress', count: findingStats?.inProgress || 0, color: 'bg-score-average', filter: 'in_progress' },
-                { label: language === 'ar' ? 'بانتظار المراجعة' : 'Pending Review', count: findingStats?.pendingReview || 0, color: 'bg-primary', filter: 'pending_review' },
-                { label: language === 'ar' ? 'تم الحل' : 'Resolved', count: findingStats?.resolved || 0, color: 'bg-score-excellent', filter: 'resolved' },
+                { label: language === 'ar' ? 'موافقة المدير' : 'Manager Review', count: findingStats?.pendingManagerReview || 0, color: 'bg-score-average', filter: 'pending_manager_review' },
+                { label: language === 'ar' ? 'مراجعة المقيّم' : 'Assessor Review', count: findingStats?.pendingReview || 0, color: 'bg-primary', filter: 'pending_review' },
+                { label: language === 'ar' ? 'تم الاعتماد' : 'Approved', count: findingStats?.resolved || 0, color: 'bg-score-excellent', filter: 'resolved' },
                 { label: language === 'ar' ? 'مرفوض' : 'Rejected', count: findingStats?.rejected || 0, color: 'bg-score-weak', filter: 'rejected' },
                 { label: language === 'ar' ? 'متأخر' : 'Overdue', count: findingStats?.overdue || 0, color: 'bg-orange-500', filter: 'overdue' },
               ].map((item) => (
