@@ -1217,6 +1217,18 @@ export default function EvaluationForm() {
             </div>
           )}
         </div>
+
+        {/* End Evaluation: go back to home if user is done */}
+        <div className="flex justify-center">
+          <Button
+            size="lg"
+            variant="outline"
+            onClick={() => navigate('/')}
+            className="h-14 px-10 text-base font-semibold border-2 border-primary/40 text-primary hover:bg-primary hover:text-primary-foreground transition-all"
+          >
+            {direction === 'rtl' ? 'إنهاء التقييم' : 'End Evaluation'}
+          </Button>
+        </div>
         </>
         );
       })()}
