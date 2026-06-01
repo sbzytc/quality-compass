@@ -152,9 +152,9 @@ export default function EvaluationForm() {
     if (templateData?.id) {
       setActiveTemplateId(templateData.id);
     }
-    // Expand first category by default
+    // Expand all categories by default
     if (templateData?.categories?.length && expandedCategories.length === 0) {
-      setExpandedCategories([templateData.categories[0].id]);
+      setExpandedCategories(templateData.categories.map(c => c.id));
     }
   }, [templateData]);
 
