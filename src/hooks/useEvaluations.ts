@@ -7,6 +7,7 @@ export interface EvaluationWithDetails {
   id: string;
   branchId: string;
   branchName: string;
+  branchNameAr?: string | null;
   templateId: string;
   templateName: string;
   assessorId: string;
@@ -36,7 +37,7 @@ export function useEvaluations() {
         .from('evaluations')
         .select(`
           *,
-          branches:branch_id (name),
+          branches:branch_id (name, name_ar),
           evaluation_templates:template_id (name)
         `)
         .eq('is_archived', false);
@@ -60,6 +61,7 @@ export function useEvaluations() {
         id: e.id,
         branchId: e.branch_id,
         branchName: (e.branches as any)?.name || 'Unknown',
+        branchNameAr: (e.branches as any)?.name_ar,
         templateId: e.template_id,
         templateName: (e.evaluation_templates as any)?.name || 'Unknown',
         assessorId: e.assessor_id,
@@ -84,7 +86,7 @@ export function useArchivedEvaluations() {
         .from('evaluations')
         .select(`
           *,
-          branches:branch_id (name),
+          branches:branch_id (name, name_ar),
           evaluation_templates:template_id (name)
         `)
         .eq('is_archived', true)
@@ -104,6 +106,7 @@ export function useArchivedEvaluations() {
         id: e.id,
         branchId: e.branch_id,
         branchName: (e.branches as any)?.name || 'Unknown',
+        branchNameAr: (e.branches as any)?.name_ar,
         templateId: e.template_id,
         templateName: (e.evaluation_templates as any)?.name || 'Unknown',
         assessorId: e.assessor_id,
