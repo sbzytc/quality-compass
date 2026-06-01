@@ -13,6 +13,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGoBack } from '@/hooks/useGoBack';
 import { useBranches } from '@/hooks/useBranches';
+import { useCompanyScope } from '@/hooks/useCompanyScope';
 import { useTemplateHierarchy } from '@/hooks/useTemplateHierarchy';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
