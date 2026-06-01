@@ -130,14 +130,19 @@ export default function CEODashboard() {
 
   const resolutionLegendItems = useMemo(() => ([
     {
-      name: language === 'ar' ? 'تم الحل' : 'Resolved',
+      name: language === 'ar' ? 'تم الاعتماد' : 'Approved',
       value: findingStats?.resolved || 0,
       color: 'hsl(var(--score-excellent))',
     },
     {
-      name: language === 'ar' ? 'بانتظار المراجعة' : 'Pending Review',
+      name: language === 'ar' ? 'مراجعة المقيّم' : 'Assessor Review',
       value: findingStats?.pendingReview || 0,
       color: 'hsl(var(--primary))',
+    },
+    {
+      name: language === 'ar' ? 'موافقة المدير' : 'Manager Review',
+      value: findingStats?.pendingManagerReview || 0,
+      color: 'hsl(var(--score-average))',
     },
     {
       name: language === 'ar' ? 'قيد المعالجة' : 'In Progress',
