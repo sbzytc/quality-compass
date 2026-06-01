@@ -741,22 +741,20 @@ export default function EvaluationForm() {
 
       toast.success(
         direction === 'rtl' 
-          ? 'تم إرسال التقييم بنجاح! يمكنك البدء بتقييم جديد.'
-          : 'Evaluation submitted successfully! You can start a new evaluation.',
+          ? 'تم إرسال التقييم بنجاح! يمكنك اختيار مجال آخر لنفس الفرع.'
+          : 'Evaluation submitted successfully! You can pick another domain for the same branch.',
         { duration: 4000 }
       );
 
-      // Reset form to empty state
-      setSelectedBranchId('');
+      // Keep the branch selected so the user can evaluate another domain on it
       setSelectedDomainId(null);
       setSelectedFrequencyId(null);
       setScores({});
       setExpandedCategories(['cat-1']);
       setCurrentNotes(null);
       setCurrentDraftId(null);
-      
-      // Navigate to previous evaluations to see the submitted entry
-      navigate('/evaluations/previous');
+      // Scroll to top so the domain selector is in view
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
       console.error('Error submitting evaluation:', error);
       toast.error(direction === 'rtl' ? 'فشل في إرسال التقييم' : 'Failed to submit evaluation');
@@ -1218,6 +1216,18 @@ export default function EvaluationForm() {
               })}
             </div>
           )}
+        </div>
+
+        {/* End Evaluation: go back to home if user is done */}
+        <div className="flex justify-center">
+          <Button
+            size="lg"
+            variant="outline"
+            onClick={() => navigate('/')}
+            className="h-14 px-10 text-base font-semibold border-2 border-primary/40 text-primary hover:bg-primary hover:text-primary-foreground transition-all"
+          >
+            {direction === 'rtl' ? 'إنهاء التقييم' : 'End Evaluation'}
+          </Button>
         </div>
         </>
         );
