@@ -393,6 +393,7 @@ export default function EvaluationForm() {
             status: 'draft',
             period_type: selectedFrequency?.frequencyType || 'yearly',
             started_at: evaluationStartTime?.toISOString() || new Date().toISOString(),
+            company_id: activeCompanyId,
           })
           .select()
           .single();
@@ -593,6 +594,7 @@ export default function EvaluationForm() {
             started_at: startTime.toISOString(),
             duration_minutes: durationMinutes,
             period_type: selectedFrequency?.frequencyType || 'yearly',
+            company_id: activeCompanyId,
           })
           .select()
           .single();
