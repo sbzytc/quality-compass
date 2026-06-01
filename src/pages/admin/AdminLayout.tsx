@@ -1,7 +1,8 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { Building2, Package, CreditCard, Activity, LogOut, ArrowLeft } from 'lucide-react';
+import { Building2, Package, CreditCard, Activity, LogOut, ArrowLeft, Home } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCurrentCompany } from '@/contexts/CurrentCompanyContext';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -16,6 +17,15 @@ export default function AdminLayout() {
   const { signOut, profile } = useAuth();
   const { language } = useLanguage();
   const navigate = useNavigate();
+  const { companies, switchCompany } = useCurrentCompany();
+
+  const goToDefaultWorkspace = async () => {
+    const defaultWs = companies.find(c => c.workspace_type === 'food') || companies[0];
+    if (defaultWs) {
+      await switchCompany(defaultWs.id);
+      navigate('/dashboard/ceo');
+    }
+  };
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-[hsl(var(--background))] to-[hsl(var(--muted))]">
@@ -38,6 +48,10 @@ export default function AdminLayout() {
           </NavLink>
         ))}
         <div className="mt-auto flex flex-col gap-2">
+          <Button variant="default" size="sm" onClick={goToDefaultWorkspace} className="justify-start gap-2">
+            <Home className="w-4 h-4" />
+            {language === 'ar' ? 'العودة لرصدة الافتراضية' : 'Back to Rasdah Default'}
+          </Button>
           <Button variant="ghost" size="sm" onClick={() => navigate('/super-admin')} className="justify-start gap-2">
             <ArrowLeft className="w-4 h-4" />
             {language === 'ar' ? 'اختيار الوجهة' : 'Destination picker'}
