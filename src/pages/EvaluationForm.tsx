@@ -655,6 +655,7 @@ export default function EvaluationForm() {
           const criticalFindings: {
             evaluation_id: string;
             branch_id: string;
+            company_id: string | null;
             criterion_id: string;
             score: number;
             max_score: number;
@@ -670,6 +671,7 @@ export default function EvaluationForm() {
                 criticalFindings.push({
                   evaluation_id: evaluationId!,
                   branch_id: selectedBranchId,
+                  company_id: activeCompanyId,
                   criterion_id: criterion.id,
                   score: s!.score,
                   max_score: criterion.maxScore,
