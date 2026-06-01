@@ -13,6 +13,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGoBack } from '@/hooks/useGoBack';
 import { useBranches } from '@/hooks/useBranches';
+import { useCompanyScope } from '@/hooks/useCompanyScope';
 import { useTemplateHierarchy } from '@/hooks/useTemplateHierarchy';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -77,6 +78,7 @@ export default function EvaluationForm() {
   const goBack = useGoBack('/');
   const { t, direction } = useLanguage();
   const { user } = useAuth();
+  const { companyId: activeCompanyId } = useCompanyScope();
   const { data: branches, isLoading: branchesLoading } = useBranches();
   const { data: hierarchy, isLoading: templateLoading } = useTemplateHierarchy();
   const [selectedDomainId, setSelectedDomainId] = useState<string | null>(null);
@@ -391,6 +393,7 @@ export default function EvaluationForm() {
             status: 'draft',
             period_type: selectedFrequency?.frequencyType || 'yearly',
             started_at: evaluationStartTime?.toISOString() || new Date().toISOString(),
+            company_id: activeCompanyId,
           })
           .select()
           .single();
@@ -591,6 +594,7 @@ export default function EvaluationForm() {
             started_at: startTime.toISOString(),
             duration_minutes: durationMinutes,
             period_type: selectedFrequency?.frequencyType || 'yearly',
+            company_id: activeCompanyId,
           })
           .select()
           .single();
