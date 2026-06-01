@@ -1208,7 +1208,10 @@ export default function EvaluationForm() {
                     {direction === 'rtl' ? (d.nameAr || d.name) : d.name}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    {d.frequencies.length} {direction === 'rtl' ? 'تكرار' : 'frequencies'}
+                    {direction === 'rtl'
+                      ? d.frequencies.map(f => frequencyLabelAr[f.frequencyType] || f.frequencyType).join(' - ')
+                      : `${d.frequencies.length} frequency${d.frequencies.length !== 1 ? 'ies' : 'y'}`
+                    }
                   </span>
                 </button>
                 );
@@ -1243,7 +1246,6 @@ export default function EvaluationForm() {
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
               {selectedDomain.frequencies.map(f => {
-                const labelAr: Record<string, string> = { daily:'يومي', weekly:'أسبوعي', monthly:'شهري', quarterly:'ربعي', semi_annual:'نصف سنوي', yearly:'سنوي' };
                 const frequencyIcons: Record<string, typeof Sun> = {
                   daily: Sun,
                   weekly: CalendarRange,
