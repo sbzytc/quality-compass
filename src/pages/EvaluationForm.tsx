@@ -1030,7 +1030,7 @@ export default function EvaluationForm() {
                     ) : branches && branches.length > 0 ? (
                       branches.filter(b => b.isActive).map((branch) => (
                         <SelectItem key={branch.id} value={branch.id}>
-                          {branch.name} • {branch.city || 'N/A'}
+                          {(direction === 'rtl' ? (branch.nameAr || branch.name) : branch.name)} • {branch.city || 'N/A'}
                         </SelectItem>
                       ))
                     ) : (

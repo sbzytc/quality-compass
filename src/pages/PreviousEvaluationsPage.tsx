@@ -61,8 +61,9 @@ export default function PreviousEvaluationsPage() {
       if (evaluation.branchId !== profile.branch_id) return false;
     }
 
+    const displayBranchName = language === 'ar' ? (evaluation.branchNameAr || evaluation.branchName) : evaluation.branchName;
     const matchesSearch = 
-      evaluation.branchName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      displayBranchName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       evaluation.templateName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       evaluation.assessorName.toLowerCase().includes(searchQuery.toLowerCase());
     
@@ -379,7 +380,7 @@ export default function PreviousEvaluationsPage() {
                             <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                               <Building2 className="h-4 w-4 text-primary" />
                             </div>
-                            <span className="font-medium whitespace-nowrap">{evaluation.branchName}</span>
+                            <span className="font-medium whitespace-nowrap">{language === 'ar' ? (evaluation.branchNameAr || evaluation.branchName) : evaluation.branchName}</span>
                           </div>
                         </TableCell>
                         <TableCell className="whitespace-nowrap text-sm">{evaluation.templateName}</TableCell>

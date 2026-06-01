@@ -41,7 +41,7 @@ export default function ArchivedEvaluationsPage() {
     }
 
     const matchesSearch = 
-      evaluation.branchName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (language === 'ar' ? (evaluation.branchNameAr || evaluation.branchName) : evaluation.branchName).toLowerCase().includes(searchQuery.toLowerCase()) ||
       evaluation.templateName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       evaluation.assessorName.toLowerCase().includes(searchQuery.toLowerCase());
     
@@ -175,7 +175,7 @@ export default function ArchivedEvaluationsPage() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Building2 className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">{evaluation.branchName}</span>
+                          <span className="font-medium">{language === 'ar' ? (evaluation.branchNameAr || evaluation.branchName) : evaluation.branchName}</span>
                         </div>
                       </TableCell>
                       <TableCell>{evaluation.templateName}</TableCell>
