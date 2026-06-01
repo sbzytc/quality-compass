@@ -78,6 +78,7 @@ export default function EvaluationForm() {
   const goBack = useGoBack('/');
   const { t, direction } = useLanguage();
   const { user } = useAuth();
+  const { companyId: activeCompanyId } = useCompanyScope();
   const { data: branches, isLoading: branchesLoading } = useBranches();
   const { data: hierarchy, isLoading: templateLoading } = useTemplateHierarchy();
   const [selectedDomainId, setSelectedDomainId] = useState<string | null>(null);
