@@ -1269,7 +1269,7 @@ export default function EvaluationForm() {
                       <FreqIcon className="w-7 h-7 text-primary" />
                     </div>
                     <span className="font-semibold text-foreground">
-                      {direction === 'rtl' ? labelAr[f.frequencyType] : f.frequencyType.replace('_', ' ')}
+                      {direction === 'rtl' ? frequencyLabelAr[f.frequencyType] : f.frequencyType.replace('_', ' ')}
                     </span>
                     <span className="text-xs text-muted-foreground">
                       {f.priorities.reduce((n, p) => n + p.criteria.length, 0)} {direction === 'rtl' ? 'سؤال' : 'questions'}
