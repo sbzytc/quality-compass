@@ -534,7 +534,7 @@ export default function UsersPage() {
                               <Send className="w-4 h-4 me-2" />
                               {language === 'ar' ? 'إعادة إرسال الدعوة' : 'Resend Invitation'}
                             </DropdownMenuItem>
-                            {primaryRole === 'branch_manager' && (
+                            {(user.roles.includes('branch_manager') || primaryRole === 'branch_manager') && (isAdmin || isSuperAdmin) && (
                               <>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
