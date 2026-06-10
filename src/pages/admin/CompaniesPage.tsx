@@ -12,11 +12,11 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Plus, Building2, Stethoscope, Utensils, ChevronRight, Users, Activity, LifeBuoy, Power, Shield, MoreHorizontal, KeyRound, UserX, UserCheck, Trash2, UserPlus, AlertTriangle } from 'lucide-react';
+import { Plus, Building2, Stethoscope, Utensils, ChevronRight, Users, Activity, LifeBuoy, Power, Shield, MoreHorizontal, KeyRound, UserX, UserCheck, Trash2, UserPlus, AlertTriangle, Building } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuditLog } from '@/hooks/useAuditLog';
-import { useCreateUser, useInviteUser, useResetPassword, useUpdateUserRole, useUpdateUserStatus } from '@/hooks/useUsers';
+import { useCreateUser, useInviteUser, useResetPassword, useUpdateUserRole, useUpdateUserStatus, useAssignBranch } from '@/hooks/useUsers';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import type { AppRole } from '@/contexts/AuthContext';
 
@@ -312,11 +312,27 @@ function CompanyMembersTab({ companyId }: { companyId: string }) {
   const updateStatus = useUpdateUserStatus();
   const updateRole = useUpdateUserRole();
   const resetPassword = useResetPassword();
+  const assignBranch = useAssignBranch();
 
   const [addOpen, setAddOpen] = useState(false);
   const [form, setForm] = useState({ email: '', fullName: '', password: '', role: 'assessor' as AppRole });
   const [confirmRemove, setConfirmRemove] = useState<{ id: string; name?: string } | null>(null);
   const [changeRoleFor, setChangeRoleFor] = useState<{ userId: string; role: AppRole; name?: string } | null>(null);
+  const [assignBranchFor, setAssignBranchFor] = useState<{ userId: string; branchId: string; name?: string } | null>(null);
+
+  const { data: companyBranches } = useQuery({
+    queryKey: ['admin-company-branches', companyId],
+    enabled: !!companyId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('branches')
+        .select('id, name, name_ar, manager_id')
+        .eq('company_id', companyId)
+        .order('name', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-company-members', companyId],
@@ -500,6 +516,17 @@ function CompanyMembersTab({ companyId }: { companyId: string }) {
                 <DropdownMenuItem onClick={() => setChangeRoleFor({ userId: m.user_id, role: (m.appRoles?.[0] as AppRole) || 'assessor', name: m.profile?.full_name })}>
                   <Shield className="w-3.5 h-3.5 me-2" />{language === 'ar' ? 'تغيير الصلاحية' : 'Change role'}
                 </DropdownMenuItem>
+                {m.appRoles?.includes('branch_manager') && (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      const current = (companyBranches || []).find((b: any) => b.manager_id === m.user_id);
+                      setAssignBranchFor({ userId: m.user_id, branchId: current?.id || '', name: m.profile?.full_name });
+                    }}
+                  >
+                    <Building className="w-3.5 h-3.5 me-2" />
+                    {language === 'ar' ? 'تعيين / تغيير الفرع' : 'Assign / Change branch'}
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={() => handleResetPassword(m)}>
                   <KeyRound className="w-3.5 h-3.5 me-2" />{language === 'ar' ? 'إعادة كلمة المرور' : 'Reset password'}
                 </DropdownMenuItem>
@@ -561,6 +588,53 @@ function CompanyMembersTab({ companyId }: { companyId: string }) {
           )}
           <DialogFooter>
             <Button onClick={handleRoleChange} disabled={updateRole.isPending}>{language === 'ar' ? 'حفظ' : 'Save'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign branch dialog */}
+      <Dialog open={!!assignBranchFor} onOpenChange={(o) => !o && setAssignBranchFor(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {language === 'ar' ? `تعيين فرع لـ ${assignBranchFor?.name || ''}` : `Assign branch for ${assignBranchFor?.name || ''}`}
+            </DialogTitle>
+          </DialogHeader>
+          {assignBranchFor && (
+            <Select
+              value={assignBranchFor.branchId}
+              onValueChange={(v) => setAssignBranchFor({ ...assignBranchFor, branchId: v })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={language === 'ar' ? 'اختر فرعًا' : 'Select a branch'} />
+              </SelectTrigger>
+              <SelectContent>
+                {(companyBranches || []).map((b: any) => (
+                  <SelectItem key={b.id} value={b.id}>
+                    {language === 'ar' ? (b.name_ar || b.name) : b.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          <DialogFooter>
+            <Button
+              disabled={!assignBranchFor?.branchId || assignBranch.isPending}
+              onClick={async () => {
+                if (!assignBranchFor?.branchId) return;
+                try {
+                  await assignBranch.mutateAsync({ userId: assignBranchFor.userId, branchId: assignBranchFor.branchId });
+                  await audit({ action: 'branch_assigned', entityType: 'user', entityId: assignBranchFor.userId, companyId, details: { branch_id: assignBranchFor.branchId } });
+                  toast.success(language === 'ar' ? 'تم تعيين الفرع' : 'Branch assigned');
+                  setAssignBranchFor(null);
+                  refresh();
+                } catch (e: any) {
+                  toast.error(e?.message);
+                }
+              }}
+            >
+              {language === 'ar' ? 'حفظ' : 'Save'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
