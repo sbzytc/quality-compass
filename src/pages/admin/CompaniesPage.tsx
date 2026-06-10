@@ -516,6 +516,17 @@ function CompanyMembersTab({ companyId }: { companyId: string }) {
                 <DropdownMenuItem onClick={() => setChangeRoleFor({ userId: m.user_id, role: (m.appRoles?.[0] as AppRole) || 'assessor', name: m.profile?.full_name })}>
                   <Shield className="w-3.5 h-3.5 me-2" />{language === 'ar' ? 'تغيير الصلاحية' : 'Change role'}
                 </DropdownMenuItem>
+                {m.appRoles?.includes('branch_manager') && (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      const current = (companyBranches || []).find((b: any) => b.manager_id === m.user_id);
+                      setAssignBranchFor({ userId: m.user_id, branchId: current?.id || '', name: m.profile?.full_name });
+                    }}
+                  >
+                    <Building className="w-3.5 h-3.5 me-2" />
+                    {language === 'ar' ? 'تعيين / تغيير الفرع' : 'Assign / Change branch'}
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={() => handleResetPassword(m)}>
                   <KeyRound className="w-3.5 h-3.5 me-2" />{language === 'ar' ? 'إعادة كلمة المرور' : 'Reset password'}
                 </DropdownMenuItem>
