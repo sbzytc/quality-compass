@@ -592,6 +592,53 @@ function CompanyMembersTab({ companyId }: { companyId: string }) {
         </DialogContent>
       </Dialog>
 
+      {/* Assign branch dialog */}
+      <Dialog open={!!assignBranchFor} onOpenChange={(o) => !o && setAssignBranchFor(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {language === 'ar' ? `تعيين فرع لـ ${assignBranchFor?.name || ''}` : `Assign branch for ${assignBranchFor?.name || ''}`}
+            </DialogTitle>
+          </DialogHeader>
+          {assignBranchFor && (
+            <Select
+              value={assignBranchFor.branchId}
+              onValueChange={(v) => setAssignBranchFor({ ...assignBranchFor, branchId: v })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={language === 'ar' ? 'اختر فرعًا' : 'Select a branch'} />
+              </SelectTrigger>
+              <SelectContent>
+                {(companyBranches || []).map((b: any) => (
+                  <SelectItem key={b.id} value={b.id}>
+                    {language === 'ar' ? (b.name_ar || b.name) : b.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          <DialogFooter>
+            <Button
+              disabled={!assignBranchFor?.branchId || assignBranch.isPending}
+              onClick={async () => {
+                if (!assignBranchFor?.branchId) return;
+                try {
+                  await assignBranch.mutateAsync({ userId: assignBranchFor.userId, branchId: assignBranchFor.branchId });
+                  await audit({ action: 'branch_assigned', entityType: 'user', entityId: assignBranchFor.userId, companyId, details: { branch_id: assignBranchFor.branchId } });
+                  toast.success(language === 'ar' ? 'تم تعيين الفرع' : 'Branch assigned');
+                  setAssignBranchFor(null);
+                  refresh();
+                } catch (e: any) {
+                  toast.error(e?.message);
+                }
+              }}
+            >
+              {language === 'ar' ? 'حفظ' : 'Save'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Confirm remove */}
       <AlertDialog open={!!confirmRemove} onOpenChange={(o) => !o && setConfirmRemove(null)}>
         <AlertDialogContent>
