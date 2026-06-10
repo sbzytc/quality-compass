@@ -12,11 +12,11 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Plus, Building2, Stethoscope, Utensils, ChevronRight, Users, Activity, LifeBuoy, Power, Shield, MoreHorizontal, KeyRound, UserX, UserCheck, Trash2, UserPlus, AlertTriangle } from 'lucide-react';
+import { Plus, Building2, Stethoscope, Utensils, ChevronRight, Users, Activity, LifeBuoy, Power, Shield, MoreHorizontal, KeyRound, UserX, UserCheck, Trash2, UserPlus, AlertTriangle, Building } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuditLog } from '@/hooks/useAuditLog';
-import { useCreateUser, useInviteUser, useResetPassword, useUpdateUserRole, useUpdateUserStatus } from '@/hooks/useUsers';
+import { useCreateUser, useInviteUser, useResetPassword, useUpdateUserRole, useUpdateUserStatus, useAssignBranch } from '@/hooks/useUsers';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import type { AppRole } from '@/contexts/AuthContext';
 
@@ -312,11 +312,27 @@ function CompanyMembersTab({ companyId }: { companyId: string }) {
   const updateStatus = useUpdateUserStatus();
   const updateRole = useUpdateUserRole();
   const resetPassword = useResetPassword();
+  const assignBranch = useAssignBranch();
 
   const [addOpen, setAddOpen] = useState(false);
   const [form, setForm] = useState({ email: '', fullName: '', password: '', role: 'assessor' as AppRole });
   const [confirmRemove, setConfirmRemove] = useState<{ id: string; name?: string } | null>(null);
   const [changeRoleFor, setChangeRoleFor] = useState<{ userId: string; role: AppRole; name?: string } | null>(null);
+  const [assignBranchFor, setAssignBranchFor] = useState<{ userId: string; branchId: string; name?: string } | null>(null);
+
+  const { data: companyBranches } = useQuery({
+    queryKey: ['admin-company-branches', companyId],
+    enabled: !!companyId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('branches')
+        .select('id, name, name_ar, manager_id')
+        .eq('company_id', companyId)
+        .order('name', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-company-members', companyId],
