@@ -143,42 +143,84 @@ export type Database = {
       }
       branches: {
         Row: {
+          activity_type: string | null
           address: string | null
+          area_m2: number | null
+          cameras_count: number | null
           city: string | null
+          code: string | null
           company_id: string | null
           created_at: string
+          details: Json
+          district: string | null
+          documents: Json
+          employees_count: number | null
+          extinguishers_count: number | null
+          gps: string | null
           id: string
           is_active: boolean
           manager_id: string | null
+          manager_name: string | null
+          manager_phone: string | null
           name: string
           name_ar: string | null
+          opened_at: string | null
           region_id: string | null
+          status: string
           updated_at: string
         }
         Insert: {
+          activity_type?: string | null
           address?: string | null
+          area_m2?: number | null
+          cameras_count?: number | null
           city?: string | null
+          code?: string | null
           company_id?: string | null
           created_at?: string
+          details?: Json
+          district?: string | null
+          documents?: Json
+          employees_count?: number | null
+          extinguishers_count?: number | null
+          gps?: string | null
           id?: string
           is_active?: boolean
           manager_id?: string | null
+          manager_name?: string | null
+          manager_phone?: string | null
           name: string
           name_ar?: string | null
+          opened_at?: string | null
           region_id?: string | null
+          status?: string
           updated_at?: string
         }
         Update: {
+          activity_type?: string | null
           address?: string | null
+          area_m2?: number | null
+          cameras_count?: number | null
           city?: string | null
+          code?: string | null
           company_id?: string | null
           created_at?: string
+          details?: Json
+          district?: string | null
+          documents?: Json
+          employees_count?: number | null
+          extinguishers_count?: number | null
+          gps?: string | null
           id?: string
           is_active?: boolean
           manager_id?: string | null
+          manager_name?: string | null
+          manager_phone?: string | null
           name?: string
           name_ar?: string | null
+          opened_at?: string | null
           region_id?: string | null
+          status?: string
           updated_at?: string
         }
         Relationships: [
@@ -290,6 +332,7 @@ export type Database = {
         Row: {
           created_at: string
           deleted_at: string | null
+          details: Json
           id: string
           is_sandbox: boolean
           logo_url: string | null
@@ -306,6 +349,7 @@ export type Database = {
         Insert: {
           created_at?: string
           deleted_at?: string | null
+          details?: Json
           id?: string
           is_sandbox?: boolean
           logo_url?: string | null
@@ -322,6 +366,7 @@ export type Database = {
         Update: {
           created_at?: string
           deleted_at?: string | null
+          details?: Json
           id?: string
           is_sandbox?: boolean
           logo_url?: string | null
