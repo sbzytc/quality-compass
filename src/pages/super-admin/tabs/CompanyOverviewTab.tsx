@@ -1,15 +1,38 @@
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Building2, Users, GitBranch, Activity, FlaskConical } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Building2, Users, GitBranch, Activity, FlaskConical, ExternalLink, Copy, Check } from 'lucide-react';
+import { useCurrentCompany } from '@/contexts/CurrentCompanyContext';
+import { toast } from '@/hooks/use-toast';
+import { useState } from 'react';
 
 export default function CompanyOverviewTab() {
   const { company } = useOutletContext<{ company: any }>();
   const { language } = useLanguage();
   const isRTL = language === 'ar';
+  const navigate = useNavigate();
+  const { switchCompany, refresh } = useCurrentCompany();
+  const [copied, setCopied] = useState(false);
+
+  const workspacePath = company.workspace_type === 'medical' ? '/clinic' : '/';
+  const workspaceUrl = `${window.location.origin}${workspacePath}`;
+
+  const openWorkspace = async () => {
+    await refresh();
+    await switchCompany(company.id);
+    navigate(workspacePath);
+  };
+
+  const copyLink = async () => {
+    await navigator.clipboard.writeText(workspaceUrl);
+    setCopied(true);
+    toast({ title: isRTL ? 'تم نسخ الرابط' : 'Link copied' });
+    setTimeout(() => setCopied(false), 1500);
+  };
 
   const { data: stats } = useQuery({
     queryKey: ['super-admin-company-stats', company.id],
@@ -57,6 +80,35 @@ export default function CompanyOverviewTab() {
               ? <Badge className="bg-amber-500 hover:bg-amber-500 text-white gap-1"><FlaskConical className="w-3 h-3" />{isRTL ? 'تجريبية' : 'Sandbox'}</Badge>
               : <Badge variant="outline">{isRTL ? 'حية' : 'Live'}</Badge>}
           />
+        </div>
+      </Card>
+
+      <Card className="p-5 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <ExternalLink className="w-4 h-4 text-primary" />
+              <h3 className="font-semibold">{isRTL ? 'الدخول على مساحة عمل الشركة' : 'Open company workspace'}</h3>
+            </div>
+            <p className="text-xs text-muted-foreground mb-2">
+              {isRTL
+                ? 'انتقل إلى مساحة العمل الخاصة بهذه الشركة كما يراها مستخدموها.'
+                : 'Jump into this company\'s workspace as its users see it.'}
+            </p>
+            <code className="text-xs bg-white/70 px-2 py-1 rounded border border-border/60 break-all">
+              {workspaceUrl}
+            </code>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={copyLink} className="gap-2">
+              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              {isRTL ? 'نسخ الرابط' : 'Copy link'}
+            </Button>
+            <Button size="sm" onClick={openWorkspace} className="gap-2">
+              <ExternalLink className="w-4 h-4" />
+              {isRTL ? 'فتح مساحة العمل' : 'Open workspace'}
+            </Button>
+          </div>
         </div>
       </Card>
 
