@@ -327,58 +327,75 @@ function BranchBarChart({
     );
   }
 
-  const height = Math.max(260, chartData.length * 44 + 60);
-
   return (
-    <div style={{ width: '100%', height }}>
+    <>
       <p className="text-xs text-muted-foreground mb-2">
-        {isAr ? 'اضغط على أي شريط لعرض تفاصيل مخالفات الفرع' : 'Click any bar to view branch violation details'}
+        {isAr ? 'اضغط على أي عمود لعرض تفاصيل مخالفات الفرع' : 'Click any bar to view branch violation details'}
       </p>
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart
-          data={chartData}
-          layout="vertical"
-          margin={{ top: 5, right: 24, left: 8, bottom: 5 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
-          <XAxis
-            type="number"
-            tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-            tickFormatter={(v) => new Intl.NumberFormat(isAr ? 'ar-SA' : 'en-US').format(v as number)}
-          />
-          <YAxis
-            type="category"
-            dataKey="name"
-            width={130}
-            tick={{ fontSize: 12, fill: 'hsl(var(--foreground))' }}
-            interval={0}
-          />
-          <RechartsTooltip
-            cursor={{ fill: 'hsl(var(--muted) / 0.4)' }}
-            contentStyle={{
-              backgroundColor: 'hsl(var(--card))',
-              border: '1px solid hsl(var(--border))',
-              borderRadius: '8px',
-              fontSize: '12px',
+      <div className="h-[300px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart
+            data={chartData}
+            margin={{ top: 24, right: 30, left: 20, bottom: 40 }}
+            onClick={(state: any) => {
+              if (state?.activePayload?.length) {
+                const p = state.activePayload[0].payload;
+                if (p?.summary) onSelect(p.summary);
+              }
             }}
-            formatter={(value: number, _n, ctx: any) => [
-              `${new Intl.NumberFormat(isAr ? 'ar-SA' : 'en-US').format(value)} ${isAr ? 'ر.س' : 'SAR'} · ${ctx?.payload?.count ?? 0} ${isAr ? 'مفتوحة' : 'open'}`,
-              isAr ? 'الغرامات' : 'Fines',
-            ]}
-          />
-          <Bar
-            dataKey="value"
-            radius={[0, 6, 6, 0]}
-            cursor="pointer"
-            onClick={(entry: any) => entry?.summary && onSelect(entry.summary)}
+            style={{ cursor: 'pointer' }}
           >
-            {chartData.map((d) => (
-              <Cell key={d.id} fill="hsl(var(--score-critical))" />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <XAxis
+              dataKey="name"
+              tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+              interval={0}
+              angle={-20}
+              textAnchor="end"
+              height={60}
+            />
+            <YAxis
+              tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+              tickFormatter={(v) => new Intl.NumberFormat(isAr ? 'ar-SA' : 'en-US').format(v as number)}
+            />
+            <RechartsTooltip
+              cursor={{ fill: 'hsl(var(--muted) / 0.4)' }}
+              contentStyle={{
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '8px',
+                fontSize: '12px',
+              }}
+              formatter={(value: number, _n, ctx: any) => [
+                `${new Intl.NumberFormat(isAr ? 'ar-SA' : 'en-US').format(value)} ${isAr ? 'ر.س' : 'SAR'} · ${ctx?.payload?.count ?? 0} ${isAr ? 'مفتوحة' : 'open'}`,
+                isAr ? 'الغرامات' : 'Fines',
+              ]}
+            />
+            <Bar
+              dataKey="value"
+              radius={[6, 6, 0, 0]}
+              maxBarSize={60}
+              label={({ x, y, width, value }: any) => (
+                <text
+                  x={x + width / 2}
+                  y={y - 8}
+                  textAnchor="middle"
+                  fontSize={12}
+                  fontWeight={700}
+                  fill="hsl(var(--foreground))"
+                >
+                  {new Intl.NumberFormat(isAr ? 'ar-SA' : 'en-US').format(value as number)}
+                </text>
+              )}
+            >
+              {chartData.map((d) => (
+                <Cell key={d.id} fill="hsl(var(--score-critical))" cursor="pointer" />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </>
   );
 }
 
