@@ -123,7 +123,7 @@ export default function AddCompanyDialog({ open, onOpenChange, workspace }: Prop
           name_ar: company.name_ar || null,
           slug,
           workspace_type: workspace,
-          sector_type: workspace === 'food' ? 'fnb' : 'medical',
+          sector_type: workspace === 'food' ? 'fnb' : 'clinic',
           primary_module: workspace === 'food' ? 'food_restaurants' : 'medical_clinics',
           status: 'active',
           details,
