@@ -333,7 +333,7 @@ export default function MyTickets() {
                   <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
                     {ticket.attachments.map((url: string, index: number) => (
                       <div key={index} className="flex-shrink-0 block w-12 h-12 rounded-md overflow-hidden border pointer-events-none">
-                        <img src={url} alt="Attachment" className="w-full h-full object-cover" />
+                        <SignedImage src={url} bucket="support-attachments" alt="Attachment" className="w-full h-full object-cover" />
                       </div>
                     ))}
                   </div>

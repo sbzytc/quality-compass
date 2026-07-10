@@ -638,13 +638,14 @@ export default function EvaluationViewPage() {
                                   </p>
                                   <div className="flex flex-wrap gap-2">
                                     {savedScore.attachments.map((url, idx) => (
-                                      <a key={idx} href={url} target="_blank" rel="noopener noreferrer">
-                                        <img
-                                          src={url}
-                                          alt={`Attachment ${idx + 1}`}
-                                          className="h-20 w-20 object-cover rounded-lg border hover:opacity-80 transition-opacity cursor-pointer"
-                                        />
-                                      </a>
+                                      <SignedImage
+                                        key={idx}
+                                        src={url}
+                                        bucket="evaluation-attachments"
+                                        wrapWithLink
+                                        alt={`Attachment ${idx + 1}`}
+                                        className="h-20 w-20 object-cover rounded-lg border hover:opacity-80 transition-opacity cursor-pointer"
+                                      />
                                     ))}
                                   </div>
                                 </div>

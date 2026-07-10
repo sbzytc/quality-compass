@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 import { X, Send, Clock, User } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
+import { SignedImage } from '@/components/SignedAttachment';
 
 interface TicketDetailsDialogProps {
   ticket: SupportTicket | null;

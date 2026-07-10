@@ -855,9 +855,14 @@ export default function FindingsPage() {
                       <span className="text-xs font-medium text-muted-foreground">{isAr ? 'صور المقيّم:' : 'Assessor Photos:'}</span>
                       <div className="flex flex-wrap gap-1">
                         {selectedFinding.attachments.map((url, i) => (
-                          <a key={i} href={url} target="_blank" rel="noopener noreferrer">
-                            <img src={url} alt="" className="w-14 h-14 rounded border border-border object-cover hover:opacity-80 transition-opacity" />
-                          </a>
+                          <SignedImage
+                            key={i}
+                            src={url}
+                            bucket="evaluation-attachments"
+                            wrapWithLink
+                            alt=""
+                            className="w-14 h-14 rounded border border-border object-cover hover:opacity-80 transition-opacity"
+                          />
                         ))}
                       </div>
                     </div>
@@ -1134,9 +1139,14 @@ export default function FindingsPage() {
                     <span className="text-sm font-medium text-muted-foreground">{isAr ? 'صور الملاحظة:' : 'Finding Photos:'}</span>
                     <div className="flex flex-wrap gap-2">
                       {viewFinding.attachments.map((url, i) => (
-                        <a key={i} href={url} target="_blank" rel="noopener noreferrer">
-                          <img src={url} alt="" className="w-20 h-20 rounded-lg border border-border object-cover hover:opacity-80 transition-opacity" />
-                        </a>
+                        <SignedImage
+                          key={i}
+                          src={url}
+                          bucket="evaluation-attachments"
+                          wrapWithLink
+                          alt=""
+                          className="w-20 h-20 rounded-lg border border-border object-cover hover:opacity-80 transition-opacity"
+                        />
                       ))}
                     </div>
                   </div>
@@ -1245,9 +1255,14 @@ export default function FindingsPage() {
                               {entry.attachments && entry.attachments.length > 0 && (
                                 <div className="flex flex-wrap gap-1 ps-1">
                                   {entry.attachments.map((url, i) => (
-                                    <a key={i} href={url} target="_blank" rel="noopener noreferrer">
-                                      <img src={url} alt="" className="w-12 h-12 rounded border border-border object-cover hover:opacity-80" />
-                                    </a>
+                                    <SignedImage
+                                      key={i}
+                                      src={url}
+                                      bucket="evaluation-attachments"
+                                      wrapWithLink
+                                      alt=""
+                                      className="w-12 h-12 rounded border border-border object-cover hover:opacity-80"
+                                    />
                                   ))}
                                 </div>
                               )}
