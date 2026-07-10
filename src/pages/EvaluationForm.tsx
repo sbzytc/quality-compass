@@ -832,18 +832,14 @@ export default function EvaluationForm() {
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}/${criterionId}/${Date.now()}.${fileExt}`;
 
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from('evaluation-attachments')
         .upload(fileName, file);
 
       if (error) throw error;
 
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('evaluation-attachments')
-        .getPublicUrl(fileName);
-
-      const imageUrl = urlData.publicUrl;
+      // Store the storage path (bucket is private; signed URLs are generated on read)
+      const imageUrl = fileName;
 
       // Add to attachments
       setScores((prev) => ({

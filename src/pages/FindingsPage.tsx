@@ -205,10 +205,7 @@ export default function FindingsPage() {
           .from('evaluation-attachments')
           .upload(path, file);
         if (uploadError) throw uploadError;
-        const { data: urlData } = supabase.storage
-          .from('evaluation-attachments')
-          .getPublicUrl(path);
-        uploadedUrls.push(urlData.publicUrl);
+        uploadedUrls.push(path);
       }
 
       const resolvedByManager = isBranchManager && !isBranchEmployee;
@@ -280,10 +277,7 @@ export default function FindingsPage() {
           .from('evaluation-attachments')
           .upload(path, file);
         if (uploadError) throw uploadError;
-        const { data: urlData } = supabase.storage
-          .from('evaluation-attachments')
-          .getPublicUrl(path);
-        uploadedUrls.push(urlData.publicUrl);
+        uploadedUrls.push(path);
       }
 
       if (isManagerReview) {

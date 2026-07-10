@@ -127,11 +127,7 @@ export default function MyTickets() {
 
         if (uploadError) throw uploadError;
 
-        const { data: publicUrlData } = supabase.storage
-          .from('support-attachments')
-          .getPublicUrl(fileName);
-
-        attachments.push(publicUrlData.publicUrl);
+        attachments.push(fileName);
       }
 
       // Determine final screen name
