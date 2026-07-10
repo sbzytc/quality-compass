@@ -123,9 +123,8 @@ export default function LoginPage() {
           ? 'تم تسجيل الدخول بنجاح!'
           : 'Login successful!'
       );
-      setTimeout(() => {
-        navigate('/', { replace: true });
-      }, 100);
+      // Redirect is handled by the useEffect once roles load,
+      // so admin users go to /admin and other users go to their own dashboard.
     }
 
     setLoading(false);
