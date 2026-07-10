@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Building2, Stethoscope, ShieldCheck, ArrowRight, Loader2 } from 'lucide-react';
+import { Utensils, Stethoscope, CreditCard, ArrowRight, Loader2 } from 'lucide-react';
 import { useCurrentCompany } from '@/contexts/CurrentCompanyContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,7 +10,7 @@ export default function SuperAdminLanding() {
   const navigate = useNavigate();
   const { language, direction } = useLanguage();
   const { roles, loading: authLoading } = useAuth();
-  const { companies, switchCompany, loading } = useCurrentCompany();
+  const { loading } = useCurrentCompany();
   const isRTL = direction === 'rtl';
 
   if (authLoading || loading) {
@@ -25,48 +25,36 @@ export default function SuperAdminLanding() {
     return <Navigate to="/" replace />;
   }
 
-  // Find workspaces by type
-  const clinicWs = companies.find(c => c.workspace_type === 'medical');
-  const defaultWs = companies.find(c => c.workspace_type === 'food') || companies[0];
-
-  const enterWorkspace = async (companyId: string, route: string) => {
-    await switchCompany(companyId);
-    navigate(route);
-  };
-
   const cards = [
     {
-      key: 'default',
-      title: isRTL ? 'رصدة الافتراضية' : 'Rasdah Default',
-      desc: isRTL ? 'الدخول لمساحة العمل الافتراضية (مطاعم/خدمات)' : 'Enter the default workspace (F&B / Services)',
-      icon: Building2,
-      color: 'from-blue-500/20 to-indigo-500/20',
-      iconColor: 'text-blue-600',
-      disabled: !defaultWs,
-      onClick: () => defaultWs && enterWorkspace(defaultWs.id, '/dashboard/ceo'),
-      badge: defaultWs ? (isRTL ? defaultWs.name_ar || defaultWs.name : defaultWs.name) : (isRTL ? 'غير متاح' : 'Unavailable'),
+      key: 'food',
+      title: isRTL ? 'موديول الأغذية / المطاعم' : 'Food / Restaurants Module',
+      desc: isRTL ? 'كل الشركات ضمن قطاع المطاعم والأغذية' : 'All companies in the F&B sector',
+      icon: Utensils,
+      color: 'from-orange-500/20 to-amber-500/20',
+      iconColor: 'text-orange-600',
+      onClick: () => navigate('/super-admin/sector/food'),
+      badge: isRTL ? 'قطاع' : 'Sector',
     },
     {
-      key: 'clinic',
-      title: isRTL ? 'قطاع العيادات' : 'Clinics Sector',
-      desc: isRTL ? 'الدخول لمساحة عمل العيادات (مرضى، مواعيد، غرف)' : 'Enter the clinics workspace (patients, appointments, rooms)',
+      key: 'medical',
+      title: isRTL ? 'موديول الطبي / العيادات' : 'Medical / Clinics Module',
+      desc: isRTL ? 'كل الشركات ضمن قطاع العيادات والمراكز الطبية' : 'All companies in the clinics sector',
       icon: Stethoscope,
       color: 'from-emerald-500/20 to-teal-500/20',
       iconColor: 'text-emerald-600',
-      disabled: !clinicWs,
-      onClick: () => clinicWs && enterWorkspace(clinicWs.id, '/clinic/dashboard'),
-      badge: clinicWs ? (isRTL ? clinicWs.name_ar || clinicWs.name : clinicWs.name) : (isRTL ? 'غير متاح' : 'Unavailable'),
+      onClick: () => navigate('/super-admin/sector/medical'),
+      badge: isRTL ? 'قطاع' : 'Sector',
     },
     {
-      key: 'admin',
-      title: isRTL ? 'لوحة مدير النظام' : 'System Admin Panel',
-      desc: isRTL ? 'إدارة كل الشركات، الموديولات، الخطط، وسجلات التدقيق' : 'Manage all companies, modules, plans, and audit logs',
-      icon: ShieldCheck,
+      key: 'plans',
+      title: isRTL ? 'الخطط' : 'Plans',
+      desc: isRTL ? 'إدارة باقات الاشتراك المتاحة للشركات' : 'Manage subscription plans available to companies',
+      icon: CreditCard,
       color: 'from-purple-500/20 to-pink-500/20',
       iconColor: 'text-purple-600',
-      disabled: false,
-      onClick: () => navigate('/admin/companies'),
-      badge: isRTL ? 'كل الشركات' : 'All Companies',
+      onClick: () => navigate('/admin/plans'),
+      badge: isRTL ? 'إعدادات' : 'Settings',
     },
   ];
 
@@ -123,7 +111,7 @@ export default function SuperAdminLanding() {
         </div>
 
         <div className="text-center mt-8 text-xs text-muted-foreground">
-          {isRTL ? 'يمكنك التبديل بين هذه الوجهات لاحقاً من الهيدر' : 'You can switch between these destinations later from the header'}
+          {isRTL ? 'اختر قطاعاً لعرض شركاته أو ادخل على الخطط لإدارة الاشتراكات' : 'Choose a sector to view its companies or manage subscription plans'}
         </div>
       </div>
     </div>
