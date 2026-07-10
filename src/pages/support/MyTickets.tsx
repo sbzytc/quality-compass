@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { SignedImage } from '@/components/SignedAttachment';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSupportTickets } from '@/hooks/useSupportTickets';

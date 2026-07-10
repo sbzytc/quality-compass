@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { SignedImage } from '@/components/SignedAttachment';
 import { Image as ImageIcon } from 'lucide-react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
