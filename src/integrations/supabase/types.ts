@@ -290,6 +290,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_sandbox: boolean
           logo_url: string | null
           name: string
           name_ar: string | null
@@ -304,6 +305,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          is_sandbox?: boolean
           logo_url?: string | null
           name: string
           name_ar?: string | null
@@ -318,6 +320,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          is_sandbox?: boolean
           logo_url?: string | null
           name?: string
           name_ar?: string | null
