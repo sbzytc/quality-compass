@@ -368,8 +368,8 @@ function BranchBarChart({
             />
             <YAxis
               tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-              width={70}
-              tickMargin={8}
+              width={90}
+              tickMargin={22}
               tickFormatter={(v) => new Intl.NumberFormat(isAr ? 'ar-SA' : 'en-US').format(v as number)}
             />
             <RechartsTooltip
