@@ -12,7 +12,8 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { toast } from '@/hooks/use-toast';
-import { ArrowLeft, Building2, Utensils, Stethoscope, ChevronRight, FlaskConical, Loader2, Trash2, RotateCcw, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Building2, Utensils, Stethoscope, ChevronRight, FlaskConical, Loader2, Trash2, RotateCcw, AlertTriangle, Plus } from 'lucide-react';
+import AddCompanyDialog from './AddCompanyDialog';
 
 const SECTOR_META: Record<string, { workspace: 'food' | 'medical'; titleEn: string; titleAr: string; icon: any; gradient: string }> = {
   food: { workspace: 'food', titleEn: 'Food / Restaurants', titleAr: 'الأغذية / المطاعم', icon: Utensils, gradient: 'from-orange-500/20 to-amber-500/20' },
@@ -29,6 +30,7 @@ export default function SectorCompaniesPage() {
   const queryClient = useQueryClient();
   const [toDelete, setToDelete] = useState<any>(null);
   const [deleteSummary, setDeleteSummary] = useState<{ branches: number; users: number; evaluations: number; auditLogs: number } | null>(null);
+  const [addOpen, setAddOpen] = useState(false);
 
   const { data: companies, isLoading } = useQuery({
     queryKey: ['super-admin-sector-companies', meta.workspace],
@@ -107,12 +109,16 @@ export default function SectorCompaniesPage() {
           <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${meta.gradient} flex items-center justify-center`}>
             <SectorIcon className="w-7 h-7 text-foreground" />
           </div>
-          <div>
+          <div className="flex-1">
             <h1 className="text-3xl font-bold text-foreground">{isRTL ? meta.titleAr : meta.titleEn}</h1>
             <p className="text-sm text-muted-foreground">
               {isRTL ? 'اختر شركة للدخول على لوحة السوبر ادمن الخاصة بها' : 'Pick a company to open its Super Admin panel'}
             </p>
           </div>
+          <Button onClick={() => setAddOpen(true)} className="gap-2">
+            <Plus className="w-4 h-4" />
+            {isRTL ? 'إضافة شركة' : 'Add company'}
+          </Button>
         </div>
 
         {isLoading && (
@@ -236,6 +242,8 @@ export default function SectorCompaniesPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AddCompanyDialog open={addOpen} onOpenChange={setAddOpen} workspace={meta.workspace} />
     </div>
   );
 }
