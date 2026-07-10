@@ -222,7 +222,12 @@ export function TicketDetailsDialog({ ticket, isOpen, onClose, isSupportAgent = 
                       onClick={() => setFullscreenImage(url)}
                       className="cursor-pointer block w-24 h-24 rounded-md overflow-hidden border hover:opacity-80 transition-opacity"
                     >
-                      <img src={url} alt={`Attachment ${i + 1}`} className="w-full h-full object-cover" />
+                      <SignedImage
+                        src={url}
+                        bucket="support-attachments"
+                        alt={`Attachment ${i + 1}`}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                   ))}
                 </div>
