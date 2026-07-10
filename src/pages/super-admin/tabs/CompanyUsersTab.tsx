@@ -1,15 +1,30 @@
+import { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCreateUser, useResetPassword, useUpdateUserStatus, useUpdateUserRole } from '@/hooks/useUsers';
+import type { AppRole } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Users, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Users, Loader2, MoreHorizontal, KeyRound, Pencil, UserX, UserCheck, Plus } from 'lucide-react';
+import { toast } from 'sonner';
+
+const ASSIGNABLE_ROLES: AppRole[] = ['admin', 'executive', 'branch_manager', 'assessor', 'branch_employee', 'support_agent'];
 
 export default function CompanyUsersTab() {
   const { company } = useOutletContext<{ company: any }>();
   const { language } = useLanguage();
   const isRTL = language === 'ar';
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editing, setEditing] = useState<any | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['super-admin-company-users', company.id],
@@ -22,46 +37,270 @@ export default function CompanyUsersTab() {
       if (error) throw error;
       const ids = (cu || []).map(r => r.user_id);
       if (!ids.length) return [];
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('user_id, full_name, email, avatar_url')
-        .in('user_id', ids);
+      const [{ data: profiles }, { data: appRoles }] = await Promise.all([
+        supabase.from('profiles').select('user_id, full_name, email, phone, avatar_url, is_active').in('user_id', ids),
+        supabase.from('user_roles').select('user_id, role').in('user_id', ids),
+      ]);
       const pmap = new Map((profiles || []).map(p => [p.user_id, p]));
-      return (cu || []).map(r => ({ ...r, profile: pmap.get(r.user_id) }));
+      const rmap = new Map<string, AppRole[]>();
+      (appRoles || []).forEach(r => {
+        const list = rmap.get(r.user_id) || [];
+        list.push(r.role as AppRole);
+        rmap.set(r.user_id, list);
+      });
+      return (cu || []).map(r => ({ ...r, profile: pmap.get(r.user_id), appRoles: rmap.get(r.user_id) || [] }));
     },
   });
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Users className="w-6 h-6 text-primary" />
-          {isRTL ? 'المستخدمين' : 'Users'}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {isRTL ? 'أعضاء هذه الشركة وأدوارهم' : 'Members of this company and their roles'}
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Users className="w-6 h-6 text-primary" />
+            {isRTL ? 'المستخدمين' : 'Users'}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {isRTL ? 'أعضاء هذه الشركة وأدوارهم' : 'Members of this company and their roles'}
+          </p>
+        </div>
+        <Button onClick={() => setCreateOpen(true)} className="gap-2">
+          <Plus className="w-4 h-4" />
+          {isRTL ? 'إضافة مستخدم' : 'Add user'}
+        </Button>
       </div>
 
       {isLoading && <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>}
 
       <div className="space-y-2">
         {data?.map((m: any) => (
-          <Card key={m.id} className="p-4 flex items-center justify-between">
-            <div>
-              <div className="font-medium">{m.profile?.full_name || m.profile?.email || m.user_id}</div>
-              <div className="text-xs text-muted-foreground">{m.profile?.email}</div>
+          <Card key={m.id} className="p-4 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="font-medium truncate">{m.profile?.full_name || m.profile?.email || m.user_id}</div>
+              <div className="text-xs text-muted-foreground truncate">{m.profile?.email}</div>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline">{m.role}</Badge>
-              <Badge variant={m.is_active ? 'default' : 'secondary'}>
-                {m.is_active ? (isRTL ? 'نشط' : 'active') : (isRTL ? 'موقوف' : 'inactive')}
+            <div className="flex items-center gap-2 shrink-0">
+              {m.appRoles.length > 0 ? (
+                m.appRoles.map((r: AppRole) => <Badge key={r} variant="outline" className="text-[10px]">{r}</Badge>)
+              ) : (
+                <Badge variant="outline" className="text-[10px]">{m.role}</Badge>
+              )}
+              <Badge variant={m.profile?.is_active !== false ? 'default' : 'secondary'}>
+                {m.profile?.is_active !== false ? (isRTL ? 'نشط' : 'active') : (isRTL ? 'موقوف' : 'inactive')}
               </Badge>
+              <UserActions member={m} companyId={company.id} onEdit={() => setEditing(m)} />
             </div>
           </Card>
         ))}
         {data?.length === 0 && <div className="text-sm text-muted-foreground">{isRTL ? 'لا يوجد أعضاء بعد.' : 'No members yet.'}</div>}
       </div>
+
+      {createOpen && <CreateUserDialog companyId={company.id} onClose={() => setCreateOpen(false)} />}
+      {editing && <EditUserDialog member={editing} companyId={company.id} onClose={() => setEditing(null)} />}
     </div>
+  );
+}
+
+function UserActions({ member, companyId, onEdit }: { member: any; companyId: string; onEdit: () => void }) {
+  const { language } = useLanguage();
+  const isRTL = language === 'ar';
+  const qc = useQueryClient();
+  const resetPassword = useResetPassword();
+  const updateStatus = useUpdateUserStatus();
+  const [confirmReset, setConfirmReset] = useState(false);
+  const [confirmStatus, setConfirmStatus] = useState(false);
+
+  const active = member.profile?.is_active !== false;
+
+  const doReset = async () => {
+    try {
+      await resetPassword.mutateAsync({ userId: member.user_id, email: member.profile?.email });
+      toast.success(isRTL ? 'تم إرسال رابط إعادة التعيين' : 'Reset link sent');
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setConfirmReset(false);
+    }
+  };
+
+  const doToggle = async () => {
+    try {
+      await updateStatus.mutateAsync({ userId: member.user_id, isActive: !active });
+      qc.invalidateQueries({ queryKey: ['super-admin-company-users', companyId] });
+      toast.success(isRTL ? 'تم التحديث' : 'Updated');
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setConfirmStatus(false);
+    }
+  };
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button size="icon" variant="ghost"><MoreHorizontal className="w-4 h-4" /></Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={onEdit}>
+            <Pencil className="w-4 h-4 me-2" />
+            {isRTL ? 'تعديل البيانات والدور' : 'Edit info & role'}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setConfirmReset(true)}>
+            <KeyRound className="w-4 h-4 me-2" />
+            {isRTL ? 'إعادة تعيين كلمة المرور' : 'Reset password'}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => setConfirmStatus(true)} className={active ? 'text-destructive' : ''}>
+            {active
+              ? <><UserX className="w-4 h-4 me-2" />{isRTL ? 'إيقاف' : 'Deactivate'}</>
+              : <><UserCheck className="w-4 h-4 me-2" />{isRTL ? 'تفعيل' : 'Activate'}</>}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <AlertDialog open={confirmReset} onOpenChange={setConfirmReset}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{isRTL ? 'إعادة تعيين كلمة المرور؟' : 'Reset password?'}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {isRTL ? `سيتم إرسال رابط إلى ${member.profile?.email}` : `A reset link will be sent to ${member.profile?.email}`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
+            <AlertDialogAction onClick={doReset}>{isRTL ? 'إرسال' : 'Send'}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={confirmStatus} onOpenChange={setConfirmStatus}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {active ? (isRTL ? 'إيقاف هذا المستخدم؟' : 'Deactivate this user?') : (isRTL ? 'تفعيل هذا المستخدم؟' : 'Activate this user?')}
+            </AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
+            <AlertDialogAction onClick={doToggle} className={active ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : ''}>
+              {isRTL ? 'تأكيد' : 'Confirm'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}
+
+function EditUserDialog({ member, companyId, onClose }: { member: any; companyId: string; onClose: () => void }) {
+  const { language } = useLanguage();
+  const isRTL = language === 'ar';
+  const qc = useQueryClient();
+  const updateRole = useUpdateUserRole();
+  const [fullName, setFullName] = useState(member.profile?.full_name || '');
+  const [phone, setPhone] = useState(member.profile?.phone || '');
+  const initialRole = (member.appRoles?.[0] as AppRole) || 'assessor';
+  const [role, setRole] = useState<AppRole>(initialRole);
+
+  const save = useMutation({
+    mutationFn: async () => {
+      const { error: pErr } = await supabase
+        .from('profiles')
+        .update({ full_name: fullName, phone: phone || null })
+        .eq('user_id', member.user_id);
+      if (pErr) throw pErr;
+      if (role !== initialRole) {
+        await updateRole.mutateAsync({ userId: member.user_id, newRole: role });
+      }
+    },
+    onSuccess: () => {
+      toast.success(isRTL ? 'تم الحفظ' : 'Saved');
+      qc.invalidateQueries({ queryKey: ['super-admin-company-users', companyId] });
+      onClose();
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>{isRTL ? 'تعديل بيانات المستخدم' : 'Edit user'}</DialogTitle></DialogHeader>
+        <div className="space-y-4">
+          <div><Label>{isRTL ? 'البريد الإلكتروني' : 'Email'}</Label><Input value={member.profile?.email || ''} disabled className="mt-1" /></div>
+          <div><Label>{isRTL ? 'الاسم الكامل' : 'Full name'}</Label><Input value={fullName} onChange={e => setFullName(e.target.value)} className="mt-1" /></div>
+          <div><Label>{isRTL ? 'الجوال' : 'Phone'}</Label><Input value={phone} onChange={e => setPhone(e.target.value)} className="mt-1" /></div>
+          <div>
+            <Label>{isRTL ? 'الدور' : 'Role'}</Label>
+            <Select value={role} onValueChange={(v) => setRole(v as AppRole)}>
+              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {ASSIGNABLE_ROLES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+          <Button onClick={() => save.mutate()} disabled={save.isPending}>{isRTL ? 'حفظ' : 'Save'}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function CreateUserDialog({ companyId, onClose }: { companyId: string; onClose: () => void }) {
+  const { language } = useLanguage();
+  const isRTL = language === 'ar';
+  const qc = useQueryClient();
+  const createUser = useCreateUser();
+  const [form, setForm] = useState({ email: '', fullName: '', password: '', role: 'assessor' as AppRole });
+
+  const submit = async () => {
+    if (!form.email || !form.fullName || form.password.length < 6) {
+      toast.error(isRTL ? 'اكمل الحقول (كلمة المرور 6+ أحرف)' : 'Fill all fields (password 6+ chars)');
+      return;
+    }
+    try {
+      await createUser.mutateAsync({
+        email: form.email,
+        fullName: form.fullName,
+        password: form.password,
+        role: form.role,
+        forcePasswordChange: true,
+        companyId,
+      });
+      toast.success(isRTL ? 'تم إنشاء المستخدم' : 'User created');
+      qc.invalidateQueries({ queryKey: ['super-admin-company-users', companyId] });
+      onClose();
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>{isRTL ? 'إضافة مستخدم للشركة' : 'Add user to company'}</DialogTitle></DialogHeader>
+        <div className="space-y-4">
+          <div><Label>{isRTL ? 'الاسم الكامل' : 'Full name'}</Label><Input className="mt-1" value={form.fullName} onChange={e => setForm({ ...form, fullName: e.target.value })} /></div>
+          <div><Label>{isRTL ? 'البريد الإلكتروني' : 'Email'}</Label><Input type="email" className="mt-1" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></div>
+          <div><Label>{isRTL ? 'كلمة المرور المؤقتة' : 'Temporary password'}</Label><Input className="mt-1" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} /></div>
+          <div>
+            <Label>{isRTL ? 'الدور' : 'Role'}</Label>
+            <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v as AppRole })}>
+              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {ASSIGNABLE_ROLES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+          <Button onClick={submit} disabled={createUser.isPending}>{isRTL ? 'إنشاء' : 'Create'}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
