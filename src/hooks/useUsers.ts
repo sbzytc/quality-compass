@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { AppRole } from '@/contexts/AuthContext';
+import { AppRole, useAuth } from '@/contexts/AuthContext';
 
 export interface UserWithRole {
   id: string;
@@ -23,10 +23,11 @@ export interface UserWithRole {
 export function useUsers(opts?: { companyId?: string | null; isSuperAdmin?: boolean }) {
   const companyId = opts?.companyId ?? null;
   const isSuperAdmin = opts?.isSuperAdmin ?? false;
+  const { user } = useAuth();
 
   return useQuery({
     queryKey: ['users', isSuperAdmin ? 'all' : (companyId || 'none')],
-    enabled: isSuperAdmin || !!companyId,
+    enabled: !!user,
     queryFn: async () => {
       // Fetch all profiles (RLS allows admins to see all)
       const { data: profiles, error: profilesError } = await supabase
