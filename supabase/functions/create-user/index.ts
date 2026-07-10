@@ -11,10 +11,11 @@ interface CreateUserRequest {
   email: string;
   fullName: string;
   password: string;
-  role: "admin" | "executive" | "branch_manager" | "assessor" | "branch_employee" | "support_agent";
+  role: "admin" | "executive" | "branch_manager" | "assessor" | "branch_employee" | "support_agent" | "super_admin";
   forcePasswordChange: boolean;
   branchId?: string;
   companyId?: string;
+  superAdminScope?: "all" | "food" | "medical";
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -58,14 +59,23 @@ const handler = async (req: Request): Promise<Response> => {
       .eq("user_id", requestingUserId);
 
     const isAdmin = userRoles?.some((r) => r.role === "admin");
-    if (!isAdmin) {
+    const isSuperAdmin = userRoles?.some((r) => r.role === "super_admin");
+    if (!isAdmin && !isSuperAdmin) {
       return new Response(
         JSON.stringify({ error: "Only admins can create users" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const { email, fullName, password, role, forcePasswordChange, branchId, companyId }: CreateUserRequest = await req.json();
+    const { email, fullName, password, role, forcePasswordChange, branchId, companyId, superAdminScope }: CreateUserRequest = await req.json();
+
+    // Only super admins can create other super admins
+    if (role === "super_admin" && !isSuperAdmin) {
+      return new Response(
+        JSON.stringify({ error: "Only super admins can create super admin accounts" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     if (!email || !fullName || !password || !role) {
       return new Response(
@@ -168,6 +178,17 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (roleError) {
       console.error("Error assigning role:", roleError);
+    }
+
+    // If super_admin, set scope
+    if (role === "super_admin") {
+      const { error: scopeError } = await supabaseAdmin.from("super_admin_scopes").insert({
+        user_id: newUser.user.id,
+        scope: superAdminScope || "all",
+      });
+      if (scopeError) {
+        console.error("Error setting super admin scope:", scopeError);
+      }
     }
 
     // If branch_manager, update the branch's manager_id
