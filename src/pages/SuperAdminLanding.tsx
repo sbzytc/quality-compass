@@ -84,7 +84,6 @@ export default function SuperAdminLanding() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.08 }}
                 whileHover={{ y: -4 }}
-                disabled={card.disabled}
                 onClick={card.onClick}
                 className={`group relative overflow-hidden rounded-2xl p-6 text-start backdrop-blur-xl bg-white/60 border border-white/60 shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
               >
