@@ -55,6 +55,13 @@ import ClinicDashboard from "@/pages/clinic/ClinicDashboard";
 import ClinicBranchesPage from "@/pages/clinic/ClinicBranchesPage";
 import ClinicBranchDetailPage from "@/pages/clinic/ClinicBranchDetailPage";
 import SuperAdminLanding from "@/pages/SuperAdminLanding";
+import SectorCompaniesPage from "@/pages/super-admin/SectorCompaniesPage";
+import CompanyAdminLayout from "@/pages/super-admin/CompanyAdminLayout";
+import CompanyOverviewTab from "@/pages/super-admin/tabs/CompanyOverviewTab";
+import CompanyUsersTab from "@/pages/super-admin/tabs/CompanyUsersTab";
+import CompanyBranchesTab from "@/pages/super-admin/tabs/CompanyBranchesTab";
+import CompanySubscriptionTab from "@/pages/super-admin/tabs/CompanySubscriptionTab";
+import CompanyAuditLogsTab from "@/pages/super-admin/tabs/CompanyAuditLogsTab";
 
 const queryClient = new QueryClient();
 
@@ -77,6 +84,18 @@ const AppRoutes = () => (
 
     {/* Super Admin Landing — pick destination */}
     <Route path="/super-admin" element={<SuperAdminRoute><SuperAdminLanding /></SuperAdminRoute>} />
+
+    {/* Super Admin: sector companies list */}
+    <Route path="/super-admin/sector/:sector" element={<SuperAdminRoute><SectorCompaniesPage /></SuperAdminRoute>} />
+
+    {/* Super Admin: per-company panel */}
+    <Route path="/super-admin/company/:companyId" element={<SuperAdminRoute><CompanyAdminLayout /></SuperAdminRoute>}>
+      <Route index element={<CompanyOverviewTab />} />
+      <Route path="users" element={<CompanyUsersTab />} />
+      <Route path="branches" element={<CompanyBranchesTab />} />
+      <Route path="subscription" element={<CompanySubscriptionTab />} />
+      <Route path="audit-logs" element={<CompanyAuditLogsTab />} />
+    </Route>
 
     {/* Super Admin Panel */}
     <Route path="/admin" element={<SuperAdminRoute><AdminLayout /></SuperAdminRoute>}>
