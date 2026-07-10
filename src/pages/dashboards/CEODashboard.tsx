@@ -430,6 +430,9 @@ export default function CEODashboard() {
         </div>
       )}
 
+      {/* Fines Indicator - per branch */}
+      <FinesIndicator />
+
       {/* Summary Stats - Now Clickable */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {isLoading ? (
