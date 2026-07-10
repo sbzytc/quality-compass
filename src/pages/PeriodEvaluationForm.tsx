@@ -217,10 +217,9 @@ export default function PeriodEvaluationForm() {
       const fileName = `${user.id}/${criterionId}/${Date.now()}.${ext}`;
       const { error } = await supabase.storage.from('evaluation-attachments').upload(fileName, file);
       if (error) throw error;
-      const { data: urlData } = supabase.storage.from('evaluation-attachments').getPublicUrl(fileName);
       setScores(prev => ({
         ...prev,
-        [criterionId]: { ...prev[criterionId], criterionId, score: prev[criterionId]?.score || 0, notes: prev[criterionId]?.notes || '', attachments: [...(prev[criterionId]?.attachments || []), urlData.publicUrl] },
+        [criterionId]: { ...prev[criterionId], criterionId, score: prev[criterionId]?.score || 0, notes: prev[criterionId]?.notes || '', attachments: [...(prev[criterionId]?.attachments || []), fileName] },
       }));
       toast.success(isAr ? 'تم رفع الصورة' : 'Image uploaded');
     } catch { toast.error(isAr ? 'فشل الرفع' : 'Upload failed'); }

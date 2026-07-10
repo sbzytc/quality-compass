@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { SignedImage } from '@/components/SignedAttachment';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSupportTickets } from '@/hooks/useSupportTickets';
@@ -127,11 +128,7 @@ export default function MyTickets() {
 
         if (uploadError) throw uploadError;
 
-        const { data: publicUrlData } = supabase.storage
-          .from('support-attachments')
-          .getPublicUrl(fileName);
-
-        attachments.push(publicUrlData.publicUrl);
+        attachments.push(fileName);
       }
 
       // Determine final screen name
@@ -337,7 +334,7 @@ export default function MyTickets() {
                   <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
                     {ticket.attachments.map((url: string, index: number) => (
                       <div key={index} className="flex-shrink-0 block w-12 h-12 rounded-md overflow-hidden border pointer-events-none">
-                        <img src={url} alt="Attachment" className="w-full h-full object-cover" />
+                        <SignedImage src={url} bucket="support-attachments" alt="Attachment" className="w-full h-full object-cover" />
                       </div>
                     ))}
                   </div>
