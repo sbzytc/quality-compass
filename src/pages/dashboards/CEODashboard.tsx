@@ -15,6 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentCompany } from '@/contexts/CurrentCompanyContext';
+import { FinesIndicator } from '@/components/FinesIndicator';
 
 export default function CEODashboard() {
   const navigate = useNavigate();
@@ -503,6 +504,9 @@ export default function CEODashboard() {
           </>
         )}
       </div>
+
+      {/* Fines Indicator - per branch */}
+      <FinesIndicator />
 
       {/* Score Distribution - Column Chart */}
       <div className="glass-card p-6">
