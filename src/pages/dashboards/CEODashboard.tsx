@@ -508,9 +508,6 @@ export default function CEODashboard() {
         )}
       </div>
 
-      {/* Fines Indicator - per branch */}
-      <FinesIndicator />
-
       {/* Score Distribution - Column Chart */}
       <div className="glass-card p-6">
         <h2 className="text-lg font-semibold text-foreground mb-4">{t('dashboard.scoreDistribution')}</h2>
