@@ -1,0 +1,277 @@
+import { useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Coins, Building2, Calendar, Clock, UserCheck, AlertCircle } from 'lucide-react';
+import { format } from 'date-fns';
+import { ar } from 'date-fns/locale';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useBranchFines, type BranchFinesSummary, type FineViolation } from '@/hooks/useFines';
+import { cn } from '@/lib/utils';
+
+interface FinesIndicatorProps {
+  /** When provided, renders a single-branch card (used on Branch Manager Dashboard). */
+  branchId?: string;
+  className?: string;
+}
+
+function formatCurrency(value: number, isAr: boolean) {
+  const formatted = new Intl.NumberFormat(isAr ? 'ar-SA' : 'en-US').format(value);
+  return isAr ? `${formatted} ر.س` : `${formatted} SAR`;
+}
+
+function statusLabel(status: string, isAr: boolean) {
+  const map: Record<string, { en: string; ar: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+    open: { en: 'Open', ar: 'مفتوحة', variant: 'destructive' },
+    in_progress: { en: 'In progress', ar: 'قيد المعالجة', variant: 'default' },
+    pending_review: { en: 'Pending review', ar: 'بانتظار المراجعة', variant: 'secondary' },
+    pending_manager_review: { en: 'Manager review', ar: 'مراجعة المدير', variant: 'secondary' },
+    resolved: { en: 'Resolved', ar: 'تم الحل', variant: 'outline' },
+    rejected: { en: 'Rejected', ar: 'مرفوض', variant: 'outline' },
+  };
+  return map[status] || { en: status, ar: status, variant: 'outline' as const };
+}
+
+export function FinesIndicator({ branchId, className }: FinesIndicatorProps) {
+  const { language } = useLanguage();
+  const isAr = language === 'ar';
+  const dateLocale = isAr ? { locale: ar } : {};
+  const { data: summaries, isLoading } = useBranchFines(branchId);
+
+  const [selected, setSelected] = useState<BranchFinesSummary | null>(null);
+
+  const totalOutstanding = useMemo(
+    () => (summaries || []).reduce((sum, b) => sum + b.total_value, 0),
+    [summaries],
+  );
+  const totalOpenCount = useMemo(
+    () => (summaries || []).reduce((sum, b) => sum + b.open_count, 0),
+    [summaries],
+  );
+
+  if (isLoading) {
+    return <Skeleton className={cn('h-40 rounded-xl', className)} />;
+  }
+
+  const singleBranch = branchId ? summaries?.[0] : null;
+
+  return (
+    <>
+      <div className={cn('glass-card p-6', className)}>
+        <div className="flex items-start justify-between gap-4 mb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-xl bg-score-critical/10 text-score-critical">
+              <Coins className="w-6 h-6" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">
+                {isAr ? 'مؤشر الغرامات' : 'Fines Indicator'}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {branchId
+                  ? isAr
+                    ? 'إجمالي قيمة المخالفات المفتوحة على هذا الفرع'
+                    : 'Total outstanding fines on this branch'
+                  : isAr
+                  ? 'إجمالي قيمة المخالفات لكل فرع'
+                  : 'Outstanding fines per branch'}
+              </p>
+            </div>
+          </div>
+          <div className="text-end">
+            <p className="text-2xl font-bold text-score-critical">
+              {formatCurrency(totalOutstanding, isAr)}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {isAr ? `${totalOpenCount} مخالفة مفتوحة` : `${totalOpenCount} open violations`}
+            </p>
+          </div>
+        </div>
+
+        {branchId ? (
+          <SingleBranchBody
+            summary={singleBranch}
+            isAr={isAr}
+            onOpen={() => singleBranch && setSelected(singleBranch)}
+          />
+        ) : (
+          <BranchList
+            summaries={summaries || []}
+            isAr={isAr}
+            onSelect={setSelected}
+          />
+        )}
+      </div>
+
+      <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Coins className="w-5 h-5 text-score-critical" />
+              {isAr ? 'تفاصيل الغرامات' : 'Fine details'}
+              {selected && (
+                <span className="text-sm font-normal text-muted-foreground ms-2">
+                  — {isAr ? (selected.branch_name_ar || selected.branch_name) : selected.branch_name}
+                </span>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          {selected && (
+            <ViolationList violations={selected.violations} isAr={isAr} dateLocale={dateLocale} />
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+function SingleBranchBody({
+  summary,
+  isAr,
+  onOpen,
+}: {
+  summary: BranchFinesSummary | null | undefined;
+  isAr: boolean;
+  onOpen: () => void;
+}) {
+  if (!summary || summary.violations.length === 0) {
+    return (
+      <div className="text-center py-6 text-sm text-muted-foreground">
+        {isAr ? 'لا توجد غرامات مسجلة على هذا الفرع' : 'No fines recorded on this branch'}
+      </div>
+    );
+  }
+  return (
+    <motion.button
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={onOpen}
+      className="w-full flex items-center justify-between p-4 rounded-lg bg-muted/40 hover:bg-muted/70 transition"
+    >
+      <div className="text-start">
+        <p className="text-sm font-medium text-foreground">
+          {isAr ? 'اعرض تفاصيل المخالفات' : 'View violation details'}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          {isAr
+            ? `${summary.open_count} مفتوحة · ${summary.count} إجمالي`
+            : `${summary.open_count} open · ${summary.count} total`}
+        </p>
+      </div>
+      <span className="text-primary text-sm">{isAr ? 'تفاصيل ←' : 'Details →'}</span>
+    </motion.button>
+  );
+}
+
+function BranchList({
+  summaries,
+  isAr,
+  onSelect,
+}: {
+  summaries: BranchFinesSummary[];
+  isAr: boolean;
+  onSelect: (s: BranchFinesSummary) => void;
+}) {
+  if (summaries.length === 0) {
+    return (
+      <div className="text-center py-6 text-sm text-muted-foreground">
+        {isAr ? 'لا توجد غرامات مسجلة على أي فرع' : 'No fines recorded on any branch'}
+      </div>
+    );
+  }
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      {summaries.map((s) => (
+        <motion.button
+          key={s.branch_id}
+          whileHover={{ y: -2 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => onSelect(s)}
+          className={cn(
+            'text-start p-4 rounded-lg border transition bg-muted/30 hover:bg-muted/60',
+            s.total_value > 0 ? 'border-score-critical/30' : 'border-border',
+          )}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <Building2 className="w-4 h-4 text-muted-foreground shrink-0" />
+            <span className="text-sm font-medium text-foreground line-clamp-1">
+              {isAr ? (s.branch_name_ar || s.branch_name) : s.branch_name}
+            </span>
+          </div>
+          <p className={cn('text-xl font-bold', s.total_value > 0 ? 'text-score-critical' : 'text-muted-foreground')}>
+            {new Intl.NumberFormat(isAr ? 'ar-SA' : 'en-US').format(s.total_value)}
+            <span className="text-xs font-normal text-muted-foreground ms-1">
+              {isAr ? 'ر.س' : 'SAR'}
+            </span>
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {isAr
+              ? `${s.open_count} مفتوحة · ${s.count} إجمالي`
+              : `${s.open_count} open · ${s.count} total`}
+          </p>
+        </motion.button>
+      ))}
+    </div>
+  );
+}
+
+function ViolationList({
+  violations,
+  isAr,
+  dateLocale,
+}: {
+  violations: FineViolation[];
+  isAr: boolean;
+  dateLocale: any;
+}) {
+  return (
+    <div className="space-y-3">
+      {violations.map((v) => {
+        const s = statusLabel(v.status, isAr);
+        return (
+          <div key={v.id} className="p-4 rounded-lg border border-border bg-muted/30">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-foreground">
+                  {isAr ? (v.criterion_name_ar || v.criterion_name) : v.criterion_name}
+                </p>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-muted-foreground">
+                  <span className="inline-flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5" />
+                    {format(new Date(v.created_at), 'd MMM yyyy', dateLocale)}
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5" />
+                    {isAr ? `مضى ${v.days_since} يوم` : `${v.days_since} day${v.days_since === 1 ? '' : 's'} ago`}
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    {v.assigned_to ? (
+                      <>
+                        <UserCheck className="w-3.5 h-3.5 text-primary" />
+                        {isAr ? 'تم استلامها كمهمة' : 'Assigned as task'}
+                      </>
+                    ) : (
+                      <>
+                        <AlertCircle className="w-3.5 h-3.5 text-score-critical" />
+                        {isAr ? 'لم تُستلم بعد' : 'Not assigned yet'}
+                      </>
+                    )}
+                  </span>
+                </div>
+              </div>
+              <div className="text-end shrink-0">
+                <p className="text-lg font-bold text-score-critical">
+                  {formatCurrency(v.violation_value, isAr)}
+                </p>
+                <Badge variant={s.variant} className="mt-1">
+                  {isAr ? s.ar : s.en}
+                </Badge>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
