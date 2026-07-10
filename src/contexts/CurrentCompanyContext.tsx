@@ -64,6 +64,7 @@ export function CurrentCompanyProvider({ children }: { children: ReactNode }) {
       const { data, error } = await supabase
         .from('companies')
         .select('id, name, name_ar, slug, sector_type, workspace_type, primary_module, logo_url, status')
+        .is('deleted_at', null)
         .order('name');
       if (error) {
         console.error('Error loading companies (super admin):', error);
