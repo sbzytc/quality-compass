@@ -1,9 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Utensils, Stethoscope, CreditCard, ArrowRight, Loader2 } from 'lucide-react';
+import { Utensils, Stethoscope, CreditCard, ShieldCheck, ArrowRight, Loader2 } from 'lucide-react';
 import { useCurrentCompany } from '@/contexts/CurrentCompanyContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSuperAdminScope } from '@/hooks/useSuperAdminScope';
 import { Navigate } from 'react-router-dom';
 
 export default function SuperAdminLanding() {
@@ -11,9 +12,10 @@ export default function SuperAdminLanding() {
   const { language, direction } = useLanguage();
   const { roles, loading: authLoading } = useAuth();
   const { loading } = useCurrentCompany();
+  const { scope, loading: scopeLoading } = useSuperAdminScope();
   const isRTL = direction === 'rtl';
 
-  if (authLoading || loading) {
+  if (authLoading || loading || scopeLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -25,9 +27,10 @@ export default function SuperAdminLanding() {
     return <Navigate to="/" replace />;
   }
 
-  const cards = [
+  const allCards = [
     {
       key: 'food',
+      sector: 'food' as const,
       title: isRTL ? 'موديول الأغذية / المطاعم' : 'Food / Restaurants Module',
       desc: isRTL ? 'كل الشركات ضمن قطاع المطاعم والأغذية' : 'All companies in the F&B sector',
       icon: Utensils,
@@ -38,6 +41,7 @@ export default function SuperAdminLanding() {
     },
     {
       key: 'medical',
+      sector: 'medical' as const,
       title: isRTL ? 'موديول الطبي / العيادات' : 'Medical / Clinics Module',
       desc: isRTL ? 'كل الشركات ضمن قطاع العيادات والمراكز الطبية' : 'All companies in the clinics sector',
       icon: Stethoscope,
@@ -48,6 +52,7 @@ export default function SuperAdminLanding() {
     },
     {
       key: 'plans',
+      sector: 'admin' as const,
       title: isRTL ? 'الخطط' : 'Plans',
       desc: isRTL ? 'إدارة باقات الاشتراك المتاحة للشركات' : 'Manage subscription plans available to companies',
       icon: CreditCard,
@@ -56,7 +61,24 @@ export default function SuperAdminLanding() {
       onClick: () => navigate('/admin/plans'),
       badge: isRTL ? 'إعدادات' : 'Settings',
     },
+    {
+      key: 'accounts',
+      sector: 'admin' as const,
+      title: isRTL ? 'حسابات السوبر ادمن' : 'Super Admin Accounts',
+      desc: isRTL ? 'إدارة السوبر ادمنز، تعديل بياناتهم وتحديد نطاق كل منهم' : 'Manage super admin accounts, edit their info and scope',
+      icon: ShieldCheck,
+      color: 'from-slate-500/20 to-zinc-500/20',
+      iconColor: 'text-slate-700',
+      onClick: () => navigate('/super-admin/accounts'),
+      badge: isRTL ? 'إدارة' : 'Management',
+    },
   ];
+
+  // Filter sector cards based on this super admin's scope
+  const cards = allCards.filter(c => {
+    if (c.sector === 'admin') return scope === 'all';
+    return scope === 'all' || scope === c.sector;
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#edf3ff] to-[#e8eff9] flex items-center justify-center p-6" dir={direction}>
@@ -74,7 +96,7 @@ export default function SuperAdminLanding() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {cards.map((card, i) => {
             const Icon = card.icon;
             return (
