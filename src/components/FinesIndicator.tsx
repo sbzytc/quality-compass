@@ -296,6 +296,17 @@ function SingleBranchBody({
   );
 }
 
+const BAR_COLORS = [
+  'hsl(0, 84%, 60%)',
+  'hsl(24, 90%, 55%)',
+  'hsl(45, 93%, 47%)',
+  'hsl(142, 60%, 45%)',
+  'hsl(190, 80%, 45%)',
+  'hsl(220, 80%, 60%)',
+  'hsl(265, 70%, 60%)',
+  'hsl(320, 70%, 55%)',
+];
+
 function BranchBarChart({
   summaries,
   isAr,
@@ -332,11 +343,11 @@ function BranchBarChart({
       <p className="text-xs text-muted-foreground mb-2">
         {isAr ? 'اضغط على أي عمود لعرض تفاصيل مخالفات الفرع' : 'Click any bar to view branch violation details'}
       </p>
-      <div className="h-[300px]">
+      <div className="h-[340px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={chartData}
-            margin={{ top: 24, right: 30, left: 20, bottom: 40 }}
+            margin={{ top: 24, right: 30, left: 30, bottom: 50 }}
             onClick={(state: any) => {
               if (state?.activePayload?.length) {
                 const p = state.activePayload[0].payload;
@@ -350,12 +361,15 @@ function BranchBarChart({
               dataKey="name"
               tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
               interval={0}
-              angle={-20}
-              textAnchor="end"
-              height={60}
+              angle={0}
+              textAnchor="middle"
+              height={40}
+              tickMargin={10}
             />
             <YAxis
               tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+              width={70}
+              tickMargin={8}
               tickFormatter={(v) => new Intl.NumberFormat(isAr ? 'ar-SA' : 'en-US').format(v as number)}
             />
             <RechartsTooltip
@@ -388,8 +402,8 @@ function BranchBarChart({
                 </text>
               )}
             >
-              {chartData.map((d) => (
-                <Cell key={d.id} fill="hsl(var(--score-critical))" cursor="pointer" />
+              {chartData.map((d, i) => (
+                <Cell key={d.id} fill={BAR_COLORS[i % BAR_COLORS.length]} cursor="pointer" />
               ))}
             </Bar>
           </BarChart>
