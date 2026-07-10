@@ -92,9 +92,15 @@ export function CurrentCompanyProvider({ children }: { children: ReactNode }) {
 
     setCompanies(list);
 
-    // Pick current: stored > first
+    // Pick current: URL ?company=<slug|id> > stored > first
+    const params = new URLSearchParams(window.location.search);
+    const urlKey = params.get('company');
     const stored = localStorage.getItem(STORAGE_KEY);
-    const picked = list.find(c => c.id === stored) || list[0] || null;
+    const picked =
+      (urlKey && (list.find(c => c.slug === urlKey) || list.find(c => c.id === urlKey))) ||
+      list.find(c => c.id === stored) ||
+      list[0] ||
+      null;
     setCurrentCompany(picked);
 
     if (picked) {

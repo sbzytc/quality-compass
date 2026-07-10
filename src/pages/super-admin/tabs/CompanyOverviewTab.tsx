@@ -18,12 +18,13 @@ export default function CompanyOverviewTab() {
   const { switchCompany, refresh } = useCurrentCompany();
   const [copied, setCopied] = useState(false);
 
-  const workspacePath = company.workspace_type === 'medical' ? '/clinic' : '/';
+  const basePath = company.workspace_type === 'medical' ? '/clinic' : '/';
+  const workspacePath = `${basePath}${basePath.endsWith('/') ? '' : '/'}?company=${encodeURIComponent(company.slug)}`;
   const workspaceUrl = `${window.location.origin}${workspacePath}`;
 
   const openWorkspace = async () => {
-    await refresh();
     await switchCompany(company.id);
+    await refresh();
     navigate(workspacePath);
   };
 
