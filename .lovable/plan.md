@@ -1,71 +1,51 @@
-## إعادة هيكلة نظام التقييم
+# خطة إعادة هيكلة شاشة السوبر ادمن
 
-### الهيكل الجديد
-```
-القالب (Template)
-└── المجال (Domain)
-    └── التكرار (Frequency: يومي/أسبوعي/شهري/ربعي/نصف سنوي/سنوي)
-        └── الأهمية (Priority: حرجة/عالية/متوسطة)
-            └── الأسئلة (Questions)
-```
+## الشاشة 1: الوجهة الرئيسية (`/super-admin`)
+استبدال البطاقات الحالية بـ 3 بطاقات فقط:
+- **موديول الأغذية / المطاعم** → `/super-admin/sector/food`
+- **موديول الطبي / العيادات** → `/super-admin/sector/medical`
+- **الخطط** → `/admin/plans`
 
-بدلاً من الهيكل الحالي: Template → Categories → Criteria.
+بدون "لوحة مدير النظام" و"رصدة الافتراضية" (نستغني عنهم – الوصول للشركات صار عبر القطاع).
 
-### تغييرات قاعدة البيانات
+## الشاشة 2: شركات القطاع (`/super-admin/sector/:type`)
+- عنوان القطاع + زر رجوع.
+- بطاقة **الشركة التجريبية** (Sandbox) بارزة وملوّنة بشارة "تجريبية".
+- شبكة بطاقات لكل شركات هذا القطاع (اسم، شعار، عدد الفروع، الحالة).
+- زر "+ إنشاء شركة جديدة" في هذا القطاع.
+- الضغط على أي بطاقة → `/super-admin/company/:id`.
 
-1. **جدول `company_off_days` جديد**
-   - `company_id`, `day_of_week` (0-6) أو `specific_date`
-   - لتعريف أيام الإجازة الأسبوعية لكل شركة
+## الشاشة 3: لوحة السوبر ادمن للشركة (`/super-admin/company/:id`)
+Layout جانبي خاص بالشركة يحتوي التبويبات:
+1. **نظرة عامة** – معلومات الشركة، عدد الفروع/المستخدمين، الحالة، شارة القطاع، أزرار (تعديل، تعطيل/تفعيل، حذف).
+2. **المستخدمين** – قائمة `company_users` لهذه الشركة + إمكانية إضافة/إزالة/تغيير الدور.
+3. **الفروع** – قائمة فروع الشركة (قراءة + تفعيل/تعطيل).
+4. **الاشتراك والخطة** – الخطة الحالية + تغييرها + تفاصيل الاشتراك.
+5. **سجلات التدقيق** – `audit_logs` مفلترة على `company_id` هذه الشركة.
 
-2. **جدول `template_domains` جديد** (يحل محل categories)
-   - `template_id`, `name`, `name_ar`, `sort_order`
+زر رجوع إلى قائمة شركات القطاع في الهيدر.
 
-3. **جدول `template_frequencies` جديد**
-   - `domain_id`, `frequency_type` (daily/weekly/monthly/quarterly/semi_annual/yearly)
-   - `sort_order`
+## قاعدة البيانات
+- إضافة عمود `is_sandbox boolean default false` على `companies`.
+- Migration seed: إنشاء شركتين تجريبيتين إن لم تكونا موجودتين:
+  - `Rasdah Sandbox — F&B` (workspace_type=food, is_sandbox=true)
+  - `Rasdah Sandbox — Clinics` (workspace_type=medical, is_sandbox=true)
+- ربط السوبر ادمن `saeedb_itx@hotmail.com` كـ owner فيهما تلقائياً.
 
-4. **جدول `template_priorities` جديد**
-   - `frequency_id`, `priority_level` (critical/high/medium)
-   - `weight`, `sort_order`
+## الملفات
+**جديد:**
+- `src/pages/super-admin/SectorCompaniesPage.tsx` (شاشة 2)
+- `src/pages/super-admin/CompanyAdminLayout.tsx` + subpages:
+  - `CompanyOverviewTab.tsx`
+  - `CompanyUsersTab.tsx`
+  - `CompanyBranchesTab.tsx`
+  - `CompanySubscriptionTab.tsx`
+  - `CompanyAuditLogsTab.tsx`
 
-5. **تعديل `template_criteria` (الأسئلة)**
-   - تغيير `category_id` إلى `priority_id`
-   - الحفاظ على باقي الحقول كما هي
+**معدّل:**
+- `src/pages/SuperAdminLanding.tsx` – البطاقات الثلاث الجديدة.
+- `src/App.tsx` – إضافة المسارات الجديدة تحت `SuperAdminRoute`.
+- `src/pages/admin/AdminLayout.tsx` – تحديث زر "الرجوع لاختيار الوجهة".
 
-6. **جدول `evaluation_schedules` جديد**
-   - `company_id`, `branch_id`, `frequency_id`
-   - `first_evaluation_date`, `next_due_date`, `last_completed_at`
-   - لجدولة التقييمات تلقائياً مع تخطي أيام الإجازة
-
-### تغييرات الواجهة
-
-1. **منشئ القوالب (CreateTemplatePage)**
-   - إعادة تصميم لإضافة المجالات → التكرارات → الأهميات → الأسئلة بشكل متداخل
-   - فرض هذا التسلسل عند الإنشاء
-
-2. **صفحة إعدادات الشركة (SettingsPage)**
-   - قسم جديد "أيام الإجازة الأسبوعية" لتحديد أيام off
-
-3. **نموذج التقييم (EvaluationForm / PeriodEvaluationForm)**
-   - عرض الأسئلة مجمّعة حسب: المجال → التكرار → الأهمية
-   - الحفاظ على منطق التقييم وN/A والمرفقات والتعليقات الحالية
-
-4. **جدولة تلقائية**
-   - عند بدء أول تقييم لتكرار شهري/أسبوعي → حفظ تاريخ البداية وحساب المواعيد القادمة (تخطي أيام off)
-   - دالة DB لحساب `next_due_date`
-
-### ما يبقى كما هو
-- نظام المرفقات، N/A، السكورنج، المسودات (24 ساعة)
-- صلاحيات RLS، الأدوار، تعدد اللغات
-- التقييمات السابقة، الفايندنغز، الإجراءات التصحيحية
-- التصميم العام (Glassmorphism)
-
-### استراتيجية الترحيل
-- إنشاء الجداول الجديدة جنباً إلى جنب مع القديمة
-- ترحيل البيانات الموجودة: كل category → domain، تكرار افتراضي "yearly"، أهمية افتراضية "medium" (حسب is_critical)
-- بعد التحقق، إزالة العلاقات القديمة
-
-### أسئلة قبل البدء
-- هل أيام off موحدة للشركة كلها أم لكل فرع؟ (أقترح: مستوى الشركة مع إمكانية override للفرع لاحقاً)
-- هل نحتاج تنبيهات/إشعارات عند اقتراب موعد التقييم؟ (يمكن إضافتها لاحقاً)
-- ترحيل بيانات القوالب الموجودة: نحوّلها تلقائياً أم نبدأ من الصفر؟
+## ملاحظة على الصلاحيات
+السوبر ادمن يحتفظ بكل صلاحياته الحالية (RLS موجودة عبر `is_super_admin`). الأدمن العادي داخل الشركة يبقى محصور بشركته عبر `is_company_admin`. لا حاجة لتغييرات RLS جوهرية.
