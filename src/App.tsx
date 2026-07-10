@@ -62,6 +62,7 @@ import CompanyUsersTab from "@/pages/super-admin/tabs/CompanyUsersTab";
 import CompanyBranchesTab from "@/pages/super-admin/tabs/CompanyBranchesTab";
 import CompanySubscriptionTab from "@/pages/super-admin/tabs/CompanySubscriptionTab";
 import CompanyAuditLogsTab from "@/pages/super-admin/tabs/CompanyAuditLogsTab";
+import SuperAdminAccountsPage from "@/pages/super-admin/SuperAdminAccountsPage";
 
 const queryClient = new QueryClient();
 
@@ -87,6 +88,9 @@ const AppRoutes = () => (
 
     {/* Super Admin: sector companies list */}
     <Route path="/super-admin/sector/:sector" element={<SuperAdminRoute><SectorCompaniesPage /></SuperAdminRoute>} />
+
+    {/* Super Admin: manage super admin accounts */}
+    <Route path="/super-admin/accounts" element={<SuperAdminRoute><SuperAdminAccountsPage /></SuperAdminRoute>} />
 
     {/* Super Admin: per-company panel */}
     <Route path="/super-admin/company/:companyId" element={<SuperAdminRoute><CompanyAdminLayout /></SuperAdminRoute>}>
