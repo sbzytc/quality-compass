@@ -127,8 +127,8 @@ export function useCreateUser() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ email, fullName, password, role, forcePasswordChange, branchId, companyId }: { 
-      email: string; fullName: string; password: string; role: AppRole; forcePasswordChange: boolean; branchId?: string; companyId?: string 
+    mutationFn: async ({ email, fullName, password, role, forcePasswordChange, branchId, companyId, superAdminScope }: {
+      email: string; fullName: string; password: string; role: AppRole; forcePasswordChange: boolean; branchId?: string; companyId?: string; superAdminScope?: 'all' | 'food' | 'medical'
     }) => {
       // Use direct fetch to avoid supabase-js logging non-2xx responses to console
       // (which would otherwise trigger the runtime error overlay).
@@ -141,7 +141,7 @@ export function useCreateUser() {
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           Authorization: `Bearer ${session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ email, fullName, password, role, forcePasswordChange, branchId, companyId }),
+        body: JSON.stringify({ email, fullName, password, role, forcePasswordChange, branchId, companyId, superAdminScope }),
       });
       let body: any = null;
       try { body = await res.json(); } catch { /* ignore */ }
