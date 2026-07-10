@@ -16,6 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { FinesIndicator } from '@/components/FinesIndicator';
 
 export default function BranchManagerDashboard() {
   const navigate = useNavigate();
@@ -250,6 +251,9 @@ export default function BranchManagerDashboard() {
 
       {/* Performance Trend Over Time */}
       <PerformanceTrendChart branchId={branchId!} isAr={isAr} />
+
+      {/* Fines Indicator */}
+      <FinesIndicator branchId={branchId!} />
 
       {/* Quick Link to Recurring Problems */}
       <Card
