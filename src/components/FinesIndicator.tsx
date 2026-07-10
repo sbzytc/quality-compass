@@ -9,6 +9,16 @@ import { ar } from 'date-fns/locale';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useBranchFines, type BranchFinesSummary, type FineViolation } from '@/hooks/useFines';
 import { cn } from '@/lib/utils';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  Cell,
+} from 'recharts';
 
 interface FinesIndicatorProps {
   /** When provided, renders a single-branch card (used on Branch Manager Dashboard). */
@@ -96,7 +106,7 @@ export function FinesIndicator({ branchId, className }: FinesIndicatorProps) {
             onOpen={() => singleBranch && setSelected(singleBranch)}
           />
         ) : (
-          <BranchList
+          <BranchBarChart
             summaries={summaries || []}
             isAr={isAr}
             onSelect={setSelected}
@@ -164,7 +174,7 @@ function SingleBranchBody({
   );
 }
 
-function BranchList({
+function BranchBarChart({
   summaries,
   isAr,
   onSelect,
@@ -173,45 +183,79 @@ function BranchList({
   isAr: boolean;
   onSelect: (s: BranchFinesSummary) => void;
 }) {
-  if (summaries.length === 0) {
+  const chartData = useMemo(
+    () =>
+      summaries
+        .filter((s) => s.total_value > 0)
+        .map((s) => ({
+          id: s.branch_id,
+          name: isAr ? (s.branch_name_ar || s.branch_name) : s.branch_name,
+          value: s.total_value,
+          count: s.open_count,
+          summary: s,
+        })),
+    [summaries, isAr],
+  );
+
+  if (chartData.length === 0) {
     return (
       <div className="text-center py-6 text-sm text-muted-foreground">
         {isAr ? 'لا توجد غرامات مسجلة على أي فرع' : 'No fines recorded on any branch'}
       </div>
     );
   }
+
+  const height = Math.max(260, chartData.length * 44 + 60);
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-      {summaries.map((s) => (
-        <motion.button
-          key={s.branch_id}
-          whileHover={{ y: -2 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => onSelect(s)}
-          className={cn(
-            'text-start p-4 rounded-lg border transition bg-muted/30 hover:bg-muted/60',
-            s.total_value > 0 ? 'border-score-critical/30' : 'border-border',
-          )}
+    <div style={{ width: '100%', height }}>
+      <p className="text-xs text-muted-foreground mb-2">
+        {isAr ? 'اضغط على أي شريط لعرض تفاصيل مخالفات الفرع' : 'Click any bar to view branch violation details'}
+      </p>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart
+          data={chartData}
+          layout="vertical"
+          margin={{ top: 5, right: 24, left: 8, bottom: 5 }}
         >
-          <div className="flex items-center gap-2 mb-2">
-            <Building2 className="w-4 h-4 text-muted-foreground shrink-0" />
-            <span className="text-sm font-medium text-foreground line-clamp-1">
-              {isAr ? (s.branch_name_ar || s.branch_name) : s.branch_name}
-            </span>
-          </div>
-          <p className={cn('text-xl font-bold', s.total_value > 0 ? 'text-score-critical' : 'text-muted-foreground')}>
-            {new Intl.NumberFormat(isAr ? 'ar-SA' : 'en-US').format(s.total_value)}
-            <span className="text-xs font-normal text-muted-foreground ms-1">
-              {isAr ? 'ر.س' : 'SAR'}
-            </span>
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            {isAr
-              ? `${s.open_count} مفتوحة · ${s.count} إجمالي`
-              : `${s.open_count} open · ${s.count} total`}
-          </p>
-        </motion.button>
-      ))}
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+          <XAxis
+            type="number"
+            tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+            tickFormatter={(v) => new Intl.NumberFormat(isAr ? 'ar-SA' : 'en-US').format(v as number)}
+          />
+          <YAxis
+            type="category"
+            dataKey="name"
+            width={130}
+            tick={{ fontSize: 12, fill: 'hsl(var(--foreground))' }}
+            interval={0}
+          />
+          <RechartsTooltip
+            cursor={{ fill: 'hsl(var(--muted) / 0.4)' }}
+            contentStyle={{
+              backgroundColor: 'hsl(var(--card))',
+              border: '1px solid hsl(var(--border))',
+              borderRadius: '8px',
+              fontSize: '12px',
+            }}
+            formatter={(value: number, _n, ctx: any) => [
+              `${new Intl.NumberFormat(isAr ? 'ar-SA' : 'en-US').format(value)} ${isAr ? 'ر.س' : 'SAR'} · ${ctx?.payload?.count ?? 0} ${isAr ? 'مفتوحة' : 'open'}`,
+              isAr ? 'الغرامات' : 'Fines',
+            ]}
+          />
+          <Bar
+            dataKey="value"
+            radius={[0, 6, 6, 0]}
+            cursor="pointer"
+            onClick={(entry: any) => entry?.summary && onSelect(entry.summary)}
+          >
+            {chartData.map((d) => (
+              <Cell key={d.id} fill="hsl(var(--score-critical))" />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
     </div>
   );
 }
