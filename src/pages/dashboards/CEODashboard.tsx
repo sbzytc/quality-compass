@@ -15,6 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentCompany } from '@/contexts/CurrentCompanyContext';
+import { FinesIndicator } from '@/components/FinesIndicator';
 
 export default function CEODashboard() {
   const navigate = useNavigate();
