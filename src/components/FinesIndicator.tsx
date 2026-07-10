@@ -2,13 +2,21 @@ import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Coins, Building2, Calendar, Clock, UserCheck, AlertCircle } from 'lucide-react';
+import { Coins, Building2, Calendar, Clock, UserCheck, AlertCircle, UserPlus } from 'lucide-react';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useBranchFines, type BranchFinesSummary, type FineViolation } from '@/hooks/useFines';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { useUsers } from '@/hooks/useUsers';
+import { useAssignFinding } from '@/hooks/useFindings';
+import { toast } from 'sonner';
 import {
   BarChart,
   Bar,
@@ -50,6 +58,47 @@ export function FinesIndicator({ branchId, className }: FinesIndicatorProps) {
   const { data: summaries, isLoading } = useBranchFines(branchId);
 
   const [selected, setSelected] = useState<BranchFinesSummary | null>(null);
+  const [assignTarget, setAssignTarget] = useState<FineViolation | null>(null);
+
+  const { user, isAdmin, isExecutive, isBranchManager } = useAuth();
+  const canAssign = isAdmin || isExecutive || isBranchManager;
+  const { data: users } = useUsers();
+  const assignMutation = useAssignFinding();
+  const [assignUserId, setAssignUserId] = useState('');
+  const [assignDueDate, setAssignDueDate] = useState('');
+
+  const openAssign = (v: FineViolation) => {
+    setAssignTarget(v);
+    setAssignUserId(v.assigned_to || '');
+    setAssignDueDate('');
+  };
+
+  const branchEmployees = useMemo(() => {
+    if (!users || !assignTarget) return [];
+    return users.filter(
+      (u) =>
+        u.is_active &&
+        u.branch_id === assignTarget.branch_id &&
+        (u.roles.includes('branch_employee') || u.roles.includes('branch_manager')),
+    );
+  }, [users, assignTarget]);
+
+  const submitAssign = async () => {
+    if (!assignTarget || !assignUserId || !assignDueDate) return;
+    try {
+      await assignMutation.mutateAsync({
+        findingId: assignTarget.id,
+        assignedTo: assignUserId,
+        dueDate: assignDueDate,
+      });
+      toast.success(isAr ? 'تم تحويل المخالفة إلى مهمة' : 'Violation converted to a task');
+      setAssignTarget(null);
+      // Optimistic close of details so user sees fresh list on next open
+      setSelected(null);
+    } catch {
+      toast.error(isAr ? 'حدث خطأ أثناء الإسناد' : 'Failed to assign task');
+    }
+  };
 
   const totalOutstanding = useMemo(
     () => (summaries || []).reduce((sum, b) => sum + b.total_value, 0),
@@ -128,7 +177,80 @@ export function FinesIndicator({ branchId, className }: FinesIndicatorProps) {
             </DialogTitle>
           </DialogHeader>
           {selected && (
-            <ViolationList violations={selected.violations} isAr={isAr} dateLocale={dateLocale} />
+            <ViolationList
+              violations={selected.violations}
+              isAr={isAr}
+              dateLocale={dateLocale}
+              canAssign={canAssign}
+              onAssign={openAssign}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign as task dialog */}
+      <Dialog open={!!assignTarget} onOpenChange={(open) => !open && setAssignTarget(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="w-5 h-5 text-primary" />
+              {isAr ? 'تحويل إلى مهمة' : 'Convert to task'}
+            </DialogTitle>
+          </DialogHeader>
+          {assignTarget && (
+            <div className="space-y-4">
+              <div className="p-3 rounded-lg bg-muted/40 text-sm">
+                <p className="font-medium text-foreground">
+                  {isAr ? (assignTarget.criterion_name_ar || assignTarget.criterion_name) : assignTarget.criterion_name}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {formatCurrency(assignTarget.violation_value, isAr)}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label>{isAr ? 'الموظف المستلم' : 'Assign to'}</Label>
+                <Select value={assignUserId} onValueChange={setAssignUserId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={isAr ? 'اختر موظفاً...' : 'Select an employee...'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {branchEmployees.length === 0 ? (
+                      <div className="px-3 py-2 text-xs text-muted-foreground">
+                        {isAr ? 'لا يوجد موظفون في هذا الفرع' : 'No employees in this branch'}
+                      </div>
+                    ) : (
+                      branchEmployees.map((u) => (
+                        <SelectItem key={u.user_id} value={u.user_id}>
+                          {u.full_name}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>{isAr ? 'تاريخ الاستحقاق' : 'Due date'}</Label>
+                <Input
+                  type="date"
+                  value={assignDueDate}
+                  min={new Date().toISOString().split('T')[0]}
+                  onChange={(e) => setAssignDueDate(e.target.value)}
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={() => setAssignTarget(null)}>
+                  {isAr ? 'إلغاء' : 'Cancel'}
+                </Button>
+                <Button
+                  onClick={submitAssign}
+                  disabled={!assignUserId || !assignDueDate || assignMutation.isPending}
+                >
+                  {assignMutation.isPending
+                    ? isAr ? 'جارٍ الإسناد...' : 'Assigning...'
+                    : isAr ? 'إسناد كمهمة' : 'Assign as task'}
+                </Button>
+              </div>
+            </div>
           )}
         </DialogContent>
       </Dialog>
@@ -264,15 +386,20 @@ function ViolationList({
   violations,
   isAr,
   dateLocale,
+  canAssign,
+  onAssign,
 }: {
   violations: FineViolation[];
   isAr: boolean;
   dateLocale: any;
+  canAssign: boolean;
+  onAssign: (v: FineViolation) => void;
 }) {
   return (
     <div className="space-y-3">
       {violations.map((v) => {
         const s = statusLabel(v.status, isAr);
+        const canAssignThis = canAssign && v.status !== 'resolved';
         return (
           <div key={v.id} className="p-4 rounded-lg border border-border bg-muted/30">
             <div className="flex items-start justify-between gap-3">
@@ -303,6 +430,16 @@ function ViolationList({
                     )}
                   </span>
                 </div>
+                {canAssignThis && (
+                  <div className="mt-3">
+                    <Button size="sm" variant="outline" onClick={() => onAssign(v)}>
+                      <UserPlus className="w-3.5 h-3.5 me-1" />
+                      {v.assigned_to
+                        ? isAr ? 'إعادة تعيين' : 'Reassign'
+                        : isAr ? 'تحويل إلى مهمة' : 'Convert to task'}
+                    </Button>
+                  </div>
+                )}
               </div>
               <div className="text-end shrink-0">
                 <p className="text-lg font-bold text-score-critical">
