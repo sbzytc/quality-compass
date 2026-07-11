@@ -41,6 +41,9 @@ export default function CompanyAdminLayout() {
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-[#edf3ff] to-[#e8eff9]" dir={direction}>
       <aside className="w-64 border-e border-border/60 bg-white/60 backdrop-blur-xl p-4 flex flex-col gap-2">
+        <div className="mb-2">
+          <SuperAdminHeader />
+        </div>
         <Button variant="ghost" size="sm" onClick={() => navigate(sectorRoute)} className="justify-start gap-2 mb-2">
           <ArrowLeft className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
           {isRTL ? 'قائمة الشركات' : 'Companies list'}
