@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { ArrowLeft, Building2, Users, GitBranch, CreditCard, Activity, LayoutDashboard, Loader2, FlaskConical } from 'lucide-react';
+import { SuperAdminHeader } from '@/components/SuperAdminHeader';
 
 export default function CompanyAdminLayout() {
   const { companyId } = useParams();

@@ -14,6 +14,7 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { ArrowLeft, Building2, Utensils, Stethoscope, ChevronRight, FlaskConical, Loader2, Trash2, RotateCcw, AlertTriangle, Plus } from 'lucide-react';
 import AddCompanyDialog from './AddCompanyDialog';
+import { SuperAdminHeader } from '@/components/SuperAdminHeader';
 
 const SECTOR_META: Record<string, { workspace: 'food' | 'medical'; titleEn: string; titleAr: string; icon: any; gradient: string }> = {
   food: { workspace: 'food', titleEn: 'Food / Restaurants', titleAr: 'الأغذية / المطاعم', icon: Utensils, gradient: 'from-orange-500/20 to-amber-500/20' },

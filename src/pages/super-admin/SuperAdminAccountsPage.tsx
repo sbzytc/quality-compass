@@ -17,6 +17,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { ShieldCheck, ArrowLeft, Plus, Loader2, KeyRound, MoreHorizontal, UserX, UserCheck, Pencil, Utensils, Stethoscope, Globe } from 'lucide-react';
 import { toast } from 'sonner';
 import { Navigate } from 'react-router-dom';
+import { SuperAdminHeader } from '@/components/SuperAdminHeader';
 
 type Scope = 'all' | 'food' | 'medical';
 
