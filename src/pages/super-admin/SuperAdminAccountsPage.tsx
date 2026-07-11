@@ -17,6 +17,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { ShieldCheck, ArrowLeft, Plus, Loader2, KeyRound, MoreHorizontal, UserX, UserCheck, Pencil, Utensils, Stethoscope, Globe } from 'lucide-react';
 import { toast } from 'sonner';
 import { Navigate } from 'react-router-dom';
+import { SuperAdminHeader } from '@/components/SuperAdminHeader';
 
 type Scope = 'all' | 'food' | 'medical';
 
@@ -60,11 +61,12 @@ export default function SuperAdminAccountsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#edf3ff] to-[#e8eff9] p-6" dir={direction}>
       <div className="max-w-5xl mx-auto">
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center justify-between gap-3 mb-6">
           <Button variant="ghost" size="sm" onClick={() => navigate('/super-admin')} className="gap-2">
             <ArrowLeft className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
             {isRTL ? 'الرجوع' : 'Back'}
           </Button>
+          <SuperAdminHeader />
         </div>
 
         <div className="flex items-start justify-between gap-4 mb-8">

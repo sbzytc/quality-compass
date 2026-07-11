@@ -14,6 +14,7 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { ArrowLeft, Building2, Utensils, Stethoscope, ChevronRight, FlaskConical, Loader2, Trash2, RotateCcw, AlertTriangle, Plus } from 'lucide-react';
 import AddCompanyDialog from './AddCompanyDialog';
+import { SuperAdminHeader } from '@/components/SuperAdminHeader';
 
 const SECTOR_META: Record<string, { workspace: 'food' | 'medical'; titleEn: string; titleAr: string; icon: any; gradient: string }> = {
   food: { workspace: 'food', titleEn: 'Food / Restaurants', titleAr: 'الأغذية / المطاعم', icon: Utensils, gradient: 'from-orange-500/20 to-amber-500/20' },
@@ -98,11 +99,12 @@ export default function SectorCompaniesPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#edf3ff] to-[#e8eff9] p-6" dir={direction}>
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center justify-between gap-3 mb-6">
           <Button variant="ghost" size="sm" onClick={() => navigate('/super-admin')} className="gap-2">
             <ArrowLeft className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
             {isRTL ? 'الرجوع' : 'Back'}
           </Button>
+          <SuperAdminHeader />
         </div>
 
         <div className="flex items-center gap-4 mb-8">

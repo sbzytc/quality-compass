@@ -6,6 +6,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSuperAdminScope } from '@/hooks/useSuperAdminScope';
 import { Navigate } from 'react-router-dom';
+import { SuperAdminHeader } from '@/components/SuperAdminHeader';
 
 export default function SuperAdminLanding() {
   const navigate = useNavigate();
@@ -83,6 +84,9 @@ export default function SuperAdminLanding() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#edf3ff] to-[#e8eff9] flex items-center justify-center p-6" dir={direction}>
       <div className="w-full max-w-5xl">
+        <div className="absolute top-4 end-4 sm:top-6 sm:end-6">
+          <SuperAdminHeader />
+        </div>
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
