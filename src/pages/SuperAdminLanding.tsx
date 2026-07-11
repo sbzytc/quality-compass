@@ -6,6 +6,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSuperAdminScope } from '@/hooks/useSuperAdminScope';
 import { Navigate } from 'react-router-dom';
+import { SuperAdminHeader } from '@/components/SuperAdminHeader';
 
 export default function SuperAdminLanding() {
   const navigate = useNavigate();
