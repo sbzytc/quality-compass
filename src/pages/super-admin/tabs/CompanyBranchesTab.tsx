@@ -1,15 +1,19 @@
+import { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { GitBranch, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { GitBranch, Loader2, Plus } from 'lucide-react';
+import AddBranchDialog from '../AddBranchDialog';
 
 export default function CompanyBranchesTab() {
   const { company } = useOutletContext<{ company: any }>();
   const { language } = useLanguage();
   const isRTL = language === 'ar';
+  const [open, setOpen] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ['super-admin-company-branches', company.id],
@@ -26,14 +30,20 @@ export default function CompanyBranchesTab() {
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <GitBranch className="w-6 h-6 text-primary" />
-          {isRTL ? 'الفروع' : 'Branches'}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {isRTL ? 'فروع هذه الشركة' : 'Branches of this company'}
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <GitBranch className="w-6 h-6 text-primary" />
+            {isRTL ? 'الفروع' : 'Branches'}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {isRTL ? 'فروع هذه الشركة' : 'Branches of this company'}
+          </p>
+        </div>
+        <Button onClick={() => setOpen(true)} className="gap-2">
+          <Plus className="w-4 h-4" />
+          {isRTL ? 'إضافة فرع' : 'Add branch'}
+        </Button>
       </div>
 
       {isLoading && <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>}
@@ -52,6 +62,8 @@ export default function CompanyBranchesTab() {
         ))}
         {data?.length === 0 && <div className="text-sm text-muted-foreground">{isRTL ? 'لا توجد فروع بعد.' : 'No branches yet.'}</div>}
       </div>
+
+      <AddBranchDialog open={open} onOpenChange={setOpen} companyId={company.id} />
     </div>
   );
 }
