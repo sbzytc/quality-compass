@@ -71,6 +71,8 @@ export default function AddCompanyDialog({ open, onOpenChange, workspace }: Prop
   const [company, setCompany] = useState({
     name: '',
     name_ar: '',
+    brand_name: '',
+    brand_name_ar: '',
     cr_number: '',
     cr_expires_at: '',
     unified_number: '',
@@ -85,7 +87,7 @@ export default function AddCompanyDialog({ open, onOpenChange, workspace }: Prop
   const [branches, setBranches] = useState<any[]>([emptyBranch()]);
 
   const reset = () => {
-    setCompany({ name: '', name_ar: '', cr_number: '', cr_expires_at: '', unified_number: '', main_activity: '', city: '', main_address: '', contact_person: '', email: '', phone: '' });
+    setCompany({ name: '', name_ar: '', brand_name: '', brand_name_ar: '', cr_number: '', cr_expires_at: '', unified_number: '', main_activity: '', city: '', main_address: '', contact_person: '', email: '', phone: '' });
     setBranches([emptyBranch()]);
     setLogoFile(null);
     setTab('company');
@@ -105,6 +107,8 @@ export default function AddCompanyDialog({ open, onOpenChange, workspace }: Prop
 
       const slug = slugify(company.name);
       const details = {
+        brand_name: company.brand_name,
+        brand_name_ar: company.brand_name_ar,
         cr_number: company.cr_number,
         cr_expires_at: company.cr_expires_at,
         unified_number: company.unified_number,
@@ -216,6 +220,12 @@ export default function AddCompanyDialog({ open, onOpenChange, workspace }: Prop
               </Field>
               <Field label={isRTL ? 'اسم الشركة (عربي)' : 'Company name (Arabic)'}>
                 <Input value={company.name_ar} onChange={e => setCompany({ ...company, name_ar: e.target.value })} />
+              </Field>
+              <Field label={isRTL ? 'اسم البراند (English)' : 'Brand name (English)'}>
+                <Input value={company.brand_name} onChange={e => setCompany({ ...company, brand_name: e.target.value })} />
+              </Field>
+              <Field label={isRTL ? 'اسم البراند (عربي)' : 'Brand name (Arabic)'}>
+                <Input value={company.brand_name_ar} onChange={e => setCompany({ ...company, brand_name_ar: e.target.value })} />
               </Field>
               <Field label={isRTL ? 'رقم السجل التجاري' : 'CR number'}>
                 <Input value={company.cr_number} onChange={e => setCompany({ ...company, cr_number: e.target.value })} />
