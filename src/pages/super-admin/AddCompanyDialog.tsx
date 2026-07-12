@@ -71,6 +71,8 @@ export default function AddCompanyDialog({ open, onOpenChange, workspace }: Prop
   const [company, setCompany] = useState({
     name: '',
     name_ar: '',
+    brand_name: '',
+    brand_name_ar: '',
     cr_number: '',
     cr_expires_at: '',
     unified_number: '',
@@ -85,7 +87,7 @@ export default function AddCompanyDialog({ open, onOpenChange, workspace }: Prop
   const [branches, setBranches] = useState<any[]>([emptyBranch()]);
 
   const reset = () => {
-    setCompany({ name: '', name_ar: '', cr_number: '', cr_expires_at: '', unified_number: '', main_activity: '', city: '', main_address: '', contact_person: '', email: '', phone: '' });
+    setCompany({ name: '', name_ar: '', brand_name: '', brand_name_ar: '', cr_number: '', cr_expires_at: '', unified_number: '', main_activity: '', city: '', main_address: '', contact_person: '', email: '', phone: '' });
     setBranches([emptyBranch()]);
     setLogoFile(null);
     setTab('company');
