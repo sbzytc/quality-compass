@@ -107,6 +107,8 @@ export default function AddCompanyDialog({ open, onOpenChange, workspace }: Prop
 
       const slug = slugify(company.name);
       const details = {
+        brand_name: company.brand_name,
+        brand_name_ar: company.brand_name_ar,
         cr_number: company.cr_number,
         cr_expires_at: company.cr_expires_at,
         unified_number: company.unified_number,
