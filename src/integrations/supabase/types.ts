@@ -1414,11 +1414,13 @@ export type Database = {
           can_view_suggestions: boolean
           created_at: string
           default_company_id: string | null
+          direct_manager_id: string | null
           email: string
           force_password_change: boolean
           full_name: string
           id: string
           is_active: boolean
+          job_title: string | null
           phone: string | null
           region_id: string | null
           updated_at: string
@@ -1433,11 +1435,13 @@ export type Database = {
           can_view_suggestions?: boolean
           created_at?: string
           default_company_id?: string | null
+          direct_manager_id?: string | null
           email: string
           force_password_change?: boolean
           full_name: string
           id?: string
           is_active?: boolean
+          job_title?: string | null
           phone?: string | null
           region_id?: string | null
           updated_at?: string
@@ -1452,11 +1456,13 @@ export type Database = {
           can_view_suggestions?: boolean
           created_at?: string
           default_company_id?: string | null
+          direct_manager_id?: string | null
           email?: string
           force_password_change?: boolean
           full_name?: string
           id?: string
           is_active?: boolean
+          job_title?: string | null
           phone?: string | null
           region_id?: string | null
           updated_at?: string

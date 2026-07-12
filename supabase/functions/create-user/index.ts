@@ -16,6 +16,9 @@ interface CreateUserRequest {
   branchId?: string;
   companyId?: string;
   superAdminScope?: "all" | "food" | "medical";
+  phone?: string;
+  jobTitle?: string;
+  directManagerId?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -67,7 +70,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { email, fullName, password, role, forcePasswordChange, branchId, companyId, superAdminScope }: CreateUserRequest = await req.json();
+    const { email, fullName, password, role, forcePasswordChange, branchId, companyId, superAdminScope, phone, jobTitle, directManagerId }: CreateUserRequest = await req.json();
 
     // Only super admins can create other super admins
     if (role === "super_admin" && !isSuperAdmin) {
@@ -163,6 +166,9 @@ const handler = async (req: Request): Promise<Response> => {
     if ((role === "branch_manager" || role === "branch_employee") && branchId) {
       profileData.branch_id = branchId;
     }
+    if (phone) profileData.phone = phone;
+    if (jobTitle) profileData.job_title = jobTitle;
+    if (directManagerId) profileData.direct_manager_id = directManagerId;
 
     const { error: profileError } = await supabaseAdmin.from("profiles").insert(profileData);
 

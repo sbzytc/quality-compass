@@ -36,6 +36,29 @@ function useCompanyBranches(companyId: string) {
   });
 }
 
+function useCompanyEmployees(companyId: string) {
+  return useQuery({
+    queryKey: ['company-employees-all', companyId],
+    queryFn: async () => {
+      const { data: cu, error } = await supabase
+        .from('company_users')
+        .select('user_id')
+        .eq('company_id', companyId)
+        .eq('is_active', true);
+      if (error) throw error;
+      const ids = (cu || []).map((r: any) => r.user_id);
+      if (!ids.length) return [];
+      const { data: profs, error: e2 } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, email')
+        .in('user_id', ids)
+        .eq('is_active', true);
+      if (e2) throw e2;
+      return profs || [];
+    },
+  });
+}
+
 export default function CompanyUsersTab() {
   const { company } = useOutletContext<{ company: any }>();
   const { language } = useLanguage();
@@ -299,8 +322,9 @@ function CreateUserDialog({ companyId, onClose }: { companyId: string; onClose: 
   const isRTL = language === 'ar';
   const qc = useQueryClient();
   const createUser = useCreateUser();
-  const [form, setForm] = useState({ email: '', fullName: '', password: '', role: 'assessor' as AppRole, branchId: '' });
+  const [form, setForm] = useState({ email: '', fullName: '', password: '', role: 'assessor' as AppRole, branchId: '', phone: '', jobTitle: '', directManagerId: '' });
   const { data: branches = [] } = useCompanyBranches(companyId);
+  const { data: employees = [] } = useCompanyEmployees(companyId);
   const isCompanyLevel = COMPANY_LEVEL_ROLES.includes(form.role);
 
   const submit = async () => {
@@ -321,6 +345,9 @@ function CreateUserDialog({ companyId, onClose }: { companyId: string; onClose: 
         forcePasswordChange: true,
         companyId,
         branchId: isCompanyLevel ? undefined : form.branchId,
+        phone: form.phone || undefined,
+        jobTitle: form.jobTitle || undefined,
+        directManagerId: form.directManagerId || undefined,
       });
       toast.success(isRTL ? 'تم إنشاء المستخدم' : 'User created');
       qc.invalidateQueries({ queryKey: ['super-admin-company-users', companyId] });
@@ -332,12 +359,30 @@ function CreateUserDialog({ companyId, onClose }: { companyId: string; onClose: 
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>{isRTL ? 'إضافة مستخدم للشركة' : 'Add user to company'}</DialogTitle></DialogHeader>
         <div className="space-y-4">
           <div><Label>{isRTL ? 'الاسم الكامل' : 'Full name'}</Label><Input className="mt-1" value={form.fullName} onChange={e => setForm({ ...form, fullName: e.target.value })} /></div>
           <div><Label>{isRTL ? 'البريد الإلكتروني' : 'Email'}</Label><Input type="email" className="mt-1" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></div>
+          <div><Label>{isRTL ? 'رقم الجوال' : 'Phone'}</Label><Input className="mt-1" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
+          <div><Label>{isRTL ? 'المنصب' : 'Job title'}</Label><Input className="mt-1" value={form.jobTitle} onChange={e => setForm({ ...form, jobTitle: e.target.value })} /></div>
           <div><Label>{isRTL ? 'كلمة المرور المؤقتة' : 'Temporary password'}</Label><Input className="mt-1" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} /></div>
+          <div>
+            <Label>{isRTL ? 'المدير المباشر' : 'Direct manager'}</Label>
+            <Select value={form.directManagerId} onValueChange={(v) => setForm({ ...form, directManagerId: v })}>
+              <SelectTrigger className="mt-1"><SelectValue placeholder={isRTL ? 'اختر مدير' : 'Select manager'} /></SelectTrigger>
+              <SelectContent>
+                {employees.length === 0 && (
+                  <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                    {isRTL ? 'لا يوجد موظفون بعد' : 'No employees yet'}
+                  </div>
+                )}
+                {employees.map((e: any) => (
+                  <SelectItem key={e.user_id} value={e.user_id}>{e.full_name || e.email}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div>
             <Label>{isRTL ? 'الدور' : 'Role'}</Label>
             <Select value={form.role} onValueChange={(v) => {
