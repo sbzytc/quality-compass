@@ -221,6 +221,12 @@ export default function AddCompanyDialog({ open, onOpenChange, workspace }: Prop
               <Field label={isRTL ? 'اسم الشركة (عربي)' : 'Company name (Arabic)'}>
                 <Input value={company.name_ar} onChange={e => setCompany({ ...company, name_ar: e.target.value })} />
               </Field>
+              <Field label={isRTL ? 'اسم البراند (English)' : 'Brand name (English)'}>
+                <Input value={company.brand_name} onChange={e => setCompany({ ...company, brand_name: e.target.value })} />
+              </Field>
+              <Field label={isRTL ? 'اسم البراند (عربي)' : 'Brand name (Arabic)'}>
+                <Input value={company.brand_name_ar} onChange={e => setCompany({ ...company, brand_name_ar: e.target.value })} />
+              </Field>
               <Field label={isRTL ? 'رقم السجل التجاري' : 'CR number'}>
                 <Input value={company.cr_number} onChange={e => setCompany({ ...company, cr_number: e.target.value })} />
               </Field>
