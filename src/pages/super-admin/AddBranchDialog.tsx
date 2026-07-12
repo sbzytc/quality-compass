@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -54,6 +54,29 @@ export default function AddBranchDialog({ open, onOpenChange, companyId, branch 
   const [b, setB] = useState<any>(initialBranch());
   const [files, setFiles] = useState<Record<string, File | null>>({});
   const isEdit = !!branch;
+
+  const { data: employees = [] } = useQuery({
+    queryKey: ['company-employees-for-manager', companyId],
+    enabled: open && !!companyId,
+    queryFn: async () => {
+      const { data: cu, error: e1 } = await supabase
+        .from('company_users')
+        .select('user_id')
+        .eq('company_id', companyId)
+        .eq('is_active', true);
+      if (e1) throw e1;
+      const ids = (cu || []).map((r: any) => r.user_id);
+      if (!ids.length) return [];
+      const { data: profs, error: e2 } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, email, phone, branch_id')
+        .in('user_id', ids)
+        .eq('is_active', true)
+        .not('branch_id', 'is', null);
+      if (e2) throw e2;
+      return profs || [];
+    },
+  });
 
   const reset = () => { setB(initialBranch()); setFiles({}); };
 
@@ -202,7 +225,29 @@ export default function AddBranchDialog({ open, onOpenChange, companyId, branch 
               <Input type="date" value={b.opened_at} onChange={e => setB({ ...b, opened_at: e.target.value })} />
             </F>
             <F label={isRTL ? 'مدير الفرع' : 'Branch manager'}>
-              <Input value={b.manager_name} onChange={e => setB({ ...b, manager_name: e.target.value })} />
+              <Select
+                value={b.manager_name || ''}
+                onValueChange={(v) => {
+                  const emp: any = employees.find((e: any) => e.full_name === v);
+                  setB({ ...b, manager_name: v, manager_phone: emp?.phone || b.manager_phone });
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={isRTL ? 'اختر موظف' : 'Select employee'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {employees.length === 0 && (
+                    <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                      {isRTL ? 'لا يوجد موظفون معينون على فروع' : 'No employees assigned to branches'}
+                    </div>
+                  )}
+                  {employees.map((e: any) => (
+                    <SelectItem key={e.user_id} value={e.full_name || e.email}>
+                      {e.full_name || e.email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </F>
             <F label={isRTL ? 'رقم مدير الفرع' : 'Manager phone'}>
               <Input value={b.manager_phone} onChange={e => setB({ ...b, manager_phone: e.target.value })} />
