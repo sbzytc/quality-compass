@@ -1,0 +1,277 @@
+import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from '@/hooks/use-toast';
+import { Loader2, MapPin, FileText, Upload } from 'lucide-react';
+
+interface Props {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  companyId: string;
+}
+
+const emptyDoc = () => ({ number: '', issued_at: '', expires_at: '', file_path: '' });
+const emptyContract = () => ({ provider: '', expires_at: '', file_path: '' });
+
+const initialBranch = () => ({
+  name: '',
+  name_ar: '',
+  code: '',
+  city: '',
+  district: '',
+  address: '',
+  gps: '',
+  status: 'active',
+  activity_type: '',
+  opened_at: '',
+  manager_name: '',
+  manager_phone: '',
+  area_m2: '' as any,
+  employees_count: '' as any,
+  cameras_count: '' as any,
+  extinguishers_count: '' as any,
+  documents: {
+    municipality: emptyDoc(),
+    civil_defense: { number: '', expires_at: '', file_path: '' },
+    signboard: { has: false, number: '', expires_at: '', file_path: '' },
+    pest_control: emptyContract(),
+    cameras_contract: emptyContract(),
+    filters_contract: emptyContract(),
+  } as any,
+});
+
+export default function AddBranchDialog({ open, onOpenChange, companyId }: Props) {
+  const { direction } = useLanguage();
+  const isRTL = direction === 'rtl';
+  const qc = useQueryClient();
+  const [b, setB] = useState<any>(initialBranch());
+  const [files, setFiles] = useState<Record<string, File | null>>({});
+
+  const reset = () => { setB(initialBranch()); setFiles({}); };
+
+  const uploadFile = async (file: File, folder: string) => {
+    const ext = file.name.split('.').pop();
+    const path = `${companyId}/branches/${folder}/${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from('company-documents').upload(path, file);
+    if (error) throw error;
+    return path;
+  };
+
+  const submit = useMutation({
+    mutationFn: async () => {
+      if (!b.name.trim()) throw new Error(isRTL ? 'اسم الفرع مطلوب' : 'Branch name required');
+
+      const docs = JSON.parse(JSON.stringify(b.documents));
+      for (const key of Object.keys(docs)) {
+        const f = files[key];
+        if (f) docs[key].file_path = await uploadFile(f, key);
+      }
+
+      const { error } = await supabase.from('branches').insert({
+        company_id: companyId,
+        name: b.name,
+        name_ar: b.name_ar || null,
+        code: b.code || null,
+        city: b.city || null,
+        district: b.district || null,
+        address: b.address || null,
+        gps: b.gps || null,
+        status: b.status,
+        activity_type: b.activity_type || null,
+        opened_at: b.opened_at || null,
+        manager_name: b.manager_name || null,
+        manager_phone: b.manager_phone || null,
+        area_m2: b.area_m2 === '' ? null : Number(b.area_m2),
+        employees_count: b.employees_count === '' ? null : Number(b.employees_count),
+        cameras_count: b.cameras_count === '' ? null : Number(b.cameras_count),
+        extinguishers_count: b.extinguishers_count === '' ? null : Number(b.extinguishers_count),
+        documents: docs,
+        is_active: b.status === 'active',
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['super-admin-company-branches', companyId] });
+      toast({ title: isRTL ? 'تمت إضافة الفرع' : 'Branch added' });
+      reset();
+      onOpenChange(false);
+    },
+    onError: (e: any) => toast({ title: isRTL ? 'فشل الإضافة' : 'Failed', description: e.message, variant: 'destructive' }),
+  });
+
+  const updDoc = (key: string, patch: any) =>
+    setB((prev: any) => ({ ...prev, documents: { ...prev.documents, [key]: { ...prev.documents[key], ...patch } } }));
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) reset(); onOpenChange(o); }}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" dir={direction}>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <MapPin className="w-5 h-5 text-primary" />
+            {isRTL ? 'إضافة فرع جديد' : 'Add new branch'}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4 pt-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <F label={isRTL ? 'اسم الفرع (English)' : 'Branch name (English)'} required>
+              <Input value={b.name} onChange={e => setB({ ...b, name: e.target.value })} />
+            </F>
+            <F label={isRTL ? 'اسم الفرع (عربي)' : 'Branch name (Arabic)'}>
+              <Input value={b.name_ar} onChange={e => setB({ ...b, name_ar: e.target.value })} />
+            </F>
+            <F label={isRTL ? 'رقم الفرع' : 'Branch code'}>
+              <Input value={b.code} onChange={e => setB({ ...b, code: e.target.value })} />
+            </F>
+            <F label={isRTL ? 'المدينة' : 'City'}>
+              <Input value={b.city} onChange={e => setB({ ...b, city: e.target.value })} />
+            </F>
+            <F label={isRTL ? 'الحي' : 'District'}>
+              <Input value={b.district} onChange={e => setB({ ...b, district: e.target.value })} />
+            </F>
+            <F label={isRTL ? 'العنوان' : 'Address'}>
+              <Input value={b.address} onChange={e => setB({ ...b, address: e.target.value })} />
+            </F>
+            <F label={isRTL ? 'الموقع الجغرافي' : 'GPS / Maps link'}>
+              <Input value={b.gps} onChange={e => setB({ ...b, gps: e.target.value })} placeholder="24.7136, 46.6753" />
+            </F>
+            <F label={isRTL ? 'حالة الفرع' : 'Branch status'}>
+              <Select value={b.status} onValueChange={v => setB({ ...b, status: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">{isRTL ? 'نشط' : 'Active'}</SelectItem>
+                  <SelectItem value="closed">{isRTL ? 'مغلق' : 'Closed'}</SelectItem>
+                  <SelectItem value="under_construction">{isRTL ? 'تحت الإنشاء' : 'Under construction'}</SelectItem>
+                </SelectContent>
+              </Select>
+            </F>
+            <F label={isRTL ? 'نوع النشاط' : 'Activity type'}>
+              <Input value={b.activity_type} onChange={e => setB({ ...b, activity_type: e.target.value })} />
+            </F>
+            <F label={isRTL ? 'تاريخ الافتتاح' : 'Opening date'}>
+              <Input type="date" value={b.opened_at} onChange={e => setB({ ...b, opened_at: e.target.value })} />
+            </F>
+            <F label={isRTL ? 'مدير الفرع' : 'Branch manager'}>
+              <Input value={b.manager_name} onChange={e => setB({ ...b, manager_name: e.target.value })} />
+            </F>
+            <F label={isRTL ? 'رقم مدير الفرع' : 'Manager phone'}>
+              <Input value={b.manager_phone} onChange={e => setB({ ...b, manager_phone: e.target.value })} />
+            </F>
+            <F label={isRTL ? 'مساحة المنشأة (م²)' : 'Area (m²)'}>
+              <Input type="number" value={b.area_m2} onChange={e => setB({ ...b, area_m2: e.target.value })} />
+            </F>
+            <F label={isRTL ? 'عدد العاملين' : 'Employees count'}>
+              <Input type="number" value={b.employees_count} onChange={e => setB({ ...b, employees_count: e.target.value })} />
+            </F>
+            <F label={isRTL ? 'عدد الكاميرات' : 'Cameras count'}>
+              <Input type="number" value={b.cameras_count} onChange={e => setB({ ...b, cameras_count: e.target.value })} />
+            </F>
+            <F label={isRTL ? 'عدد طفايات الحريق' : 'Fire extinguishers count'}>
+              <Input type="number" value={b.extinguishers_count} onChange={e => setB({ ...b, extinguishers_count: e.target.value })} />
+            </F>
+          </div>
+
+          <div className="space-y-3 pt-2 border-t">
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <FileText className="w-4 h-4 text-primary" />
+              {isRTL ? 'الوثائق والعقود' : 'Documents & contracts'}
+            </div>
+
+            <DocRow title={isRTL ? 'رخصة البلدية' : 'Municipality license'} data={b.documents.municipality}
+              onChange={p => updDoc('municipality', p)} onFile={f => setFiles(s => ({ ...s, municipality: f }))} isRTL={isRTL} showIssued />
+            <DocRow title={isRTL ? 'رخصة الدفاع المدني' : 'Civil defense license'} data={b.documents.civil_defense}
+              onChange={p => updDoc('civil_defense', p)} onFile={f => setFiles(s => ({ ...s, civil_defense: f }))} isRTL={isRTL} />
+
+            <div className="rounded-lg border p-3 bg-background/50 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">{isRTL ? 'اللوحة الإعلانية' : 'Signboard'}</span>
+                <label className="flex items-center gap-2 text-xs cursor-pointer">
+                  <input type="checkbox" checked={b.documents.signboard.has}
+                    onChange={e => updDoc('signboard', { has: e.target.checked })} />
+                  {isRTL ? 'يوجد لوحة' : 'Has signboard'}
+                </label>
+              </div>
+              {b.documents.signboard.has && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                  <Input placeholder={isRTL ? 'رقم الترخيص' : 'License number'} value={b.documents.signboard.number} onChange={e => updDoc('signboard', { number: e.target.value })} />
+                  <Input type="date" value={b.documents.signboard.expires_at} onChange={e => updDoc('signboard', { expires_at: e.target.value })} />
+                  <FileInput onFile={f => setFiles(s => ({ ...s, signboard: f }))} />
+                </div>
+              )}
+            </div>
+
+            <ContractRow title={isRTL ? 'عقد مكافحة الحشرات' : 'Pest control contract'} data={b.documents.pest_control}
+              onChange={p => updDoc('pest_control', p)} onFile={f => setFiles(s => ({ ...s, pest_control: f }))} isRTL={isRTL} />
+            <ContractRow title={isRTL ? 'عقد الكاميرات' : 'Cameras contract'} data={b.documents.cameras_contract}
+              onChange={p => updDoc('cameras_contract', p)} onFile={f => setFiles(s => ({ ...s, cameras_contract: f }))} isRTL={isRTL} />
+            <ContractRow title={isRTL ? 'عقد الفلاتر' : 'Filters contract'} data={b.documents.filters_contract}
+              onChange={p => updDoc('filters_contract', p)} onFile={f => setFiles(s => ({ ...s, filters_contract: f }))} isRTL={isRTL} />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submit.isPending}>
+            {isRTL ? 'إلغاء' : 'Cancel'}
+          </Button>
+          <Button onClick={() => submit.mutate()} disabled={submit.isPending || !b.name.trim()}>
+            {submit.isPending && <Loader2 className="w-4 h-4 animate-spin me-2" />}
+            {isRTL ? 'إضافة الفرع' : 'Add branch'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function F({ label, required, children }: any) {
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-xs font-medium">
+        {label} {required && <span className="text-destructive">*</span>}
+      </Label>
+      {children}
+    </div>
+  );
+}
+
+function FileInput({ onFile }: { onFile: (f: File | null) => void }) {
+  return (
+    <div className="flex items-center gap-2">
+      <Upload className="w-3.5 h-3.5 text-muted-foreground" />
+      <Input type="file" className="h-9 text-xs" onChange={e => onFile(e.target.files?.[0] ?? null)} />
+    </div>
+  );
+}
+
+function DocRow({ title, data, onChange, onFile, isRTL, showIssued = false }: any) {
+  return (
+    <div className="rounded-lg border p-3 bg-background/50 space-y-2">
+      <div className="text-sm font-medium">{title}</div>
+      <div className={`grid grid-cols-1 md:grid-cols-${showIssued ? 4 : 3} gap-2`}>
+        <Input placeholder={isRTL ? 'رقم الترخيص' : 'License number'} value={data.number || ''} onChange={e => onChange({ number: e.target.value })} />
+        {showIssued && <Input type="date" value={data.issued_at || ''} onChange={e => onChange({ issued_at: e.target.value })} />}
+        <Input type="date" value={data.expires_at || ''} onChange={e => onChange({ expires_at: e.target.value })} />
+        <FileInput onFile={onFile} />
+      </div>
+    </div>
+  );
+}
+
+function ContractRow({ title, data, onChange, onFile, isRTL }: any) {
+  return (
+    <div className="rounded-lg border p-3 bg-background/50 space-y-2">
+      <div className="text-sm font-medium">{title}</div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+        <Input placeholder={isRTL ? 'اسم المزود' : 'Provider name'} value={data.provider || ''} onChange={e => onChange({ provider: e.target.value })} />
+        <Input type="date" value={data.expires_at || ''} onChange={e => onChange({ expires_at: e.target.value })} />
+        <FileInput onFile={onFile} />
+      </div>
+    </div>
+  );
+}
