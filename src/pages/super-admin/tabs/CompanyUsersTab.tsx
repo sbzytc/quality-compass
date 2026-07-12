@@ -18,6 +18,23 @@ import { Users, Loader2, MoreHorizontal, KeyRound, Pencil, UserX, UserCheck, Plu
 import { toast } from 'sonner';
 
 const ASSIGNABLE_ROLES: AppRole[] = ['admin', 'executive', 'branch_manager', 'assessor', 'branch_employee', 'support_agent'];
+const COMPANY_LEVEL_ROLES: AppRole[] = ['admin', 'executive'];
+
+function useCompanyBranches(companyId: string) {
+  return useQuery({
+    queryKey: ['company-branches-min', companyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('branches')
+        .select('id, name, name_ar')
+        .eq('company_id', companyId)
+        .eq('is_active', true)
+        .order('name');
+      if (error) throw error;
+      return data || [];
+    },
+  });
+}
 
 export default function CompanyUsersTab() {
   const { company } = useOutletContext<{ company: any }>();
@@ -202,12 +219,22 @@ function EditUserDialog({ member, companyId, onClose }: { member: any; companyId
   const [phone, setPhone] = useState(member.profile?.phone || '');
   const initialRole = (member.appRoles?.[0] as AppRole) || 'assessor';
   const [role, setRole] = useState<AppRole>(initialRole);
+  const [branchId, setBranchId] = useState<string>(member.profile?.branch_id || '');
+  const { data: branches = [] } = useCompanyBranches(companyId);
+  const isCompanyLevel = COMPANY_LEVEL_ROLES.includes(role);
 
   const save = useMutation({
     mutationFn: async () => {
+      if (!isCompanyLevel && !branchId) {
+        throw new Error(isRTL ? 'يجب اختيار فرع لهذا الدور' : 'Branch required for this role');
+      }
       const { error: pErr } = await supabase
         .from('profiles')
-        .update({ full_name: fullName, phone: phone || null })
+        .update({
+          full_name: fullName,
+          phone: phone || null,
+          branch_id: isCompanyLevel ? null : branchId,
+        })
         .eq('user_id', member.user_id);
       if (pErr) throw pErr;
       if (role !== initialRole) {
@@ -232,13 +259,31 @@ function EditUserDialog({ member, companyId, onClose }: { member: any; companyId
           <div><Label>{isRTL ? 'الجوال' : 'Phone'}</Label><Input value={phone} onChange={e => setPhone(e.target.value)} className="mt-1" /></div>
           <div>
             <Label>{isRTL ? 'الدور' : 'Role'}</Label>
-            <Select value={role} onValueChange={(v) => setRole(v as AppRole)}>
+            <Select value={role} onValueChange={(v) => { const nr = v as AppRole; setRole(nr); if (COMPANY_LEVEL_ROLES.includes(nr)) setBranchId(''); }}>
               <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {ASSIGNABLE_ROLES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
+          {!isCompanyLevel && (
+            <div>
+              <Label>{isRTL ? 'الفرع' : 'Branch'}</Label>
+              <Select value={branchId} onValueChange={setBranchId}>
+                <SelectTrigger className="mt-1"><SelectValue placeholder={isRTL ? 'اختر فرع' : 'Select branch'} /></SelectTrigger>
+                <SelectContent>
+                  {branches.map((b: any) => (
+                    <SelectItem key={b.id} value={b.id}>{isRTL ? (b.name_ar || b.name) : b.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          {isCompanyLevel && (
+            <p className="text-xs text-muted-foreground">
+              {isRTL ? 'دور على مستوى الشركة — بدون فرع.' : 'Company-level role — no branch.'}
+            </p>
+          )}
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
@@ -254,11 +299,17 @@ function CreateUserDialog({ companyId, onClose }: { companyId: string; onClose: 
   const isRTL = language === 'ar';
   const qc = useQueryClient();
   const createUser = useCreateUser();
-  const [form, setForm] = useState({ email: '', fullName: '', password: '', role: 'assessor' as AppRole });
+  const [form, setForm] = useState({ email: '', fullName: '', password: '', role: 'assessor' as AppRole, branchId: '' });
+  const { data: branches = [] } = useCompanyBranches(companyId);
+  const isCompanyLevel = COMPANY_LEVEL_ROLES.includes(form.role);
 
   const submit = async () => {
     if (!form.email || !form.fullName || form.password.length < 6) {
       toast.error(isRTL ? 'اكمل الحقول (كلمة المرور 6+ أحرف)' : 'Fill all fields (password 6+ chars)');
+      return;
+    }
+    if (!isCompanyLevel && !form.branchId) {
+      toast.error(isRTL ? 'اختر فرع لهذا الدور' : 'Select a branch for this role');
       return;
     }
     try {
@@ -269,6 +320,7 @@ function CreateUserDialog({ companyId, onClose }: { companyId: string; onClose: 
         role: form.role,
         forcePasswordChange: true,
         companyId,
+        branchId: isCompanyLevel ? undefined : form.branchId,
       });
       toast.success(isRTL ? 'تم إنشاء المستخدم' : 'User created');
       qc.invalidateQueries({ queryKey: ['super-admin-company-users', companyId] });
@@ -288,13 +340,34 @@ function CreateUserDialog({ companyId, onClose }: { companyId: string; onClose: 
           <div><Label>{isRTL ? 'كلمة المرور المؤقتة' : 'Temporary password'}</Label><Input className="mt-1" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} /></div>
           <div>
             <Label>{isRTL ? 'الدور' : 'Role'}</Label>
-            <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v as AppRole })}>
+            <Select value={form.role} onValueChange={(v) => {
+              const nr = v as AppRole;
+              setForm(f => ({ ...f, role: nr, branchId: COMPANY_LEVEL_ROLES.includes(nr) ? '' : f.branchId }));
+            }}>
               <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {ASSIGNABLE_ROLES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
+          {!isCompanyLevel && (
+            <div>
+              <Label>{isRTL ? 'الفرع' : 'Branch'}</Label>
+              <Select value={form.branchId} onValueChange={(v) => setForm({ ...form, branchId: v })}>
+                <SelectTrigger className="mt-1"><SelectValue placeholder={isRTL ? 'اختر فرع' : 'Select branch'} /></SelectTrigger>
+                <SelectContent>
+                  {branches.map((b: any) => (
+                    <SelectItem key={b.id} value={b.id}>{isRTL ? (b.name_ar || b.name) : b.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          {isCompanyLevel && (
+            <p className="text-xs text-muted-foreground">
+              {isRTL ? 'دور على مستوى الشركة — بدون فرع.' : 'Company-level role — no branch.'}
+            </p>
+          )}
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
