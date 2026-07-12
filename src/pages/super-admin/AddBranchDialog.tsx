@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -14,6 +14,7 @@ interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   companyId: string;
+  branch?: any;
 }
 
 const emptyDoc = () => ({ number: '', issued_at: '', expires_at: '', file_path: '' });
@@ -46,14 +47,51 @@ const initialBranch = () => ({
   } as any,
 });
 
-export default function AddBranchDialog({ open, onOpenChange, companyId }: Props) {
+export default function AddBranchDialog({ open, onOpenChange, companyId, branch }: Props) {
   const { direction } = useLanguage();
   const isRTL = direction === 'rtl';
   const qc = useQueryClient();
   const [b, setB] = useState<any>(initialBranch());
   const [files, setFiles] = useState<Record<string, File | null>>({});
+  const isEdit = !!branch;
 
   const reset = () => { setB(initialBranch()); setFiles({}); };
+
+  useEffect(() => {
+    if (open && branch) {
+      const base = initialBranch();
+      const docs = { ...base.documents, ...(branch.documents || {}) };
+      // ensure nested doc shapes
+      docs.municipality = { ...base.documents.municipality, ...(docs.municipality || {}) };
+      docs.civil_defense = { ...base.documents.civil_defense, ...(docs.civil_defense || {}) };
+      docs.signboard = { ...base.documents.signboard, ...(docs.signboard || {}) };
+      docs.pest_control = { ...base.documents.pest_control, ...(docs.pest_control || {}) };
+      docs.cameras_contract = { ...base.documents.cameras_contract, ...(docs.cameras_contract || {}) };
+      docs.filters_contract = { ...base.documents.filters_contract, ...(docs.filters_contract || {}) };
+      setB({
+        name: branch.name || '',
+        name_ar: branch.name_ar || '',
+        code: branch.code || '',
+        city: branch.city || '',
+        district: branch.district || '',
+        address: branch.address || '',
+        gps: branch.gps || '',
+        status: branch.status || (branch.is_active ? 'active' : 'closed'),
+        activity_type: branch.activity_type || '',
+        opened_at: branch.opened_at || '',
+        manager_name: branch.manager_name || '',
+        manager_phone: branch.manager_phone || '',
+        area_m2: branch.area_m2 ?? '',
+        employees_count: branch.employees_count ?? '',
+        cameras_count: branch.cameras_count ?? '',
+        extinguishers_count: branch.extinguishers_count ?? '',
+        documents: docs,
+      });
+      setFiles({});
+    } else if (open && !branch) {
+      reset();
+    }
+  }, [open, branch]);
 
   const uploadFile = async (file: File, folder: string) => {
     const ext = file.name.split('.').pop();
@@ -73,7 +111,7 @@ export default function AddBranchDialog({ open, onOpenChange, companyId }: Props
         if (f) docs[key].file_path = await uploadFile(f, key);
       }
 
-      const { error } = await supabase.from('branches').insert({
+      const payload: any = {
         company_id: companyId,
         name: b.name,
         name_ar: b.name_ar || null,
@@ -93,12 +131,18 @@ export default function AddBranchDialog({ open, onOpenChange, companyId }: Props
         extinguishers_count: b.extinguishers_count === '' ? null : Number(b.extinguishers_count),
         documents: docs,
         is_active: b.status === 'active',
-      });
-      if (error) throw error;
+      };
+      if (isEdit) {
+        const { error } = await supabase.from('branches').update(payload).eq('id', branch.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('branches').insert(payload);
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['super-admin-company-branches', companyId] });
-      toast({ title: isRTL ? 'تمت إضافة الفرع' : 'Branch added' });
+      toast({ title: isEdit ? (isRTL ? 'تم تحديث الفرع' : 'Branch updated') : (isRTL ? 'تمت إضافة الفرع' : 'Branch added') });
       reset();
       onOpenChange(false);
     },
@@ -114,7 +158,7 @@ export default function AddBranchDialog({ open, onOpenChange, companyId }: Props
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <MapPin className="w-5 h-5 text-primary" />
-            {isRTL ? 'إضافة فرع جديد' : 'Add new branch'}
+            {isEdit ? (isRTL ? 'تعديل الفرع' : 'Edit branch') : (isRTL ? 'إضافة فرع جديد' : 'Add new branch')}
           </DialogTitle>
         </DialogHeader>
 
@@ -221,7 +265,7 @@ export default function AddBranchDialog({ open, onOpenChange, companyId }: Props
           </Button>
           <Button onClick={() => submit.mutate()} disabled={submit.isPending || !b.name.trim()}>
             {submit.isPending && <Loader2 className="w-4 h-4 animate-spin me-2" />}
-            {isRTL ? 'إضافة الفرع' : 'Add branch'}
+            {isEdit ? (isRTL ? 'حفظ التعديلات' : 'Save changes') : (isRTL ? 'إضافة الفرع' : 'Add branch')}
           </Button>
         </DialogFooter>
       </DialogContent>
