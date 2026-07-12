@@ -6,7 +6,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { GitBranch, Loader2, Plus } from 'lucide-react';
+import { GitBranch, Loader2, Plus, Pencil } from 'lucide-react';
 import AddBranchDialog from '../AddBranchDialog';
 
 export default function CompanyBranchesTab() {
@@ -14,13 +14,14 @@ export default function CompanyBranchesTab() {
   const { language } = useLanguage();
   const isRTL = language === 'ar';
   const [open, setOpen] = useState(false);
+  const [editBranch, setEditBranch] = useState<any>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['super-admin-company-branches', company.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('branches')
-        .select('id, name, name_ar, city, is_active, created_at')
+        .select('*')
         .eq('company_id', company.id)
         .order('name');
       if (error) throw error;
@@ -49,21 +50,33 @@ export default function CompanyBranchesTab() {
       {isLoading && <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>}
 
       <div className="space-y-2">
-        {data?.map(b => (
+        {data?.map((b: any) => (
           <Card key={b.id} className="p-4 flex items-center justify-between">
             <div>
               <div className="font-medium">{isRTL ? (b.name_ar || b.name) : b.name}</div>
               <div className="text-xs text-muted-foreground">{b.city || (isRTL ? 'بدون مدينة' : 'no city')}</div>
             </div>
-            <Badge variant={b.is_active ? 'default' : 'secondary'}>
-              {b.is_active ? (isRTL ? 'نشط' : 'active') : (isRTL ? 'موقوف' : 'inactive')}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant={b.is_active ? 'default' : 'secondary'}>
+                {b.is_active ? (isRTL ? 'نشط' : 'active') : (isRTL ? 'موقوف' : 'inactive')}
+              </Badge>
+              <Button size="sm" variant="outline" onClick={() => setEditBranch(b)} className="gap-1">
+                <Pencil className="w-3.5 h-3.5" />
+                {isRTL ? 'تعديل' : 'Edit'}
+              </Button>
+            </div>
           </Card>
         ))}
         {data?.length === 0 && <div className="text-sm text-muted-foreground">{isRTL ? 'لا توجد فروع بعد.' : 'No branches yet.'}</div>}
       </div>
 
       <AddBranchDialog open={open} onOpenChange={setOpen} companyId={company.id} />
+      <AddBranchDialog
+        open={!!editBranch}
+        onOpenChange={(o) => { if (!o) setEditBranch(null); }}
+        companyId={company.id}
+        branch={editBranch}
+      />
     </div>
   );
 }
