@@ -288,9 +288,18 @@ export default function AddBranchDialog({ open, onOpenChange, companyId, branch 
               </div>
               {b.documents.signboard.has && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                  <Input placeholder={isRTL ? 'رقم الترخيص' : 'License number'} value={b.documents.signboard.number} onChange={e => updDoc('signboard', { number: e.target.value })} />
-                  <Input type="date" value={b.documents.signboard.expires_at} onChange={e => updDoc('signboard', { expires_at: e.target.value })} />
-                  <FileInput onFile={f => setFiles(s => ({ ...s, signboard: f }))} />
+                  <div className="space-y-1">
+                    <Label className="text-[11px] text-muted-foreground">{isRTL ? 'رقم الترخيص' : 'License number'}</Label>
+                    <Input placeholder={isRTL ? 'رقم الترخيص' : 'License number'} value={b.documents.signboard.number} onChange={e => updDoc('signboard', { number: e.target.value })} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[11px] text-muted-foreground">{isRTL ? 'تاريخ انتهاء الرخصة' : 'Expiry date'}</Label>
+                    <Input type="date" value={b.documents.signboard.expires_at} onChange={e => updDoc('signboard', { expires_at: e.target.value })} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[11px] text-muted-foreground">{isRTL ? 'المرفق' : 'Attachment'}</Label>
+                    <FileInput onFile={f => setFiles(s => ({ ...s, signboard: f }))} />
+                  </div>
                 </div>
               )}
             </div>
