@@ -47,6 +47,7 @@ import CustomerComplaintsPage from "@/pages/CustomerComplaintsPage";
 import SystemLogsPage from "@/pages/SystemLogsPage";
 import RecurringProblemsPage from "@/pages/RecurringProblemsPage";
 import IntegrationsPage from "@/pages/IntegrationsPage";
+import LicensesExpiryPage from "@/pages/LicensesExpiryPage";
 import { ModuleGuard } from "@/components/ModuleGuard";
 import PatientsPage from "@/pages/clinic/PatientsPage";
 import AppointmentsPage from "@/pages/clinic/AppointmentsPage";
