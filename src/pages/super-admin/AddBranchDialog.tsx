@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, MapPin, FileText, Upload } from 'lucide-react';
+import { Loader2, MapPin, FileText, Upload, ImagePlus, X } from 'lucide-react';
 
 interface Props {
   open: boolean;
@@ -44,6 +44,7 @@ const initialBranch = () => ({
     pest_control: emptyContract(),
     cameras_contract: emptyContract(),
     filters_contract: emptyContract(),
+    photos: [] as string[],
   } as any,
 });
 
@@ -53,6 +54,8 @@ export default function AddBranchDialog({ open, onOpenChange, companyId, branch 
   const qc = useQueryClient();
   const [b, setB] = useState<any>(initialBranch());
   const [files, setFiles] = useState<Record<string, File | null>>({});
+  const [newPhotos, setNewPhotos] = useState<File[]>([]);
+  const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
   const isEdit = !!branch;
 
   const { data: employees = [] } = useQuery({
@@ -78,7 +81,7 @@ export default function AddBranchDialog({ open, onOpenChange, companyId, branch 
     },
   });
 
-  const reset = () => { setB(initialBranch()); setFiles({}); };
+  const reset = () => { setB(initialBranch()); setFiles({}); setNewPhotos([]); setPhotoUrls({}); };
 
   useEffect(() => {
     if (open && branch) {
@@ -91,6 +94,7 @@ export default function AddBranchDialog({ open, onOpenChange, companyId, branch 
       docs.pest_control = { ...base.documents.pest_control, ...(docs.pest_control || {}) };
       docs.cameras_contract = { ...base.documents.cameras_contract, ...(docs.cameras_contract || {}) };
       docs.filters_contract = { ...base.documents.filters_contract, ...(docs.filters_contract || {}) };
+      docs.photos = Array.isArray(docs.photos) ? docs.photos : [];
       setB({
         name: branch.name || '',
         name_ar: branch.name_ar || '',
@@ -111,10 +115,27 @@ export default function AddBranchDialog({ open, onOpenChange, companyId, branch 
         documents: docs,
       });
       setFiles({});
+      setNewPhotos([]);
     } else if (open && !branch) {
       reset();
     }
   }, [open, branch]);
+
+  // Resolve signed URLs for existing branch photos
+  useEffect(() => {
+    const paths: string[] = b.documents?.photos || [];
+    if (!paths.length) { setPhotoUrls({}); return; }
+    let cancelled = false;
+    (async () => {
+      const map: Record<string, string> = {};
+      for (const p of paths) {
+        const { data } = await supabase.storage.from('company-documents').createSignedUrl(p, 3600);
+        if (data?.signedUrl) map[p] = data.signedUrl;
+      }
+      if (!cancelled) setPhotoUrls(map);
+    })();
+    return () => { cancelled = true; };
+  }, [b.documents?.photos]);
 
   const uploadFile = async (file: File, folder: string) => {
     const ext = file.name.split('.').pop();
@@ -129,10 +150,18 @@ export default function AddBranchDialog({ open, onOpenChange, companyId, branch 
       if (!b.name.trim()) throw new Error(isRTL ? 'اسم الفرع مطلوب' : 'Branch name required');
 
       const docs = JSON.parse(JSON.stringify(b.documents));
+      const existingPhotos: string[] = Array.isArray(docs.photos) ? docs.photos : [];
       for (const key of Object.keys(docs)) {
+        if (key === 'photos') continue;
         const f = files[key];
         if (f) docs[key].file_path = await uploadFile(f, key);
       }
+      // Upload new photos
+      const uploaded: string[] = [];
+      for (const pf of newPhotos) {
+        uploaded.push(await uploadFile(pf, 'photos'));
+      }
+      docs.photos = [...existingPhotos, ...uploaded];
 
       const payload: any = {
         company_id: companyId,
@@ -264,6 +293,60 @@ export default function AddBranchDialog({ open, onOpenChange, companyId, branch 
             <F label={isRTL ? 'عدد طفايات الحريق' : 'Fire extinguishers count'}>
               <Input type="number" value={b.extinguishers_count} onChange={e => setB({ ...b, extinguishers_count: e.target.value })} />
             </F>
+          </div>
+
+          <div className="space-y-3 pt-2 border-t">
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <ImagePlus className="w-4 h-4 text-primary" />
+              {isRTL ? 'صور الفرع' : 'Branch photos'}
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              {(b.documents.photos || []).map((path: string) => (
+                <div key={path} className="relative group aspect-square rounded-lg border overflow-hidden bg-muted">
+                  {photoUrls[path] ? (
+                    <img src={photoUrls[path]} alt="branch" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setB((p: any) => ({ ...p, documents: { ...p.documents, photos: p.documents.photos.filter((x: string) => x !== path) } }))}
+                    className="absolute top-1 end-1 p-1 rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 transition"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+              {newPhotos.map((f, i) => (
+                <div key={`new-${i}`} className="relative group aspect-square rounded-lg border overflow-hidden bg-muted">
+                  <img src={URL.createObjectURL(f)} alt="new" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => setNewPhotos(list => list.filter((_, idx) => idx !== i))}
+                    className="absolute top-1 end-1 p-1 rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 transition"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+              <label className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/30 hover:border-primary hover:bg-primary/5 flex flex-col items-center justify-center gap-1 cursor-pointer text-xs text-muted-foreground">
+                <ImagePlus className="w-5 h-5" />
+                {isRTL ? 'إضافة صور' : 'Add photos'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={e => {
+                    const list = Array.from(e.target.files || []);
+                    if (list.length) setNewPhotos(prev => [...prev, ...list]);
+                    e.target.value = '';
+                  }}
+                />
+              </label>
+            </div>
           </div>
 
           <div className="space-y-3 pt-2 border-t">
