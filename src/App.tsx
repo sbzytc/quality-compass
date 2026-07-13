@@ -266,6 +266,13 @@ const AppRoutes = () => (
         </ProtectedRoute>
       } />
 
+      {/* Licenses & Contracts Expiry Tracker */}
+      <Route path="/licenses-expiry" element={
+        <ProtectedRoute allowedRoles={['admin', 'executive', 'branch_manager']}>
+          <LicensesExpiryPage />
+        </ProtectedRoute>
+      } />
+
       {/* AI Assistant - All authenticated users */}
       <Route path="/assistant" element={<AIAssistantPage />} />
 
