@@ -288,9 +288,18 @@ export default function AddBranchDialog({ open, onOpenChange, companyId, branch 
               </div>
               {b.documents.signboard.has && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                  <Input placeholder={isRTL ? 'رقم الترخيص' : 'License number'} value={b.documents.signboard.number} onChange={e => updDoc('signboard', { number: e.target.value })} />
-                  <Input type="date" value={b.documents.signboard.expires_at} onChange={e => updDoc('signboard', { expires_at: e.target.value })} />
-                  <FileInput onFile={f => setFiles(s => ({ ...s, signboard: f }))} />
+                  <div className="space-y-1">
+                    <Label className="text-[11px] text-muted-foreground">{isRTL ? 'رقم الترخيص' : 'License number'}</Label>
+                    <Input placeholder={isRTL ? 'رقم الترخيص' : 'License number'} value={b.documents.signboard.number} onChange={e => updDoc('signboard', { number: e.target.value })} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[11px] text-muted-foreground">{isRTL ? 'تاريخ انتهاء الرخصة' : 'Expiry date'}</Label>
+                    <Input type="date" value={b.documents.signboard.expires_at} onChange={e => updDoc('signboard', { expires_at: e.target.value })} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[11px] text-muted-foreground">{isRTL ? 'المرفق' : 'Attachment'}</Label>
+                    <FileInput onFile={f => setFiles(s => ({ ...s, signboard: f }))} />
+                  </div>
                 </div>
               )}
             </div>
@@ -343,10 +352,24 @@ function DocRow({ title, data, onChange, onFile, isRTL, showIssued = false }: an
     <div className="rounded-lg border p-3 bg-background/50 space-y-2">
       <div className="text-sm font-medium">{title}</div>
       <div className={`grid grid-cols-1 md:grid-cols-${showIssued ? 4 : 3} gap-2`}>
-        <Input placeholder={isRTL ? 'رقم الترخيص' : 'License number'} value={data.number || ''} onChange={e => onChange({ number: e.target.value })} />
-        {showIssued && <Input type="date" value={data.issued_at || ''} onChange={e => onChange({ issued_at: e.target.value })} />}
-        <Input type="date" value={data.expires_at || ''} onChange={e => onChange({ expires_at: e.target.value })} />
-        <FileInput onFile={onFile} />
+        <div className="space-y-1">
+          <Label className="text-[11px] text-muted-foreground">{isRTL ? 'رقم الترخيص' : 'License number'}</Label>
+          <Input placeholder={isRTL ? 'رقم الترخيص' : 'License number'} value={data.number || ''} onChange={e => onChange({ number: e.target.value })} />
+        </div>
+        {showIssued && (
+          <div className="space-y-1">
+            <Label className="text-[11px] text-muted-foreground">{isRTL ? 'تاريخ الإصدار' : 'Issue date'}</Label>
+            <Input type="date" value={data.issued_at || ''} onChange={e => onChange({ issued_at: e.target.value })} />
+          </div>
+        )}
+        <div className="space-y-1">
+          <Label className="text-[11px] text-muted-foreground">{isRTL ? 'تاريخ انتهاء الرخصة' : 'Expiry date'}</Label>
+          <Input type="date" value={data.expires_at || ''} onChange={e => onChange({ expires_at: e.target.value })} />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-[11px] text-muted-foreground">{isRTL ? 'المرفق' : 'Attachment'}</Label>
+          <FileInput onFile={onFile} />
+        </div>
       </div>
     </div>
   );
@@ -357,9 +380,18 @@ function ContractRow({ title, data, onChange, onFile, isRTL }: any) {
     <div className="rounded-lg border p-3 bg-background/50 space-y-2">
       <div className="text-sm font-medium">{title}</div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-        <Input placeholder={isRTL ? 'اسم المزود' : 'Provider name'} value={data.provider || ''} onChange={e => onChange({ provider: e.target.value })} />
-        <Input type="date" value={data.expires_at || ''} onChange={e => onChange({ expires_at: e.target.value })} />
-        <FileInput onFile={onFile} />
+        <div className="space-y-1">
+          <Label className="text-[11px] text-muted-foreground">{isRTL ? 'اسم المزود' : 'Provider name'}</Label>
+          <Input placeholder={isRTL ? 'اسم المزود' : 'Provider name'} value={data.provider || ''} onChange={e => onChange({ provider: e.target.value })} />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-[11px] text-muted-foreground">{isRTL ? 'تاريخ انتهاء العقد' : 'Contract expiry date'}</Label>
+          <Input type="date" value={data.expires_at || ''} onChange={e => onChange({ expires_at: e.target.value })} />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-[11px] text-muted-foreground">{isRTL ? 'المرفق' : 'Attachment'}</Label>
+          <FileInput onFile={onFile} />
+        </div>
       </div>
     </div>
   );

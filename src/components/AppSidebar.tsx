@@ -7,6 +7,7 @@ import {
   ChevronLeft, ChevronRight, ChevronDown, Briefcase, UserCircle, Wrench, LogOut,
   PlusCircle, History, Archive, ListChecks, BarChart3, TrendingUp, Headset, Sparkles,
   Star, MessageSquareMore, ScrollText, Repeat, Plug, Stethoscope, Calendar as CalendarIcon, ClipboardList,
+  CalendarClock,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
@@ -80,6 +81,7 @@ export function AppSidebar() {
     { labelKey: 'nav.correctiveActions', icon: ListChecks, path: '/corrective-actions', allowedRoles: ['admin', 'executive', 'branch_manager'] as AppRole[] },
     { labelKey: 'nav.reports', icon: BarChart3, path: '/reports', allowedRoles: ['admin', 'executive', 'branch_manager'] as AppRole[] },
     { labelKey: 'nav.branchPerformance', icon: TrendingUp, path: '/branch-performance', allowedRoles: ['admin', 'executive', 'branch_manager'] as AppRole[] },
+    { labelKey: 'nav.licensesExpiry', icon: CalendarClock, path: '/licenses-expiry', allowedRoles: ['admin', 'executive', 'branch_manager'] as AppRole[] },
     {
       labelKey: 'nav.support', icon: Headset, path: '/support',
       children: [

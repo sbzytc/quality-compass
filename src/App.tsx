@@ -47,6 +47,7 @@ import CustomerComplaintsPage from "@/pages/CustomerComplaintsPage";
 import SystemLogsPage from "@/pages/SystemLogsPage";
 import RecurringProblemsPage from "@/pages/RecurringProblemsPage";
 import IntegrationsPage from "@/pages/IntegrationsPage";
+import LicensesExpiryPage from "@/pages/LicensesExpiryPage";
 import { ModuleGuard } from "@/components/ModuleGuard";
 import PatientsPage from "@/pages/clinic/PatientsPage";
 import AppointmentsPage from "@/pages/clinic/AppointmentsPage";
@@ -262,6 +263,13 @@ const AppRoutes = () => (
       <Route path="/integrations" element={
         <ProtectedRoute allowedRoles={['admin']}>
           <IntegrationsPage />
+        </ProtectedRoute>
+      } />
+
+      {/* Licenses & Contracts Expiry Tracker */}
+      <Route path="/licenses-expiry" element={
+        <ProtectedRoute allowedRoles={['admin', 'executive', 'branch_manager']}>
+          <LicensesExpiryPage />
         </ProtectedRoute>
       } />
 
