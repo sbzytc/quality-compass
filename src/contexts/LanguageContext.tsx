@@ -290,6 +290,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.correctiveActions': 'الإجراءات التصحيحية',
     'nav.reports': 'التقارير',
     'nav.branchPerformance': 'أداء الفرع',
+    'nav.licensesExpiry': 'الرخص و العقود',
     'nav.evaluations.weekly': 'تقييم أسبوعي',
     'nav.evaluations.monthly': 'تقييم شهري',
     'nav.users': 'المستخدمين',
