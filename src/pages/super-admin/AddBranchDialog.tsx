@@ -297,6 +297,60 @@ export default function AddBranchDialog({ open, onOpenChange, companyId, branch 
 
           <div className="space-y-3 pt-2 border-t">
             <div className="flex items-center gap-2 text-sm font-semibold">
+              <ImagePlus className="w-4 h-4 text-primary" />
+              {isRTL ? 'صور الفرع' : 'Branch photos'}
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              {(b.documents.photos || []).map((path: string) => (
+                <div key={path} className="relative group aspect-square rounded-lg border overflow-hidden bg-muted">
+                  {photoUrls[path] ? (
+                    <img src={photoUrls[path]} alt="branch" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setB((p: any) => ({ ...p, documents: { ...p.documents, photos: p.documents.photos.filter((x: string) => x !== path) } }))}
+                    className="absolute top-1 end-1 p-1 rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 transition"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+              {newPhotos.map((f, i) => (
+                <div key={`new-${i}`} className="relative group aspect-square rounded-lg border overflow-hidden bg-muted">
+                  <img src={URL.createObjectURL(f)} alt="new" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => setNewPhotos(list => list.filter((_, idx) => idx !== i))}
+                    className="absolute top-1 end-1 p-1 rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 transition"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+              <label className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/30 hover:border-primary hover:bg-primary/5 flex flex-col items-center justify-center gap-1 cursor-pointer text-xs text-muted-foreground">
+                <ImagePlus className="w-5 h-5" />
+                {isRTL ? 'إضافة صور' : 'Add photos'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={e => {
+                    const list = Array.from(e.target.files || []);
+                    if (list.length) setNewPhotos(prev => [...prev, ...list]);
+                    e.target.value = '';
+                  }}
+                />
+              </label>
+            </div>
+          </div>
+
+          <div className="space-y-3 pt-2 border-t">
+            <div className="flex items-center gap-2 text-sm font-semibold">
               <FileText className="w-4 h-4 text-primary" />
               {isRTL ? 'الوثائق والعقود' : 'Documents & contracts'}
             </div>
