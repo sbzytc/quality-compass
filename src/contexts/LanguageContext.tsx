@@ -27,6 +27,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.correctiveActions': 'Corrective Actions',
     'nav.reports': 'Reports',
     'nav.branchPerformance': 'Branch Performance',
+    'nav.licensesExpiry': 'Licenses & Contracts',
     'nav.evaluations.weekly': 'Weekly Evaluation',
     'nav.evaluations.monthly': 'Monthly Evaluation',
     'nav.users': 'Users',
