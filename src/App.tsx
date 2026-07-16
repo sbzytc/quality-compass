@@ -64,6 +64,7 @@ import CompanyBranchesTab from "@/pages/super-admin/tabs/CompanyBranchesTab";
 import CompanySubscriptionTab from "@/pages/super-admin/tabs/CompanySubscriptionTab";
 import CompanyAuditLogsTab from "@/pages/super-admin/tabs/CompanyAuditLogsTab";
 import SuperAdminAccountsPage from "@/pages/super-admin/SuperAdminAccountsPage";
+import OAuthConsent from "@/pages/OAuthConsent";
 
 const queryClient = new QueryClient();
 
@@ -83,6 +84,9 @@ const AppRoutes = () => (
     {/* Public routes */}
     <Route path="/login" element={<LoginPage />} />
     <Route path="/feedback/:branchId" element={<CustomerFeedbackPage />} />
+
+    {/* Managed OAuth consent (for MCP / third-party clients) */}
+    <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
 
     {/* Super Admin Landing — pick destination */}
     <Route path="/super-admin" element={<SuperAdminRoute><SuperAdminLanding /></SuperAdminRoute>} />

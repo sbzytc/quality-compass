@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
@@ -34,13 +34,16 @@ export default function LoginPage() {
   const { signIn, user, roles, loading: authLoading } = useAuth();
   const { direction } = useLanguage();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const rawNext = searchParams.get('next');
+  const nextPath = rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : null;
 
   // Redirect if already logged in (and not showing force password change)
   useEffect(() => {
     if (!authLoading && user && roles.length > 0 && !showForcePasswordChange) {
-      navigate(getDefaultDashboard(roles), { replace: true });
+      navigate(nextPath ?? getDefaultDashboard(roles), { replace: true });
     }
-  }, [user, roles, authLoading, navigate, showForcePasswordChange]);
+  }, [user, roles, authLoading, navigate, showForcePasswordChange, nextPath]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
