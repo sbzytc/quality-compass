@@ -2140,6 +2140,10 @@ export type Database = {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
       }
+      internal_clone_sandbox: {
+        Args: { _source_company_id: string }
+        Returns: string
+      }
       promote_sandbox_changes: {
         Args: { _sandbox_company_id: string; _selections: Json }
         Returns: Json
