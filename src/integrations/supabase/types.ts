@@ -2135,9 +2135,37 @@ export type Database = {
         }
         Returns: undefined
       }
+      get_sandbox_diff: { Args: { _sandbox_company_id: string }; Returns: Json }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
+      }
+      promote_sandbox_changes: {
+        Args: { _sandbox_company_id: string; _selections: Json }
+        Returns: Json
+      }
+      promote_table_by_company: {
+        Args: {
+          _real_id: string
+          _sandbox_id: string
+          _selection: Json
+          _table: string
+        }
+        Returns: Json
+      }
+      reset_sandbox: { Args: { _sandbox_company_id: string }; Returns: string }
+      sandbox_diff_by_company: {
+        Args: { _real_id: string; _sandbox_id: string; _table: string }
+        Returns: Json
+      }
+      sandbox_diff_row_json: { Args: { _r: Json }; Returns: Json }
+      sandbox_diff_template_categories: {
+        Args: { _real_id: string; _sandbox_id: string }
+        Returns: Json
+      }
+      sandbox_diff_template_criteria: {
+        Args: { _real_id: string; _sandbox_id: string }
+        Returns: Json
       }
     }
     Enums: {
