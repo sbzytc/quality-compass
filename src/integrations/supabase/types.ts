@@ -2153,7 +2153,6 @@ export type Database = {
         }
         Returns: Json
       }
-      reset_sandbox: { Args: { _sandbox_company_id: string }; Returns: string }
       sandbox_diff_by_company: {
         Args: { _real_id: string; _sandbox_id: string; _table: string }
         Returns: Json
