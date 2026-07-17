@@ -102,6 +102,10 @@
 5. صفحة `SandboxDiffPage` + RPC `get_sandbox_diff` + `promote_sandbox_changes`.
 6. زر Reset + توثيق مختصر للمستخدم.
 
+## ملاحظة عن حالة التنفيذ
+
+الخطوات 1–4 من قسم "خطة التنفيذ" منجزة فعلًا في الجلسة السابقة (schema + clone + auto-trigger + backfill + Workspace Switcher + Sandbox banner). المتبقي: **الخطوة 5 (صفحة Diff/Promote + RPCs)** ثم **الخطوة 6 (زر Reset)**. الموافقة على هذه الخطة تعني الاستمرار في الخطوة 5.
+
 ## أسئلة أطلبها قبل البدء
 
 - هل الشركة التجريبية مرئية لكل أدمن الشركة الفعلية، أم فقط لمن أنشأها؟
