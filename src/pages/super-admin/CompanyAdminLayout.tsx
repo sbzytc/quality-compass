@@ -20,7 +20,7 @@ export default function CompanyAdminLayout() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('companies')
-        .select('id, name, name_ar, slug, status, is_sandbox, workspace_type')
+        .select('id, name, name_ar, slug, status, is_sandbox, sandbox_of_company_id, workspace_type')
         .eq('id', companyId!)
         .maybeSingle();
       if (error) throw error;
@@ -61,10 +61,16 @@ export default function CompanyAdminLayout() {
             <Badge variant={company?.status === 'active' ? 'default' : 'secondary'} className="text-[10px]">
               {company?.status}
             </Badge>
-            {company?.is_sandbox && (
+            {company?.is_sandbox && company?.sandbox_of_company_id && (
               <Badge className="text-[10px] bg-amber-500 hover:bg-amber-500 text-white gap-1">
                 <FlaskConical className="w-2.5 h-2.5" />
                 {isRTL ? 'تجريبية' : 'Sandbox'}
+              </Badge>
+            )}
+            {company?.is_sandbox && !company?.sandbox_of_company_id && (
+              <Badge variant="outline" className="text-[10px] border-slate-400/70 text-slate-600 bg-white/60 gap-1">
+                <FlaskConical className="w-2.5 h-2.5" />
+                {isRTL ? 'تجريبي قديم — غير مرتبط' : 'Legacy — Unlinked'}
               </Badge>
             )}
           </div>
