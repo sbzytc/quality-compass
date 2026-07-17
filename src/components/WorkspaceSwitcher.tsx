@@ -30,7 +30,8 @@ export function WorkspaceSwitcher() {
     isRTL ? (c.name_ar || c.name) : c.name;
 
   const realCompanies = companies.filter((c) => !c.is_sandbox);
-  const sandboxCompanies = companies.filter((c) => c.is_sandbox);
+  const sandboxCompanies = companies.filter((c) => c.is_sandbox && c.sandbox_of_company_id);
+  const orphanSandboxes = companies.filter((c) => c.is_sandbox && !c.sandbox_of_company_id);
 
   const renderItem = (c: (typeof companies)[number]) => (
     <DropdownMenuItem
@@ -60,9 +61,14 @@ export function WorkspaceSwitcher() {
           {isRTL ? 'مالك' : 'Owner'}
         </Badge>
       )}
-      {c.is_sandbox && (
+      {c.is_sandbox && c.sandbox_of_company_id && (
         <Badge variant="outline" className="text-[10px] border-amber-500/50 text-amber-700">
           {isRTL ? 'تجريبي' : 'Sandbox'}
+        </Badge>
+      )}
+      {c.is_sandbox && !c.sandbox_of_company_id && (
+        <Badge variant="outline" className="text-[10px] border-slate-400/60 text-slate-600 bg-slate-100/60">
+          {isRTL ? 'تجريبي قديم — غير مرتبط' : 'Legacy — Unlinked'}
         </Badge>
       )}
     </DropdownMenuItem>
@@ -97,6 +103,16 @@ export function WorkspaceSwitcher() {
               {isRTL ? 'بيئات تجريبية' : 'Sandboxes'}
             </DropdownMenuLabel>
             {sandboxCompanies.map(renderItem)}
+          </>
+        )}
+        {orphanSandboxes.length > 0 && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="text-xs text-slate-600 flex items-center gap-1.5">
+              <FlaskConical className="h-3.5 w-3.5 opacity-60" />
+              {isRTL ? 'بيئات تجريبية قديمة (غير مرتبطة)' : 'Legacy Sandboxes (Unlinked)'}
+            </DropdownMenuLabel>
+            {orphanSandboxes.map(renderItem)}
           </>
         )}
       </DropdownMenuContent>
