@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Shield, Check, X, Save, Pencil } from 'lucide-react';
+import { Shield, Check, X, Save, Pencil, Info } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -92,10 +92,10 @@ const DEFAULT_PERMISSIONS: Record<RoleKey, string[]> = {
 export default function RolePermissionsManager() {
   const { direction } = useLanguage();
   const [editing, setEditing] = useState(false);
-  const [permissions, setPermissions] = useState<Record<RoleKey, string[]>>(() => {
-    const saved = localStorage.getItem('role_permissions');
-    return saved ? JSON.parse(saved) : { ...DEFAULT_PERMISSIONS };
-  });
+  // NOTE: This matrix is a UI-only reference. Actual access control is enforced
+  // by Supabase Row-Level Security policies and role checks — this panel does
+  // NOT grant or revoke any real permission.
+  const [permissions, setPermissions] = useState<Record<RoleKey, string[]>>(() => ({ ...DEFAULT_PERMISSIONS }));
 
   const togglePermission = (role: RoleKey, permKey: string) => {
     if (!editing || role === 'admin') return; // Admin always has all
@@ -109,20 +109,19 @@ export default function RolePermissionsManager() {
   };
 
   const handleSave = () => {
-    localStorage.setItem('role_permissions', JSON.stringify(permissions));
     setEditing(false);
-    toast.success(direction === 'rtl' ? 'تم حفظ الصلاحيات بنجاح' : 'Permissions saved successfully');
+    toast.info(direction === 'rtl'
+      ? 'تم تحديث العرض فقط. الصلاحيات الفعلية تُدار من قِبل قواعد الأمان في قاعدة البيانات.'
+      : 'View updated locally. Actual permissions are enforced by database security rules.');
   };
 
   const handleCancel = () => {
-    const saved = localStorage.getItem('role_permissions');
-    setPermissions(saved ? JSON.parse(saved) : { ...DEFAULT_PERMISSIONS });
+    setPermissions({ ...DEFAULT_PERMISSIONS });
     setEditing(false);
   };
 
   const handleReset = () => {
     setPermissions({ ...DEFAULT_PERMISSIONS });
-    localStorage.removeItem('role_permissions');
     setEditing(false);
     toast.success(direction === 'rtl' ? 'تم إعادة الصلاحيات للوضع الافتراضي' : 'Permissions reset to defaults');
   };
@@ -177,6 +176,14 @@ export default function RolePermissionsManager() {
         </div>
       </CardHeader>
       <CardContent>
+        <div className="mb-4 flex items-start gap-2 rounded-md border border-amber-300/60 bg-amber-50/60 p-3 text-xs text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200">
+          <Info className="w-4 h-4 mt-0.5 shrink-0" />
+          <p>
+            {direction === 'rtl'
+              ? 'هذه اللوحة للعرض المرجعي فقط. الصلاحيات الفعلية يفرضها الخادم عبر قواعد الأمان (RLS)، ولا يمكن تجاوزها من هنا.'
+              : 'This panel is a reference view only. Real access is enforced server-side by Row-Level Security policies and cannot be changed from here.'}
+          </p>
+        </div>
         <div className="overflow-x-auto -mx-6 px-6">
           <Table>
             <TableHeader>

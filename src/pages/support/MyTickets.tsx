@@ -119,9 +119,17 @@ export default function MyTickets() {
     try {
       let attachments: string[] = [];
       if (file) {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-        
+        if (file.size > 5 * 1024 * 1024) {
+          throw new Error(direction === 'rtl' ? 'حجم الملف كبير جداً (الحد 5MB)' : 'File is too large (max 5MB)');
+        }
+        if (!file.type.startsWith('image/')) {
+          throw new Error(direction === 'rtl' ? 'يُسمح بالصور فقط' : 'Only image files are allowed');
+        }
+        const fileExt = (file.name.split('.').pop() || 'bin').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+        const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
+
         const { error: uploadError } = await supabase.storage
           .from('support-attachments')
           .upload(fileName, file);
