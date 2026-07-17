@@ -18,6 +18,8 @@ export interface Company {
   primary_module: PrimaryModule;
   logo_url: string | null;
   status: string;
+  is_sandbox?: boolean;
+  sandbox_of_company_id?: string | null;
 }
 
 export interface CompanyMembership extends Company {
@@ -34,6 +36,8 @@ interface CurrentCompanyContextValue {
   /** @deprecated use workspaceType. Kept for legacy call sites. */
   hasModule: (code: string) => boolean;
   isCompanyAdmin: boolean;
+  isSandbox: boolean;
+  sandboxOfCompanyId: string | null;
   refresh: () => Promise<void>;
 }
 
@@ -63,7 +67,7 @@ export function CurrentCompanyProvider({ children }: { children: ReactNode }) {
       // Super admin sees ALL companies
       const { data, error } = await supabase
         .from('companies')
-        .select('id, name, name_ar, slug, sector_type, workspace_type, primary_module, logo_url, status')
+        .select('id, name, name_ar, slug, sector_type, workspace_type, primary_module, logo_url, status, is_sandbox, sandbox_of_company_id')
         .is('deleted_at', null)
         .order('name');
       if (error) {
@@ -75,7 +79,7 @@ export function CurrentCompanyProvider({ children }: { children: ReactNode }) {
     } else {
       const { data, error } = await supabase
         .from('company_users')
-        .select('role, companies(id, name, name_ar, slug, sector_type, workspace_type, primary_module, logo_url, status)')
+        .select('role, companies(id, name, name_ar, slug, sector_type, workspace_type, primary_module, logo_url, status, is_sandbox, sandbox_of_company_id)')
         .eq('user_id', user.id)
         .eq('is_active', true);
 
@@ -122,6 +126,8 @@ export function CurrentCompanyProvider({ children }: { children: ReactNode }) {
 
   const workspaceType = currentCompany?.workspace_type ?? null;
   const primaryModule = currentCompany?.primary_module ?? null;
+  const isSandbox = !!currentCompany?.is_sandbox;
+  const sandboxOfCompanyId = currentCompany?.sandbox_of_company_id ?? null;
 
   // Legacy compatibility: hasModule('medical') → workspace_type === 'medical'
   const hasModule = useCallback(
@@ -143,6 +149,8 @@ export function CurrentCompanyProvider({ children }: { children: ReactNode }) {
         primaryModule,
         hasModule,
         isCompanyAdmin,
+        isSandbox,
+        sandboxOfCompanyId,
         refresh: loadCompanies,
       }}
     >
