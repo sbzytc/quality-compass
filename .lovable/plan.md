@@ -1,116 +1,160 @@
-# تصميم ميزة "الشركة التجريبية" (Sandbox) — مرحلة التخطيط فقط
+# تصميم ميزة "الشركة التجريبية" (Sandbox)
 
-> ملاحظة: المرحلة الأولى (استنساخ الهيكلة + مبدّل الشركات + شريط التنبيه) والمرحلة الثانية (Diff/Promote للإعدادات الأساسية + Reset) منفّذة فعليًا في المشروع. هذه الوثيقة تجيب على أسئلتك الأربعة وتضع خارطة للتوسعات القادمة، دون أي تعديل على الكود.
-
----
+> plan mode فقط — لا يُنفّذ أي تغيير على الكود.
 
 ## 1) تمثيل العلاقة بين الشركة الفعلية والتجريبية في قاعدة البيانات
 
-**التوصية:** الإبقاء على النموذج الحالي (بدون جدول ربط منفصل)، مع إضافات صغيرة عند التوسع.
+### التوصية: نموذج الأعمدة على `companies` + عمود `origin_id` على جداول الإعدادات
 
-النموذج الحالي في جدول `companies`:
-- `is_sandbox boolean` — علم يميّز البيئة.
-- `sandbox_of_company_id uuid` — يشير من التجريبية إلى الفعلية (NULL في الفعلية).
-- `sandbox_created_at`, `sandbox_last_synced_at` — بيانات وصفية.
-- Trigger `enforce_sandbox_company_shape` يضمن التماسك (Sandbox ⇔ لديها parent، Real ⇔ ليس لديها parent).
-- Trigger `trigger_auto_create_sandbox` يستنسخ تلقائيًا عند إنشاء شركة فعلية.
+لا نضيف جدول ربط منفصل؛ العلاقة 1↔1 صارمة بين شركة فعلية وشركة تجريبية واحدة.
 
-على مستوى جداول الإعدادات (13 جدولًا حاليًا: regions, branches, feature_flags, company_off_days, evaluation_templates, template_categories, template_criteria, …) يوجد عمود `origin_id` يشير إلى الصف المقابل في الشركة الفعلية (NULL = سجل جديد في التجريبية فقط). هذا هو مفتاح خوارزمية الـ Diff.
+#### جدول `companies`
 
-**لماذا لا نستخدم جدول ربط منفصل؟**
-- علاقة 1↔1 صارمة بين الشركتين، لا حاجة لجدول Junction.
-- كل الاستعلامات الحالية مُفلترة بـ `company_id`؛ الحفاظ على نفس النمط يبسّط RLS.
-- إضافة عمود `parent_company_id` في جداول أخرى غير `companies` كان سيُدخل تكرارًا ويكسر مبدأ عزل الشركات.
+````text
+companies
+├── id
+├── name / name_ar / slug / sector_type / workspace_type / primary_module
+├── status / deleted_at
+├── is_sandbox            boolean  -- true = شركة تجريبية
+├── sandbox_of_company_id uuid     -- تشير من التجريبية إلى الفعلية؛ NULL في الفعلية
+├── sandbox_created_at    timestamptz
+└── sandbox_last_synced_at timestamptz
+````
 
-**التوسع المقترح لاحقًا** (للجداول التشغيلية):
-- إبقاء نفس نمط `origin_id` فقط للجداول التي نحتاج Promote فيها (غالبًا: `evaluation_schedules`, `operations_tasks`).
-- لا نضيف `origin_id` لجداول Facts الضخمة (تقييمات، درجات، بلاغات) لأنها لا تُرقّى — انظر القسم 3.
+#### ضوابط النزاهة
+
+- **Trigger** `enforce_sandbox_company_shape`:
+  - `is_sandbox = true` يجب أن يكون `sandbox_of_company_id` غير NULL.
+  - `is_sandbox = false` يجب أن يكون `sandbox_of_company_id` NULL.
+- **Unique partial index** لمنع تكرار Sandbox لنفس الشركة:
+  `UNIQUE (sandbox_of_company_id) WHERE is_sandbox = true`.
+- **Trigger** `trigger_auto_create_sandbox` على `INSERT` في `companies` ينشئ Sandbox تلقائيًا للشركة الفعلية.
+
+#### تمثيل السجلات المقابلة داخل الشركتين
+
+لكل جدول إعدادات/هيكل نريد Diff/Promote له، نضيف عمود `origin_id uuid`:
+
+- `origin_id` يشير إلى `id` السجل الأصل في الشركة الفعلية.
+- `origin_id IS NULL` يعني أن السجل جديد أنشئ في Sandbox فقط.
+- لا نضيف `origin_id` لجداول Facts التشغيلية (تقييمات، درجات، بلاغات) لأنها لا تُرقّى.
+
+#### لماذا لا نستخدم `parent_company_id` في كل جدول؟
+
+لأن كل الاستعلامات الحالية مُفلترة بـ `company_id`، وإضافة `parent_company_id` ستكرّر المنطق وتكسر عزل الشركات. عمود `origin_id` يكفي ولا يُغيّر شكل الاستعلامات القائمة.
 
 ---
 
 ## 2) تعامل RLS مع تبديل السياق
 
-**المبدأ الأساسي:** لا يوجد "context switching" فعلي في قاعدة البيانات — الشركة التجريبية تُعامل كشركة مستقلة تمامًا بمعرّف مختلف، وكل الـ RLS الحالية المبنية على `company_id` تعمل كما هي دون أي تعديل.
+### المبدأ: لا "context switching" في قاعدة البيانات
 
-آلية الوصول:
-1. **الأدمن يُضاف كعضو في الشركة التجريبية** عبر `company_users` أثناء عملية الاستنساخ (`private.clone_company_as_sandbox`).
-2. **الفرونت** يمرّر `company_id` الحالي (المختار من WorkspaceSwitcher) في كل استعلام.
-3. **سياسات RLS القائمة** — مثل `has_company_access(auth.uid(), company_id)` — تسمح تلقائيًا للأدمن بالشركتين لأنه عضو في كلتيهما.
+الشركة التجريبية هي شركة مستقلة بمعرّف `company_id` مختلف. الـ RLS القائم على `company_id` يعمل كما هو دون تعديل.
 
-**النقاط الحرجة التي يجب التحقق منها قبل التوسع:**
-- أي RLS يستخدم `profiles.default_company_id` كمصدر وحيد للسياق يجب استبداله بـ `company_id` المرسل مع الاستعلام (أو JWT claim).
-- سياسات edge functions يجب أن تتحقق من صلاحية الأدمن على **الشركة الفعلية** قبل السماح بـ Reset/Promote (وليس فقط على التجريبية) — للحماية من رفع تعديلات من مستخدم أُضيف للتجريبية فقط.
-- منع تسريب بيانات عابرة للشركتين: لا يوجد أي JOIN بين `sandbox_company_id` و `real_company_id` في استعلامات المستخدم النهائي — فقط دوال SECURITY DEFINER (`get_sandbox_diff`, `promote_sandbox_changes`) تفعل ذلك بعد التحقق من الملكية.
+### آلية الوصول
 
-**التحسين المقترح:** إضافة helper `private.is_sandbox_admin_of(_user, _sandbox_id)` يتحقق أن المستخدم أدمن على الشركة الأصل، واستخدامه في كل مسارات Promote/Reset بدل تكرار المنطق.
+1. **إضافة الأدمن كعضو في Sandbox:** أثناء الاستنساخ، يُضاف صاحب/أدمن الشركة الفعلية إلى `company_users` للشركة التجريبية بدور `owner` أو `admin`.
+2. **الفرونت يمرّر `company_id` الحالي:** عند تبديل الشركة عبر `WorkspaceSwitcher`، يُخزّن الاختيار في `localStorage` ويُرسل مع كل استعلام.
+3. **RLS القائمة:** سياسات مثل `has_company_access(auth.uid(), company_id)` تسمح للأدمن بالوصول إلى الشركتين لأنه عضو في كلتيهما.
+
+### نقاط حرجة يجب مراعاتها
+
+- **عدم الاعتماد على `profiles.default_company_id`:** أي RLS يستخدم `default_company_id` كمصدر وحيد للسياق يجب تعديله ليقبل `company_id` المرسل مع الاستعلام.
+- **التحقق من الصلاحيات على الشركة الفعلية:** دوال Promote/Reset يجب أن تتحقق أن المستخدم أدمن/مالك على **الشركة الفعلية** قبل السماح بنقل التعديلات أو إعادة التعيين.
+- **عزل البيانات عبر الشركتين:** لا يوجد JOIN بين `sandbox_company_id` و `real_company_id` في استعلامات المستخدم النهائي؛ فقط دوال SECURITY DEFINER (`get_sandbox_diff`, `promote_sandbox_changes`) تفعل ذلك بعد التحقق من الملكية.
+
+### تحسين مقترح
+
+إضافة helper واحد:
+
+```sql
+private.is_sandbox_admin_of(_user_id uuid, _sandbox_company_id uuid) RETURNS boolean
+```
+
+يتحقق أن المستخدم أدمن/مالك للشركة الأصل، ويُستخدم في كل مسارات Promote/Reset بدل تكرار المنطق.
 
 ---
 
 ## 3) تقييم إمكانية حساب Diff شامل لكل الجداول
 
-**الإجابة المختصرة:** غير عملي وغير مرغوب لكل الجداول. يوصى بالتقسيم الآتي:
+### الإجابة المختصرة: غير عملي وغير مرغوب لكل الجداول
 
-### الفئة أ — Diff + Promote كاملَين (النطاق الحالي + توسعات قريبة)
-جداول إعدادات وقوالب: صغيرة، تتغيّر ببطء، وذات دلالة تشغيلية للـ Promote.
-- ✅ المُنفَّذ: `regions`, `branches`, `feature_flags`, `company_off_days` (Diff + Promote)
-- 🟡 Diff فقط حاليًا (Promote يحتاج معالجة شجرية): `evaluation_templates`, `template_categories`, `template_criteria`
-- 🔜 مرشحات للإضافة: `template_domains`, `template_frequencies`, `template_priorities`, `clinic_departments`, `clinic_rooms`
+نوصي بتقسيم الجداول إلى ثلاث فئات:
 
-### الفئة ب — Diff للعرض فقط (بدون Promote)
-جداول تشغيلية متوسطة يمكن مقارنتها لكن ترقيتها للفعلي تكسر المعنى:
-- `evaluation_schedules` (جدولة مرتبطة بفروع مختلفة الـ ID)
-- `operations_tasks` (المهام مرتبطة بمستخدمين وفروع)
+#### الفئة أ — Diff + Promote كامل
 
-يمكن عرض عدد السجلات الجديدة/المعدلة كإحصائية دون زر Promote.
+جداول إعدادات وقوالب: صغيرة، تتغير ببطء، وذات دلالة تشغيلية للـ Promote.
 
-### الفئة ج — لا Diff ولا Promote
-جداول Facts عالية التغيّر (بيانات ناتجة عن تنفيذ فعلي):
-- `evaluations`, `evaluation_criterion_scores`, `evaluation_category_scores`
-- `non_conformities`, `non_conformity_history`, `corrective_actions`
-- `customer_feedbacks`, `customer_feedback_scores`, `customer_complaints`
-- `notifications`, `audit_logs`, `system_logs`, `appointments`, `visits`, `patients`
+- المنفّذ حاليًا: `regions`, `branches`, `feature_flags`, `company_off_days`.
+- Diff فقط حاليًا (Promote يحتاج معالجة شجرية): `evaluation_templates`, `template_categories`, `template_criteria`.
+- مرشحات للإضافة: `template_domains`, `template_frequencies`, `template_priorities`, `clinic_departments`, `clinic_rooms`.
+
+#### الفئة ب — Diff للعرض فقط (بدون Promote)
+
+جداول تشغيلية متوسطة يمكن مقارنتها إحصائيًا لكن ترقيتها للفعلي تكسر المعنى:
+
+- `evaluation_schedules` (مرتبطة بفروع مختلفة الـ ID).
+- `operations_tasks` (مرتبطة بمستخدمين وفروع).
+
+يمكن عرض عدد السجلات الجديدة/المعدلة دون زر Promote.
+
+#### الفئة ج — لا Diff ولا Promote
+
+جداول Facts عالية التغيّر (نتائج تنفيذ فعلي):
+
+- `evaluations`, `evaluation_criterion_scores`, `evaluation_category_scores`.
+- `non_conformities`, `non_conformity_history`, `corrective_actions`.
+- `customer_feedbacks`, `customer_feedback_scores`, `customer_complaints`.
+- `notifications`, `audit_logs`, `system_logs`, `appointments`, `visits`, `patients`.
 
 **السبب:**
-- لا معنى لـ "ترقية تقييم" من التجريبي للفعلي (يخلق تاريخًا مزيّفًا).
-- حجم البيانات يجعل الـ Diff مكلفًا (O(n) على جدولين).
-- الـ IDs الخارجية (branch, user, template) مختلفة بين البيئتين → كل صف سيبدو مختلفًا.
+- لا معنى لـ "ترقية تقييم" من التجريبي للفعلي؛ يخلق تاريخًا مزيّفًا.
+- الحجم يجعل Diff مكلفًا.
+- الـ FKs (branch, user, template) مختلفة بين البيئتين → كل صف سيظهر مختلفًا.
 
-### الاستراتيجية العامة للـ Diff
-- استخدام `sandbox_diff_row_json` (موجود) الذي يحذف `id`, `origin_id`, `company_id`, `created_at`, `updated_at` قبل المقارنة → يقلل الضجيج.
-- **مشكلة معروفة:** الأعمدة التي تحمل FK لجداول أخرى (`region_id`, `parent_id`, …) ستظهر كاختلاف دائم لأن الـ IDs مختلفة. **الحل المقترح:** إضافة خطوة "normalization" في `sandbox_diff_row_json` تستبدل الـ FK بـ `origin_id` الخاص بالسجل المُشار إليه قبل المقارنة (يحتاج جدول تعريف للـ FKs).
+### استراتيجية الـ Diff
+
+- استخدام `sandbox_diff_row_json` لحذف `id`, `origin_id`, `company_id`, `created_at`, `updated_at` قبل المقارنة.
+- **مشكلة معروفة:** الأعمدة التي تحمل FK لجداول أخرى (`region_id`, `parent_id`) ستظهر كاختلاف دائم لأن الـ IDs مختلفة. **الحل:** إضافة خطوة normalization تستبدل الـ FK بـ `origin_id` الخاص بالسجل المُشار إليه قبل المقارنة.
+
+### التوصية
+
+ابدأ بنطاق أضيق (الإعدادات والقوالب)، ثم وسّع تدريجيًا. لا تُضمّن Facts في Promote.
 
 ---
 
-## 4) أهم المخاطر التقنية
+## 4) أهم المخاطر التقنية قبل التنفيذ
 
 ### مخاطر عالية
-1. **انفجار عدد الشركات التجريبية:** كل شركة فعلية تولّد نسخة → مضاعفة الصفوف في 13+ جدول. يجب مراقبة الأحجام، وربما إضافة سياسة "Sandbox واحد لكل شركة" (unique index جزئي على `sandbox_of_company_id WHERE is_sandbox`).
-2. **تسرّب صلاحيات عبر الاستنساخ:** إذا استُنسخ `company_users` بحذافيره، قد يحصل مستخدمون سابقون على وصول لبيانات تجريبية جديدة. **الحل:** استنساخ صلاحيات الأدمن/المالك فقط.
-3. **Reset يحذف عمل المستخدم:** إذا أعاد الأدمن التعيين بعد ساعات من العمل التجريبي يفقد كل شيء. مطلوب: تأكيد مزدوج + Snapshot تلقائي قبل Reset (يمكن تأجيله لمرحلة متقدمة).
-4. **Promote للترقيات المتضاربة:** إذا عدّل مستخدم في الفعلية بينما كان الأدمن يعدّل نفس السجل في التجريبية، الـ Promote يكتب فوق التغيير. مطلوب: فحص `updated_at` قبل الكتابة (Optimistic locking).
+
+1. **انفجار عدد الشركات التجريبية:** كل شركة فعلية تولّد نسخة → مضاعفة الصفوف في 13+ جدول. يجب unique index جزئي على `sandbox_of_company_id WHERE is_sandbox`.
+2. **تسرّب صلاحيات عبر الاستنساخ:** إذا استُنسخ `company_users` بحذافيره قد يحصل مستخدمون سابقون على وصول للـ Sandbox. **الحل:** استنساخ صلاحيات الأدمن/المالك فقط.
+3. **فقدان عمل المستخدم عند Reset:** إعادة التعيين تحذف كل شيء. مطلوب تأكيد مزدوج + Snapshot تلقائي قبل Reset.
+4. **Promote يكتب فوق تغييرات الفعلية:** إذا عدّل مستخدم الفعلي بينما الأدمن يعدّل Sandbox، الـ Promote يحذف التغيير. مطلوب فحص `updated_at` (Optimistic locking).
 
 ### مخاطر متوسطة
-5. **FKs الشجرية (Templates):** ترقية `template_criteria` تتطلب أن يكون `template_categories` مرقّى أولًا، والذي يتطلب `evaluation_templates` — التزامن يجب أن يكون في transaction واحد بترتيب طوبولوجي.
-6. **الاستنساخ الأولي بطيء للشركات الكبيرة:** الـ trigger على `INSERT` يجعل إنشاء الشركة يستغرق ثوانٍ إذا كان لديها آلاف السجلات. اقتراح: تحويل الاستنساخ لعملية async (queue) للشركات الكبيرة.
-7. **UI Confusion:** المستخدم قد يظن أنه في الفعلية ويرسل تقييمات وهمية. الشريط الحالي جيد، لكن يُفضّل إضافة لون واضح للـ header + prefix للـ browser tab title.
-8. **RLS على `storage`:** الملفات المرفوعة في Sandbox تذهب لنفس الـ buckets بمسارات تحتوي `company_id` مختلف — يجب التحقق أن سياسات storage تُفلتر صحيحًا وأن Reset يحذف ملفات التجريبية أيضًا.
+
+5. **FKs الشجرية (Templates):** ترقية `template_criteria` تتطلب `template_categories` أولًا، والذي يتطلب `evaluation_templates` — يجب أن يحدث في transaction واحد بترتيب طوبولوجي.
+6. **الاستنساخ الأولي بطيء للشركات الكبيرة:** trigger على `INSERT` قد يستغرق ثوانٍ. اقتراح: تحويل الاستنساخ لعملية async (queue) للشركات الكبيرة.
+7. **UI Confusion:** المستخدم قد يظن أنه في الفعلية. يُفضّل إضافة لون واضح للـ header + prefix في عنوان التبويب.
+8. **RLS على Storage:** ملفات Sandbox تُرفع لنفس الـ buckets بمسارات تحتوي `company_id` مختلف — يجب التحقق من سياسات storage وأن Reset يحذف ملفات Sandbox أيضًا.
 
 ### مخاطر منخفضة
-9. **حجم `types.ts` والـ frontend:** كل توسع لـ Diff يضيف كود؛ يُنصح بجعل مكوّن Diff عامًا يقبل تعريف الجدول ديناميكيًا بدل تكرار الكود.
-10. **الاختبار:** لا توجد بيئة Staging منفصلة — الميزة نفسها ستُستخدم كـ Staging، ما يجعل اختبار الميزة نفسها معقدًا (Bootstrapping).
+
+9. **حجم `types.ts` والـ frontend:** كل توسع لـ Diff يضيف كود؛ يُنصح بمكوّن Diff عام يقبل تعريف الجدول ديناميكيًا.
+10. **الاختبار:** لا توجد بيئة Staging منفصلة؛ الميزة نفسها ستُستخدم كـ Staging، ما يجعل اختبارها معقدًا.
 
 ---
 
-## توصية الخارطة
+## خارطة التنفيذ المقترحة
 
-| المرحلة | النطاق | الحالة |
-|---|---|---|
-| 1 | استنساخ الهيكلة + Switcher + تنبيه | ✅ منفّذ |
-| 2 | Diff/Promote للإعدادات الأساسية + Reset | ✅ منفّذ |
-| 3 | Promote للقوالب (شجري + Transaction) | مقترح تالٍ |
-| 4 | Normalization للـ FKs في Diff | مقترح |
-| 5 | Optimistic locking + Snapshot قبل Reset | مقترح |
-| 6 | Diff للعرض فقط على الجداول التشغيلية | اختياري |
-| 7 | تحويل الاستنساخ لعملية async | عند الحاجة |
+| المرحلة | النطاق |
+|---|---|
+| 1 | استنساخ الهيكلة + Switcher + تنبيه Sandbox |
+| 2 | Diff/Promote للإعدادات الأساسية + Reset |
+| 3 | Promote للقوالب (شجري + Transaction) |
+| 4 | Normalization للـ FKs في Diff |
+| 5 | Optimistic locking + Snapshot قبل Reset |
+| 6 | Diff للعرض فقط على الجداول التشغيلية |
+| 7 | تحويل الاستنساخ لعملية async عند الحاجة |
 
-بدون Promote للـ Facts (تقييمات/بلاغات/مهام) — هذا قرار تصميمي مقصود.
+**قرار تصميمي مقصود:** لا Promote للـ Facts (تقييمات/بلاغات/مهام) — فقط للإعدادات والقوالب.
