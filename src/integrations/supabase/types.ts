@@ -2079,26 +2079,9 @@ export type Database = {
         }
         Returns: undefined
       }
-      get_user_company_ids: { Args: { _user_id: string }; Returns: string[] }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
-      }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
-      is_company_admin: {
-        Args: { _company_id: string; _user_id: string }
-        Returns: boolean
-      }
-      is_super_admin: { Args: { _user_id: string }; Returns: boolean }
-      user_belongs_to_company: {
-        Args: { _company_id: string; _user_id: string }
-        Returns: boolean
       }
     }
     Enums: {
