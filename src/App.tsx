@@ -65,6 +65,7 @@ import CompanySubscriptionTab from "@/pages/super-admin/tabs/CompanySubscription
 import CompanyAuditLogsTab from "@/pages/super-admin/tabs/CompanyAuditLogsTab";
 import SuperAdminAccountsPage from "@/pages/super-admin/SuperAdminAccountsPage";
 import OAuthConsent from "@/pages/OAuthConsent";
+import SandboxDiffPage from "@/pages/SandboxDiffPage";
 
 const queryClient = new QueryClient();
 
@@ -279,6 +280,13 @@ const AppRoutes = () => (
 
       {/* AI Assistant - All authenticated users */}
       <Route path="/assistant" element={<AIAssistantPage />} />
+
+      {/* Sandbox Diff / Promote - Admin only */}
+      <Route path="/sandbox/diff" element={
+        <ProtectedRoute allowedRoles={['admin']}>
+          <SandboxDiffPage />
+        </ProtectedRoute>
+      } />
 
       {/* Support Routes */}
       <Route path="/support/dashboard" element={
