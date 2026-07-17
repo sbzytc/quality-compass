@@ -1,12 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@2.0.0";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { buildCorsHeaders } from "../_shared/cors.ts";
+import { generateTempPassword } from "../_shared/password.ts";
 
 interface InviteRequest {
   email: string;
@@ -18,6 +14,7 @@ interface InviteRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  const corsHeaders = buildCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -80,8 +77,8 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Generate a secure temporary password
-    const tempPassword = crypto.randomUUID().slice(0, 12) + "Aa1!";
+    // Generate a secure temporary password (~120 bits of entropy)
+    const tempPassword = generateTempPassword();
 
     // Create user with Supabase Admin
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
