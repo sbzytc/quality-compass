@@ -48,6 +48,14 @@ export function MainLayout() {
                 ? 'أنت في وضع الشركة التجريبية — أي تعديلات هنا لن تؤثر على الشركة الحقيقية.'
                 : 'You are in Sandbox mode — changes here do not affect the real company.'}
             </span>
+            <Button
+              size="sm"
+              variant="link"
+              className="h-auto py-0 px-1 text-xs text-amber-900 underline"
+              onClick={() => navigate('/sandbox/diff')}
+            >
+              {direction === 'rtl' ? 'مراجعة ورفع التعديلات' : 'Review & promote changes'}
+            </Button>
           </div>
         )}
         {/* Header */}
