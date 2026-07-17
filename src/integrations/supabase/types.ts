@@ -165,6 +165,7 @@ export type Database = {
           name: string
           name_ar: string | null
           opened_at: string | null
+          origin_id: string | null
           region_id: string | null
           status: string
           updated_at: string
@@ -192,6 +193,7 @@ export type Database = {
           name: string
           name_ar?: string | null
           opened_at?: string | null
+          origin_id?: string | null
           region_id?: string | null
           status?: string
           updated_at?: string
@@ -219,6 +221,7 @@ export type Database = {
           name?: string
           name_ar?: string | null
           opened_at?: string | null
+          origin_id?: string | null
           region_id?: string | null
           status?: string
           updated_at?: string
@@ -243,6 +246,7 @@ export type Database = {
           is_active: boolean
           name: string
           name_ar: string | null
+          origin_id: string | null
           sort_order: number
           updated_at: string
         }
@@ -255,6 +259,7 @@ export type Database = {
           is_active?: boolean
           name: string
           name_ar?: string | null
+          origin_id?: string | null
           sort_order?: number
           updated_at?: string
         }
@@ -267,6 +272,7 @@ export type Database = {
           is_active?: boolean
           name?: string
           name_ar?: string | null
+          origin_id?: string | null
           sort_order?: number
           updated_at?: string
         }
@@ -283,6 +289,7 @@ export type Database = {
           is_active: boolean
           name: string
           name_ar: string | null
+          origin_id: string | null
           room_number: string | null
           room_type: string
           status: string
@@ -298,6 +305,7 @@ export type Database = {
           is_active?: boolean
           name: string
           name_ar?: string | null
+          origin_id?: string | null
           room_number?: string | null
           room_type?: string
           status?: string
@@ -313,6 +321,7 @@ export type Database = {
           is_active?: boolean
           name?: string
           name_ar?: string | null
+          origin_id?: string | null
           room_number?: string | null
           room_type?: string
           status?: string
@@ -339,6 +348,9 @@ export type Database = {
           name: string
           name_ar: string | null
           primary_module: string | null
+          sandbox_created_at: string | null
+          sandbox_last_synced_at: string | null
+          sandbox_of_company_id: string | null
           sector_type: Database["public"]["Enums"]["sector_type"]
           settings: Json
           slug: string
@@ -356,6 +368,9 @@ export type Database = {
           name: string
           name_ar?: string | null
           primary_module?: string | null
+          sandbox_created_at?: string | null
+          sandbox_last_synced_at?: string | null
+          sandbox_of_company_id?: string | null
           sector_type?: Database["public"]["Enums"]["sector_type"]
           settings?: Json
           slug: string
@@ -373,6 +388,9 @@ export type Database = {
           name?: string
           name_ar?: string | null
           primary_module?: string | null
+          sandbox_created_at?: string | null
+          sandbox_last_synced_at?: string | null
+          sandbox_of_company_id?: string | null
           sector_type?: Database["public"]["Enums"]["sector_type"]
           settings?: Json
           slug?: string
@@ -380,7 +398,15 @@ export type Database = {
           updated_at?: string
           workspace_type?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "companies_sandbox_of_company_id_fkey"
+            columns: ["sandbox_of_company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       company_off_days: {
         Row: {
@@ -389,6 +415,7 @@ export type Database = {
           day_of_week: number | null
           id: string
           label: string | null
+          origin_id: string | null
           specific_date: string | null
         }
         Insert: {
@@ -397,6 +424,7 @@ export type Database = {
           day_of_week?: number | null
           id?: string
           label?: string | null
+          origin_id?: string | null
           specific_date?: string | null
         }
         Update: {
@@ -405,6 +433,7 @@ export type Database = {
           day_of_week?: number | null
           id?: string
           label?: string | null
+          origin_id?: string | null
           specific_date?: string | null
         }
         Relationships: []
@@ -770,6 +799,7 @@ export type Database = {
           id: string
           last_completed_at: string | null
           next_due_date: string | null
+          origin_id: string | null
           updated_at: string
         }
         Insert: {
@@ -781,6 +811,7 @@ export type Database = {
           id?: string
           last_completed_at?: string | null
           next_due_date?: string | null
+          origin_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -792,6 +823,7 @@ export type Database = {
           id?: string
           last_completed_at?: string | null
           next_due_date?: string | null
+          origin_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -813,6 +845,7 @@ export type Database = {
           is_active: boolean
           name: string
           name_ar: string | null
+          origin_id: string | null
           period_type: string
           updated_at: string
           version: string
@@ -826,6 +859,7 @@ export type Database = {
           is_active?: boolean
           name: string
           name_ar?: string | null
+          origin_id?: string | null
           period_type?: string
           updated_at?: string
           version?: string
@@ -839,6 +873,7 @@ export type Database = {
           is_active?: boolean
           name?: string
           name_ar?: string | null
+          origin_id?: string | null
           period_type?: string
           updated_at?: string
           version?: string
@@ -932,6 +967,7 @@ export type Database = {
           enabled: boolean
           id: string
           key: string
+          origin_id: string | null
         }
         Insert: {
           company_id: string
@@ -940,6 +976,7 @@ export type Database = {
           enabled?: boolean
           id?: string
           key: string
+          origin_id?: string | null
         }
         Update: {
           company_id?: string
@@ -948,6 +985,7 @@ export type Database = {
           enabled?: boolean
           id?: string
           key?: string
+          origin_id?: string | null
         }
         Relationships: [
           {
@@ -1477,6 +1515,7 @@ export type Database = {
           id: string
           name: string
           name_ar: string | null
+          origin_id: string | null
           updated_at: string
         }
         Insert: {
@@ -1485,6 +1524,7 @@ export type Database = {
           id?: string
           name: string
           name_ar?: string | null
+          origin_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -1493,6 +1533,7 @@ export type Database = {
           id?: string
           name?: string
           name_ar?: string | null
+          origin_id?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -1706,6 +1747,7 @@ export type Database = {
           id: string
           name: string
           name_ar: string | null
+          origin_id: string | null
           sort_order: number
           template_id: string
           weight: number
@@ -1715,6 +1757,7 @@ export type Database = {
           id?: string
           name: string
           name_ar?: string | null
+          origin_id?: string | null
           sort_order?: number
           template_id: string
           weight?: number
@@ -1724,6 +1767,7 @@ export type Database = {
           id?: string
           name?: string
           name_ar?: string | null
+          origin_id?: string | null
           sort_order?: number
           template_id?: string
           weight?: number
@@ -1749,6 +1793,7 @@ export type Database = {
           max_score: number
           name: string
           name_ar: string | null
+          origin_id: string | null
           priority_id: string | null
           sort_order: number
           violation_value: number | null
@@ -1765,6 +1810,7 @@ export type Database = {
           max_score?: number
           name: string
           name_ar?: string | null
+          origin_id?: string | null
           priority_id?: string | null
           sort_order?: number
           violation_value?: number | null
@@ -1781,6 +1827,7 @@ export type Database = {
           max_score?: number
           name?: string
           name_ar?: string | null
+          origin_id?: string | null
           priority_id?: string | null
           sort_order?: number
           violation_value?: number | null
@@ -1810,6 +1857,7 @@ export type Database = {
           id: string
           name: string
           name_ar: string | null
+          origin_id: string | null
           sort_order: number
           template_id: string
           updated_at: string
@@ -1819,6 +1867,7 @@ export type Database = {
           id?: string
           name: string
           name_ar?: string | null
+          origin_id?: string | null
           sort_order?: number
           template_id: string
           updated_at?: string
@@ -1828,6 +1877,7 @@ export type Database = {
           id?: string
           name?: string
           name_ar?: string | null
+          origin_id?: string | null
           sort_order?: number
           template_id?: string
           updated_at?: string
@@ -1840,6 +1890,7 @@ export type Database = {
           domain_id: string
           frequency_type: string
           id: string
+          origin_id: string | null
           sort_order: number
           updated_at: string
         }
@@ -1848,6 +1899,7 @@ export type Database = {
           domain_id: string
           frequency_type: string
           id?: string
+          origin_id?: string | null
           sort_order?: number
           updated_at?: string
         }
@@ -1856,6 +1908,7 @@ export type Database = {
           domain_id?: string
           frequency_type?: string
           id?: string
+          origin_id?: string | null
           sort_order?: number
           updated_at?: string
         }
@@ -1874,6 +1927,7 @@ export type Database = {
           created_at: string
           frequency_id: string
           id: string
+          origin_id: string | null
           priority_level: string
           sort_order: number
           updated_at: string
@@ -1883,6 +1937,7 @@ export type Database = {
           created_at?: string
           frequency_id: string
           id?: string
+          origin_id?: string | null
           priority_level: string
           sort_order?: number
           updated_at?: string
@@ -1892,6 +1947,7 @@ export type Database = {
           created_at?: string
           frequency_id?: string
           id?: string
+          origin_id?: string | null
           priority_level?: string
           sort_order?: number
           updated_at?: string
@@ -2062,6 +2118,10 @@ export type Database = {
     }
     Functions: {
       cleanup_expired_drafts: { Args: never; Returns: undefined }
+      clone_company_as_sandbox: {
+        Args: { _source_company_id: string }
+        Returns: string
+      }
       compute_next_due_date: {
         Args: {
           _company_id: string
