@@ -87,9 +87,9 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    if (password.length < 6) {
+    if (typeof password !== "string" || password.length < 8 || !/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) {
       return new Response(
-        JSON.stringify({ error: "Password must be at least 6 characters" }),
+        JSON.stringify({ error: "Password must be at least 8 characters and include a letter and a number" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

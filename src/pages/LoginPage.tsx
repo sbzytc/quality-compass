@@ -138,8 +138,10 @@ export default function LoginPage() {
       toast.error(direction === 'rtl' ? 'كلمات المرور غير متطابقة' : 'Passwords do not match');
       return;
     }
-    if (newPassword.length < 6) {
-      toast.error(direction === 'rtl' ? 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' : 'Password must be at least 6 characters');
+    if (newPassword.length < 8 || !/[A-Za-z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+      toast.error(direction === 'rtl'
+        ? 'كلمة المرور يجب ألا تقل عن 8 أحرف وتحتوي على حرف ورقم'
+        : 'Password must be at least 8 characters and include a letter and a number');
       return;
     }
 
@@ -165,11 +167,6 @@ export default function LoginPage() {
     } finally {
       setChangingPassword(false);
     }
-  };
-
-  const handleSkipPasswordChange = () => {
-    setShowForcePasswordChange(false);
-    navigate('/', { replace: true });
   };
 
   return (
@@ -320,9 +317,6 @@ export default function LoginPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={handleSkipPasswordChange}>
-              {direction === 'rtl' ? 'تخطي' : 'Skip'}
-            </Button>
             <Button
               onClick={handleChangePassword}
               disabled={changingPassword || !newPassword || newPassword !== confirmNewPassword}
