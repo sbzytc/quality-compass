@@ -2118,10 +2118,6 @@ export type Database = {
     }
     Functions: {
       cleanup_expired_drafts: { Args: never; Returns: undefined }
-      clone_company_as_sandbox: {
-        Args: { _source_company_id: string }
-        Returns: string
-      }
       compute_next_due_date: {
         Args: {
           _company_id: string
