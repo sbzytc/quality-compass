@@ -73,23 +73,13 @@ Deno.serve(async (req) => {
       .eq("id", sandboxCompanyId);
     if (dErr) return json({ error: dErr.message }, 500, cors);
 
-    // Re-clone from real via private function
-    const { data: newIdData, error: rErr } = await admin.rpc(
-      "clone_company_as_sandbox" as any,
+    // Re-clone via service-role-only wrapper that delegates to the private helper
+    const { data: newId, error: rErr } = await admin.rpc(
+      "internal_clone_sandbox" as any,
       { _source_company_id: realCompanyId },
-      { count: undefined } as any,
     );
-    if (rErr) {
-      // Retry via SQL if RPC not exposed (private schema)
-      const { data: sqlData, error: sqlErr } = await admin
-        .from("companies")
-        .select("id")
-        .eq("sandbox_of_company_id", realCompanyId)
-        .maybeSingle();
-      if (sqlErr || !sqlData) return json({ error: rErr.message }, 500, cors);
-      return json({ new_sandbox_company_id: sqlData.id }, 200, cors);
-    }
-    return json({ new_sandbox_company_id: newIdData }, 200, cors);
+    if (rErr) return json({ error: rErr.message }, 500, cors);
+    return json({ new_sandbox_company_id: newId }, 200, cors);
   } catch (e: any) {
     return json({ error: e?.message || "Unexpected error" }, 500, cors);
   }
