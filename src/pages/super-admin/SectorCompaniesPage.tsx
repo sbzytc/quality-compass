@@ -274,7 +274,7 @@ function Row({ label, value }: { label: string; value: number }) {
   );
 }
 
-function CompanyCard({ company, onClick, onDelete, index, isRTL, highlight = false }: any) {
+function CompanyCard({ company, onClick, onDelete, index, isRTL, highlight = false, legacy = false }: any) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -282,7 +282,11 @@ function CompanyCard({ company, onClick, onDelete, index, isRTL, highlight = fal
       transition={{ delay: index * 0.04 }}
       whileHover={{ y: -3 }}
       className={`group relative overflow-hidden rounded-2xl backdrop-blur-xl border shadow-md hover:shadow-lg transition-all ${
-        highlight ? 'bg-amber-50/60 border-amber-300/60' : 'bg-white/60 border-white/60'
+        legacy
+          ? 'bg-slate-100/60 border-slate-300/60 border-dashed'
+          : highlight
+            ? 'bg-amber-50/60 border-amber-300/60'
+            : 'bg-white/60 border-white/60'
       }`}
     >
       <button onClick={onClick} className="w-full text-start p-5 flex items-start justify-between gap-3">
@@ -298,6 +302,11 @@ function CompanyCard({ company, onClick, onDelete, index, isRTL, highlight = fal
             {highlight && (
               <Badge className="text-[10px] bg-amber-500 hover:bg-amber-500 text-white">
                 {isRTL ? 'تجريبية' : 'Sandbox'}
+              </Badge>
+            )}
+            {legacy && (
+              <Badge variant="outline" className="text-[10px] border-slate-400/70 text-slate-600 bg-white/60">
+                {isRTL ? 'تجريبي قديم — غير مرتبط' : 'Legacy — Unlinked'}
               </Badge>
             )}
           </div>
