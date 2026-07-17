@@ -8,16 +8,18 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut, Settings, Languages, LayoutGrid } from 'lucide-react';
+import { LogOut, Settings, Languages, LayoutGrid, FlaskConical } from 'lucide-react';
 import { getInitials } from '@/lib/getInitials';
 import { AIAssistantButton } from '@/components/AIAssistant/AIAssistantButton';
 import { WorkspaceSwitcher } from '@/components/WorkspaceSwitcher';
+import { useCurrentCompany } from '@/contexts/CurrentCompanyContext';
 
 export function MainLayout() {
   const { language, setLanguage, direction, t } = useLanguage();
   const { profile, signOut, roles, isAdmin, isExecutive, isBranchManager, isAssessor } = useAuth();
   const navigate = useNavigate();
   const isSuperAdmin = roles.includes('super_admin');
+  const { isSandbox } = useCurrentCompany();
 
   const handleSignOut = async () => {
     await signOut();
@@ -38,6 +40,16 @@ export function MainLayout() {
     <div className="flex h-screen overflow-hidden glass-app">
       <AppSidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
+        {isSandbox && (
+          <div className="flex items-center justify-center gap-2 py-1.5 px-4 text-xs font-medium bg-amber-500/15 border-b border-amber-500/40 text-amber-800">
+            <FlaskConical className="h-3.5 w-3.5" />
+            <span>
+              {direction === 'rtl'
+                ? 'أنت في وضع الشركة التجريبية — أي تعديلات هنا لن تؤثر على الشركة الحقيقية.'
+                : 'You are in Sandbox mode — changes here do not affect the real company.'}
+            </span>
+          </div>
+        )}
         {/* Header */}
         <header className="h-14 border-b glass-surface flex items-center justify-end px-5 gap-2">
           {/* Super Admin: back to destination picker */}
