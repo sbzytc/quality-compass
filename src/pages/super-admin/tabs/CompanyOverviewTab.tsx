@@ -77,9 +77,13 @@ export default function CompanyOverviewTab() {
           />
           <Row
             label={isRTL ? 'النوع' : 'Type'}
-            value={company.is_sandbox
-              ? <Badge className="bg-amber-500 hover:bg-amber-500 text-white gap-1"><FlaskConical className="w-3 h-3" />{isRTL ? 'تجريبية' : 'Sandbox'}</Badge>
-              : <Badge variant="outline">{isRTL ? 'حية' : 'Live'}</Badge>}
+            value={
+              company.is_sandbox && company.sandbox_of_company_id
+                ? <Badge className="bg-amber-500 hover:bg-amber-500 text-white gap-1"><FlaskConical className="w-3 h-3" />{isRTL ? 'تجريبية' : 'Sandbox'}</Badge>
+                : company.is_sandbox && !company.sandbox_of_company_id
+                  ? <Badge variant="outline" className="border-slate-400/70 text-slate-600 bg-slate-100/60 gap-1"><FlaskConical className="w-3 h-3" />{isRTL ? 'تجريبي قديم — غير مرتبط' : 'Legacy — Unlinked'}</Badge>
+                  : <Badge variant="outline">{isRTL ? 'حية' : 'Live'}</Badge>
+            }
           />
         </div>
       </Card>
