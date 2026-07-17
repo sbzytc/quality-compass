@@ -38,7 +38,7 @@ export default function SectorCompaniesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('companies')
-        .select('id, name, name_ar, slug, status, is_sandbox, logo_url, workspace_type, deleted_at')
+        .select('id, name, name_ar, slug, status, is_sandbox, sandbox_of_company_id, logo_url, workspace_type, deleted_at')
         .eq('workspace_type', meta.workspace)
         .order('is_sandbox', { ascending: false })
         .order('name');
@@ -49,7 +49,8 @@ export default function SectorCompaniesPage() {
 
   const active = companies?.filter(c => !c.deleted_at) ?? [];
   const deleted = companies?.filter(c => !!c.deleted_at) ?? [];
-  const sandbox = active.filter(c => c.is_sandbox);
+  const sandbox = active.filter(c => c.is_sandbox && c.sandbox_of_company_id);
+  const orphanSandbox = active.filter(c => c.is_sandbox && !c.sandbox_of_company_id);
   const live = active.filter(c => !c.is_sandbox);
 
   const openDelete = async (c: any) => {
@@ -138,6 +139,20 @@ export default function SectorCompaniesPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {sandbox.map((c, i) => (
                 <CompanyCard key={c.id} company={c} onClick={() => navigate(`/super-admin/company/${c.id}`)} onDelete={() => openDelete(c)} index={i} isRTL={isRTL} highlight />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {orphanSandbox.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3 flex items-center gap-2">
+              <FlaskConical className="w-4 h-4 opacity-60" />
+              {isRTL ? 'شركات تجريبية قديمة (غير مرتبطة بشركة أصل)' : 'Legacy sandboxes (no parent company)'}
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {orphanSandbox.map((c, i) => (
+                <CompanyCard key={c.id} company={c} onClick={() => navigate(`/super-admin/company/${c.id}`)} onDelete={() => openDelete(c)} index={i} isRTL={isRTL} legacy />
               ))}
             </div>
           </div>
