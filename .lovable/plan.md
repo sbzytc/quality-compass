@@ -1,97 +1,109 @@
 
-# Security Review — Rasdah
+# خطة: نظام الشركة التجريبية (Sandbox Companies)
 
-Read-only audit. Grouped by severity with file + issue for each finding. No changes made.
+## 1) نموذج البيانات والعلاقة بين الشركتين
 
-## Critical
+**التوصية:** إضافة أعمدة على `companies` بدل جدول ربط منفصل — أبسط ويستفيد من كل الـ RLS الحالي المبني حول `company_id`.
 
-**1. `supabase/functions/update-user-email/index.ts` — account takeover via unauthenticated admin endpoint.**
-The function uses `SUPABASE_SERVICE_ROLE_KEY` and calls `supabaseAdmin.auth.admin.updateUserById(userId, { email, email_confirm: true })` with **no `Authorization` check, no role check, and no ownership check**. The request body's `userId` is trusted verbatim.
-- The function is not listed in `supabase/config.toml` `[functions.*]` so it defaults to `verify_jwt = true`, meaning any signed-in low-privilege user (assessor, branch_employee, even a public feedback submitter if anon key is used) can change the email of any account they name — including super_admin — and because `email_confirm: true` is passed, the change is auto-confirmed. Combined with a password reset from the new address, this is full account takeover.
-- Fix direction (do not implement now): add `Authorization` header check, `auth.getClaims`, verify caller is `admin`/`super_admin`, and validate email format; either scope to `userId === caller` or restrict to admin-managed users.
+أعمدة جديدة على `public.companies`:
+- `is_sandbox boolean NOT NULL DEFAULT false`
+- `sandbox_of_company_id uuid NULL REFERENCES public.companies(id) ON DELETE CASCADE` — يشير من التجريبية إلى الفعلية. `NULL` للشركات الفعلية.
+- `sandbox_created_at timestamptz`
+- `sandbox_last_synced_at timestamptz` — آخر مرة صار فيها Promote/Reset (مرجع للـ Diff).
+- قيد فريد: `UNIQUE (sandbox_of_company_id)` — كل شركة فعلية لها نسخة تجريبية واحدة فقط.
 
-**2. `profiles` RLS — `Users can update own profile` allows privilege escalation via column write.**
-Policy `Users can update own profile` on `public.profiles` is `USING (auth.uid() = user_id)` with no `WITH CHECK` and no column list. `profiles` contains privilege/scope columns any user can flip on themselves:
-- `ai_assistant_enabled` — the `ai-assistant` edge function (line ~440–445) gates access purely on this column, so any user can grant themselves AI Assistant access and burn LOVABLE_API_KEY credits.
-- `can_view_customer_feedback`, `can_view_complaints`, `can_view_suggestions` — client-side feature gates that unlock sensitive customer PII pages.
-- `branch_id`, `region_id`, `default_company_id` — read by multiple hooks/dashboards to scope data; a user can point themselves at another company/branch.
-- `is_active` — a deactivated user can re-enable themselves.
-- `direct_manager_id`, `job_title` — impersonation/social-engineering aid.
-- Fix direction: replace with a `WITH CHECK` policy that only permits a whitelist of self-editable columns (e.g. `full_name`, `phone`, `avatar_url`), and route privileged column changes through an admin edge function or `profile_change_requests`.
+**ترقيم بصري:** الاسم يُشتق تلقائيًا: `"<name> (Sandbox)"` مع شارة واضحة في `WorkspaceSwitcher` و`PageHeader`.
 
-## High
+**سبب رفض `parent_company_id` بدون علم اتجاه:** نحتاج نميّز صراحة "تجريبية تابعة" من "فرع تنظيمي" مستقبلي، فاسم العمود يفصح عن النية.
 
-**3. `public.notifications` — `System can create notifications` allows any signed-in user to spam any inbox.**
-`WITH CHECK (auth.uid() IS NOT NULL)` — no constraint that `user_id = auth.uid()` or that the caller has an admin/agent role. Any authenticated user can insert arbitrary titles/bodies/`reference_id`s to any other user's notifications feed (phishing surface, since notifications link into the app). Same table's SELECT/UPDATE are correctly scoped to owner; INSERT is not.
+## 2) إنشاء النسخة التجريبية تلقائيًا
 
-**4. `src/components/RolePermissionsManager.tsx` — role permissions matrix stored in `localStorage`.**
-`localStorage.getItem/setItem('role_permissions', ...)` is the source of truth for what each role can do in this UI. It is trivially editable in DevTools. Not currently a full authZ bypass because the sidebar and most pages also consult `roles` from Supabase and RLS enforces data access, but any component that consults `permissions` directly (grep for `role_permissions` usage) inherits a client-trusted decision. This must never be the sole gate for a privileged action.
+عند `INSERT` على `companies` (شركة فعلية جديدة) → تريجر `AFTER INSERT` يستدعي دالة `SECURITY DEFINER`:
 
-**5. `public.customer_complaints` — `Anyone can submit complaints` is unverified.**
-Anon INSERT policy checks only `feedback_id IS NOT NULL`, `branch_id IS NOT NULL`, and text length. It does not verify the `feedback_id` references an existing recent `customer_feedbacks` row, and it does not verify the `branch_id` is real/active. Same class of issue that was fixed for `customer_feedback_scores`. Enables injection of arbitrary complaint text against arbitrary branches from anon, and log/table pollution.
+`public.clone_company_as_sandbox(_source_company_id uuid) returns uuid`
 
-**6. `supabase/functions/ai-assistant/index.ts` — `verify_jwt = false` + unauthenticated public entrypoint.**
-`config.toml` sets `verify_jwt = false` for both `ai-assistant` and `create-user`. The function does authenticate internally (getUser + `ai_assistant_enabled` check), so authorized use is safe — but the endpoint is reachable by anonymous callers who can force it to execute request parsing, DB profile lookup, and return 401. Combined with `*` CORS, this is a cheap unauthenticated DoS / probing vector against a function that also holds the Lovable AI Gateway credit-bearing key. `create-user` also carries `verify_jwt = false` but auth-checks internally — same DoS surface.
+الدالة تنسخ بترتيب الاعتماديات (أدنى → أعلى):
+1. `companies` (صف جديد `is_sandbox=true`)
+2. `regions`, `branches`, `clinic_departments`, `clinic_rooms`
+3. `template_domains/frequencies/priorities/categories/criteria`, `evaluation_templates`
+4. `customer_feedback_questions`, `company_off_days`, `feature_flags`, `evaluation_schedules`
+5. `company_users` — نسخ عضويات الأدمن/الأونر فقط (بدون المستخدمين العاديين افتراضيًا)
+6. **لا تُنسخ:** `evaluations`, `non_conformities`, `corrective_actions`, `operations_tasks`, `customer_feedbacks`, `audit_logs`, `notifications`, `system_logs`, `support_tickets`, `subscriptions` — تبدأ فارغة.
 
-## Medium
+كل جدول يحتاج **جدول خرائط** مؤقت داخل الدالة: `map_old_id → new_id` لإعادة كتابة الـ FKs (`branch_id`, `template_id`, `category_id` ...).
 
-**7. Weak password policy in edge functions.**
-`supabase/functions/create-user/index.ts` line ~97 enforces only `password.length < 6`. `src/pages/LoginPage.tsx` line ~141 same threshold on the force-change flow. No complexity, no HIBP check. Combined with `email_confirm: true` and admin-set initial passwords in `useUsers.ts`, weak temp passwords may persist if users skip the force-change (which `handleSkipPasswordChange` in `LoginPage.tsx:170` allows).
+**تسمية موحّدة:** كل صف منسوخ يحمل `origin_id uuid NULL` (عمود اختياري نضيفه على الجداول القابلة للـ Promote) يشير للـ ID في الشركة الأصل. هذا هو مفتاح الـ Diff لاحقًا.
 
-**8. `LoginPage.tsx` — force-password-change is skippable.**
-`handleSkipPasswordChange` lets a user with `force_password_change = true` bypass the prompt entirely and continue to the app. The `force_password_change` flag on `profiles` is only cleared on successful change, so functionally the guard is advisory. Should be blocking, or the flag should also block session usage server-side.
+## 3) الوصول والـ RLS
 
-**9. File upload validation is client-side only.**
-- Size limit `file.size > 5 * 1024 * 1024` and `accept="image/*"` are set in `EvaluationForm.tsx:824`, `PeriodEvaluationForm.tsx:213`, `FindingsPage.tsx:179/249`, `support/MyTickets.tsx`, and `AddBranchDialog.tsx`. Both are trivially bypassed by a direct Storage API call.
-- No server-side MIME/type/size enforcement (Storage bucket policies check only path/ownership).
-- `support/MyTickets.tsx:123` derives filename from `Math.random().toString(36).substring(2, 15)` — collision-prone and predictable; not security-critical because RLS now scopes reads, but should use `crypto.randomUUID()`.
+**المبدأ الحالي:** كل الجداول مقيّدة بـ `company_id`. لا حاجة لتغيير الـ policies نفسها.
 
-**10. `supabase/functions/invite-user/index.ts` — temp password entropy.**
-Line ~90: `crypto.randomUUID().slice(0, 12) + "Aa1!"`. 12 hex chars from a UUID = ~48 bits of entropy plus a fixed suffix pattern that is trivially guessable if an attacker knows the scheme. Emailed to a Resend inbox that may be less protected than the app. Acceptable if users are forced to change on first login — but see finding 8, skip is allowed.
+**التعديل الوحيد:** إضافة عضوية `company_users` للمستخدم الأدمن على الشركة التجريبية عند إنشائها (تلقائيًا داخل الدالة). هكذا:
+- `CurrentCompanyContext` يجيبها ضمن `loadCompanies` دون أي تعديل منطقي.
+- `WorkspaceSwitcher` يعرضها في نفس القائمة، مع قسم فرعي "Sandboxes" ومجموعة بصرية تحت الشركة الأم.
+- الـ RLS يعامل الشركة التجريبية كأي workspace — عزل كامل.
 
-**11. `supabase/functions/*` — CORS `Access-Control-Allow-Origin: *` on authenticated admin endpoints.**
-`create-user`, `invite-user`, `resend-invitation`, `reset-user-password`, `update-user-email`, `ai-assistant`, and `mcp` all reply with `*`. For pure-auth endpoints Supabase's JWT check protects data, but wildcard CORS enables cross-origin CSRF-style invocation from any site the victim visits while logged in. Prefer a same-origin allow-list (published domain + preview).
+**إضافة صغيرة على السياق:** كشف `isSandbox` و`sandboxOfCompanyId` في `CurrentCompanyContext` لتمكين لافتة "أنت في وضع تجريبي" في `MainLayout`.
 
-**12. `.env` published `VITE_SUPABASE_PROJECT_ID`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`.**
-These are meant to be public (`anon` key) — flagged only to confirm classification. No `SUPABASE_SERVICE_ROLE_KEY` or other secret was found in client code or committed files. `ripgrep` for `sk_live`, `sk_test`, `service_role`, `api_key` returns only i18n strings, hook parameter names, and column names — no hardcoded secret.
+**المستخدمون التجريبيون الإضافيون:** أدمن الشركة التجريبية يقدر يضيف `company_users` جدد مربوطين فقط بـ `company_id` التجريبي. لا يحتاج تعديل أي edge function — نفس `create-user`/`invite-user` تعمل مع فحص إضافي: إذا `is_sandbox=true`، لا نرسل بريد إلكتروني حقيقي (اختياري) ونضع علامة `sandbox_user=true` على `profiles` لضمان عدم ظهورهم في الشركة الفعلية أبدًا.
 
-## Low
+## 4) استراتيجية الـ Diff/Promote
 
-**13. `src/components/ui/chart.tsx:70` — `dangerouslySetInnerHTML` for CSS variables.**
-Content is derived from `config.color` values passed by developers via chart config, not from user input, and is wrapped in a CSS selector context. Low risk, but worth a comment noting values must remain developer-controlled — do not feed user-supplied strings into `ChartStyle`.
+**التقييم الصريح:** Diff عالمي (Configuration + Operational data) عبر كل الجداول = **معقد جدًا ومكلف**. أنصح بتقسيم على مرحلتين:
 
-**14. `src/contexts/CurrentCompanyContext.tsx` and `LanguageContext.tsx` — `localStorage` writes.**
-Store selected `company_id` and UI language only. Non-sensitive; RLS still enforces which companies a user can read. No action needed.
+### المرحلة 1 (MVP — موصى بها للبداية): إعدادات وقوالب فقط
+جداول Promotable:
+- `evaluation_templates` + `template_categories` + `template_criteria`
+- `template_domains/frequencies/priorities`
+- `customer_feedback_questions`
+- `feature_flags`, `company_off_days`
+- `branches` (إعدادات فقط، لا بيانات تشغيلية)
+- `clinic_departments`, `clinic_rooms`
 
-**15. Console error logging.**
-`AuthContext.tsx:94/104/109` and `SettingsPage.tsx:129` log fetch errors. No tokens, passwords, or PII are printed. Fine.
+آلية Diff:
+- كل صف قابل للترقية له `origin_id` (كما في القسم 2).
+- Diff = مقارنة عمود بعمود بين صف التجريبي وصف الأصل عبر `origin_id`.
+- ثلاث حالات لكل صف: **Added** (`origin_id IS NULL`)، **Modified** (فرق بالأعمدة)، **Deleted** (موجود بالأصل، غير موجود بالتجريبي).
+- الحساب على السيرفر عبر RPC: `get_sandbox_diff(_sandbox_company_id uuid) returns jsonb` — تُرجع شجرة مجمّعة حسب الجدول.
+- واجهة Diff: قائمة قابلة للتوسيع بمربعات اختيار لكل عنصر (Add / Update / Delete)، ثم زر "Promote Selected" يستدعي `promote_sandbox_changes(_sandbox_company_id uuid, _selections jsonb)`.
 
-**16. `Anyone can view active questions` on `public.customer_feedback_questions`.**
-`SELECT` policy `USING (true)` for role `public`. Intentional — the public feedback portal needs this. Documented, not a finding beyond confirming intent.
+### المرحلة 2 (لاحقًا، إذا احتاجها المستخدم فعلًا): بيانات تشغيلية
+مشاكل جوهرية يجب طرحها الآن على المستخدم:
+- **التقييمات (`evaluations`) تعتمد على قوالب** — إذا انتقلت التقييمات دون قوالبها المقابلة، تنكسر المراجع.
+- **تعارضات زمنية:** خلال فترة الاختبار، الشركة الفعلية تستقبل تقييمات جديدة بنفس التواريخ. دمج التقييمات = صعوبة في تحديد "أيهم الحقيقي".
+- **`audit_logs`, `notifications`** يجب استبعادها نهائيًا — منطق تاريخي لا يُدمج.
+- **الأداء:** Diff على `evaluation_criterion_scores` لآلاف الصفوف مكلف — يحتاج فهارس على `origin_id` وعرض مفلتر.
+- الخيار الأنسب لاحقًا: بدل "Diff تشغيلي"، نقدم زر **"Import operational data as new"** — تُنسخ التقييمات التجريبية إلى الفعلية كسجلات جديدة مع علامة "imported from sandbox".
 
-**17. Auto-confirm email in admin-created users.**
-`create-user`, `invite-user`, `update-user-email` all pass `email_confirm: true`. This skips the ownership-proof step. Intentional for admin flows, but combined with finding 1 it turns email hijack into a one-step account takeover.
+**توصية صريحة للمستخدم:** نبدأ بالمرحلة 1 فقط. البيانات التشغيلية في التجريبي غرضها التجربة والتحقق من صحة الإعدادات، لا الترحيل. نعيد التقييم بعد استخدام حقيقي لمدة شهر.
 
-**18. Dependency vulnerabilities.**
-`code--dependency_scan` reports no high/critical npm vulnerabilities. RLS-enabled on all 41 public tables (`pg_tables` scan returned 0 rows without RLS). Supabase linter is clean after last migration.
+### Reset التجريبي
+زر إضافي: "إعادة تعيين التجريبي من الفعلي" — يحذف الشركة التجريبية ويعيد إنشاءها. مفيد بعد Promote ناجح.
 
-## Coverage summary
+## 5) المخاطر والتعقيدات
 
-- **Auth & authorization:** section 1 (auth bypass in `update-user-email`), 2 (profile column escalation), 4 (client-side permission trust), 8 (skippable force-change).
-- **Supabase / RLS:** all 41 public tables have RLS on. Overly permissive policies: `Users can update own profile`, `notifications` INSERT, `customer_complaints` INSERT.
-- **API keys & secrets:** no hardcoded secrets in `src/**` or committed files. `.env` contains only public anon key/URL/project id (expected).
-- **Input validation & injection:** All DB access via Supabase JS parameterized queries — no raw SQL from client. One `dangerouslySetInnerHTML` (chart CSS, developer-controlled). Zod is only used in the MCP tools; app forms rely on ad-hoc checks. No stored-XSS sink found for user-typed strings.
-- **CORS / endpoint exposure:** wildcard CORS on all edge functions; two have `verify_jwt = false`.
-- **Dependencies:** clean.
-- **Client-side data exposure:** only non-sensitive UI state in localStorage; Supabase session is stored via the SDK's built-in `localStorage` adapter (SPA-standard, XSS is the only threat model).
-- **File uploads:** client-side size/type only; server enforces bucket scoping via RLS (fixed last migration) but not MIME/size.
-- **Third-party integrations:** Resend key used server-side only; no exposed webhook endpoints in this project.
+1. **انفجار الحجم:** كل شركة تضاعف عدد صفوف الإعدادات. لشركة بـ 500 معيار تقييم، النسخة التجريبية = 500 صف إضافي. مقبول، لكن يحتاج مراقبة.
+2. **تسرّب البيانات عبر الحدود:** إذا نُسي `company_id` في أي جدول جديد مستقبلًا، قد تُرى بيانات تجريبية في الفعلية. علاج: مراجعة RLS إلزامية لكل جدول جديد + اختبار E2E يتحقق من العزل.
+3. **ترحيل الـ Schema:** أي `ALTER TABLE` لاحقًا يجب أن يطبَّق على الشركتين — الشركات التجريبية حقيقية في نفس الجداول، فلا مشكلة تلقائيًا، لكن أي seed data جديدة لشركات جديدة يجب أن تُنسخ للتجريبية أيضًا.
+4. **الفوترة والحصص:** هل الشركة التجريبية تُحتسب في `subscriptions` وحدود الفروع/المستخدمين؟ **توصية:** لا تُحتسب. يحتاج فلترة صريحة في كل استعلام حصص عبر `WHERE is_sandbox = false`.
+5. **الـ Edge Functions:** `ai-assistant`, `create-user`, `invite-user`، إلخ — يجب أن تحترم `is_sandbox`: مثلًا `ai-assistant` يعمل عاديًا، لكن `invite-user` قد يتخطى إرسال البريد للشركة التجريبية.
+6. **الوقت المتوقع للتنفيذ:** 
+   - المرحلة 1 (Schema + Clone + Switcher + Diff/Promote للإعدادات): ~4–6 دفعات عمل.
+   - إضافة البيانات التشغيلية (المرحلة 2): مضاعفة الجهد على الأقل.
+7. **البحث عن `origin_id`:** إضافة العمود على ~10 جداول موجودة تعني migration واسع + فهارس.
+8. **الحذف المتسلسل:** `ON DELETE CASCADE` من الشركة الفعلية إلى التجريبية — إذا حُذفت الفعلية بالخطأ، ضاعت التجريبية. حل: `ON DELETE RESTRICT` + زر حذف صريح للتجريبية أولًا.
 
-## Recommended fix order when you switch to build mode
+## 6) خطة التنفيذ المقترحة (بعد الموافقة)
 
-1. Fix `update-user-email` (Critical — account takeover).
-2. Restrict `profiles` self-UPDATE to a safe column whitelist (Critical — privilege escalation).
-3. Tighten `notifications` INSERT to `user_id = auth.uid()` or admin/agent role.
-4. Scope `customer_complaints` INSERT to a recent parent feedback (mirror the feedback-scores fix).
-5. Remove `localStorage`-backed role permissions or make it a UI-only preference clearly documented as non-authoritative.
-6. Add MIME/size enforcement, revisit password policy and force-change skip, tighten CORS, and add server-side email validation.
+1. Migration: أعمدة `is_sandbox`, `sandbox_of_company_id`, `origin_id` على الجداول القابلة للترقية.
+2. دالة `clone_company_as_sandbox` + تريجر إنشاء تلقائي + Backfill للشركات الحالية.
+3. تحديث `CurrentCompanyContext` + `WorkspaceSwitcher` (تجميع + شارة "Sandbox").
+4. لافتة "Sandbox Mode" في `MainLayout` + استبعاد التجريبيات من الحصص.
+5. صفحة `SandboxDiffPage` + RPC `get_sandbox_diff` + `promote_sandbox_changes`.
+6. زر Reset + توثيق مختصر للمستخدم.
+
+## أسئلة أطلبها قبل البدء
+
+- هل الشركة التجريبية مرئية لكل أدمن الشركة الفعلية، أم فقط لمن أنشأها؟
+- في حالة Promote تعديل قالب تقييم مستخدم فعليًا في تقييمات سابقة — نُنشئ نسخة جديدة (versioning) أم نحدّث في المكان؟
+- هل تريد فترة صلاحية للتجريبية (مثلًا 30 يومًا ثم Reset تلقائي)؟
