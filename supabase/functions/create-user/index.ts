@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
+import { canAdministerCompany, isSuperAdmin as checkIsSuperAdmin } from "../_shared/tenant-admin.ts";
 
 interface CreateUserRequest {
   email: string;
@@ -74,6 +75,23 @@ const handler = async (req: Request): Promise<Response> => {
         JSON.stringify({ error: "Only super admins can create super admin accounts" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // Tenant isolation: caller must administer the target companyId
+    // (unless creating a super_admin, which is already restricted above).
+    if (role !== "super_admin") {
+      if (!companyId) {
+        return new Response(
+          JSON.stringify({ error: "companyId is required" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (!(await canAdministerCompany(supabaseAdmin, requestingUserId, companyId))) {
+        return new Response(
+          JSON.stringify({ error: "Forbidden: you do not administer this workspace" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
     if (!email || !fullName || !password || !role) {

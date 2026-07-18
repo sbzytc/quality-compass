@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { buildCorsHeaders } from "../_shared/cors.ts";
 import { generateTempPassword } from "../_shared/password.ts";
+import { canAdministerCompany } from "../_shared/tenant-admin.ts";
 
 interface InviteRequest {
   email: string;
@@ -74,6 +75,20 @@ const handler = async (req: Request): Promise<Response> => {
       return new Response(
         JSON.stringify({ error: "Missing required fields: email, fullName, role" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Tenant isolation: caller must administer the target workspace.
+    if (!companyId) {
+      return new Response(
+        JSON.stringify({ error: "companyId is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    if (!(await canAdministerCompany(supabaseAdmin, userId, companyId))) {
+      return new Response(
+        JSON.stringify({ error: "Forbidden: you do not administer this workspace" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 

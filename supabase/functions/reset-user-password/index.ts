@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { buildCorsHeaders } from "../_shared/cors.ts";
 import { generateTempPassword } from "../_shared/password.ts";
+import { canAdministerUser } from "../_shared/tenant-admin.ts";
 
 interface ResetPasswordRequest {
   userId: string;
@@ -84,6 +85,15 @@ const handler = async (req: Request): Promise<Response> => {
           { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+    }
+
+    // Tenant isolation: caller must administer the target user's company
+    // (or be a super_admin, or act on themselves).
+    if (!(await canAdministerUser(supabaseAdmin, requestingUserId, userId))) {
+      return new Response(
+        JSON.stringify({ error: "Forbidden: target user is not in your workspace" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // Use custom password if provided, otherwise generate a strong one.
