@@ -544,8 +544,8 @@ export default function FindingsPage() {
                           const isOverdue = finding.dueDate && new Date(finding.dueDate) < new Date() && finding.status !== 'resolved';
                           
                           // Permission logic - NEW WORKFLOW
-                          // Assign: Admin, Executive (CEO), and Branch Manager, for open/in_progress findings
-                          const canAssign = (isAdmin || isExecutive || isBranchManager) && (finding.status === 'open' || finding.status === 'in_progress');
+                          // Assign: Branch Manager ONLY, for open/in_progress findings
+                          const canAssign = isBranchManager && (finding.status === 'open' || finding.status === 'in_progress');
                           
                           // Resolve: 
                           // - BM can resolve directly (open/in_progress/rejected)

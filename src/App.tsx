@@ -222,8 +222,12 @@ const AppRoutes = () => (
         </ProtectedRoute>
       } />
 
-      {/* Findings - All authenticated users */}
-      <Route path="/findings" element={<FindingsPage />} />
+      {/* Findings - Branch Manager and Executive only */}
+      <Route path="/findings" element={
+        <ProtectedRoute allowedRoles={['branch_manager', 'executive']}>
+          <FindingsPage />
+        </ProtectedRoute>
+      } />
       
       {/* Recurring Problems - Branch Manager, Admin, Executive */}
       <Route path="/recurring-problems" element={
