@@ -39,6 +39,7 @@ export default function CustomerComplaintsPage() {
   const canViewSuggestions = isAdmin || profile?.can_view_suggestions;
   const branchFilter = selectedBranch !== 'all' ? selectedBranch :
     (isBranchManager && !isAdmin ? profile?.branch_id || undefined : undefined);
+  // Note: supervisors with extra branches see additional data via RLS at the DB layer.
 
   const { data: complaints, isLoading } = useCustomerComplaints(branchFilter || undefined);
   const { data: branches } = useBranches();
