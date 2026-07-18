@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { Loader2, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { Languages } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import rasdaLogo from '@/assets/rasdah-logo.png';
 import { getDefaultDashboard } from '@/components/ProtectedRoute';
@@ -32,7 +33,7 @@ export default function LoginPage() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
   const { signIn, user, roles, loading: authLoading } = useAuth();
-  const { direction } = useLanguage();
+  const { direction, language, setLanguage } = useLanguage();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const rawNext = searchParams.get('next');
@@ -172,6 +173,17 @@ export default function LoginPage() {
   return (
     <>
     <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="absolute top-4 end-4">
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 px-3 gap-1.5 text-[13px] font-medium"
+          onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
+        >
+          <Languages className="h-3.5 w-3.5" />
+          <span>{language === 'en' ? 'العربية' : 'English'}</span>
+        </Button>
+      </div>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-1">
           <img src={rasdaLogo} alt="Rasda" className="mx-auto w-52 h-52 object-contain" />
