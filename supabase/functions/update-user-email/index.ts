@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
+import { canAdministerUser } from "../_shared/tenant-admin.ts";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -78,6 +79,13 @@ const handler = async (req: Request): Promise<Response> => {
           { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
+    }
+
+    if (!(await canAdministerUser(supabaseAdmin, callerId, userId))) {
+      return new Response(
+        JSON.stringify({ error: "Forbidden: target user is not in your workspace" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
     const { data, error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
