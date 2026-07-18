@@ -42,19 +42,21 @@ export default function LicensesExpiryPage() {
   const isRTL = language === 'ar';
   const { profile, isBranchManager, isAdmin, isExecutive } = useAuth();
   const { companyId, scopeKey } = useCompanyScope();
+  const { branchIds: accessibleBranchIds } = useAccessibleBranchIds();
 
   const { data: branches = [], isLoading } = useQuery({
-    queryKey: ['branches-expiry', scopeKey, profile?.branch_id],
+      queryKey: ['branches-expiry', scopeKey, (accessibleBranchIds || []).join(',')],
     enabled: !!companyId,
     queryFn: async () => {
       let q = supabase
         .from('branches')
         .select('id, name, name_ar, documents, company_id')
         .eq('company_id', companyId!);
-      // Branch manager (not admin/executive) sees only their branch
-      if (isBranchManager && !isAdmin && !isExecutive && profile?.branch_id) {
-        q = q.eq('id', profile.branch_id);
-      }
+        // Branch manager (not admin/executive) sees only their primary + supervised branches
+        if (isBranchManager && !isAdmin && !isExecutive && accessibleBranchIds) {
+          if (accessibleBranchIds.length === 0) return [];
+          q = q.in('id', accessibleBranchIds);
+        }
       const { data, error } = await q;
       if (error) throw error;
       return data || [];
