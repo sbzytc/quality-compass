@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEvaluations, useArchiveEvaluations, useDeleteEvaluation } from '@/hooks/useEvaluations';
+import { useAccessibleBranchIds } from '@/hooks/useAccessibleBranchIds';
 import { ClipboardCheck, Search, Eye, Pencil, Clock, Calendar, Building2, User, Archive, Trash2, FileText, CheckCircle2, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, differenceInHours } from 'date-fns';
@@ -43,6 +44,7 @@ import {
 export default function PreviousEvaluationsPage() {
   const { t, language, direction } = useLanguage();
   const { user, profile, isBranchManager, isAdmin, isAssessor } = useAuth();
+  const { branchIds: accessibleBranchIds } = useAccessibleBranchIds();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { data: evaluations, isLoading } = useEvaluations();
@@ -57,8 +59,8 @@ export default function PreviousEvaluationsPage() {
   // Filter evaluations
   const filteredEvaluations = evaluations?.filter(evaluation => {
     // Branch managers can only see their branch's evaluations
-    if (isBranchManager && !isAdmin && !isAssessor && profile?.branch_id) {
-      if (evaluation.branchId !== profile.branch_id) return false;
+    if (isBranchManager && !isAdmin && !isAssessor && accessibleBranchIds) {
+      if (!accessibleBranchIds.includes(evaluation.branchId)) return false;
     }
 
     const displayBranchName = language === 'ar' ? (evaluation.branchNameAr || evaluation.branchName) : evaluation.branchName;
