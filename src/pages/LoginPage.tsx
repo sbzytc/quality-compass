@@ -125,19 +125,19 @@ export default function LoginPage() {
   return (
     <>
     <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="absolute top-4 end-4">
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 px-3 gap-1.5 text-[13px] font-medium"
-          onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
-        >
-          <Languages className="h-3.5 w-3.5" />
-          <span>{language === 'en' ? 'العربية' : 'English'}</span>
-        </Button>
-      </div>
       <Card className="w-full max-w-md">
-        <CardHeader className="text-center space-y-1">
+        <CardHeader className="text-center space-y-1 relative">
+          <div className="absolute top-2 end-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 px-3 gap-1.5 text-[13px] font-medium"
+              onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
+            >
+              <Languages className="h-3.5 w-3.5" />
+              <span>{language === 'en' ? 'العربية' : 'English'}</span>
+            </Button>
+          </div>
           <img src={rasdaLogo} alt="Rasda" className="mx-auto w-52 h-52 object-contain" />
           <div>
             <CardDescription className="text-muted-foreground">
