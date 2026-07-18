@@ -11,9 +11,9 @@ import { useCurrentCompany } from '@/contexts/CurrentCompanyContext';
  * Admins/executives/super-admins get `null` (meaning: no branch restriction).
  */
 export function useAccessibleBranchIds() {
-  const { user, profile, isAdmin, isExecutive, isSuperAdmin } = useAuth();
+  const { user, profile, isAdmin, isExecutive, roles } = useAuth();
   const { currentCompany } = useCurrentCompany();
-  const unrestricted = isAdmin || isExecutive || isSuperAdmin;
+  const unrestricted = isAdmin || isExecutive || roles.includes('super_admin');
 
   const { data: supervised = [] } = useQuery({
     queryKey: ['my-supervised-branches', user?.id, currentCompany?.id],
