@@ -15,8 +15,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Loader2, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
-import { Languages } from 'lucide-react';
+import { Loader2, Mail, Lock, Eye, EyeOff, Languages } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import rasdaLogo from '@/assets/rasdah-logo.png';
 import { getDefaultDashboard } from '@/components/ProtectedRoute';
