@@ -379,7 +379,10 @@ function EditUserDialog({ member, companyId, onClose }: { member: any; companyId
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent>
+      <DialogContent
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader><DialogTitle>{isRTL ? 'تعديل بيانات المستخدم' : 'Edit user'}</DialogTitle></DialogHeader>
         <div className="space-y-4">
           <div><Label>{isRTL ? 'البريد الإلكتروني' : 'Email'}</Label><Input value={member.profile?.email || ''} disabled className="mt-1" /></div>
