@@ -38,7 +38,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
       } else if (roles.includes('assessor')) {
         return <Navigate to="/dashboard/auditor" replace />;
       } else if (roles.includes('branch_employee')) {
-        return <Navigate to="/findings" replace />;
+        return <Navigate to="/support/my-tickets" replace />;
       } else if (roles.includes('support_agent')) {
         return <Navigate to="/support/my-tickets" replace />;
       }
@@ -62,7 +62,7 @@ export function getDefaultDashboard(roles: AppRole[]): string {
   } else if (roles.includes('assessor')) {
     return '/evaluations';
   } else if (roles.includes('branch_employee')) {
-    return '/findings';
+    return '/support/my-tickets';
   } else if (roles.includes('support_agent')) {
     return '/support/my-tickets';
   }

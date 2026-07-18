@@ -76,7 +76,7 @@ export function AppSidebar() {
     { labelKey: 'nav.branches', icon: Building2, path: '/branches', allowedRoles: ['admin', 'executive'] as AppRole[] },
     { labelKey: 'nav.evaluations', icon: ClipboardCheck, path: '/evaluations', allowedRoles: ['admin', 'assessor'] as AppRole[], children: evaluationSubItems },
     ...(isBranchManager && !isAdmin && !isAssessor ? [{ labelKey: 'nav.evaluations', icon: ClipboardCheck, path: '/evaluations', children: branchEvaluationSubItems }] : []),
-    { labelKey: 'nav.findings', icon: AlertTriangle, path: '/findings', badge: openFindingsCount > 0 ? openFindingsCount : undefined },
+    { labelKey: 'nav.findings', icon: AlertTriangle, path: '/findings', allowedRoles: ['branch_manager', 'executive'] as AppRole[], badge: openFindingsCount > 0 ? openFindingsCount : undefined },
     { labelKey: 'nav.recurringProblems', icon: Repeat, path: '/recurring-problems', allowedRoles: ['admin', 'executive', 'branch_manager'] as AppRole[] },
     { labelKey: 'nav.correctiveActions', icon: ListChecks, path: '/corrective-actions', allowedRoles: ['admin', 'executive', 'branch_manager'] as AppRole[] },
     { labelKey: 'nav.reports', icon: BarChart3, path: '/reports', allowedRoles: ['admin', 'executive', 'branch_manager'] as AppRole[] },
