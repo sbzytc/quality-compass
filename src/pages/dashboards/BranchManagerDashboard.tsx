@@ -147,7 +147,7 @@ export default function BranchManagerDashboard() {
                 <SelectValue placeholder={isAr ? 'اختر فرعاً...' : 'Choose a branch...'} />
               </SelectTrigger>
               <SelectContent>
-                {branches?.filter(b => b.isActive).map(b => (
+                {selectableBranches.map(b => (
                   <SelectItem key={b.id} value={b.id}>
                     {isAr ? (b.nameAr || b.name) : b.name} • {b.city || 'N/A'}
                   </SelectItem>
@@ -193,7 +193,7 @@ export default function BranchManagerDashboard() {
                 <SelectValue placeholder={isAr ? 'تغيير الفرع...' : 'Change branch...'} />
               </SelectTrigger>
               <SelectContent>
-                {branches?.filter(b => b.isActive).map(b => (
+                {selectableBranches.map(b => (
                   <SelectItem key={b.id} value={b.id}>
                     {isAr ? (b.nameAr || b.name) : b.name}
                   </SelectItem>
