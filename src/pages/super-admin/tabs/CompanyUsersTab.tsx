@@ -410,7 +410,7 @@ function CreateUserDialog({ companyId, onClose }: { companyId: string; onClose: 
   const { data: branches = [] } = useCompanyBranches(companyId);
   const { data: employees = [] } = useCompanyEmployees(companyId);
   const isCompanyLevel = COMPANY_LEVEL_ROLES.includes(form.role);
-  const showSupervised = SUPERVISOR_ELIGIBLE_ROLES.includes(form.role);
+  const showSupervised = form.role === 'branch_manager';
 
   const submit = async () => {
     if (!form.email || !form.fullName || form.password.length < 6) {
