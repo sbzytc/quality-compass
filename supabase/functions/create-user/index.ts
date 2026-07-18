@@ -108,6 +108,58 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Pre-check: is this email already registered anywhere in the system?
+    const emailNormalized = email.trim().toLowerCase();
+    {
+      const { data: existingProfile } = await supabaseAdmin
+        .from("profiles")
+        .select("user_id, email")
+        .ilike("email", emailNormalized)
+        .maybeSingle();
+
+      let existingUserId: string | null = existingProfile?.user_id ?? null;
+
+      if (!existingUserId) {
+        // Fallback: scan auth users (handles cases where a profile row wasn't created)
+        try {
+          const { data: list } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 200 });
+          const found = list?.users?.find((u: any) => (u.email || "").toLowerCase() === emailNormalized);
+          existingUserId = found?.id ?? null;
+        } catch (_) {}
+      }
+
+      if (existingUserId) {
+        let companies: { id: string; name: string }[] = [];
+        const { data: cu } = await supabaseAdmin
+          .from("company_users")
+          .select("company_id, companies:company_id(id, name)")
+          .eq("user_id", existingUserId);
+        companies = (cu || [])
+          .map((r: any) => r.companies)
+          .filter(Boolean)
+          .map((c: any) => ({ id: c.id, name: c.name }));
+
+        const names = companies.map((c) => c.name).join("، ");
+        const messageAr = companies.length
+          ? `هذا البريد الإلكتروني مسجّل مسبقًا في: ${names}`
+          : "هذا البريد الإلكتروني مسجّل مسبقًا في النظام";
+        const messageEn = companies.length
+          ? `This email is already registered in: ${names}`
+          : "This email is already registered in the system";
+
+        return new Response(
+          JSON.stringify({
+            error: messageAr,
+            error_en: messageEn,
+            code: "email_exists",
+            existingUserId,
+            companies,
+          }),
+          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     // Create user
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
