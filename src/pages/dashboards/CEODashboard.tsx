@@ -531,7 +531,7 @@ export default function CEODashboard() {
                   <BarChart
                     data={scoreData}
                     margin={{ top: 20, right: 30, left: 20, bottom: 30 }}
-                    onClick={(state) => {
+                    onClick={(state: any) => {
                       if (state && state.activePayload && state.activePayload.length > 0) {
                         const clicked = state.activePayload[0].payload;
                         navigate(`/findings?scoreRange=${clicked.scoreRange}`);
