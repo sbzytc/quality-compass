@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBranches } from '@/hooks/useBranches';
+import { useAccessibleBranchIds } from '@/hooks/useAccessibleBranchIds';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -31,6 +32,7 @@ export default function ReportsPage() {
   const { language } = useLanguage();
   const isAr = language === 'ar';
   const { profile, isAdmin, isExecutive, isBranchManager } = useAuth();
+  const { branchIds: accessibleBranchIds } = useAccessibleBranchIds();
   const { data: branches } = useBranches();
   const [activeTab, setActiveTab] = useState<PeriodTab>('monthly');
   const [periodsToShow, setPeriodsToShow] = useState(4);
@@ -82,8 +84,8 @@ export default function ReportsPage() {
     const result: PeriodData[] = (branches || []).filter(b => {
       if (!b.isActive) return false;
       // Branch managers can only see their own branch
-      if (isBranchManager && !isAdmin && !isExecutive && profile?.branch_id) {
-        return b.id === profile.branch_id;
+      if (isBranchManager && !isAdmin && !isExecutive && accessibleBranchIds) {
+        return accessibleBranchIds.includes(b.id);
       }
       return true;
     }).map(branch => {
@@ -111,7 +113,7 @@ export default function ReportsPage() {
     });
 
     return result;
-  }, [branches, evaluations, activeTab, periodsToShow, isAr, isBranchManager, isAdmin, isExecutive, profile?.branch_id]);
+  }, [branches, evaluations, activeTab, periodsToShow, isAr, isBranchManager, isAdmin, isExecutive, accessibleBranchIds]);
 
   const getTrend = (periods: { score: number | null }[]) => {
     const current = periods[0]?.score;

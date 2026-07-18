@@ -10,6 +10,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAccessibleBranchIds } from '@/hooks/useAccessibleBranchIds';
 import { useBranches } from '@/hooks/useBranches';
 import { getScoreLevel } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -23,14 +24,25 @@ export default function BranchManagerDashboard() {
   const { t, language } = useLanguage();
   const { profile, isAdmin, isExecutive } = useAuth();
   const { data: branches } = useBranches();
+  const { branchIds: accessibleBranchIds } = useAccessibleBranchIds();
   const isAr = language === 'ar';
   const dateLocale = isAr ? { locale: ar } : {};
-  const canSelectBranch = isAdmin || isExecutive;
+  const hasMultipleAccessible = (accessibleBranchIds?.length ?? 0) > 1;
+  const canSelectBranch = isAdmin || isExecutive || hasMultipleAccessible;
 
   const [selectedBranchId, setSelectedBranchId] = useState<string>('');
 
-  // Admin/Executive select from dropdown; Branch Manager uses their assigned branch
-  const branchId = canSelectBranch ? selectedBranchId : profile?.branch_id;
+  // Admin/Executive/multi-branch supervisors select from dropdown; single-branch managers use their assigned branch
+  const branchId = canSelectBranch
+    ? (selectedBranchId || (!isAdmin && !isExecutive ? profile?.branch_id ?? '' : ''))
+    : profile?.branch_id;
+
+  // Restrict selectable branches for non-admin/exec supervisors
+  const selectableBranches = (branches ?? []).filter(b => {
+    if (!b.isActive) return false;
+    if (isAdmin || isExecutive) return true;
+    return accessibleBranchIds ? accessibleBranchIds.includes(b.id) : true;
+  });
 
   // Fetch branch info
   const { data: branch } = useQuery({
@@ -135,7 +147,7 @@ export default function BranchManagerDashboard() {
                 <SelectValue placeholder={isAr ? 'اختر فرعاً...' : 'Choose a branch...'} />
               </SelectTrigger>
               <SelectContent>
-                {branches?.filter(b => b.isActive).map(b => (
+                {selectableBranches.map(b => (
                   <SelectItem key={b.id} value={b.id}>
                     {isAr ? (b.nameAr || b.name) : b.name} • {b.city || 'N/A'}
                   </SelectItem>
@@ -181,7 +193,7 @@ export default function BranchManagerDashboard() {
                 <SelectValue placeholder={isAr ? 'تغيير الفرع...' : 'Change branch...'} />
               </SelectTrigger>
               <SelectContent>
-                {branches?.filter(b => b.isActive).map(b => (
+                {selectableBranches.map(b => (
                   <SelectItem key={b.id} value={b.id}>
                     {isAr ? (b.nameAr || b.name) : b.name}
                   </SelectItem>

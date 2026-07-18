@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useGoBack } from '@/hooks/useGoBack';
 import { useCriticalFindings } from '@/hooks/useFindings';
 import { useBranches } from '@/hooks/useBranches';
+import { useAccessibleBranchIds } from '@/hooks/useAccessibleBranchIds';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 export default function RecurringProblemsPage() {
@@ -19,9 +20,13 @@ export default function RecurringProblemsPage() {
   const isAr = language === 'ar';
   const { profile, isAdmin, isExecutive } = useAuth();
   const { data: branches } = useBranches();
+  const { branchIds: accessibleBranchIds } = useAccessibleBranchIds();
 
-  // For branch managers, filter by their branch
-  const branchId = (!isAdmin && !isExecutive) ? profile?.branch_id || undefined : undefined;
+  // For branch managers with only one accessible branch, filter client-side.
+  // Supervisors of multiple branches: rely on RLS to scope to accessible branches.
+  const branchId = (!isAdmin && !isExecutive && accessibleBranchIds && accessibleBranchIds.length === 1)
+    ? accessibleBranchIds[0]
+    : undefined;
   const { data: findings, isLoading } = useCriticalFindings({ branchId });
 
   // Group findings by criterion to find recurring problems

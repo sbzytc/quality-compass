@@ -12,6 +12,7 @@ import { ar, enUS } from 'date-fns/locale';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAccessibleBranchIds } from '@/hooks/useAccessibleBranchIds';
 import {
   Table,
   TableBody,
@@ -24,6 +25,7 @@ import {
 export default function ArchivedEvaluationsPage() {
   const { language, direction } = useLanguage();
   const { profile, isBranchManager, isAdmin, isAssessor } = useAuth();
+  const { branchIds: accessibleBranchIds } = useAccessibleBranchIds();
   const navigate = useNavigate();
   const { data: evaluations, isLoading } = useArchivedEvaluations();
   const unarchiveMutation = useUnarchiveEvaluations();
@@ -36,8 +38,8 @@ export default function ArchivedEvaluationsPage() {
   // Filter evaluations
   const filteredEvaluations = evaluations?.filter(evaluation => {
     // Branch managers can only see their branch's evaluations
-    if (isBranchManager && !isAdmin && !isAssessor && profile?.branch_id) {
-      if (evaluation.branchId !== profile.branch_id) return false;
+    if (isBranchManager && !isAdmin && !isAssessor && accessibleBranchIds) {
+      if (!accessibleBranchIds.includes(evaluation.branchId)) return false;
     }
 
     const matchesSearch = 
