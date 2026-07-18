@@ -69,6 +69,21 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Block non-super-admins from resending credentials for a super admin.
+    if (userId !== requestingUser.id) {
+      const { data: targetRoles } = await supabaseAdmin
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
+      const targetIsSuperAdmin = targetRoles?.some((r) => r.role === "super_admin");
+      if (targetIsSuperAdmin && !isSuperAdmin) {
+        return new Response(
+          JSON.stringify({ error: "Forbidden" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     // Get user details
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
