@@ -198,7 +198,18 @@ export default function LoginPage() {
     </div>
 
       {/* Force Password Change Dialog */}
-      <Dialog open={showForcePasswordChange} onOpenChange={() => {}}>
+      <Dialog
+        open={showForcePasswordChange}
+        onOpenChange={async (open) => {
+          if (!open) {
+            await supabase.auth.signOut();
+            setShowForcePasswordChange(false);
+            setNewPassword('');
+            setConfirmNewPassword('');
+            setPassword('');
+          }
+        }}
+      >
         <DialogContent className="max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>{direction === 'rtl' ? 'تغيير كلمة المرور' : 'Change Your Password'}</DialogTitle>
@@ -245,6 +256,19 @@ export default function LoginPage() {
             </div>
           </div>
           <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={async () => {
+                await supabase.auth.signOut();
+                setShowForcePasswordChange(false);
+                setNewPassword('');
+                setConfirmNewPassword('');
+                setPassword('');
+              }}
+              disabled={changingPassword}
+            >
+              {direction === 'rtl' ? 'إلغاء' : 'Cancel'}
+            </Button>
             <Button
               onClick={handleChangePassword}
               disabled={changingPassword || !newPassword || newPassword !== confirmNewPassword}
