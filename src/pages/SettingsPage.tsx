@@ -186,7 +186,7 @@ export default function SettingsPage() {
       // Update the profile
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({ [request.field_name]: request.new_value })
+        .update({ [request.field_name]: request.new_value } as any)
         .eq('user_id', request.user_id);
       if (profileError) throw profileError;
 
