@@ -173,7 +173,7 @@ export function AppSidebar() {
         <div className="flex items-center px-2 pb-2 border-b border-[rgba(255,255,255,0.12)]">
           <div className="flex items-center gap-3">
             <img
-              src={currentCompany?.logo_url || rasdahLogo}
+              src={companyLogoUrl || rasdahLogo}
               alt={currentCompany ? (currentCompany.name_ar || currentCompany.name) : 'Rasdah'}
               className="w-9 h-9 rounded-lg object-contain bg-white"
               onError={(e) => { (e.currentTarget as HTMLImageElement).src = rasdahLogo; }}
