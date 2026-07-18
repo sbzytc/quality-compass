@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCreateUser, useResetPassword, useUpdateUserStatus, useUpdateUserRole } from '@/hooks/useUsers';
 import type { AppRole } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Users, Loader2, MoreHorizontal, KeyRound, Pencil, UserX, UserCheck, Plus } from 'lucide-react';
+import { Users, Loader2, MoreHorizontal, KeyRound, Pencil, UserX, UserCheck, Plus, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 
 const ASSIGNABLE_ROLES: AppRole[] = ['admin', 'executive', 'branch_manager', 'assessor', 'branch_employee', 'support_agent'];
@@ -164,8 +165,14 @@ function UserActions({ member, companyId, onEdit }: { member: any; companyId: st
   const qc = useQueryClient();
   const resetPassword = useResetPassword();
   const updateStatus = useUpdateUserStatus();
+  const { isAdmin, roles } = useAuth();
+  const isSuperAdmin = roles.includes('super_admin');
+  const canChangeEmail = isSuperAdmin || isAdmin;
   const [confirmReset, setConfirmReset] = useState(false);
   const [confirmStatus, setConfirmStatus] = useState(false);
+  const [emailOpen, setEmailOpen] = useState(false);
+  const [newEmail, setNewEmail] = useState('');
+  const [emailSaving, setEmailSaving] = useState(false);
 
   const active = member.profile?.is_active !== false;
 
@@ -203,6 +210,12 @@ function UserActions({ member, companyId, onEdit }: { member: any; companyId: st
             <Pencil className="w-4 h-4 me-2" />
             {isRTL ? 'تعديل البيانات والدور' : 'Edit info & role'}
           </DropdownMenuItem>
+          {canChangeEmail && (
+            <DropdownMenuItem onClick={() => { setNewEmail(member.profile?.email || ''); setEmailOpen(true); }}>
+              <Mail className="w-4 h-4 me-2" />
+              {isRTL ? 'تغيير البريد الإلكتروني' : 'Change email'}
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onClick={() => setConfirmReset(true)}>
             <KeyRound className="w-4 h-4 me-2" />
             {isRTL ? 'إعادة تعيين كلمة المرور' : 'Reset password'}
@@ -246,6 +259,47 @@ function UserActions({ member, companyId, onEdit }: { member: any; companyId: st
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={emailOpen} onOpenChange={setEmailOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{isRTL ? 'تغيير البريد الإلكتروني' : 'Change email'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="text-xs text-muted-foreground">
+              {isRTL ? 'البريد الحالي:' : 'Current:'} <span className="font-medium">{member.profile?.email}</span>
+            </div>
+            <div>
+              <Label>{isRTL ? 'البريد الجديد' : 'New email'}</Label>
+              <Input type="email" className="mt-1" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setEmailOpen(false)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+            <Button
+              disabled={emailSaving || !newEmail || newEmail === member.profile?.email}
+              onClick={async () => {
+                setEmailSaving(true);
+                try {
+                  const { data, error } = await supabase.functions.invoke('update-user-email', {
+                    body: { userId: member.user_id, newEmail: newEmail.trim() },
+                  });
+                  if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message);
+                  toast.success(isRTL ? 'تم تحديث البريد' : 'Email updated');
+                  qc.invalidateQueries({ queryKey: ['super-admin-company-users', companyId] });
+                  setEmailOpen(false);
+                } catch (e: any) {
+                  toast.error(e.message || (isRTL ? 'فشل التحديث' : 'Update failed'));
+                } finally {
+                  setEmailSaving(false);
+                }
+              }}
+            >
+              {emailSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : (isRTL ? 'حفظ' : 'Save')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
