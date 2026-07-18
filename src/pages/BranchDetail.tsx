@@ -284,7 +284,7 @@ export default function BranchDetail() {
                     <BarChart
                       data={scoreData}
                       margin={{ top: 20, right: 20, left: 10, bottom: 10 }}
-                      onClick={(state) => {
+                      onClick={(state: any) => {
                         if (state && state.activePayload && state.activePayload.length > 0) {
                           const clicked = state.activePayload[0].payload;
                           navigate(`/findings?scoreRange=${clicked.scoreRange}`);
