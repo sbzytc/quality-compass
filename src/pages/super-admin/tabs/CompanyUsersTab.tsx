@@ -406,9 +406,11 @@ function CreateUserDialog({ companyId, onClose }: { companyId: string; onClose: 
   const qc = useQueryClient();
   const createUser = useCreateUser();
   const [form, setForm] = useState({ email: '', fullName: '', password: '', role: 'assessor' as AppRole, branchId: '', phone: '', jobTitle: '', directManagerId: '' });
+  const [supervisedBranchIds, setSupervisedBranchIds] = useState<string[]>([]);
   const { data: branches = [] } = useCompanyBranches(companyId);
   const { data: employees = [] } = useCompanyEmployees(companyId);
   const isCompanyLevel = COMPANY_LEVEL_ROLES.includes(form.role);
+  const showSupervised = SUPERVISOR_ELIGIBLE_ROLES.includes(form.role);
 
   const submit = async () => {
     if (!form.email || !form.fullName || form.password.length < 6) {
@@ -420,7 +422,7 @@ function CreateUserDialog({ companyId, onClose }: { companyId: string; onClose: 
       return;
     }
     try {
-      await createUser.mutateAsync({
+      const created = await createUser.mutateAsync({
         email: form.email,
         fullName: form.fullName,
         password: form.password,
@@ -432,6 +434,17 @@ function CreateUserDialog({ companyId, onClose }: { companyId: string; onClose: 
         jobTitle: form.jobTitle || undefined,
         directManagerId: form.directManagerId || undefined,
       });
+      // Insert supervised branches (exclude the primary branch to avoid duplication)
+      const newUserId: string | undefined = (created as any)?.user?.id;
+      if (newUserId && showSupervised) {
+        const extras = supervisedBranchIds.filter(id => id && id !== form.branchId);
+        if (extras.length > 0) {
+          const { error: supErr } = await supabase
+            .from('branch_supervisors')
+            .insert(extras.map(bid => ({ user_id: newUserId, company_id: companyId, branch_id: bid })));
+          if (supErr) console.error('branch_supervisors insert failed', supErr);
+        }
+      }
       toast.success(isRTL ? 'تم إنشاء المستخدم' : 'User created');
       qc.invalidateQueries({ queryKey: ['super-admin-company-users', companyId] });
       onClose();
@@ -495,6 +508,38 @@ function CreateUserDialog({ companyId, onClose }: { companyId: string; onClose: 
             <p className="text-xs text-muted-foreground">
               {isRTL ? 'دور على مستوى الشركة — بدون فرع.' : 'Company-level role — no branch.'}
             </p>
+          )}
+          {showSupervised && (
+            <div>
+              <Label>{isRTL ? 'فروع إضافية تحت الإشراف' : 'Additional supervised branches'}</Label>
+              <p className="text-xs text-muted-foreground mb-2">
+                {isRTL
+                  ? 'يحصل المستخدم على صلاحيات مدير الفرع الكاملة على الفروع المختارة.'
+                  : 'The user gets full branch-manager permissions on the selected branches.'}
+              </p>
+              <div className="space-y-2 border rounded-md p-2 max-h-48 overflow-y-auto">
+                {branches.filter((b: any) => b.id !== form.branchId).map((b: any) => {
+                  const checked = supervisedBranchIds.includes(b.id);
+                  return (
+                    <label key={b.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(e) => {
+                          setSupervisedBranchIds(prev =>
+                            e.target.checked ? [...prev, b.id] : prev.filter(id => id !== b.id)
+                          );
+                        }}
+                      />
+                      <span>{isRTL ? (b.name_ar || b.name) : b.name}</span>
+                    </label>
+                  );
+                })}
+                {branches.filter((b: any) => b.id !== form.branchId).length === 0 && (
+                  <p className="text-xs text-muted-foreground">{isRTL ? 'لا توجد فروع أخرى' : 'No other branches'}</p>
+                )}
+              </div>
+            </div>
           )}
         </div>
         <DialogFooter>
