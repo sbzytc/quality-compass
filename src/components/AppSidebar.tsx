@@ -17,6 +17,7 @@ import { useAuth, AppRole } from '@/contexts/AuthContext';
 import { useFindingStats } from '@/hooks/useFindings';
 import { useCurrentCompany } from '@/contexts/CurrentCompanyContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { supabase } from '@/integrations/supabase/client';
 
 interface NavItem {
   labelKey: string;
@@ -36,6 +37,18 @@ export function AppSidebar() {
   const { profile, roles, signOut, isAdmin, isExecutive, isBranchManager, isAssessor, isSupportAgent } = useAuth();
   const { data: findingStats } = useFindingStats();
   const { workspaceType, currentCompany, companies, switchCompany } = useCurrentCompany();
+  const [companyLogoUrl, setCompanyLogoUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const path = currentCompany?.logo_url;
+    if (!path) { setCompanyLogoUrl(null); return; }
+    if (/^https?:\/\//i.test(path)) { setCompanyLogoUrl(path); return; }
+    supabase.storage.from('company-documents').createSignedUrl(path, 3600).then(({ data }) => {
+      if (!cancelled) setCompanyLogoUrl(data?.signedUrl ?? null);
+    });
+    return () => { cancelled = true; };
+  }, [currentCompany?.id, currentCompany?.logo_url]);
 
   // Auto-switch to a clinic workspace when navigating to /clinic/*
   useEffect(() => {
@@ -160,7 +173,7 @@ export function AppSidebar() {
         <div className="flex items-center px-2 pb-2 border-b border-[rgba(255,255,255,0.12)]">
           <div className="flex items-center gap-3">
             <img
-              src={currentCompany?.logo_url || rasdahLogo}
+              src={companyLogoUrl || rasdahLogo}
               alt={currentCompany ? (currentCompany.name_ar || currentCompany.name) : 'Rasdah'}
               className="w-9 h-9 rounded-lg object-contain bg-white"
               onError={(e) => { (e.currentTarget as HTMLImageElement).src = rasdahLogo; }}
