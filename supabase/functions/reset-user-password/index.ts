@@ -54,7 +54,8 @@ const handler = async (req: Request): Promise<Response> => {
       .eq("user_id", requestingUserId);
 
     const isAdmin = userRoles?.some((r) => r.role === "admin");
-    if (!isAdmin) {
+    const isSuperAdmin = userRoles?.some((r) => r.role === "super_admin");
+    if (!isAdmin && !isSuperAdmin) {
       return new Response(
         JSON.stringify({ error: "Only admins can reset passwords" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -68,6 +69,21 @@ const handler = async (req: Request): Promise<Response> => {
         JSON.stringify({ error: "Missing required fields: userId, email" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // Block non-super-admins from resetting a super admin's password.
+    if (userId !== requestingUserId) {
+      const { data: targetRoles } = await supabaseAdmin
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
+      const targetIsSuperAdmin = targetRoles?.some((r) => r.role === "super_admin");
+      if (targetIsSuperAdmin && !isSuperAdmin) {
+        return new Response(
+          JSON.stringify({ error: "Forbidden" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
     // Use custom password if provided, otherwise generate a strong one.
