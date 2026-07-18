@@ -262,6 +262,10 @@ function EditUserDialog({ member, companyId, onClose }: { member: any; companyId
   const [branchId, setBranchId] = useState<string>(member.profile?.branch_id || '');
   const { data: branches = [] } = useCompanyBranches(companyId);
   const isCompanyLevel = COMPANY_LEVEL_ROLES.includes(role);
+  const canSupervise = SUPERVISOR_ELIGIBLE_ROLES.includes(role);
+  const { data: initialSupervised = [] } = useSupervisedBranches(member.user_id, companyId, canSupervise);
+  const [supervisedIds, setSupervisedIds] = useState<string[] | null>(null);
+  const effectiveSupervised = supervisedIds ?? initialSupervised;
 
   const save = useMutation({
     mutationFn: async () => {
@@ -280,10 +284,40 @@ function EditUserDialog({ member, companyId, onClose }: { member: any; companyId
       if (role !== initialRole) {
         await updateRole.mutateAsync({ userId: member.user_id, newRole: role });
       }
+      // Sync supervised branches
+      if (canSupervise) {
+        const desired = new Set(effectiveSupervised.filter(id => id && id !== branchId));
+        const current = new Set(initialSupervised);
+        const toAdd = [...desired].filter(id => !current.has(id));
+        const toRemove = [...current].filter(id => !desired.has(id));
+        if (toRemove.length) {
+          const { error } = await supabase
+            .from('branch_supervisors')
+            .delete()
+            .eq('user_id', member.user_id)
+            .eq('company_id', companyId)
+            .in('branch_id', toRemove);
+          if (error) throw error;
+        }
+        if (toAdd.length) {
+          const { error } = await supabase
+            .from('branch_supervisors')
+            .insert(toAdd.map(bid => ({ user_id: member.user_id, company_id: companyId, branch_id: bid })));
+          if (error) throw error;
+        }
+      } else if (initialSupervised.length) {
+        // Role changed to a non-supervisor role: clear extras
+        await supabase
+          .from('branch_supervisors')
+          .delete()
+          .eq('user_id', member.user_id)
+          .eq('company_id', companyId);
+      }
     },
     onSuccess: () => {
       toast.success(isRTL ? 'تم الحفظ' : 'Saved');
       qc.invalidateQueries({ queryKey: ['super-admin-company-users', companyId] });
+      qc.invalidateQueries({ queryKey: ['branch-supervisors', member.user_id, companyId] });
       onClose();
     },
     onError: (e: any) => toast.error(e.message),
@@ -323,6 +357,38 @@ function EditUserDialog({ member, companyId, onClose }: { member: any; companyId
             <p className="text-xs text-muted-foreground">
               {isRTL ? 'دور على مستوى الشركة — بدون فرع.' : 'Company-level role — no branch.'}
             </p>
+          )}
+          {canSupervise && (
+            <div>
+              <Label>{isRTL ? 'فروع إضافية تحت الإشراف' : 'Additional supervised branches'}</Label>
+              <p className="text-xs text-muted-foreground mt-1 mb-2">
+                {isRTL
+                  ? 'يحصل المستخدم على صلاحيات مدير الفرع كاملة على الفروع المختارة.'
+                  : 'The user gets full branch-manager permissions on the selected branches.'}
+              </p>
+              <div className="max-h-40 overflow-y-auto space-y-1 border rounded-md p-2">
+                {branches.filter((b: any) => b.id !== branchId).map((b: any) => {
+                  const checked = effectiveSupervised.includes(b.id);
+                  return (
+                    <label key={b.id} className="flex items-center gap-2 cursor-pointer text-sm py-1">
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => {
+                          const next = new Set(effectiveSupervised);
+                          if (checked) next.delete(b.id); else next.add(b.id);
+                          setSupervisedIds([...next]);
+                        }}
+                      />
+                      <span>{isRTL ? (b.name_ar || b.name) : b.name}</span>
+                    </label>
+                  );
+                })}
+                {branches.filter((b: any) => b.id !== branchId).length === 0 && (
+                  <p className="text-xs text-muted-foreground">{isRTL ? 'لا توجد فروع أخرى' : 'No other branches'}</p>
+                )}
+              </div>
+            </div>
           )}
         </div>
         <DialogFooter>
