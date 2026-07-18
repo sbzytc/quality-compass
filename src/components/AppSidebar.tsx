@@ -159,7 +159,12 @@ export function AppSidebar() {
         {/* Logo */}
         <div className="flex items-center px-2 pb-2 border-b border-[rgba(255,255,255,0.12)]">
           <div className="flex items-center gap-3">
-            <img src={rasdahLogo} alt="Rasdah" className="w-9 h-9 rounded-lg object-contain" />
+            <img
+              src={currentCompany?.logo_url || rasdahLogo}
+              alt={currentCompany ? (currentCompany.name_ar || currentCompany.name) : 'Rasdah'}
+              className="w-9 h-9 rounded-lg object-contain bg-white"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).src = rasdahLogo; }}
+            />
             <AnimatePresence>
               {!collapsed && (
                 <motion.div
