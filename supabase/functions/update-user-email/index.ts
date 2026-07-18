@@ -101,6 +101,15 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Keep profiles.email in sync
+    const { error: profileErr } = await supabaseAdmin
+      .from("profiles")
+      .update({ email: newEmail })
+      .eq("user_id", userId);
+    if (profileErr) {
+      console.error("Error syncing profile email:", profileErr.message);
+    }
+
     return new Response(
       JSON.stringify({ success: true, user: data.user }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
