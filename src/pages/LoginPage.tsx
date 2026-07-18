@@ -48,86 +48,41 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
 
-    if (isSignUp) {
-      // Sign up flow
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: window.location.origin,
-        },
-      });
+    const { error } = await signIn(email, password);
 
-      if (error) {
-        toast.error(error.message);
-        setLoading(false);
-        return;
-      }
-
-      if (data.user) {
-        // Create profile and assign default role
-        const { error: profileError } = await supabase.rpc('create_user_profile', {
-          _user_id: data.user.id,
-          _email: email,
-          _full_name: fullName,
-          _role: 'assessor',
-        });
-
-        if (profileError) {
-          console.error('Profile creation error:', profileError);
-        }
-      }
-
-      toast.success(
+    if (error) {
+      toast.error(
         direction === 'rtl'
-          ? 'تم إنشاء الحساب بنجاح! جاري تسجيل الدخول...'
-          : 'Account created successfully! Logging in...'
+          ? 'خطأ في تسجيل الدخول. يرجى التحقق من بياناتك.'
+          : 'Login failed. Please check your credentials.'
       );
-      
-      // Auto sign in after signup - the useEffect will handle redirect
-      await signIn(email, password);
-      // Small delay to allow auth state to update
-      setTimeout(() => {
-        navigate('/dashboard/auditor', { replace: true });
-      }, 100);
-    } else {
-      // Sign in flow
-      const { error } = await signIn(email, password);
-
-      if (error) {
-        toast.error(
-          direction === 'rtl' 
-            ? 'خطأ في تسجيل الدخول. يرجى التحقق من بياناتك.'
-            : 'Login failed. Please check your credentials.'
-        );
-        setLoading(false);
-        return;
-      }
-
-      // Check if user needs to change password
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      if (currentUser) {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('force_password_change')
-          .eq('user_id', currentUser.id)
-          .single();
-
-        if (profileData?.force_password_change) {
-          setShowForcePasswordChange(true);
-          setLoading(false);
-          return;
-        }
-      }
-
-      toast.success(
-        direction === 'rtl'
-          ? 'تم تسجيل الدخول بنجاح!'
-          : 'Login successful!'
-      );
-      // Redirect is handled by the useEffect once roles load,
-      // so admin users go to /admin and other users go to their own dashboard.
+      setLoading(false);
+      return;
     }
+
+    // Check if user needs to change password
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    if (currentUser) {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('force_password_change')
+        .eq('user_id', currentUser.id)
+        .single();
+
+      if (profileData?.force_password_change) {
+        setShowForcePasswordChange(true);
+        setLoading(false);
+        return;
+      }
+    }
+
+    toast.success(
+      direction === 'rtl'
+        ? 'تم تسجيل الدخول بنجاح!'
+        : 'Login successful!'
+    );
+    // Redirect is handled by the useEffect once roles load,
+    // so admin users go to /admin and other users go to their own dashboard.
 
     setLoading(false);
   };
