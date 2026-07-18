@@ -19,6 +19,23 @@ import { toast } from 'sonner';
 
 const ASSIGNABLE_ROLES: AppRole[] = ['admin', 'executive', 'branch_manager', 'assessor', 'branch_employee', 'support_agent'];
 const COMPANY_LEVEL_ROLES: AppRole[] = ['admin', 'executive'];
+const SUPERVISOR_ELIGIBLE_ROLES: AppRole[] = ['branch_manager', 'executive'];
+
+function useSupervisedBranches(userId: string, companyId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ['branch-supervisors', userId, companyId],
+    enabled,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('branch_supervisors')
+        .select('branch_id')
+        .eq('user_id', userId)
+        .eq('company_id', companyId);
+      if (error) throw error;
+      return (data || []).map((r: any) => r.branch_id as string);
+    },
+  });
+}
 
 function useCompanyBranches(companyId: string) {
   return useQuery({
