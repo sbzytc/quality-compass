@@ -468,8 +468,46 @@ function CreateUserDialog({ companyId, onClose }: { companyId: string; onClose: 
   const { data: employees = [] } = useCompanyEmployees(companyId);
   const isCompanyLevel = COMPANY_LEVEL_ROLES.includes(form.role);
   const showSupervised = form.role === 'branch_manager';
+  const [emailStatus, setEmailStatus] = useState<
+    | { state: 'idle' | 'checking' | 'ok' }
+    | { state: 'taken'; companies: string[] }
+    | { state: 'invalid' }
+  >({ state: 'idle' });
+
+  // Debounced live email uniqueness check
+  const emailValue = form.email.trim().toLowerCase();
+  useEffect(() => {
+    if (!emailValue) { setEmailStatus({ state: 'idle' }); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) {
+      setEmailStatus({ state: 'invalid' });
+      return;
+    }
+    let cancelled = false;
+    setEmailStatus({ state: 'checking' });
+    const t = setTimeout(async () => {
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .ilike('email', emailValue)
+        .maybeSingle();
+      if (cancelled) return;
+      if (!prof?.user_id) { setEmailStatus({ state: 'ok' }); return; }
+      const { data: cu } = await supabase
+        .from('company_users')
+        .select('companies:company_id(name)')
+        .eq('user_id', prof.user_id);
+      if (cancelled) return;
+      const names = (cu || []).map((r: any) => r.companies?.name).filter(Boolean);
+      setEmailStatus({ state: 'taken', companies: names });
+    }, 400);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [emailValue]);
 
   const submit = async () => {
+    if (emailStatus.state === 'taken') {
+      toast.error(isRTL ? 'هذا البريد مسجّل مسبقًا' : 'This email is already registered');
+      return;
+    }
     if (!form.email || !form.fullName || form.password.length < 6) {
       toast.error(isRTL ? 'اكمل الحقول (كلمة المرور 6+ أحرف)' : 'Fill all fields (password 6+ chars)');
       return;
@@ -520,7 +558,38 @@ function CreateUserDialog({ companyId, onClose }: { companyId: string; onClose: 
         <DialogHeader><DialogTitle>{isRTL ? 'إضافة مستخدم للشركة' : 'Add user to company'}</DialogTitle></DialogHeader>
         <div className="space-y-4">
           <div><Label>{isRTL ? 'الاسم الكامل' : 'Full name'}</Label><Input className="mt-1" value={form.fullName} onChange={e => setForm({ ...form, fullName: e.target.value })} /></div>
-          <div><Label>{isRTL ? 'البريد الإلكتروني' : 'Email'}</Label><Input type="email" className="mt-1" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></div>
+          <div>
+            <Label>{isRTL ? 'البريد الإلكتروني' : 'Email'}</Label>
+            <Input
+              type="email"
+              className="mt-1"
+              value={form.email}
+              onChange={e => setForm({ ...form, email: e.target.value })}
+            />
+            {emailStatus.state === 'checking' && (
+              <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                {isRTL ? 'جاري التحقق من البريد…' : 'Checking email…'}
+              </p>
+            )}
+            {emailStatus.state === 'ok' && (
+              <p className="text-xs text-emerald-600 mt-1">
+                {isRTL ? '✓ البريد متاح' : '✓ Email available'}
+              </p>
+            )}
+            {emailStatus.state === 'invalid' && form.email.length > 3 && (
+              <p className="text-xs text-destructive mt-1">
+                {isRTL ? 'صيغة بريد غير صحيحة' : 'Invalid email format'}
+              </p>
+            )}
+            {emailStatus.state === 'taken' && (
+              <p className="text-xs text-destructive mt-1">
+                {isRTL
+                  ? `هذا البريد مسجّل مسبقًا${emailStatus.companies.length ? ` في: ${emailStatus.companies.join('، ')}` : ''}`
+                  : `Email already registered${emailStatus.companies.length ? ` in: ${emailStatus.companies.join(', ')}` : ''}`}
+              </p>
+            )}
+          </div>
           <div><Label>{isRTL ? 'رقم الجوال' : 'Phone'}</Label><Input className="mt-1" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
           <div><Label>{isRTL ? 'المنصب' : 'Job title'}</Label><Input className="mt-1" value={form.jobTitle} onChange={e => setForm({ ...form, jobTitle: e.target.value })} /></div>
           <div><Label>{isRTL ? 'كلمة المرور المؤقتة' : 'Temporary password'}</Label><Input className="mt-1" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} /></div>
@@ -605,7 +674,12 @@ function CreateUserDialog({ companyId, onClose }: { companyId: string; onClose: 
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
-          <Button onClick={submit} disabled={createUser.isPending}>{isRTL ? 'إنشاء' : 'Create'}</Button>
+          <Button
+            onClick={submit}
+            disabled={createUser.isPending || emailStatus.state === 'taken' || emailStatus.state === 'checking' || emailStatus.state === 'invalid'}
+          >
+            {isRTL ? 'إنشاء' : 'Create'}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
