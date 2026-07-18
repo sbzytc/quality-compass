@@ -142,34 +142,12 @@ export default function LoginPage() {
           <img src={rasdaLogo} alt="Rasda" className="mx-auto w-52 h-52 object-contain" />
           <div>
             <CardDescription className="text-muted-foreground">
-              {isSignUp
-                ? (direction === 'rtl' ? 'إنشاء حساب جديد' : 'Create a new account')
-                : (direction === 'rtl' ? 'تسجيل الدخول إلى حسابك' : 'Sign in to your account')
-              }
+              {direction === 'rtl' ? 'تسجيل الدخول إلى حسابك' : 'Sign in to your account'}
             </CardDescription>
           </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {isSignUp && (
-              <div className="space-y-2">
-                <Label htmlFor="fullName">
-                  {direction === 'rtl' ? 'الاسم الكامل' : 'Full Name'}
-                </Label>
-                <div className="relative">
-                  <User className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="fullName"
-                    type="text"
-                    placeholder={direction === 'rtl' ? 'أدخل اسمك الكامل' : 'Enter your full name'}
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="ps-10"
-                    required
-                  />
-                </div>
-              </div>
-            )}
             <div className="space-y-2">
               <Label htmlFor="email">
                 {direction === 'rtl' ? 'البريد الإلكتروني' : 'Email'}
@@ -212,24 +190,10 @@ export default function LoginPage() {
                   {direction === 'rtl' ? 'جاري التحميل...' : 'Loading...'}
                 </>
               ) : (
-                isSignUp
-                  ? (direction === 'rtl' ? 'إنشاء حساب' : 'Sign Up')
-                  : (direction === 'rtl' ? 'تسجيل الدخول' : 'Sign In')
+                direction === 'rtl' ? 'تسجيل الدخول' : 'Sign In'
               )}
             </Button>
           </form>
-          <div className="mt-4 text-center">
-            <button
-              type="button"
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-sm text-primary hover:underline"
-            >
-              {isSignUp
-                ? (direction === 'rtl' ? 'لديك حساب؟ تسجيل الدخول' : 'Already have an account? Sign In')
-                : (direction === 'rtl' ? 'ليس لديك حساب؟ إنشاء حساب' : "Don't have an account? Sign Up")
-              }
-            </button>
-          </div>
         </CardContent>
       </Card>
     </div>
