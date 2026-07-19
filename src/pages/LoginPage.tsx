@@ -200,13 +200,13 @@ export default function LoginPage() {
       {/* Force Password Change Dialog */}
       <Dialog
         open={showForcePasswordChange}
-        onOpenChange={async (open) => {
+        onOpenChange={(open) => {
           if (!open) {
-            await supabase.auth.signOut();
             setShowForcePasswordChange(false);
             setNewPassword('');
             setConfirmNewPassword('');
             setPassword('');
+            void supabase.auth.signOut();
           }
         }}
       >
@@ -258,12 +258,12 @@ export default function LoginPage() {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={async () => {
-                await supabase.auth.signOut();
+              onClick={() => {
                 setShowForcePasswordChange(false);
                 setNewPassword('');
                 setConfirmNewPassword('');
                 setPassword('');
+                void supabase.auth.signOut();
               }}
               disabled={changingPassword}
             >
