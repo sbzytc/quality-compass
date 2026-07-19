@@ -740,13 +740,15 @@ ${currentThemeJson}
 
 2. Design a new theme. Colors must be HSL triples in the form "H S% L%" (no hsl() wrapper, no #hex). Keep the same top-level shape: { "theme": { "colors": ..., "radius": ..., "shadows": ... } }.
 
-3. Save the new theme with PUT (or POST — both work):
+${isClaude ? `3. Submit the proposal using the safe proposal URL above. Do not use headers, API keys, PUT, or POST.
+
+4. If your tool cannot visit the proposal URL, output only the final JSON payload so I can import it manually.` : `3. Save the new theme with PUT (or POST — both work):
    curl -X PUT "${supabaseEndpoint}&api_key=${key}" \\
      -H "Content-Type: application/json" \\
      -d '{ "theme": { ... } }'
 
    If your tool can't do PUT, use POST — the endpoint accepts both.
-   ${isClaude ? `Alternatively, use the safe proposal link shown above — it only needs a GET request, contains no API key, and creates a pending proposal instead of applying blindly.` : `If your tool can only do GET or cannot reach the endpoint, do not stop; provide the final JSON payload for manual import.`}
+   If your tool can only do GET or cannot reach the endpoint, do not stop; provide the final JSON payload for manual import.`}
 
 RULES
 - Never invent field names. Use only the fields included in the current response/shape above.
