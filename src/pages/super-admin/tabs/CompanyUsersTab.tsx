@@ -15,7 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Users, Loader2, MoreHorizontal, KeyRound, Pencil, UserX, UserCheck, Plus, Mail, Eye, EyeOff } from 'lucide-react';
+import { Users, Loader2, MoreHorizontal, KeyRound, Pencil, UserX, UserCheck, Plus, Mail, Eye, EyeOff, Key } from 'lucide-react';
+import { DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 
 const ASSIGNABLE_ROLES: AppRole[] = ['admin', 'executive', 'branch_manager', 'assessor', 'branch_employee', 'support_agent'];
@@ -173,31 +174,53 @@ function UserActions({ member, companyId, onEdit }: { member: any; companyId: st
   const [emailOpen, setEmailOpen] = useState(false);
   const [newEmail, setNewEmail] = useState('');
   const [emailSaving, setEmailSaving] = useState(false);
-  const [resetMode, setResetMode] = useState<'link' | 'direct'>('link');
-  const [directPassword, setDirectPassword] = useState('');
-  const [showDirectPassword, setShowDirectPassword] = useState(false);
+  const [resetMode, setResetMode] = useState<'choose' | 'email' | 'manual' | 'done'>('choose');
+  const [manualPassword, setManualPassword] = useState('');
+  const [confirmPasswordText, setConfirmPasswordText] = useState('');
+  const [showManualPassword, setShowManualPassword] = useState(false);
+  const [resetResult, setResetResult] = useState<{ tempPassword?: string; emailSent?: boolean } | null>(null);
 
   const active = member.profile?.is_active !== false;
 
-  const doReset = async () => {
+  const resetDialogState = () => {
+    setResetMode('choose');
+    setManualPassword('');
+    setConfirmPasswordText('');
+    setShowManualPassword(false);
+    setResetResult(null);
+  };
+
+  const handleResetViaEmail = async () => {
     try {
-      if (resetMode === 'direct') {
-        if (directPassword.length < 8 || !/[A-Za-z]/.test(directPassword) || !/[0-9]/.test(directPassword)) {
-          toast.error(isRTL ? 'كلمة المرور 8+ أحرف وتحتوي على حرف ورقم' : 'Password must be 8+ chars incl. letter & number');
-          return;
-        }
-        await resetPassword.mutateAsync({ userId: member.user_id, email: member.profile?.email, customPassword: directPassword });
-        toast.success(isRTL ? 'تم تحديث كلمة المرور' : 'Password updated');
-      } else {
-        await resetPassword.mutateAsync({ userId: member.user_id, email: member.profile?.email });
-        toast.success(isRTL ? 'تم إرسال رابط إعادة التعيين' : 'Reset link sent');
-      }
-      setDirectPassword('');
-      setResetMode('link');
+      const result: any = await resetPassword.mutateAsync({ userId: member.user_id, email: member.profile?.email });
+      setResetResult(result);
+      setResetMode('done');
+      toast.success(
+        isRTL
+          ? (result?.emailSent ? `تم إرسال كلمة المرور إلى ${member.profile?.email}` : 'تم إعادة تعيين كلمة المرور')
+          : (result?.emailSent ? `Password sent to ${member.profile?.email}` : 'Password reset successfully')
+      );
     } catch (e: any) {
-      toast.error(e.message);
-    } finally {
-      setConfirmReset(false);
+      toast.error(e.message || (isRTL ? 'فشل إعادة التعيين' : 'Failed to reset password'));
+    }
+  };
+
+  const handleResetManual = async () => {
+    if (manualPassword !== confirmPasswordText) {
+      toast.error(isRTL ? 'كلمات المرور غير متطابقة' : 'Passwords do not match');
+      return;
+    }
+    if (manualPassword.length < 8 || !/[A-Za-z]/.test(manualPassword) || !/[0-9]/.test(manualPassword)) {
+      toast.error(isRTL ? 'كلمة المرور 8+ أحرف وتحتوي على حرف ورقم' : 'Password must be 8+ chars incl. letter & number');
+      return;
+    }
+    try {
+      await resetPassword.mutateAsync({ userId: member.user_id, email: member.profile?.email, customPassword: manualPassword });
+      setResetResult({});
+      setResetMode('done');
+      toast.success(isRTL ? 'تم تعيين كلمة المرور بنجاح' : 'Password set successfully');
+    } catch (e: any) {
+      toast.error(e.message || (isRTL ? 'فشل تعيين كلمة المرور' : 'Failed to set password'));
     }
   };
 
@@ -243,67 +266,132 @@ function UserActions({ member, companyId, onEdit }: { member: any; companyId: st
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Dialog open={confirmReset} onOpenChange={(o) => { setConfirmReset(o); if (!o) { setDirectPassword(''); setResetMode('link'); } }}>
+      <Dialog open={confirmReset} onOpenChange={(o) => { setConfirmReset(o); if (!o) resetDialogState(); }}>
         <DialogContent onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>{isRTL ? 'إعادة تعيين كلمة المرور' : 'Reset password'}</DialogTitle>
+            <DialogDescription>
+              {isRTL ? 'اختر طريقة إعادة تعيين كلمة المرور' : 'Choose how to reset the password'}
+            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="text-xs text-muted-foreground">
-              {isRTL ? 'المستخدم:' : 'User:'} <span className="font-medium">{member.profile?.email}</span>
+          <div className="py-2 space-y-4">
+            <div className="p-3 bg-muted/40 rounded-lg">
+              <p className="font-medium text-sm">{member.profile?.full_name}</p>
+              <p className="text-xs text-muted-foreground">{member.profile?.email}</p>
             </div>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant={resetMode === 'link' ? 'default' : 'outline'}
-                size="sm"
-                className="flex-1"
-                onClick={() => setResetMode('link')}
-              >
-                {isRTL ? 'إرسال رابط للإيميل' : 'Send email link'}
-              </Button>
-              <Button
-                type="button"
-                variant={resetMode === 'direct' ? 'default' : 'outline'}
-                size="sm"
-                className="flex-1"
-                onClick={() => setResetMode('direct')}
-              >
-                {isRTL ? 'تعيين كلمة مرور مباشرة' : 'Set password directly'}
-              </Button>
-            </div>
-            {resetMode === 'direct' && (
-              <div>
-                <Label>{isRTL ? 'كلمة المرور الجديدة' : 'New password'}</Label>
-                <div className="relative mt-1">
-                  <Input
-                    type={showDirectPassword ? 'text' : 'password'}
-                    value={directPassword}
-                    onChange={(e) => setDirectPassword(e.target.value)}
-                    placeholder={isRTL ? '8+ أحرف مع حرف ورقم' : '8+ chars incl. letter & number'}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute end-0 top-0 h-full px-3"
-                    onClick={() => setShowDirectPassword(!showDirectPassword)}
-                  >
-                    {showDirectPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  {isRTL ? 'سيتم تحديث كلمة المرور فوراً بدون إرسال إيميل.' : 'Password will be updated immediately; no email is sent.'}
+
+            {resetMode === 'choose' && (
+              <div className="flex flex-col gap-3">
+                <Button variant="outline" className="justify-start gap-3 h-auto py-3" onClick={() => setResetMode('email')}>
+                  <Mail className="w-5 h-5 text-primary" />
+                  <div className="text-start">
+                    <p className="font-medium">{isRTL ? 'إرسال عبر البريد الإلكتروني' : 'Send via Email'}</p>
+                    <p className="text-xs text-muted-foreground">{isRTL ? 'إنشاء كلمة مرور مؤقتة وإرسالها للمستخدم' : 'Generate a temporary password and email it to the user'}</p>
+                  </div>
+                </Button>
+                <Button variant="outline" className="justify-start gap-3 h-auto py-3" onClick={() => setResetMode('manual')}>
+                  <Key className="w-5 h-5 text-primary" />
+                  <div className="text-start">
+                    <p className="font-medium">{isRTL ? 'تعيين يدوي' : 'Set Manually'}</p>
+                    <p className="text-xs text-muted-foreground">{isRTL ? 'إدخال كلمة مرور جديدة يدوياً' : 'Enter a new password manually'}</p>
+                  </div>
+                </Button>
+              </div>
+            )}
+
+            {resetMode === 'email' && (
+              <div className="p-4 bg-muted/30 rounded-lg">
+                <p className="text-sm">
+                  {isRTL
+                    ? 'سيتم إنشاء كلمة مرور مؤقتة وإرسالها إلى بريد المستخدم. متابعة؟'
+                    : "A new temporary password will be generated and sent to the user's email. Continue?"}
                 </p>
+              </div>
+            )}
+
+            {resetMode === 'manual' && (
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label>{isRTL ? 'كلمة المرور الجديدة' : 'New Password'}</Label>
+                  <div className="relative">
+                    <Input
+                      type={showManualPassword ? 'text' : 'password'}
+                      value={manualPassword}
+                      onChange={(e) => setManualPassword(e.target.value)}
+                      placeholder={isRTL ? '8+ أحرف مع حرف ورقم' : '8+ chars incl. letter & number'}
+                    />
+                    <Button type="button" variant="ghost" size="icon" className="absolute end-0 top-0 h-full px-3" onClick={() => setShowManualPassword(!showManualPassword)}>
+                      {showManualPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </Button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>{isRTL ? 'تأكيد كلمة المرور' : 'Confirm Password'}</Label>
+                  <Input
+                    type={showManualPassword ? 'text' : 'password'}
+                    value={confirmPasswordText}
+                    onChange={(e) => setConfirmPasswordText(e.target.value)}
+                    placeholder={isRTL ? 'أعد إدخال كلمة المرور' : 'Re-enter password'}
+                  />
+                </div>
+                {manualPassword && confirmPasswordText && manualPassword !== confirmPasswordText && (
+                  <p className="text-xs text-destructive">{isRTL ? 'كلمات المرور غير متطابقة' : 'Passwords do not match'}</p>
+                )}
+              </div>
+            )}
+
+            {resetMode === 'done' && (
+              <div className="space-y-3">
+                {resetResult?.tempPassword && (
+                  <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg space-y-2">
+                    <p className="text-sm font-medium">{isRTL ? 'كلمة المرور المؤقتة الجديدة:' : 'New temporary password:'}</p>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 p-2 bg-muted rounded text-sm font-mono select-all break-all">{resetResult.tempPassword}</code>
+                      <Button variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(resetResult.tempPassword!); toast.success(isRTL ? 'تم النسخ' : 'Copied!'); }}>
+                        {isRTL ? 'نسخ' : 'Copy'}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                {resetResult?.emailSent && (
+                  <div className="p-3 bg-score-excellent/10 border border-score-excellent/20 rounded-lg">
+                    <p className="text-sm text-score-excellent">{isRTL ? '✓ تم إرسال كلمة المرور الجديدة عبر البريد الإلكتروني' : '✓ New password has been sent via email'}</p>
+                  </div>
+                )}
+                {!resetResult?.tempPassword && !resetResult?.emailSent && (
+                  <div className="p-3 bg-score-excellent/10 border border-score-excellent/20 rounded-lg">
+                    <p className="text-sm text-score-excellent">{isRTL ? '✓ تم تعيين كلمة المرور بنجاح' : '✓ Password has been set successfully'}</p>
+                  </div>
+                )}
               </div>
             )}
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setConfirmReset(false)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
-            <Button onClick={doReset} disabled={resetPassword.isPending}>
-              {resetPassword.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
-              {resetMode === 'direct' ? (isRTL ? 'تحديث كلمة المرور' : 'Update password') : (isRTL ? 'إرسال الرابط' : 'Send link')}
-            </Button>
+            {resetMode === 'done' ? (
+              <Button onClick={() => { setConfirmReset(false); resetDialogState(); }}>
+                {isRTL ? 'إغلاق' : 'Close'}
+              </Button>
+            ) : resetMode === 'choose' ? (
+              <Button variant="outline" onClick={() => setConfirmReset(false)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+            ) : (
+              <div className="flex gap-2 w-full justify-end">
+                <Button variant="outline" onClick={() => setResetMode('choose')}>{isRTL ? 'رجوع' : 'Back'}</Button>
+                {resetMode === 'email' && (
+                  <Button onClick={handleResetViaEmail} disabled={resetPassword.isPending}>
+                    {resetPassword.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
+                    <Mail className="w-4 h-4 me-2" />
+                    {isRTL ? 'إرسال' : 'Send'}
+                  </Button>
+                )}
+                {resetMode === 'manual' && (
+                  <Button onClick={handleResetManual} disabled={resetPassword.isPending || !manualPassword || manualPassword !== confirmPasswordText}>
+                    {resetPassword.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
+                    <Key className="w-4 h-4 me-2" />
+                    {isRTL ? 'تعيين كلمة المرور' : 'Set Password'}
+                  </Button>
+                )}
+              </div>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
