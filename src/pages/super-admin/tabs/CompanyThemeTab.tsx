@@ -491,6 +491,8 @@ curl -X PUT -H "x-api-key: <YOUR_KEY>" -H "content-type: application/json" \\
       </Card>
 
       {/* Version history */}
+      <ExternalToolInstructions companyName={company.name_ar || company.name_en || ''} companyId={company.id} t={t} />
+
       <Card className="p-6 space-y-4">
         <div className="flex items-center gap-2">
           <History className="w-5 h-5 text-primary" />
