@@ -162,7 +162,7 @@ export default function CompanyThemeTab() {
     try {
       const text = await file.text();
       const parsed = JSON.parse(text);
-      setDraft(parsed);
+      setDraft(parsed?.theme || parsed);
       toast({ title: t('تم استيراد الملف — راجع ثم احفظ', 'Imported — review then save') });
     } catch {
       toast({ title: t('ملف غير صالح', 'Invalid JSON'), variant: 'destructive' });
@@ -257,6 +257,31 @@ export default function CompanyThemeTab() {
 
   const endpoint = `${window.location.origin.replace('http://', 'https://')}/functions/v1/company-theme?company_id=${company.id}`;
   const supabaseEndpoint = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID || ''}.supabase.co/functions/v1/company-theme?company_id=${company.id}`;
+  const currentThemeResponse = useMemo(() => ({
+    company_id: company.id,
+    slug: company.slug,
+    theme: themeRow?.theme ?? null,
+    effective_theme: baseTheme,
+    inherited_from: inherited ? company.sandbox_of_company_id ?? null : null,
+    updated_at: themeRow?.updated_at ?? null,
+    accepted_payload_shape: {
+      theme: {
+        colors: {
+          primary: 'H S% L%',
+          primaryForeground: 'H S% L%',
+          accent: 'H S% L%',
+          accentForeground: 'H S% L%',
+          background: 'H S% L%',
+          foreground: 'H S% L%',
+        },
+        radius: '0.75rem',
+        shadows: {
+          soft: 'CSS box-shadow value',
+          medium: 'CSS box-shadow value',
+        },
+      },
+    },
+  }), [baseTheme, company.id, company.sandbox_of_company_id, company.slug, inherited, themeRow?.theme, themeRow?.updated_at]);
 
   const radiusPx = parseFloat(draft.radius || '0.875') * 16;
 
@@ -500,8 +525,8 @@ curl -X PUT -H "x-api-key: <YOUR_KEY>" -H "content-type: application/json" \\
         </div>
         <p className="text-sm text-muted-foreground">
           {t(
-            'انسخ التعليمات التالية والصقها في المحادثة مع الأداة المفضلة لديك. استبدل MY_API_KEY بالمفتاح الذي أنشأته في قسم "واجهة API خارجية" أعلاه.',
-            'Copy the instructions below and paste them into your preferred AI tool. Replace MY_API_KEY with the key you created in the External API access section above.'
+            'انسخ التعليمات التالية والصقها في الأداة المفضلة لديك. التعليمات تحتوي شكل JSON الحالي، لذلك لا تحتاج الأداة لعمل GET إذا كان الوصول محجوباً.',
+            'Copy the instructions below into your preferred AI tool. They include the current JSON shape, so the tool does not need GET if access is blocked.'
           )}
         </p>
 
@@ -518,14 +543,16 @@ curl -X PUT -H "x-api-key: <YOUR_KEY>" -H "content-type: application/json" \\
           {(['chatgpt', 'claude'] as const).map((tool) => {
             const toolName = tool === 'chatgpt' ? 'ChatGPT' : 'Claude';
             const placeholderKey = '<MY_API_KEY>';
+            const currentThemeJson = JSON.stringify(currentThemeResponse, null, 2);
             const buildInstructions = (key: string) => `You are a brand theme designer for the company "${company.name_ar || company.name || ''}".
 
 You will edit this company's live theme through Rasdah's Theme API.
 
-IMPORTANT: to actually call this API you need a code-execution tool
-(Claude → "Analysis / code interpreter", ChatGPT → "Advanced Data Analysis").
-Plain web browsing cannot send custom headers or PUT/POST bodies. If you don't
-have code execution enabled, tell me and stop — do not fabricate results.
+IMPORTANT
+- The current theme JSON and accepted payload shape are already included below.
+- Do NOT ask me to run GET/curl or paste JSON. If you cannot reach the endpoint, continue by designing the JSON payload from the included shape.
+- To actually save through the API, you need code execution (Claude → Analysis / code interpreter, ChatGPT → Advanced Data Analysis). Plain web browsing often cannot send custom headers or PUT/POST bodies.
+- If saving fails, output the final JSON payload only so I can paste/import it manually in Rasdah.
 
 ENDPOINT (API key can be passed either as header OR as ?api_key= query param)
 ${supabaseEndpoint}
@@ -536,27 +563,11 @@ AUTH — pick ONE of these:
   Query:   append &api_key=${key} to the URL
 
 HOW IT WORKS
-1. First, GET the current theme to see the exact JSON shape. Either:
-   curl "${supabaseEndpoint}" -H "x-api-key: ${key}"
-   or (no-header variant, works from any fetch tool):
-   curl "${supabaseEndpoint}&api_key=${key}"
+1. Use this current response/shape instead of asking me to run GET:
 
-2. Then propose a new theme. Colors are HSL triples in the form "H S% L%" (no hsl() wrapper, no #hex).
-   Example fields:
-   {
-     "theme": {
-       "colors": {
-         "primary": "220 90% 50%",
-         "primaryForeground": "0 0% 100%",
-         "accent": "160 70% 45%",
-         "accentForeground": "0 0% 100%",
-         "background": "0 0% 100%",
-         "foreground": "222 47% 11%"
-       },
-       "radius": "0.75rem",
-       "shadows": { "md": "0 4px 6px -1px rgb(0 0 0 / 0.1)" }
-     }
-   }
+${currentThemeJson}
+
+2. Design a new theme. Colors must be HSL triples in the form "H S% L%" (no hsl() wrapper, no #hex). Keep the same top-level shape: { "theme": { "colors": ..., "radius": ..., "shadows": ... } }.
 
 3. Save the new theme with PUT (or POST — both work):
    curl -X PUT "${supabaseEndpoint}&api_key=${key}" \\
@@ -564,13 +575,12 @@ HOW IT WORKS
      -d '{ "theme": { ... } }'
 
    If your tool can't do PUT, use POST — the endpoint accepts both.
-   If your tool can only do GET, this API cannot be written to from that tool;
-   tell me so I can apply the change manually.
+   If your tool can only do GET or cannot reach the endpoint, do not stop; provide the final JSON payload for manual import.
 
 RULES
-- Never invent field names. Only send fields that appeared in the GET response.
+- Never invent field names. Use only the fields included in the current response/shape above.
 - Always keep enough contrast between "background" and "foreground", and between each color and its *Foreground pair (WCAG AA minimum).
-- After every PUT, GET again and show me the applied result.
+- After every successful PUT/POST, GET again and show me the applied result. If GET fails, show the payload you attempted to save.
 - Every save is auto-versioned server-side, so it's safe to iterate.
 
 MY API KEY: ${key === placeholderKey ? '<paste the key I generated in Rasdah here>' : key}
