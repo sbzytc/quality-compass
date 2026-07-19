@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
-import { Palette, Save, RotateCcw, Download, Upload, Key, Trash2, Copy, Plus, FlaskConical } from 'lucide-react';
+import { Palette, Save, RotateCcw, Download, Upload, Key, Trash2, Copy, Plus, FlaskConical, History, Undo2, Eye } from 'lucide-react';
 import type { CompanyTheme } from '@/contexts/CompanyThemeProvider';
 
 // ── HSL <→ HEX helpers ─────────────────────────────
@@ -219,6 +219,38 @@ export default function CompanyThemeTab() {
       toast({ title: t('تم إلغاء المفتاح', 'Key revoked') });
       qc.invalidateQueries({ queryKey: ['company-theme-api-keys', company.id] });
     },
+  });
+
+  // ── Theme version history ─────────────────────────────
+  const { data: versions } = useQuery({
+    queryKey: ['company-theme-versions', company.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('company_theme_versions')
+        .select('id, theme, label, source, changed_by, created_at')
+        .eq('company_id', company.id)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const rollback = useMutation({
+    mutationFn: async (theme: CompanyTheme | null) => {
+      const { error } = await supabase
+        .from('companies')
+        .update({ theme: theme as any, theme_updated_at: new Date().toISOString() })
+        .eq('id', company.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: t('تم استرجاع الثيم', 'Theme restored') });
+      qc.invalidateQueries({ queryKey: ['company-theme-editor', company.id] });
+      qc.invalidateQueries({ queryKey: ['company-theme-versions', company.id] });
+      qc.invalidateQueries({ queryKey: ['company-theme'] });
+    },
+    onError: (e: any) => toast({ title: t('فشل الاسترجاع', 'Restore failed'), description: e.message, variant: 'destructive' }),
   });
 
   const endpoint = `${window.location.origin.replace('http://', 'https://')}/functions/v1/company-theme?company_id=${company.id}`;
@@ -453,6 +485,81 @@ curl -X PUT -H "x-api-key: <YOUR_KEY>" -H "content-type: application/json" \\
               )}
             </div>
           ))}
+        </div>
+      </Card>
+
+      {/* Version history */}
+      <Card className="p-6 space-y-4">
+        <div className="flex items-center gap-2">
+          <History className="w-5 h-5 text-primary" />
+          <h2 className="text-lg font-semibold">{t('سجل نسخ الثيم', 'Theme version history')}</h2>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          {t(
+            'كل تعديل يُحفظ تلقائياً هنا. يمكنك المعاينة أو الاسترجاع لأي نسخة سابقة.',
+            'Every change is auto-saved here. Preview or roll back to any previous version.'
+          )}
+        </p>
+
+        {(!versions || versions.length === 0) && (
+          <div className="text-sm text-muted-foreground py-6 text-center">
+            {t('لا يوجد سجل بعد.', 'No history yet.')}
+          </div>
+        )}
+
+        <div className="space-y-2">
+          {versions?.map((v) => {
+            const th = (v.theme as CompanyTheme | null);
+            const swatches = th?.colors ? [th.colors.primary, th.colors.accent, th.colors.background, th.colors.foreground].filter(Boolean) : [];
+            return (
+              <div key={v.id} className="flex items-center gap-3 p-3 rounded-lg border bg-white/60">
+                <div className="flex items-center gap-1">
+                  {swatches.length === 0 && (
+                    <span className="text-xs text-muted-foreground italic">{t('فارغ (توارث)', 'empty (inherit)')}</span>
+                  )}
+                  {swatches.map((c, i) => (
+                    <span
+                      key={i}
+                      className="w-6 h-6 rounded-md border border-border/60"
+                      style={{ background: `hsl(${c})` }}
+                    />
+                  ))}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium truncate">
+                    {v.label || t('نسخة محفوظة', 'Saved version')}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground">
+                    {new Date(v.created_at).toLocaleString()} · {v.source}
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setDraft(th || DEFAULT_THEME);
+                    toast({ title: t('تم تحميلها في المحرر — راجع ثم احفظ', 'Loaded into editor — review then save') });
+                  }}
+                  className="gap-1"
+                >
+                  <Eye className="w-4 h-4" /> {t('معاينة', 'Preview')}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={rollback.isPending}
+                  onClick={() => {
+                    if (confirm(t('استرجاع هذه النسخة كثيم حالي؟', 'Restore this version as current theme?'))) {
+                      rollback.mutate(th);
+                    }
+                  }}
+                  className="gap-1"
+                >
+                  <Undo2 className="w-4 h-4" /> {t('استرجاع', 'Restore')}
+                </Button>
+              </div>
+            );
+          })}
         </div>
       </Card>
     </div>
