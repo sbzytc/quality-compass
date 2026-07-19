@@ -522,15 +522,24 @@ curl -X PUT -H "x-api-key: <YOUR_KEY>" -H "content-type: application/json" \\
 
 You will edit this company's live theme through Rasdah's Theme API.
 
-ENDPOINT
+IMPORTANT: to actually call this API you need a code-execution tool
+(Claude → "Analysis / code interpreter", ChatGPT → "Advanced Data Analysis").
+Plain web browsing cannot send custom headers or PUT/POST bodies. If you don't
+have code execution enabled, tell me and stop — do not fabricate results.
+
+ENDPOINT (API key can be passed either as header OR as ?api_key= query param)
 ${supabaseEndpoint}
 
-AUTH HEADER (replace MY_API_KEY with the actual key)
-x-api-key: ${key}
+AUTH — pick ONE of these:
+  Header:  x-api-key: ${key}
+  Header:  Authorization: Bearer ${key}
+  Query:   append &api_key=${key} to the URL
 
 HOW IT WORKS
-1. First, GET the current theme to see the exact JSON shape:
+1. First, GET the current theme to see the exact JSON shape. Either:
    curl "${supabaseEndpoint}" -H "x-api-key: ${key}"
+   or (no-header variant, works from any fetch tool):
+   curl "${supabaseEndpoint}&api_key=${key}"
 
 2. Then propose a new theme. Colors are HSL triples in the form "H S% L%" (no hsl() wrapper, no #hex).
    Example fields:
@@ -549,11 +558,14 @@ HOW IT WORKS
      }
    }
 
-3. Save the new theme with PUT:
-   curl -X PUT "${supabaseEndpoint}" \\
-     -H "x-api-key: ${key}" \\
+3. Save the new theme with PUT (or POST — both work):
+   curl -X PUT "${supabaseEndpoint}&api_key=${key}" \\
      -H "Content-Type: application/json" \\
      -d '{ "theme": { ... } }'
+
+   If your tool can't do PUT, use POST — the endpoint accepts both.
+   If your tool can only do GET, this API cannot be written to from that tool;
+   tell me so I can apply the change manually.
 
 RULES
 - Never invent field names. Only send fields that appeared in the GET response.
