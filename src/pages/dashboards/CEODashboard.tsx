@@ -28,12 +28,14 @@ export default function CEODashboard() {
 
   // Fetch aggregated criterion scores across all submitted evaluations
   const { data: criterionScoreDistribution, isLoading: criterionScoresLoading } = useQuery({
-    queryKey: ['criterion-score-distribution'],
+    queryKey: ['criterion-score-distribution', currentCompany?.id],
+    enabled: !!currentCompany?.id,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('evaluation_criterion_scores')
-        .select('score, evaluations!inner(status)')
-        .eq('evaluations.status', 'submitted');
+        .select('score, evaluations!inner(status, company_id)')
+        .eq('evaluations.status', 'submitted')
+        .eq('evaluations.company_id', currentCompany!.id);
 
       if (error) throw error;
 
@@ -56,13 +58,15 @@ export default function CEODashboard() {
 
   // Fetch unique assessors who submitted evaluations vs total evaluations submitted
   const { data: assessorStats } = useQuery({
-    queryKey: ['assessor-submission-stats'],
+    queryKey: ['assessor-submission-stats', currentCompany?.id],
+    enabled: !!currentCompany?.id,
     queryFn: async () => {
       // Get all submitted evaluations to count unique assessors
       const { data: submittedEvals, error } = await supabase
         .from('evaluations')
         .select('assessor_id, branch_id')
-        .eq('status', 'submitted');
+        .eq('status', 'submitted')
+        .eq('company_id', currentCompany!.id);
 
       if (error) throw error;
 
@@ -79,12 +83,14 @@ export default function CEODashboard() {
 
   // Fetch performance trend per branch over time
   const { data: branchTrendData } = useQuery({
-    queryKey: ['branch-performance-trends-all'],
+    queryKey: ['branch-performance-trends-all', currentCompany?.id],
+    enabled: !!currentCompany?.id,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('evaluations')
         .select('branch_id, overall_percentage, submitted_at, created_at, branches!inner(name, name_ar)')
         .in('status', ['submitted', 'approved'])
+        .eq('company_id', currentCompany!.id)
         .order('created_at', { ascending: true });
       if (error) throw error;
 
