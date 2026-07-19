@@ -12,6 +12,15 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+function escapeHtml(str: string) {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 function html(title: string, body: string, status = 200) {
   return new Response(
     `<!DOCTYPE html>
@@ -19,7 +28,7 @@ function html(title: string, body: string, status = 200) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${title}</title>
+  <title>${escapeHtml(title)}</title>
   <style>
     body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 720px; margin: 48px auto; padding: 0 24px; line-height: 1.6; color: #1f2937; }
     .box { border-radius: 16px; padding: 24px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); }
@@ -32,7 +41,7 @@ function html(title: string, body: string, status = 200) {
 </head>
 <body>
   <div class="box ${status >= 400 ? 'error' : 'success'}">
-    <h1>${title}</h1>
+    <h1>${escapeHtml(title)}</h1>
     ${body}
   </div>
   <p class="muted">Rasdah Company Theme — Direct Apply</p>
