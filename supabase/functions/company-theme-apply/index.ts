@@ -52,11 +52,6 @@ function html(title: string, body: string, status = 200) {
   );
 }
 
-async function sha256Hex(input: string) {
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
-  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
 function validTheme(t: unknown): t is Record<string, unknown> {
   if (!t || typeof t !== "object" || Array.isArray(t)) return false;
   const keys = Object.keys(t as Record<string, unknown>);
@@ -90,13 +85,18 @@ Deno.serve(async (req) => {
     );
   }
 
-  let theme: unknown;
+  let decodedPayload: unknown;
   try {
     const decoded = decodeBase64Url(themeB64);
-    theme = JSON.parse(decoded);
+    decodedPayload = JSON.parse(decoded);
   } catch {
     return html("Invalid Theme", "<p>The <code>theme</code> parameter could not be decoded as base64 JSON.</p>", 400);
   }
+
+  const theme =
+    decodedPayload && typeof decodedPayload === "object" && !Array.isArray(decodedPayload) && "theme" in decodedPayload
+      ? (decodedPayload as Record<string, unknown>).theme
+      : decodedPayload;
 
   if (theme !== null && !validTheme(theme)) {
     return html("Invalid Theme", "<p>The decoded theme object is not valid.</p>", 400);
@@ -113,6 +113,20 @@ Deno.serve(async (req) => {
 
   if (companyError || !company) {
     return html("Company Not Found", "<p>The requested company does not exist.</p>", 404);
+  }
+
+  const { count: pendingCount } = await admin
+    .from("company_theme_proposals")
+    .select("id", { count: "exact", head: true })
+    .eq("company_id", companyId)
+    .eq("status", "pending");
+
+  if ((pendingCount || 0) >= 20) {
+    return html(
+      "Too Many Pending Proposals",
+      "<p>This company already has too many pending theme proposals. Please review or reject older proposals first.</p>",
+      429
+    );
   }
 
   const { data: proposal, error: insertError } = await admin.from("company_theme_proposals").insert({
