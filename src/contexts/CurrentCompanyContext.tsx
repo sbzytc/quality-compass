@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLocation } from 'react-router-dom';
 
 
 export type SectorType = 'fnb' | 'clinic' | 'retail' | 'factory' | 'other';
@@ -47,6 +48,7 @@ const CurrentCompanyContext = createContext<CurrentCompanyContextValue | undefin
 export function CurrentCompanyProvider({ children }: { children: ReactNode }) {
   const { user, roles } = useAuth();
   const isSuperAdmin = roles.includes('super_admin');
+  const location = useLocation();
   const [currentCompany, setCurrentCompany] = useState<Company | null>(null);
   const [companies, setCompanies] = useState<CompanyMembership[]>([]);
   const [loading, setLoading] = useState(true);
@@ -121,7 +123,7 @@ export function CurrentCompanyProvider({ children }: { children: ReactNode }) {
   // company workspace) actually switches the active company.
   useEffect(() => {
     if (!companies.length) return;
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(location.search);
     const urlKey = params.get('company');
     if (!urlKey) return;
     const match = companies.find(c => c.slug === urlKey) || companies.find(c => c.id === urlKey);
@@ -129,7 +131,7 @@ export function CurrentCompanyProvider({ children }: { children: ReactNode }) {
       setCurrentCompany(match);
       localStorage.setItem(STORAGE_KEY, match.id);
     }
-  }, [companies, currentCompany?.id]);
+  }, [companies, currentCompany?.id, location.search]);
 
   const switchCompany = useCallback(async (companyId: string) => {
     const company = companies.find(c => c.id === companyId);
