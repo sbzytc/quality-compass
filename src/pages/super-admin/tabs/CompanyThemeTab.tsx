@@ -708,7 +708,7 @@ You will ${isClaude ? 'submit a safe pending theme proposal for this company' : 
 IMPORTANT
 - The current theme JSON and accepted payload shape are already included below.
 - Do NOT ask me to run GET/curl or paste JSON. If you cannot reach the endpoint, continue by designing the JSON payload from the included shape.
-- To actually save through the API, you need code execution (Claude → Analysis / code interpreter, ChatGPT → Advanced Data Analysis). Plain web browsing often cannot send custom headers or PUT/POST bodies.
+- ${isClaude ? 'For Claude, use the safe proposal link only. It is a normal GET URL, needs no headers, and does not apply changes directly.' : 'To actually save through the API, you need code execution (ChatGPT → Advanced Data Analysis). Plain web browsing often cannot send custom headers or PUT/POST bodies.'}
 - If saving/proposal submission fails, output the final JSON payload only so I can paste/import it manually in Rasdah.
 
 ${isClaude ? `SAFE PROPOSAL ENDPOINT
@@ -753,7 +753,7 @@ ${isClaude ? `3. Submit the proposal using the safe proposal URL above. Do not u
 RULES
 - Never invent field names. Use only the fields included in the current response/shape above.
 - Always keep enough contrast between "background" and "foreground", and between each color and its *Foreground pair (WCAG AA minimum).
-- After every successful save, show me the applied result. If saving fails, show the payload you attempted to save.
+- ${isClaude ? 'After successful proposal submission, tell me to approve the pending proposal in Rasdah. If submission fails, show the payload you attempted to submit.' : 'After every successful save, show me the applied result. If saving fails, show the payload you attempted to save.'}
 - Every save is auto-versioned server-side, so it's safe to iterate.
 
 ${isClaude ? 'NO API KEY IS NEEDED FOR THE SAFE PROPOSAL LINK.' : `MY API KEY: ${key === placeholderKey ? '<paste the key I generated in Rasdah here>' : key}`}
