@@ -283,6 +283,23 @@ export default function CompanyThemeTab() {
     },
   }), [baseTheme, company.id, company.sandbox_of_company_id, company.slug, inherited, themeRow?.theme, themeRow?.updated_at]);
 
+  // ── Direct apply link (GET, no headers/body — for AI web fetchers like Claude) ──
+  // Must use the Supabase function URL directly; the custom app domain serves the React app for all paths.
+  const applyEndpoint = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID || ''}.supabase.co/functions/v1/company-theme-apply`;
+  function base64UrlEncode(obj: unknown) {
+    const str = JSON.stringify(obj);
+    const b64 = btoa(unescape(encodeURIComponent(str)));
+    return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  const applyUrlForDraft = (key: string) => {
+    const url = new URL(applyEndpoint);
+    url.searchParams.set('company_id', company.id);
+    url.searchParams.set('api_key', key);
+    url.searchParams.set('theme', base64UrlEncode({ theme: draft }));
+    url.searchParams.set('source', 'claude');
+    return url.toString();
+  };
+
   const radiusPx = parseFloat(draft.radius || '0.875') * 16;
 
   if (isLoading) return <div className="p-8 text-muted-foreground">…</div>;
@@ -515,6 +532,73 @@ curl -X PUT -H "x-api-key: <YOUR_KEY>" -H "content-type: application/json" \\
         </div>
       </Card>
 
+      {/* Direct apply link for AI web fetchers (Claude, etc.) */}
+      <Card className="p-6 space-y-4">
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-primary" />
+          <h2 className="text-lg font-semibold">
+            {t('رابط تطبيق مباشر لـ Claude', 'Direct apply link for Claude')}
+          </h2>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          {t(
+            'هذا الرابط يتيح لـ Claude تطبيق الثيم مباشرة بزيارة رابط GET واحد — لا يحتاج إلى هيدرز مخصصة أو body. انسخ الرابط بعد إنشاء مفتاح، والصقه في Claude.',
+            'This link lets Claude apply the theme by visiting a single GET URL — no custom headers or body needed. Copy the link after creating a key and paste it into Claude.'
+          )}
+        </p>
+
+        <div className="rounded-lg bg-muted/40 border p-3 space-y-2">
+          <div className="text-xs font-mono opacity-70">{t('رابط التطبيق:', 'Apply URL:')}</div>
+          <div className="text-xs font-mono break-all">
+            {freshKey ? applyUrlForDraft(freshKey) : applyUrlForDraft('<MY_API_KEY>')}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {freshKey ? (
+            <Button
+              size="sm"
+              className="gap-2"
+              onClick={() => {
+                navigator.clipboard.writeText(applyUrlForDraft(freshKey));
+                toast({ title: t('تم نسخ رابط التطبيق', 'Apply link copied') });
+              }}
+            >
+              <Copy className="w-4 h-4" /> {t('نسخ الرابط مع المفتاح', 'Copy link with key')}
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-2"
+              onClick={() => {
+                navigator.clipboard.writeText(applyUrlForDraft('<MY_API_KEY>'));
+                toast({ title: t('تم نسخ قالب الرابط', 'Link template copied') });
+              }}
+            >
+              <Copy className="w-4 h-4" /> {t('نسخ قالب الرابط', 'Copy link template')}
+            </Button>
+          )}
+          {freshKey && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-2"
+              onClick={() => window.open(applyUrlForDraft(freshKey), '_blank')}
+            >
+              <Eye className="w-4 h-4" /> {t('فتح الرابط', 'Open link')}
+            </Button>
+          )}
+        </div>
+
+        <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
+          {t(
+            'تحذير: الرابط يحتوي على مفتاح API كامل. لا تشاركه إلا مع Claude أو أداة موثوقة. بمجرد الزيارة سيتم تطبيق الثيم فوراً.',
+            'Warning: the link contains a full API key. Only share it with Claude or a trusted tool. Visiting it will apply the theme immediately.'
+          )}
+        </div>
+      </Card>
+
       {/* External AI tool instructions */}
       <Card className="p-6 space-y-4">
         <div className="flex items-center gap-2">
@@ -544,7 +628,10 @@ curl -X PUT -H "x-api-key: <YOUR_KEY>" -H "content-type: application/json" \\
             const toolName = tool === 'chatgpt' ? 'ChatGPT' : 'Claude';
             const placeholderKey = '<MY_API_KEY>';
             const currentThemeJson = JSON.stringify(currentThemeResponse, null, 2);
-            const buildInstructions = (key: string) => `You are a brand theme designer for the company "${company.name_ar || company.name || ''}".
+            const buildInstructions = (key: string) => {
+              const directApplyUrl = applyUrlForDraft(key === placeholderKey ? '<MY_API_KEY>' : key);
+              const isClaude = tool === 'claude';
+              return `You are a brand theme designer for the company "${company.name_ar || company.name || ''}".
 
 You will edit this company's live theme through Rasdah's Theme API.
 
@@ -557,10 +644,20 @@ IMPORTANT
 ENDPOINT (API key can be passed either as header OR as ?api_key= query param)
 ${supabaseEndpoint}
 
-AUTH — pick ONE of these:
+${isClaude ? `EASIEST OPTION FOR CLAUDE — DIRECT APPLY LINK (GET, no headers/body)
+A special one-click URL is available. Build the theme JSON, base64url-encode it, and visit this link to apply it immediately:
+
+${directApplyUrl}
+
+To use it:
+1. Ask me for the brand direction.
+2. Design the theme JSON using the shape below.
+3. Build the final URL by replacing the <MY_API_KEY> placeholder with the real key I provide, and replacing the base64 "theme" value with your own base64url-encoded JSON.
+4. Visit the link. The page will confirm whether the theme was applied.
+5. If visiting fails for any reason, fall back to the JSON payload for manual import.` : `AUTH — pick ONE of these:
   Header:  x-api-key: ${key}
   Header:  Authorization: Bearer ${key}
-  Query:   append &api_key=${key} to the URL
+  Query:   append &api_key=${key} to the URL`}
 
 HOW IT WORKS
 1. Use this current response/shape instead of asking me to run GET:
@@ -575,17 +672,18 @@ ${currentThemeJson}
      -d '{ "theme": { ... } }'
 
    If your tool can't do PUT, use POST — the endpoint accepts both.
-   If your tool can only do GET or cannot reach the endpoint, do not stop; provide the final JSON payload for manual import.
+   ${isClaude ? `Alternatively, use the direct apply link shown above — it only needs a GET request.` : `If your tool can only do GET or cannot reach the endpoint, do not stop; provide the final JSON payload for manual import.`}
 
 RULES
 - Never invent field names. Use only the fields included in the current response/shape above.
 - Always keep enough contrast between "background" and "foreground", and between each color and its *Foreground pair (WCAG AA minimum).
-- After every successful PUT/POST, GET again and show me the applied result. If GET fails, show the payload you attempted to save.
+- After every successful save, show me the applied result. If saving fails, show the payload you attempted to save.
 - Every save is auto-versioned server-side, so it's safe to iterate.
 
 MY API KEY: ${key === placeholderKey ? '<paste the key I generated in Rasdah here>' : key}
 
 Now, ${tool === 'chatgpt' ? 'ask me what mood or brand direction I want' : 'ask me for the mood, brand keywords, or a reference image'}, then design and apply the theme.`;
+            };
 
             const instructions = buildInstructions(placeholderKey);
             const instructionsWithFreshKey = freshKey ? buildInstructions(freshKey) : null;
