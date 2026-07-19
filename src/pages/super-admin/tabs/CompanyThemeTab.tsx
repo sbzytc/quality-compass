@@ -531,6 +531,73 @@ curl -X PUT -H "x-api-key: <YOUR_KEY>" -H "content-type: application/json" \\
         </div>
       </Card>
 
+      {/* Direct apply link for AI web fetchers (Claude, etc.) */}
+      <Card className="p-6 space-y-4">
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-primary" />
+          <h2 className="text-lg font-semibold">
+            {t('رابط تطبيق مباشر لـ Claude', 'Direct apply link for Claude')}
+          </h2>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          {t(
+            'هذا الرابط يتيح لـ Claude تطبيق الثيم مباشرة بزيارة رابط GET واحد — لا يحتاج إلى هيدرز مخصصة أو body. انسخ الرابط بعد إنشاء مفتاح، والصقه في Claude.',
+            'This link lets Claude apply the theme by visiting a single GET URL — no custom headers or body needed. Copy the link after creating a key and paste it into Claude.'
+          )}
+        </p>
+
+        <div className="rounded-lg bg-muted/40 border p-3 space-y-2">
+          <div className="text-xs font-mono opacity-70">{t('رابط التطبيق:', 'Apply URL:')}</div>
+          <div className="text-xs font-mono break-all">
+            {freshKey ? applyUrlForDraft(freshKey) : applyUrlForDraft('<MY_API_KEY>')}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {freshKey ? (
+            <Button
+              size="sm"
+              className="gap-2"
+              onClick={() => {
+                navigator.clipboard.writeText(applyUrlForDraft(freshKey));
+                toast({ title: t('تم نسخ رابط التطبيق', 'Apply link copied') });
+              }}
+            >
+              <Copy className="w-4 h-4" /> {t('نسخ الرابط مع المفتاح', 'Copy link with key')}
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-2"
+              onClick={() => {
+                navigator.clipboard.writeText(applyUrlForDraft('<MY_API_KEY>'));
+                toast({ title: t('تم نسخ قالب الرابط', 'Link template copied') });
+              }}
+            >
+              <Copy className="w-4 h-4" /> {t('نسخ قالب الرابط', 'Copy link template')}
+            </Button>
+          )}
+          {freshKey && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-2"
+              onClick={() => window.open(applyUrlForDraft(freshKey), '_blank')}
+            >
+              <Eye className="w-4 h-4" /> {t('فتح الرابط', 'Open link')}
+            </Button>
+          )}
+        </div>
+
+        <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
+          {t(
+            'تحذير: الرابط يحتوي على مفتاح API كامل. لا تشاركه إلا مع Claude أو أداة موثوقة. بمجرد الزيارة سيتم تطبيق الثيم فوراً.',
+            'Warning: the link contains a full API key. Only share it with Claude or a trusted tool. Visiting it will apply the theme immediately.'
+          )}
+        </div>
+      </Card>
+
       {/* External AI tool instructions */}
       <Card className="p-6 space-y-4">
         <div className="flex items-center gap-2">
