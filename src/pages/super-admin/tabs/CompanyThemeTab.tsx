@@ -491,7 +491,110 @@ curl -X PUT -H "x-api-key: <YOUR_KEY>" -H "content-type: application/json" \\
       </Card>
 
       {/* Version history */}
-      <ExternalToolInstructions companyName={company.name_ar || company.name_en || ''} companyId={company.id} t={t} />
+      {/* External AI tool instructions */}
+      <Card className="p-6 space-y-4">
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-primary" />
+          <h2 className="text-lg font-semibold">
+            {t('تعليمات لأدوات الذكاء الاصطناعي الخارجية', 'Instructions for external AI tools')}
+          </h2>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          {t(
+            'انسخ التعليمات التالية والصقها في المحادثة مع الأداة المفضلة لديك بعد إنشاء مفتاح API من الأعلى.',
+            'Copy the instructions below and paste them into your preferred AI tool after generating an API key above.'
+          )}
+        </p>
+
+        <Tabs defaultValue="chatgpt" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="chatgpt" className="gap-2">
+              <Bot className="w-4 h-4" /> ChatGPT
+            </TabsTrigger>
+            <TabsTrigger value="claude" className="gap-2">
+              <Sparkles className="w-4 h-4" /> Claude
+            </TabsTrigger>
+          </TabsList>
+
+          {(['chatgpt', 'claude'] as const).map((tool) => {
+            const toolName = tool === 'chatgpt' ? 'ChatGPT' : 'Claude';
+            const instructions = `You are a brand theme designer for the company "${company.name_ar || company.name_en || ''}".
+
+You will edit this company's live theme through Rasdah's Theme API.
+
+ENDPOINT
+${supabaseEndpoint}
+
+AUTH HEADER (use the API key I paste below)
+x-api-key: <MY_API_KEY>
+
+HOW IT WORKS
+1. First, GET the current theme to see the exact JSON shape:
+   curl "${supabaseEndpoint}" -H "x-api-key: <MY_API_KEY>"
+
+2. Then propose a new theme. Colors are HSL triples in the form "H S% L%" (no hsl() wrapper, no #hex).
+   Example fields:
+   {
+     "theme": {
+       "colors": {
+         "primary": "220 90% 50%",
+         "primaryForeground": "0 0% 100%",
+         "accent": "160 70% 45%",
+         "accentForeground": "0 0% 100%",
+         "background": "0 0% 100%",
+         "foreground": "222 47% 11%"
+       },
+       "radius": "0.75rem",
+       "shadows": { "md": "0 4px 6px -1px rgb(0 0 0 / 0.1)" }
+     }
+   }
+
+3. Save the new theme with PUT:
+   curl -X PUT "${supabaseEndpoint}" \\
+     -H "x-api-key: <MY_API_KEY>" \\
+     -H "Content-Type: application/json" \\
+     -d '{ "theme": { ... } }'
+
+RULES
+- Never invent field names. Only send fields that appeared in the GET response.
+- Always keep enough contrast between "background" and "foreground", and between each color and its *Foreground pair (WCAG AA minimum).
+- After every PUT, GET again and show me the applied result.
+- Every save is auto-versioned server-side, so it's safe to iterate.
+
+MY API KEY: <paste the key I generated in Rasdah here>
+
+Now, ${tool === 'chatgpt' ? 'ask me what mood or brand direction I want' : 'ask me for the mood, brand keywords, or a reference image'}, then design and apply the theme.`;
+
+            return (
+              <TabsContent key={tool} value={tool} className="space-y-3 mt-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">
+                    {t(`تعليمات جاهزة للصقها في ${toolName}`, `Ready-to-paste prompt for ${toolName}`)}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-2"
+                    onClick={() => {
+                      navigator.clipboard.writeText(instructions);
+                      toast({ title: t('تم نسخ التعليمات', 'Instructions copied') });
+                    }}
+                  >
+                    <Copy className="w-4 h-4" /> {t('نسخ', 'Copy')}
+                  </Button>
+                </div>
+                <Textarea
+                  readOnly
+                  value={instructions}
+                  className="font-mono text-xs min-h-[320px] bg-white/70"
+                  onFocus={(e) => e.currentTarget.select()}
+                />
+              </TabsContent>
+            );
+          })}
+        </Tabs>
+      </Card>
+
 
       <Card className="p-6 space-y-4">
         <div className="flex items-center gap-2">
