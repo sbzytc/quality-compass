@@ -173,13 +173,27 @@ function UserActions({ member, companyId, onEdit }: { member: any; companyId: st
   const [emailOpen, setEmailOpen] = useState(false);
   const [newEmail, setNewEmail] = useState('');
   const [emailSaving, setEmailSaving] = useState(false);
+  const [resetMode, setResetMode] = useState<'link' | 'direct'>('link');
+  const [directPassword, setDirectPassword] = useState('');
+  const [showDirectPassword, setShowDirectPassword] = useState(false);
 
   const active = member.profile?.is_active !== false;
 
   const doReset = async () => {
     try {
-      await resetPassword.mutateAsync({ userId: member.user_id, email: member.profile?.email });
-      toast.success(isRTL ? 'تم إرسال رابط إعادة التعيين' : 'Reset link sent');
+      if (resetMode === 'direct') {
+        if (directPassword.length < 8 || !/[A-Za-z]/.test(directPassword) || !/[0-9]/.test(directPassword)) {
+          toast.error(isRTL ? 'كلمة المرور 8+ أحرف وتحتوي على حرف ورقم' : 'Password must be 8+ chars incl. letter & number');
+          return;
+        }
+        await resetPassword.mutateAsync({ userId: member.user_id, email: member.profile?.email, customPassword: directPassword });
+        toast.success(isRTL ? 'تم تحديث كلمة المرور' : 'Password updated');
+      } else {
+        await resetPassword.mutateAsync({ userId: member.user_id, email: member.profile?.email });
+        toast.success(isRTL ? 'تم إرسال رابط إعادة التعيين' : 'Reset link sent');
+      }
+      setDirectPassword('');
+      setResetMode('link');
     } catch (e: any) {
       toast.error(e.message);
     } finally {
@@ -229,20 +243,70 @@ function UserActions({ member, companyId, onEdit }: { member: any; companyId: st
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <AlertDialog open={confirmReset} onOpenChange={setConfirmReset}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{isRTL ? 'إعادة تعيين كلمة المرور؟' : 'Reset password?'}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {isRTL ? `سيتم إرسال رابط إلى ${member.profile?.email}` : `A reset link will be sent to ${member.profile?.email}`}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
-            <AlertDialogAction onClick={doReset}>{isRTL ? 'إرسال' : 'Send'}</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <Dialog open={confirmReset} onOpenChange={(o) => { setConfirmReset(o); if (!o) { setDirectPassword(''); setResetMode('link'); } }}>
+        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>{isRTL ? 'إعادة تعيين كلمة المرور' : 'Reset password'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="text-xs text-muted-foreground">
+              {isRTL ? 'المستخدم:' : 'User:'} <span className="font-medium">{member.profile?.email}</span>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant={resetMode === 'link' ? 'default' : 'outline'}
+                size="sm"
+                className="flex-1"
+                onClick={() => setResetMode('link')}
+              >
+                {isRTL ? 'إرسال رابط للإيميل' : 'Send email link'}
+              </Button>
+              <Button
+                type="button"
+                variant={resetMode === 'direct' ? 'default' : 'outline'}
+                size="sm"
+                className="flex-1"
+                onClick={() => setResetMode('direct')}
+              >
+                {isRTL ? 'تعيين كلمة مرور مباشرة' : 'Set password directly'}
+              </Button>
+            </div>
+            {resetMode === 'direct' && (
+              <div>
+                <Label>{isRTL ? 'كلمة المرور الجديدة' : 'New password'}</Label>
+                <div className="relative mt-1">
+                  <Input
+                    type={showDirectPassword ? 'text' : 'password'}
+                    value={directPassword}
+                    onChange={(e) => setDirectPassword(e.target.value)}
+                    placeholder={isRTL ? '8+ أحرف مع حرف ورقم' : '8+ chars incl. letter & number'}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute end-0 top-0 h-full px-3"
+                    onClick={() => setShowDirectPassword(!showDirectPassword)}
+                  >
+                    {showDirectPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  {isRTL ? 'سيتم تحديث كلمة المرور فوراً بدون إرسال إيميل.' : 'Password will be updated immediately; no email is sent.'}
+                </p>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setConfirmReset(false)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+            <Button onClick={doReset} disabled={resetPassword.isPending}>
+              {resetPassword.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
+              {resetMode === 'direct' ? (isRTL ? 'تحديث كلمة المرور' : 'Update password') : (isRTL ? 'إرسال الرابط' : 'Send link')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={confirmStatus} onOpenChange={setConfirmStatus}>
         <AlertDialogContent>
