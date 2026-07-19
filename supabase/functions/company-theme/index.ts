@@ -7,7 +7,7 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-api-key",
-  "Access-Control-Allow-Methods": "GET, PUT, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, PUT, POST, OPTIONS",
 };
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
   let companyId = url.searchParams.get("company_id");
   let bodyTheme: unknown = undefined;
 
-  if (req.method === "PUT") {
+  if (req.method === "PUT" || req.method === "POST") {
     try {
       const body = await req.json();
       companyId = companyId || body?.company_id || null;
@@ -139,7 +139,7 @@ Deno.serve(async (req) => {
     });
   }
 
-  if (req.method === "PUT") {
+  if (req.method === "PUT" || req.method === "POST") {
     if (!scopes?.includes("theme:write"))
       return json({ error: "scope_missing", need: "theme:write" }, 403);
     if (bodyTheme !== null && !validTheme(bodyTheme))
