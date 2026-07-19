@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
-import { Palette, Save, RotateCcw, Download, Upload, Key, Trash2, Copy, Plus, FlaskConical, History, Undo2, Eye } from 'lucide-react';
+import { Palette, Save, RotateCcw, Download, Upload, Key, Trash2, Copy, Plus, FlaskConical, History, Undo2, Eye, CheckCircle2, XCircle } from 'lucide-react';
 import type { CompanyTheme } from '@/contexts/CompanyThemeProvider';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Bot, Sparkles } from 'lucide-react';
@@ -255,6 +255,65 @@ export default function CompanyThemeTab() {
     onError: (e: any) => toast({ title: t('فشل الاسترجاع', 'Restore failed'), description: e.message, variant: 'destructive' }),
   });
 
+  // ── AI theme proposals ───────────────────────────────
+  const { data: proposals } = useQuery({
+    queryKey: ['company-theme-proposals', company.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('company_theme_proposals')
+        .select('id, theme, source, status, created_at')
+        .eq('company_id', company.id)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const approveProposal = useMutation({
+    mutationFn: async ({ id, theme }: { id: string; theme: CompanyTheme }) => {
+      const { data: userRes } = await supabase.auth.getUser();
+      const reviewedBy = userRes.user?.id ?? null;
+
+      const { error: themeError } = await supabase
+        .from('companies')
+        .update({ theme: theme as any, theme_updated_at: new Date().toISOString() })
+        .eq('id', company.id);
+      if (themeError) throw themeError;
+
+      const { error: proposalError } = await supabase
+        .from('company_theme_proposals')
+        .update({ status: 'approved', reviewed_by: reviewedBy, reviewed_at: new Date().toISOString() })
+        .eq('id', id);
+      if (proposalError) throw proposalError;
+    },
+    onSuccess: () => {
+      toast({ title: t('تم اعتماد الثيم', 'Theme proposal approved') });
+      qc.invalidateQueries({ queryKey: ['company-theme-editor', company.id] });
+      qc.invalidateQueries({ queryKey: ['company-theme-proposals', company.id] });
+      qc.invalidateQueries({ queryKey: ['company-theme-versions', company.id] });
+      qc.invalidateQueries({ queryKey: ['company-theme'] });
+    },
+    onError: (e: any) => toast({ title: t('فشل الاعتماد', 'Approval failed'), description: e.message, variant: 'destructive' }),
+  });
+
+  const rejectProposal = useMutation({
+    mutationFn: async (id: string) => {
+      const { data: userRes } = await supabase.auth.getUser();
+      const { error } = await supabase
+        .from('company_theme_proposals')
+        .update({ status: 'rejected', reviewed_by: userRes.user?.id ?? null, reviewed_at: new Date().toISOString() })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: t('تم رفض المقترح', 'Proposal rejected') });
+      qc.invalidateQueries({ queryKey: ['company-theme-proposals', company.id] });
+    },
+    onError: (e: any) => toast({ title: t('فشل الرفض', 'Reject failed'), description: e.message, variant: 'destructive' }),
+  });
+
   const endpoint = `${window.location.origin.replace('http://', 'https://')}/functions/v1/company-theme?company_id=${company.id}`;
   const supabaseEndpoint = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID || ''}.supabase.co/functions/v1/company-theme?company_id=${company.id}`;
   const currentThemeResponse = useMemo(() => ({
@@ -283,18 +342,16 @@ export default function CompanyThemeTab() {
     },
   }), [baseTheme, company.id, company.sandbox_of_company_id, company.slug, inherited, themeRow?.theme, themeRow?.updated_at]);
 
-  // ── Direct apply link (GET, no headers/body — for AI web fetchers like Claude) ──
-  // Must use the Supabase function URL directly; the custom app domain serves the React app for all paths.
-  const applyEndpoint = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID || ''}.supabase.co/functions/v1/company-theme-apply`;
+  // ── Proposal link (GET, no headers/body/API key — for AI web fetchers like Claude) ──
+  const proposeEndpoint = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID || ''}.supabase.co/functions/v1/company-theme-propose`;
   function base64UrlEncode(obj: unknown) {
     const str = JSON.stringify(obj);
     const b64 = btoa(unescape(encodeURIComponent(str)));
     return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   }
-  const applyUrlForDraft = (key: string) => {
-    const url = new URL(applyEndpoint);
+  const proposalUrlForDraft = () => {
+    const url = new URL(proposeEndpoint);
     url.searchParams.set('company_id', company.id);
-    url.searchParams.set('api_key', key);
     url.searchParams.set('theme', base64UrlEncode({ theme: draft }));
     url.searchParams.set('source', 'claude');
     return url.toString();
@@ -532,70 +589,83 @@ curl -X PUT -H "x-api-key: <YOUR_KEY>" -H "content-type: application/json" \\
         </div>
       </Card>
 
-      {/* Direct apply link for AI web fetchers (Claude, etc.) */}
+      {/* Theme proposals for AI web fetchers (Claude, etc.) */}
       <Card className="p-6 space-y-4">
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-primary" />
           <h2 className="text-lg font-semibold">
-            {t('رابط تطبيق مباشر لـ Claude', 'Direct apply link for Claude')}
+            {t('اقتراحات Claude للثيم', 'Claude theme proposals')}
           </h2>
         </div>
         <p className="text-sm text-muted-foreground">
           {t(
-            'هذا الرابط يتيح لـ Claude تطبيق الثيم مباشرة بزيارة رابط GET واحد — لا يحتاج إلى هيدرز مخصصة أو body. انسخ الرابط بعد إنشاء مفتاح، والصقه في Claude.',
-            'This link lets Claude apply the theme by visiting a single GET URL — no custom headers or body needed. Copy the link after creating a key and paste it into Claude.'
+            'هذا الرابط يسمح لـ Claude بإنشاء مقترح ثيم فقط بدون مفتاح API. لن يتم تطبيق أي تغيير إلا بعد اعتمادك له من هنا.',
+            'This link lets Claude create a theme proposal only, with no API key. Nothing is applied until you approve it here.'
           )}
         </p>
 
         <div className="rounded-lg bg-muted/40 border p-3 space-y-2">
-          <div className="text-xs font-mono opacity-70">{t('رابط التطبيق:', 'Apply URL:')}</div>
+          <div className="text-xs font-mono opacity-70">{t('رابط إنشاء المقترح:', 'Proposal URL:')}</div>
           <div className="text-xs font-mono break-all">
-            {freshKey ? applyUrlForDraft(freshKey) : applyUrlForDraft('<MY_API_KEY>')}
+            {proposalUrlForDraft()}
           </div>
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {freshKey ? (
-            <Button
-              size="sm"
-              className="gap-2"
-              onClick={() => {
-                navigator.clipboard.writeText(applyUrlForDraft(freshKey));
-                toast({ title: t('تم نسخ رابط التطبيق', 'Apply link copied') });
-              }}
-            >
-              <Copy className="w-4 h-4" /> {t('نسخ الرابط مع المفتاح', 'Copy link with key')}
-            </Button>
-          ) : (
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-2"
-              onClick={() => {
-                navigator.clipboard.writeText(applyUrlForDraft('<MY_API_KEY>'));
-                toast({ title: t('تم نسخ قالب الرابط', 'Link template copied') });
-              }}
-            >
-              <Copy className="w-4 h-4" /> {t('نسخ قالب الرابط', 'Copy link template')}
-            </Button>
-          )}
-          {freshKey && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-2"
-              onClick={() => window.open(applyUrlForDraft(freshKey), '_blank')}
-            >
-              <Eye className="w-4 h-4" /> {t('فتح الرابط', 'Open link')}
-            </Button>
+          <Button
+            size="sm"
+            className="gap-2"
+            onClick={() => {
+              navigator.clipboard.writeText(proposalUrlForDraft());
+              toast({ title: t('تم نسخ رابط المقترح', 'Proposal link copied') });
+            }}
+          >
+            <Copy className="w-4 h-4" /> {t('نسخ رابط المقترح', 'Copy proposal link')}
+          </Button>
+        </div>
+
+        <div className="text-xs text-primary bg-primary/5 border border-primary/20 rounded-lg p-3">
+          {t(
+            'آمن للمشاركة مع Claude: الرابط لا يحتوي على مفتاح ولا يغيّر الثيم مباشرة. سيظهر المقترح هنا للمراجعة والاعتماد.',
+            'Safe to share with Claude: the link contains no key and does not change the theme directly. The proposal appears here for review and approval.'
           )}
         </div>
 
-        <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
-          {t(
-            'تحذير: الرابط يحتوي على مفتاح API كامل. لا تشاركه إلا مع Claude أو أداة موثوقة. بمجرد الزيارة سيتم تطبيق الثيم فوراً.',
-            'Warning: the link contains a full API key. Only share it with Claude or a trusted tool. Visiting it will apply the theme immediately.'
+        <div className="space-y-2 pt-2 border-t border-border/50">
+          <div className="text-sm font-medium">{t('المقترحات المعلقة', 'Pending proposals')}</div>
+          {(!proposals || proposals.length === 0) && (
+            <div className="text-sm text-muted-foreground py-4 text-center">
+              {t('لا توجد مقترحات معلقة.', 'No pending proposals.')}
+            </div>
           )}
+          {proposals?.map((proposal) => {
+            const proposedTheme = proposal.theme as CompanyTheme;
+            const swatches = proposedTheme?.colors ? [proposedTheme.colors.primary, proposedTheme.colors.accent, proposedTheme.colors.background, proposedTheme.colors.foreground].filter(Boolean) : [];
+            return (
+              <div key={proposal.id} className="p-3 rounded-lg border bg-card/70 space-y-3">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <div className="flex items-center gap-1">
+                    {swatches.map((c, i) => (
+                      <span key={i} className="w-6 h-6 rounded-md border border-border/60" style={{ background: `hsl(${c})` }} />
+                    ))}
+                  </div>
+                  <div className="flex-1 min-w-[160px]">
+                    <div className="text-sm font-medium truncate">{proposal.source || 'Claude'}</div>
+                    <div className="text-[11px] text-muted-foreground">{new Date(proposal.created_at).toLocaleString()}</div>
+                  </div>
+                  <Button size="sm" variant="outline" className="gap-1" onClick={() => setDraft(proposedTheme)}>
+                    <Palette className="w-3 h-3" /> {t('معاينة', 'Preview')}
+                  </Button>
+                  <Button size="sm" className="gap-1" onClick={() => approveProposal.mutate({ id: proposal.id, theme: proposedTheme })} disabled={approveProposal.isPending}>
+                    <CheckCircle2 className="w-3 h-3" /> {t('اعتماد', 'Approve')}
+                  </Button>
+                  <Button size="sm" variant="ghost" className="gap-1 text-destructive" onClick={() => rejectProposal.mutate(proposal.id)} disabled={rejectProposal.isPending}>
+                    <XCircle className="w-3 h-3" /> {t('رفض', 'Reject')}
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </Card>
 
@@ -629,32 +699,36 @@ curl -X PUT -H "x-api-key: <YOUR_KEY>" -H "content-type: application/json" \\
             const placeholderKey = '<MY_API_KEY>';
             const currentThemeJson = JSON.stringify(currentThemeResponse, null, 2);
             const buildInstructions = (key: string) => {
-              const directApplyUrl = applyUrlForDraft(key === placeholderKey ? '<MY_API_KEY>' : key);
+              const safeProposalUrl = proposalUrlForDraft();
               const isClaude = tool === 'claude';
               return `You are a brand theme designer for the company "${company.name_ar || company.name || ''}".
 
-You will edit this company's live theme through Rasdah's Theme API.
+You will ${isClaude ? 'submit a safe pending theme proposal for this company' : 'edit this company\'s live theme through Rasdah\'s Theme API'}.
 
 IMPORTANT
 - The current theme JSON and accepted payload shape are already included below.
 - Do NOT ask me to run GET/curl or paste JSON. If you cannot reach the endpoint, continue by designing the JSON payload from the included shape.
-- To actually save through the API, you need code execution (Claude → Analysis / code interpreter, ChatGPT → Advanced Data Analysis). Plain web browsing often cannot send custom headers or PUT/POST bodies.
-- If saving fails, output the final JSON payload only so I can paste/import it manually in Rasdah.
+- ${isClaude ? 'For Claude, use the safe proposal link only. It is a normal GET URL, needs no headers, and does not apply changes directly.' : 'To actually save through the API, you need code execution (ChatGPT → Advanced Data Analysis). Plain web browsing often cannot send custom headers or PUT/POST bodies.'}
+- If saving/proposal submission fails, output the final JSON payload only so I can paste/import it manually in Rasdah.
 
-ENDPOINT (API key can be passed either as header OR as ?api_key= query param)
-${supabaseEndpoint}
+${isClaude ? `SAFE PROPOSAL ENDPOINT
+Use only the proposal URL below. It needs no API key and creates a pending draft only.` : `ENDPOINT (API key can be passed either as header OR as ?api_key= query param)
+${supabaseEndpoint}`}
 
-${isClaude ? `EASIEST OPTION FOR CLAUDE — DIRECT APPLY LINK (GET, no headers/body)
-A special one-click URL is available. Build the theme JSON, base64url-encode it, and visit this link to apply it immediately:
+${isClaude ? `EASIEST OPTION FOR CLAUDE — SAFE PROPOSAL LINK (GET, no headers/body/API key)
+This documented proposal endpoint does not apply the theme directly and does not include any secret. It only creates a pending proposal that the Rasdah admin reviews and approves in the Theme page.
 
-${directApplyUrl}
+Build the theme JSON, base64url-encode {"theme": YOUR_THEME_OBJECT}, then visit this URL after replacing the theme parameter value:
+
+${safeProposalUrl}
 
 To use it:
 1. Ask me for the brand direction.
 2. Design the theme JSON using the shape below.
-3. Build the final URL by replacing the <MY_API_KEY> placeholder with the real key I provide, and replacing the base64 "theme" value with your own base64url-encoded JSON.
-4. Visit the link. The page will confirm whether the theme was applied.
-5. If visiting fails for any reason, fall back to the JSON payload for manual import.` : `AUTH — pick ONE of these:
+3. Replace the base64 "theme" value in the proposal URL with your own base64url-encoded JSON.
+4. Visit the link. The page will confirm that a proposal was created.
+5. Tell me to return to Rasdah and approve the pending proposal.
+6. If visiting fails for any reason, fall back to the JSON payload for manual import.` : `AUTH — pick ONE of these:
   Header:  x-api-key: ${key}
   Header:  Authorization: Bearer ${key}
   Query:   append &api_key=${key} to the URL`}
@@ -666,23 +740,25 @@ ${currentThemeJson}
 
 2. Design a new theme. Colors must be HSL triples in the form "H S% L%" (no hsl() wrapper, no #hex). Keep the same top-level shape: { "theme": { "colors": ..., "radius": ..., "shadows": ... } }.
 
-3. Save the new theme with PUT (or POST — both work):
+${isClaude ? `3. Submit the proposal using the safe proposal URL above. Do not use headers, API keys, PUT, or POST.
+
+4. If your tool cannot visit the proposal URL, output only the final JSON payload so I can import it manually.` : `3. Save the new theme with PUT (or POST — both work):
    curl -X PUT "${supabaseEndpoint}&api_key=${key}" \\
      -H "Content-Type: application/json" \\
      -d '{ "theme": { ... } }'
 
    If your tool can't do PUT, use POST — the endpoint accepts both.
-   ${isClaude ? `Alternatively, use the direct apply link shown above — it only needs a GET request.` : `If your tool can only do GET or cannot reach the endpoint, do not stop; provide the final JSON payload for manual import.`}
+   If your tool can only do GET or cannot reach the endpoint, do not stop; provide the final JSON payload for manual import.`}
 
 RULES
 - Never invent field names. Use only the fields included in the current response/shape above.
 - Always keep enough contrast between "background" and "foreground", and between each color and its *Foreground pair (WCAG AA minimum).
-- After every successful save, show me the applied result. If saving fails, show the payload you attempted to save.
+- ${isClaude ? 'After successful proposal submission, tell me to approve the pending proposal in Rasdah. If submission fails, show the payload you attempted to submit.' : 'After every successful save, show me the applied result. If saving fails, show the payload you attempted to save.'}
 - Every save is auto-versioned server-side, so it's safe to iterate.
 
-MY API KEY: ${key === placeholderKey ? '<paste the key I generated in Rasdah here>' : key}
+${isClaude ? 'NO API KEY IS NEEDED FOR THE SAFE PROPOSAL LINK.' : `MY API KEY: ${key === placeholderKey ? '<paste the key I generated in Rasdah here>' : key}`}
 
-Now, ${tool === 'chatgpt' ? 'ask me what mood or brand direction I want' : 'ask me for the mood, brand keywords, or a reference image'}, then design and apply the theme.`;
+Now, ${tool === 'chatgpt' ? 'ask me what mood or brand direction I want' : 'ask me for the mood, brand keywords, or a reference image'}, then design and ${isClaude ? 'submit the proposal' : 'apply the theme'}.`;
             };
 
             const instructions = buildInstructions(placeholderKey);
