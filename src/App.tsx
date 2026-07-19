@@ -66,6 +66,8 @@ import CompanyAuditLogsTab from "@/pages/super-admin/tabs/CompanyAuditLogsTab";
 import SuperAdminAccountsPage from "@/pages/super-admin/SuperAdminAccountsPage";
 import OAuthConsent from "@/pages/OAuthConsent";
 import SandboxDiffPage from "@/pages/SandboxDiffPage";
+import CompanyThemeTab from "@/pages/super-admin/tabs/CompanyThemeTab";
+import { CompanyThemeProvider } from "@/contexts/CompanyThemeProvider";
 
 const queryClient = new QueryClient();
 
@@ -105,6 +107,7 @@ const AppRoutes = () => (
       <Route path="branches" element={<CompanyBranchesTab />} />
       <Route path="subscription" element={<CompanySubscriptionTab />} />
       <Route path="audit-logs" element={<CompanyAuditLogsTab />} />
+      <Route path="theme" element={<CompanyThemeTab />} />
     </Route>
 
     {/* Super Admin Panel */}
@@ -336,6 +339,7 @@ const App = () => (
     <LanguageProvider>
       <AuthProvider>
         <CurrentCompanyProvider>
+        <CompanyThemeProvider>
         <AIAssistantProvider>
           <TooltipProvider>
             <Toaster />
@@ -345,6 +349,7 @@ const App = () => (
             </BrowserRouter>
           </TooltipProvider>
         </AIAssistantProvider>
+        </CompanyThemeProvider>
         </CurrentCompanyProvider>
       </AuthProvider>
     </LanguageProvider>
