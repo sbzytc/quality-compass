@@ -13,6 +13,8 @@ import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
 import { Palette, Save, RotateCcw, Download, Upload, Key, Trash2, Copy, Plus, FlaskConical, History, Undo2, Eye } from 'lucide-react';
 import type { CompanyTheme } from '@/contexts/CompanyThemeProvider';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Bot, Sparkles } from 'lucide-react';
 
 // ── HSL <→ HEX helpers ─────────────────────────────
 function hslToHex(hslTriple?: string) {
