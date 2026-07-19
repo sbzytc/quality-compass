@@ -397,6 +397,8 @@ export type Database = {
           settings: Json
           slug: string
           status: string
+          theme: Json | null
+          theme_updated_at: string | null
           updated_at: string
           workspace_type: string | null
         }
@@ -417,6 +419,8 @@ export type Database = {
           settings?: Json
           slug: string
           status?: string
+          theme?: Json | null
+          theme_updated_at?: string | null
           updated_at?: string
           workspace_type?: string | null
         }
@@ -437,6 +441,8 @@ export type Database = {
           settings?: Json
           slug?: string
           status?: string
+          theme?: Json | null
+          theme_updated_at?: string | null
           updated_at?: string
           workspace_type?: string | null
         }
@@ -479,6 +485,53 @@ export type Database = {
           specific_date?: string | null
         }
         Relationships: []
+      }
+      company_theme_api_keys: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          key_hash: string
+          key_prefix: string
+          last_used_at: string | null
+          name: string
+          revoked_at: string | null
+          scopes: string[]
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          key_hash: string
+          key_prefix: string
+          last_used_at?: string | null
+          name: string
+          revoked_at?: string | null
+          scopes?: string[]
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          key_hash?: string
+          key_prefix?: string
+          last_used_at?: string | null
+          name?: string
+          revoked_at?: string | null
+          scopes?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_theme_api_keys_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       company_users: {
         Row: {
