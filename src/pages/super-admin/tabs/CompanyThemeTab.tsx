@@ -162,7 +162,7 @@ export default function CompanyThemeTab() {
     try {
       const text = await file.text();
       const parsed = JSON.parse(text);
-      setDraft(parsed);
+      setDraft(parsed?.theme || parsed);
       toast({ title: t('تم استيراد الملف — راجع ثم احفظ', 'Imported — review then save') });
     } catch {
       toast({ title: t('ملف غير صالح', 'Invalid JSON'), variant: 'destructive' });
