@@ -711,8 +711,9 @@ IMPORTANT
 - To actually save through the API, you need code execution (Claude → Analysis / code interpreter, ChatGPT → Advanced Data Analysis). Plain web browsing often cannot send custom headers or PUT/POST bodies.
 - If saving/proposal submission fails, output the final JSON payload only so I can paste/import it manually in Rasdah.
 
-ENDPOINT (API key can be passed either as header OR as ?api_key= query param)
-${supabaseEndpoint}
+${isClaude ? `SAFE PROPOSAL ENDPOINT
+Use only the proposal URL below. It needs no API key and creates a pending draft only.` : `ENDPOINT (API key can be passed either as header OR as ?api_key= query param)
+${supabaseEndpoint}`}
 
 ${isClaude ? `EASIEST OPTION FOR CLAUDE — SAFE PROPOSAL LINK (GET, no headers/body/API key)
 This documented proposal endpoint does not apply the theme directly and does not include any secret. It only creates a pending proposal that the Rasdah admin reviews and approves in the Theme page.
