@@ -79,7 +79,8 @@ Deno.serve(async (req) => {
   const companyId = url.searchParams.get("company_id");
   const apiKey = url.searchParams.get("api_key");
   const themeB64 = url.searchParams.get("theme");
-  const source = url.searchParams.get("source") || "ai-direct";
+  const rawSource = url.searchParams.get("source") || "ai-direct";
+  const source = rawSource.replace(/[^a-zA-Z0-9\-_. ]/g, "").slice(0, 50) || "ai-direct";
 
   if (!companyId || !apiKey || !themeB64) {
     return html(
