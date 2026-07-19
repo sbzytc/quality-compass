@@ -149,18 +149,148 @@ var recent_evaluations_default = defineTool4({
   }
 });
 
+// src/lib/mcp/tools/list-companies.ts
+import { createClient as createClient5 } from "npm:@supabase/supabase-js@^2.110.7";
+import { defineTool as defineTool5 } from "npm:@lovable.dev/mcp-js@0.23.0";
+import { z as z4 } from "npm:zod@^4.4.3";
+function client5(ctx) {
+  return createClient5(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
+    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+}
+var list_companies_default = defineTool5({
+  name: "list_companies",
+  title: "List companies",
+  description: "List Rasdah companies visible to the signed-in user (RLS-scoped). Useful to look up a company_id by name before calling apply_company_theme.",
+  inputSchema: {
+    limit: z4.number().int().min(1).max(200).optional().describe("Max rows (default 50).")
+  },
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: async ({ limit }, ctx) => {
+    if (!ctx.isAuthenticated()) {
+      return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
+    }
+    const { data, error } = await client5(ctx).from("companies").select("id, name, name_ar, slug, is_sandbox, sandbox_of_company_id").order("name", { ascending: true }).limit(limit ?? 50);
+    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    return {
+      content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+      structuredContent: { companies: data ?? [] }
+    };
+  }
+});
+
+// src/lib/mcp/tools/get-company-theme.ts
+import { createClient as createClient6 } from "npm:@supabase/supabase-js@^2.110.7";
+import { defineTool as defineTool6 } from "npm:@lovable.dev/mcp-js@0.23.0";
+import { z as z5 } from "npm:zod@^4.4.3";
+function client6(ctx) {
+  return createClient6(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
+    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+}
+var get_company_theme_default = defineTool6({
+  name: "get_company_theme",
+  title: "Get company theme",
+  description: "Return a Rasdah company's current theme (colors, radius, shadows) plus basic identity. Useful before proposing changes with apply_company_theme.",
+  inputSchema: {
+    company_id: z5.string().uuid().describe("Target company id.")
+  },
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: async ({ company_id }, ctx) => {
+    if (!ctx.isAuthenticated()) {
+      return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
+    }
+    const sb = client6(ctx);
+    const { data, error } = await sb.from("companies").select("id, name, name_ar, slug, theme, theme_updated_at, is_sandbox, sandbox_of_company_id").eq("id", company_id).maybeSingle();
+    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    if (!data) return { content: [{ type: "text", text: "Company not found or not visible to you." }], isError: true };
+    return {
+      content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+      structuredContent: data
+    };
+  }
+});
+
+// src/lib/mcp/tools/apply-company-theme.ts
+import { createClient as createClient7 } from "npm:@supabase/supabase-js@^2.110.7";
+import { defineTool as defineTool7 } from "npm:@lovable.dev/mcp-js@0.23.0";
+import { z as z6 } from "npm:zod@^4.4.3";
+function client7(ctx) {
+  return createClient7(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
+    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+}
+var hslTriple = z6.string().regex(/^\d{1,3}\s+\d{1,3}%\s+\d{1,3}%$/, "Must be an HSL triple like '217 72% 42%'");
+var themeSchema = z6.object({
+  colors: z6.object({
+    primary: hslTriple.optional(),
+    primaryForeground: hslTriple.optional(),
+    accent: hslTriple.optional(),
+    accentForeground: hslTriple.optional(),
+    background: hslTriple.optional(),
+    foreground: hslTriple.optional(),
+    ring: hslTriple.optional()
+  }).optional(),
+  radius: z6.string().regex(/^\d+(\.\d+)?(rem|px)$/).optional(),
+  shadows: z6.object({
+    soft: z6.string().optional(),
+    medium: z6.string().optional()
+  }).optional()
+}).strict();
+var apply_company_theme_default = defineTool7({
+  name: "apply_company_theme",
+  title: "Apply company theme",
+  description: "Directly apply a theme to a Rasdah company. Requires the signed-in user to be a super admin or admin of the target company. Colors must be HSL triples like '217 72% 42%'. Overwrites the company's current theme.",
+  inputSchema: {
+    company_id: z6.string().uuid().describe("Target company id."),
+    theme: themeSchema.describe("Theme object with optional colors, radius, and shadows.")
+  },
+  annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
+  handler: async ({ company_id, theme }, ctx) => {
+    if (!ctx.isAuthenticated()) {
+      return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
+    }
+    const sb = client7(ctx);
+    const { data, error } = await sb.from("companies").update({ theme, theme_updated_at: (/* @__PURE__ */ new Date()).toISOString() }).eq("id", company_id).select("id, name, slug, theme, theme_updated_at").maybeSingle();
+    if (error) {
+      return { content: [{ type: "text", text: `Failed: ${error.message}` }], isError: true };
+    }
+    if (!data) {
+      return {
+        content: [{ type: "text", text: "Company not found or you do not have permission to update its theme." }],
+        isError: true
+      };
+    }
+    return {
+      content: [{ type: "text", text: `Applied theme to ${data.name} (${data.slug}).` }],
+      structuredContent: { company: data }
+    };
+  }
+});
+
 // src/lib/mcp/index.ts
 var projectRef = "jociyyeadabbwoqosvqc";
 var mcp_default = defineMcp({
   name: "rasdah-mcp",
   title: "Rasdah MCP",
   version: "0.1.0",
-  instructions: "Read-only tools for Rasdah, a quality-monitoring platform. All tools act as the signed-in user and respect the app's row-level security. Use `whoami` to check identity, `list_branches` for branches, `recent_evaluations` for latest submitted evaluations, and `list_findings` for non-conformities.",
+  instructions: "Tools for Rasdah, a quality-monitoring platform. All tools act as the signed-in user and respect row-level security. Read: `whoami`, `list_companies`, `list_branches`, `recent_evaluations`, `list_findings`, `get_company_theme`. Write: `apply_company_theme` overwrites a company's theme (super admin or company admin only) \u2014 colors are HSL triples like '217 72% 42%'.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated"
   }),
-  tools: [whoami_default, list_branches_default, recent_evaluations_default, list_findings_default]
+  tools: [
+    whoami_default,
+    list_companies_default,
+    list_branches_default,
+    recent_evaluations_default,
+    list_findings_default,
+    get_company_theme_default,
+    apply_company_theme_default
+  ]
 });
 
 // lovable-mcp-supabase-entry.ts

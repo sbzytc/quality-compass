@@ -33,6 +33,29 @@
         "outputSchema": null
       },
       {
+        "name": "list_companies",
+        "title": "List companies",
+        "description": "List Rasdah companies visible to the signed-in user (RLS-scoped). Useful to look up a company_id by name before calling apply_company_theme.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "description": "Max rows (default 50).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
         "name": "list_branches",
         "title": "List branches",
         "description": "List branches visible to the signed-in Rasdah user (RLS-scoped).",
@@ -121,6 +144,115 @@
               "maximum": 200
             }
           }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_company_theme",
+        "title": "Get company theme",
+        "description": "Return a Rasdah company's current theme (colors, radius, shadows) plus basic identity. Useful before proposing changes with apply_company_theme.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "company_id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "Target company id."
+            }
+          },
+          "required": [
+            "company_id"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "apply_company_theme",
+        "title": "Apply company theme",
+        "description": "Directly apply a theme to a Rasdah company. Requires the signed-in user to be a super admin or admin of the target company. Colors must be HSL triples like '217 72% 42%'. Overwrites the company's current theme.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "company_id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "Target company id."
+            },
+            "theme": {
+              "type": "object",
+              "properties": {
+                "colors": {
+                  "type": "object",
+                  "properties": {
+                    "primary": {
+                      "type": "string",
+                      "pattern": "^\\d{1,3}\\s+\\d{1,3}%\\s+\\d{1,3}%$"
+                    },
+                    "primaryForeground": {
+                      "type": "string",
+                      "pattern": "^\\d{1,3}\\s+\\d{1,3}%\\s+\\d{1,3}%$"
+                    },
+                    "accent": {
+                      "type": "string",
+                      "pattern": "^\\d{1,3}\\s+\\d{1,3}%\\s+\\d{1,3}%$"
+                    },
+                    "accentForeground": {
+                      "type": "string",
+                      "pattern": "^\\d{1,3}\\s+\\d{1,3}%\\s+\\d{1,3}%$"
+                    },
+                    "background": {
+                      "type": "string",
+                      "pattern": "^\\d{1,3}\\s+\\d{1,3}%\\s+\\d{1,3}%$"
+                    },
+                    "foreground": {
+                      "type": "string",
+                      "pattern": "^\\d{1,3}\\s+\\d{1,3}%\\s+\\d{1,3}%$"
+                    },
+                    "ring": {
+                      "type": "string",
+                      "pattern": "^\\d{1,3}\\s+\\d{1,3}%\\s+\\d{1,3}%$"
+                    }
+                  }
+                },
+                "radius": {
+                  "type": "string",
+                  "pattern": "^\\d+(\\.\\d+)?(rem|px)$"
+                },
+                "shadows": {
+                  "type": "object",
+                  "properties": {
+                    "soft": {
+                      "type": "string"
+                    },
+                    "medium": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "additionalProperties": false,
+              "description": "Theme object with optional colors, radius, and shadows."
+            }
+          },
+          "required": [
+            "company_id",
+            "theme"
+          ]
         },
         "outputSchema": null
       }
