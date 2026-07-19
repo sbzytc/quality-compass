@@ -117,6 +117,20 @@ export function CurrentCompanyProvider({ children }: { children: ReactNode }) {
     loadCompanies();
   }, [loadCompanies]);
 
+  // Watch ?company= URL param so in-app navigation (e.g. super-admin opening a
+  // company workspace) actually switches the active company.
+  useEffect(() => {
+    if (!companies.length) return;
+    const params = new URLSearchParams(window.location.search);
+    const urlKey = params.get('company');
+    if (!urlKey) return;
+    const match = companies.find(c => c.slug === urlKey) || companies.find(c => c.id === urlKey);
+    if (match && match.id !== currentCompany?.id) {
+      setCurrentCompany(match);
+      localStorage.setItem(STORAGE_KEY, match.id);
+    }
+  }, [companies, currentCompany?.id]);
+
   const switchCompany = useCallback(async (companyId: string) => {
     const company = companies.find(c => c.id === companyId);
     if (!company) return;
