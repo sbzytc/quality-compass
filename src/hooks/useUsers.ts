@@ -133,7 +133,7 @@ export function useCreateUser() {
       // Use direct fetch to avoid supabase-js logging non-2xx responses to console
       // (which would otherwise trigger the runtime error overlay).
       const { data: { session } } = await supabase.auth.getSession();
-      const url = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.functions.supabase.co/create-user`;
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`;
       const res = await fetch(url, {
         method: 'POST',
         headers: {
