@@ -284,7 +284,8 @@ export default function CompanyThemeTab() {
   }), [baseTheme, company.id, company.sandbox_of_company_id, company.slug, inherited, themeRow?.theme, themeRow?.updated_at]);
 
   // ── Direct apply link (GET, no headers/body — for AI web fetchers like Claude) ──
-  const applyEndpoint = `${window.location.origin.replace('http://', 'https://')}/functions/v1/company-theme-apply`;
+  // Must use the Supabase function URL directly; the custom app domain serves the React app for all paths.
+  const applyEndpoint = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID || ''}.supabase.co/functions/v1/company-theme-apply`;
   function base64UrlEncode(obj: unknown) {
     const str = JSON.stringify(obj);
     const b64 = btoa(unescape(encodeURIComponent(str)));
