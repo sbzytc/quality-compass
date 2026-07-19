@@ -283,6 +283,22 @@ export default function CompanyThemeTab() {
     },
   }), [baseTheme, company.id, company.sandbox_of_company_id, company.slug, inherited, themeRow?.theme, themeRow?.updated_at]);
 
+  // ── Direct apply link (GET, no headers/body — for AI web fetchers like Claude) ──
+  const applyEndpoint = `${window.location.origin.replace('http://', 'https://')}/functions/v1/company-theme-apply`;
+  function base64UrlEncode(obj: unknown) {
+    const str = JSON.stringify(obj);
+    const b64 = btoa(unescape(encodeURIComponent(str)));
+    return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  const applyUrlForDraft = (key: string) => {
+    const url = new URL(applyEndpoint);
+    url.searchParams.set('company_id', company.id);
+    url.searchParams.set('api_key', key);
+    url.searchParams.set('theme', base64UrlEncode({ theme: draft }));
+    url.searchParams.set('source', 'claude');
+    return url.toString();
+  };
+
   const radiusPx = parseFloat(draft.radius || '0.875') * 16;
 
   if (isLoading) return <div className="p-8 text-muted-foreground">…</div>;
