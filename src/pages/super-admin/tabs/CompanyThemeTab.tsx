@@ -490,7 +490,6 @@ curl -X PUT -H "x-api-key: <YOUR_KEY>" -H "content-type: application/json" \\
         </div>
       </Card>
 
-      {/* Version history */}
       {/* External AI tool instructions */}
       <Card className="p-6 space-y-4">
         <div className="flex items-center gap-2">
@@ -501,8 +500,8 @@ curl -X PUT -H "x-api-key: <YOUR_KEY>" -H "content-type: application/json" \\
         </div>
         <p className="text-sm text-muted-foreground">
           {t(
-            'انسخ التعليمات التالية والصقها في المحادثة مع الأداة المفضلة لديك بعد إنشاء مفتاح API من الأعلى.',
-            'Copy the instructions below and paste them into your preferred AI tool after generating an API key above.'
+            'انسخ التعليمات التالية والصقها في المحادثة مع الأداة المفضلة لديك. استبدل MY_API_KEY بالمفتاح الذي أنشأته في قسم "واجهة API خارجية" أعلاه.',
+            'Copy the instructions below and paste them into your preferred AI tool. Replace MY_API_KEY with the key you created in the External API access section above.'
           )}
         </p>
 
@@ -518,19 +517,20 @@ curl -X PUT -H "x-api-key: <YOUR_KEY>" -H "content-type: application/json" \\
 
           {(['chatgpt', 'claude'] as const).map((tool) => {
             const toolName = tool === 'chatgpt' ? 'ChatGPT' : 'Claude';
-            const instructions = `You are a brand theme designer for the company "${company.name_ar || company.name_en || ''}".
+            const placeholderKey = '<MY_API_KEY>';
+            const buildInstructions = (key: string) => `You are a brand theme designer for the company "${company.name_ar || company.name || ''}".
 
 You will edit this company's live theme through Rasdah's Theme API.
 
 ENDPOINT
 ${supabaseEndpoint}
 
-AUTH HEADER (use the API key I paste below)
-x-api-key: <MY_API_KEY>
+AUTH HEADER (replace MY_API_KEY with the actual key)
+x-api-key: ${key}
 
 HOW IT WORKS
 1. First, GET the current theme to see the exact JSON shape:
-   curl "${supabaseEndpoint}" -H "x-api-key: <MY_API_KEY>"
+   curl "${supabaseEndpoint}" -H "x-api-key: ${key}"
 
 2. Then propose a new theme. Colors are HSL triples in the form "H S% L%" (no hsl() wrapper, no #hex).
    Example fields:
@@ -551,7 +551,7 @@ HOW IT WORKS
 
 3. Save the new theme with PUT:
    curl -X PUT "${supabaseEndpoint}" \\
-     -H "x-api-key: <MY_API_KEY>" \\
+     -H "x-api-key: ${key}" \\
      -H "Content-Type: application/json" \\
      -d '{ "theme": { ... } }'
 
@@ -561,9 +561,12 @@ RULES
 - After every PUT, GET again and show me the applied result.
 - Every save is auto-versioned server-side, so it's safe to iterate.
 
-MY API KEY: <paste the key I generated in Rasdah here>
+MY API KEY: ${key === placeholderKey ? '<paste the key I generated in Rasdah here>' : key}
 
 Now, ${tool === 'chatgpt' ? 'ask me what mood or brand direction I want' : 'ask me for the mood, brand keywords, or a reference image'}, then design and apply the theme.`;
+
+            const instructions = buildInstructions(placeholderKey);
+            const instructionsWithFreshKey = freshKey ? buildInstructions(freshKey) : null;
 
             return (
               <TabsContent key={tool} value={tool} className="space-y-3 mt-4">
@@ -571,17 +574,31 @@ Now, ${tool === 'chatgpt' ? 'ask me what mood or brand direction I want' : 'ask 
                   <span className="text-sm font-medium">
                     {t(`تعليمات جاهزة للصقها في ${toolName}`, `Ready-to-paste prompt for ${toolName}`)}
                   </span>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="gap-2"
-                    onClick={() => {
-                      navigator.clipboard.writeText(instructions);
-                      toast({ title: t('تم نسخ التعليمات', 'Instructions copied') });
-                    }}
-                  >
-                    <Copy className="w-4 h-4" /> {t('نسخ', 'Copy')}
-                  </Button>
+                  <div className="flex gap-2">
+                    {instructionsWithFreshKey && (
+                      <Button
+                        size="sm"
+                        className="gap-2"
+                        onClick={() => {
+                          navigator.clipboard.writeText(instructionsWithFreshKey);
+                          toast({ title: t('تم النسخ مع المفتاح', 'Copied with key') });
+                        }}
+                      >
+                        <Copy className="w-4 h-4" /> {t('نسخ مع المفتاح', 'Copy with key')}
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-2"
+                      onClick={() => {
+                        navigator.clipboard.writeText(instructions);
+                        toast({ title: t('تم نسخ التعليمات', 'Instructions copied') });
+                      }}
+                    >
+                      <Copy className="w-4 h-4" /> {t('نسخ', 'Copy')}
+                    </Button>
+                  </div>
                 </div>
                 <Textarea
                   readOnly
@@ -595,7 +612,7 @@ Now, ${tool === 'chatgpt' ? 'ask me what mood or brand direction I want' : 'ask 
         </Tabs>
       </Card>
 
-
+      {/* Version history */}
       <Card className="p-6 space-y-4">
         <div className="flex items-center gap-2">
           <History className="w-5 h-5 text-primary" />
