@@ -152,7 +152,7 @@ Deno.serve(async (req) => {
     .eq("id", companyId);
 
   if (updateError) {
-    return html("Save Failed", `<p>Could not save theme: <code>${updateError.message}</code></p>`, 500);
+    return html("Save Failed", `<p>Could not save theme: <code>${escapeHtml(updateError.message)}</code></p>`, 500);
   }
 
   // Record new version
@@ -170,11 +170,12 @@ Deno.serve(async (req) => {
     .eq("id", match.id);
 
   const companyName = company.name_ar || company.name || company.slug;
+  const safeThemeJson = escapeHtml(JSON.stringify(theme, null, 2));
   return html(
     "Theme Applied",
-    `<p>Theme updated successfully for <strong>${companyName}</strong>.</p>
-     <p class="muted">Source: ${source}</p>
-     <pre>${JSON.stringify(theme, null, 2)}</pre>`,
+    `<p>Theme updated successfully for <strong>${escapeHtml(companyName)}</strong>.</p>
+     <p class="muted">Source: ${escapeHtml(source)}</p>
+     <pre>${safeThemeJson}</pre>`,
     200
   );
 });
