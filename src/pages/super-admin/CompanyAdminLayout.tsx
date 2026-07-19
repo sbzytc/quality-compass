@@ -5,7 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { ArrowLeft, Building2, Users, GitBranch, CreditCard, Activity, LayoutDashboard, Loader2, FlaskConical } from 'lucide-react';
+import { ArrowLeft, Building2, Users, GitBranch, CreditCard, Activity, LayoutDashboard, Loader2, FlaskConical, Palette } from 'lucide-react';
 import { SuperAdminHeader } from '@/components/SuperAdminHeader';
 
 export default function CompanyAdminLayout() {
@@ -35,6 +35,7 @@ export default function CompanyAdminLayout() {
     { to: `/super-admin/company/${companyId}/users`, icon: Users, en: 'Users', ar: 'المستخدمين' },
     { to: `/super-admin/company/${companyId}/branches`, icon: GitBranch, en: 'Branches', ar: 'الفروع' },
     { to: `/super-admin/company/${companyId}/subscription`, icon: CreditCard, en: 'Subscription', ar: 'الاشتراك' },
+    { to: `/super-admin/company/${companyId}/theme`, icon: Palette, en: 'Theme', ar: 'الثيم' },
     { to: `/super-admin/company/${companyId}/audit-logs`, icon: Activity, en: 'Audit Logs', ar: 'سجلات التدقيق' },
   ];
 
