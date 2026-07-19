@@ -624,7 +624,7 @@ curl -X PUT -H "x-api-key: <YOUR_KEY>" -H "content-type: application/json" \\
           </Button>
         </div>
 
-        <div className="text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded-lg p-3">
+        <div className="text-xs text-primary bg-primary/5 border border-primary/20 rounded-lg p-3">
           {t(
             'آمن للمشاركة مع Claude: الرابط لا يحتوي على مفتاح ولا يغيّر الثيم مباشرة. سيظهر المقترح هنا للمراجعة والاعتماد.',
             'Safe to share with Claude: the link contains no key and does not change the theme directly. The proposal appears here for review and approval.'
@@ -642,7 +642,7 @@ curl -X PUT -H "x-api-key: <YOUR_KEY>" -H "content-type: application/json" \\
             const proposedTheme = proposal.theme as CompanyTheme;
             const swatches = proposedTheme?.colors ? [proposedTheme.colors.primary, proposedTheme.colors.accent, proposedTheme.colors.background, proposedTheme.colors.foreground].filter(Boolean) : [];
             return (
-              <div key={proposal.id} className="p-3 rounded-lg border bg-white/60 space-y-3">
+              <div key={proposal.id} className="p-3 rounded-lg border bg-card/70 space-y-3">
                 <div className="flex items-center gap-3 flex-wrap">
                   <div className="flex items-center gap-1">
                     {swatches.map((c, i) => (
