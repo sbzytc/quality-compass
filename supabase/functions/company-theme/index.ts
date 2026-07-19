@@ -34,7 +34,18 @@ function validTheme(t: unknown): t is Record<string, unknown> {
 
 async function resolveAuth(req: Request, companyId: string | null) {
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
-  const apiKey = req.headers.get("x-api-key");
+  const url = new URL(req.url);
+  // Accept the API key from any of: x-api-key header, Authorization: Bearer <key>,
+  // or ?api_key= query param (needed for tools that can't set custom headers,
+  // e.g. Claude/ChatGPT web fetchers).
+  const authHeaderRaw = req.headers.get("authorization") || "";
+  const bearerKey = authHeaderRaw.toLowerCase().startsWith("bearer rsdah_")
+    ? authHeaderRaw.slice(7).trim()
+    : null;
+  const apiKey =
+    req.headers.get("x-api-key") ||
+    bearerKey ||
+    url.searchParams.get("api_key");
   if (apiKey) {
     const prefix = apiKey.slice(0, 12);
     const hash = await sha256Hex(apiKey);
@@ -56,7 +67,7 @@ async function resolveAuth(req: Request, companyId: string | null) {
   }
 
   // Fall back to JWT — must be super_admin
-  const authHeader = req.headers.get("authorization");
+  const authHeader = authHeaderRaw || null;
   if (!authHeader) return { admin, error: json({ error: "unauthenticated" }, 401) };
   const userClient = createClient(SUPABASE_URL, ANON, {
     global: { headers: { Authorization: authHeader } },
