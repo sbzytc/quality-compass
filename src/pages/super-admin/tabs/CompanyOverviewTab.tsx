@@ -69,6 +69,20 @@ export default function CompanyOverviewTab() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-6 text-sm">
           <Row label={isRTL ? 'الاسم' : 'Name'} value={company.name} />
           <Row label={isRTL ? 'الاسم بالعربية' : 'Arabic name'} value={company.name_ar || '—'} />
+          <Row
+            label={isRTL ? 'كود الشركة' : 'Company code'}
+            value={
+              company.code ? (
+                <button
+                  onClick={() => { navigator.clipboard.writeText(company.code); toast({ title: isRTL ? 'تم نسخ الكود' : 'Code copied' }); }}
+                  className="font-mono font-bold tracking-wider bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20 hover:bg-primary/20 transition-colors"
+                  title={isRTL ? 'اضغط للنسخ' : 'Click to copy'}
+                >
+                  {company.code}
+                </button>
+              ) : '—'
+            }
+          />
           <Row label={isRTL ? 'المعرف' : 'Slug'} value={`/${company.slug}`} />
           <Row label={isRTL ? 'نوع مساحة العمل' : 'Workspace type'} value={company.workspace_type} />
           <Row
