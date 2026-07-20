@@ -38,7 +38,7 @@ export default function SectorCompaniesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('companies')
-        .select('id, name, name_ar, slug, status, is_sandbox, sandbox_of_company_id, logo_url, workspace_type, deleted_at')
+        .select('id, name, name_ar, slug, code, status, is_sandbox, sandbox_of_company_id, logo_url, workspace_type, deleted_at')
         .eq('workspace_type', meta.workspace)
         .order('is_sandbox', { ascending: false })
         .order('name');
