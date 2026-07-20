@@ -381,6 +381,7 @@ export type Database = {
       }
       companies: {
         Row: {
+          code: string
           created_at: string
           deleted_at: string | null
           details: Json
@@ -403,6 +404,7 @@ export type Database = {
           workspace_type: string | null
         }
         Insert: {
+          code: string
           created_at?: string
           deleted_at?: string | null
           details?: Json
@@ -425,6 +427,7 @@ export type Database = {
           workspace_type?: string | null
         }
         Update: {
+          code?: string
           created_at?: string
           deleted_at?: string | null
           details?: Json
@@ -2312,6 +2315,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      generate_company_code: { Args: never; Returns: string }
       get_sandbox_diff: { Args: { _sandbox_company_id: string }; Returns: Json }
       get_user_roles: {
         Args: { _user_id: string }
