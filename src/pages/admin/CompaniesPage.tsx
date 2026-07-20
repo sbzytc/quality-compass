@@ -77,7 +77,7 @@ export default function CompaniesPage() {
         sector_type: wt.sectorType,
         workspace_type: wt.value,
         primary_module: wt.primaryModule,
-      }).select().single();
+      } as any).select().single();
       if (error) throw error;
       await audit({ action: 'company_created', entityType: 'company', entityId: data?.id, companyId: data?.id, details: { name: form.name, workspace_type: wt.value } });
     },
