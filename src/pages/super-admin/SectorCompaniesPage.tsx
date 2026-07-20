@@ -294,7 +294,18 @@ function CompanyCard({ company, onClick, onDelete, index, isRTL, highlight = fal
           <div className="font-semibold text-foreground truncate">
             {isRTL ? (company.name_ar || company.name) : company.name}
           </div>
-          <div className="text-xs text-muted-foreground mt-0.5">/{company.slug}</div>
+          <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-2 flex-wrap">
+            <span>/{company.slug}</span>
+            {company.code && (
+              <button
+                onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(company.code); }}
+                className="font-mono font-semibold text-[10px] tracking-wider bg-primary/10 text-primary px-1.5 py-0.5 rounded border border-primary/20 hover:bg-primary/20 transition-colors"
+                title={isRTL ? 'كود الشركة (اضغط للنسخ)' : 'Company code (click to copy)'}
+              >
+                {company.code}
+              </button>
+            )}
+          </div>
           <div className="flex gap-1.5 mt-3 flex-wrap">
             <Badge variant={company.status === 'active' ? 'default' : 'secondary'} className="text-[10px]">
               {company.status}
