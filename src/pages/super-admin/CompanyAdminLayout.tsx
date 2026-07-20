@@ -20,7 +20,7 @@ export default function CompanyAdminLayout() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('companies')
-        .select('id, name, name_ar, slug, status, is_sandbox, sandbox_of_company_id, workspace_type')
+        .select('id, name, name_ar, slug, code, status, is_sandbox, sandbox_of_company_id, workspace_type')
         .eq('id', companyId!)
         .maybeSingle();
       if (error) throw error;
