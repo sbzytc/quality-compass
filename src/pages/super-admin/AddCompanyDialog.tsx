@@ -131,7 +131,7 @@ export default function AddCompanyDialog({ open, onOpenChange, workspace }: Prop
           primary_module: workspace === 'food' ? 'food_restaurants' : 'medical_clinics',
           status: 'active',
           details,
-        })
+        } as any)
         .select('id')
         .single();
       if (cErr) throw cErr;
