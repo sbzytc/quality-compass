@@ -22,6 +22,7 @@ import {
   Star,
   AlertTriangle,
   Lightbulb,
+  Wand2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -81,6 +82,7 @@ import {
 import { AppRole, useAuth } from '@/contexts/AuthContext';
 import { useBranches } from '@/hooks/useBranches';
 import { useCurrentCompany } from '@/contexts/CurrentCompanyContext';
+import { generateStrongPassword, getPasswordPolicyError, getWeakPasswordServerMessage } from '@/lib/passwordPolicy';
 
 const roleLabels: Record<AppRole, { en: string; ar: string }> = {
   super_admin: { en: 'Platform Super Admin', ar: 'مدير المنصة' },
@@ -272,17 +274,26 @@ export default function UsersPage() {
       toast.error(language === 'ar' ? 'كلمات المرور غير متطابقة' : 'Passwords do not match');
       return;
     }
-    if (manualPassword.length < 6) {
-      toast.error(language === 'ar' ? 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' : 'Password must be at least 6 characters');
+    const policyError = getPasswordPolicyError(manualPassword, language);
+    if (policyError) {
+      toast.error(policyError);
       return;
     }
     try {
       await resetPassword.mutateAsync({ userId: selectedUser.user_id, email: selectedUser.email, customPassword: manualPassword });
       setResetMode('done');
       toast.success(language === 'ar' ? 'تم تعيين كلمة المرور بنجاح' : 'Password set successfully');
-    } catch (error) {
-      toast.error(language === 'ar' ? 'فشل تعيين كلمة المرور' : 'Failed to set password');
+    } catch (error: any) {
+      toast.error(error?.code === 'weak_password' ? getWeakPasswordServerMessage(language) : (error?.message || (language === 'ar' ? 'فشل تعيين كلمة المرور' : 'Failed to set password')));
     }
+  };
+
+  const generateManualResetPassword = () => {
+    const password = generateStrongPassword();
+    setManualPassword(password);
+    setConfirmPassword(password);
+    setShowPassword(true);
+    toast.success(language === 'ar' ? 'تم توليد كلمة مرور قوية' : 'Strong password generated');
   };
 
   const handleResendInvitation = async (user: UserWithRole) => {
@@ -958,18 +969,24 @@ export default function UsersPage() {
               {resetMode === 'manual' && (
                 <div className="space-y-3">
                   <div className="space-y-2">
-                    <Label>{language === 'ar' ? 'كلمة المرور الجديدة' : 'New Password'}</Label>
+                    <div className="flex items-center justify-between gap-2">
+                      <Label>{language === 'ar' ? 'كلمة المرور الجديدة' : 'New Password'}</Label>
+                      <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5" onClick={generateManualResetPassword}>
+                        <Wand2 className="w-3.5 h-3.5" />
+                        {language === 'ar' ? 'توليد قوية' : 'Generate strong'}
+                      </Button>
+                    </div>
                     <Input
-                      type="password"
+                      type={showPassword ? 'text' : 'password'}
                       value={manualPassword}
                       onChange={(e) => setManualPassword(e.target.value)}
-                      placeholder={language === 'ar' ? 'أدخل كلمة المرور الجديدة' : 'Enter new password'}
+                      placeholder={language === 'ar' ? '12+ مع حروف كبيرة وصغيرة وأرقام ورموز' : '12+ with upper/lowercase, number & symbol'}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>{language === 'ar' ? 'تأكيد كلمة المرور' : 'Confirm Password'}</Label>
                     <Input
-                      type="password"
+                      type={showPassword ? 'text' : 'password'}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder={language === 'ar' ? 'أعد إدخال كلمة المرور' : 'Re-enter password'}
@@ -978,6 +995,11 @@ export default function UsersPage() {
                   {manualPassword && confirmPassword && manualPassword !== confirmPassword && (
                     <p className="text-xs text-destructive">
                       {language === 'ar' ? 'كلمات المرور غير متطابقة' : 'Passwords do not match'}
+                    </p>
+                  )}
+                  {manualPassword && manualPassword === confirmPassword && getPasswordPolicyError(manualPassword, language) && (
+                    <p className="text-xs text-destructive">
+                      {getPasswordPolicyError(manualPassword, language)}
                     </p>
                   )}
                 </div>
@@ -1053,7 +1075,7 @@ export default function UsersPage() {
                 {resetMode === 'manual' && (
                   <Button
                     onClick={handleResetManual}
-                    disabled={resetPassword.isPending || !manualPassword || manualPassword !== confirmPassword}
+                    disabled={resetPassword.isPending || !manualPassword || manualPassword !== confirmPassword || !!getPasswordPolicyError(manualPassword, language)}
                   >
                     {resetPassword.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
                     <Key className="w-4 h-4 me-2" />

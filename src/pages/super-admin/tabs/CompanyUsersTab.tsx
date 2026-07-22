@@ -15,9 +15,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Users, Loader2, MoreHorizontal, KeyRound, Pencil, UserX, UserCheck, Plus, Mail, Eye, EyeOff, Key } from 'lucide-react';
+import { Users, Loader2, MoreHorizontal, KeyRound, Pencil, UserX, UserCheck, Plus, Mail, Eye, EyeOff, Key, Wand2 } from 'lucide-react';
 import { DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import { generateStrongPassword, getPasswordPolicyError, getWeakPasswordServerMessage } from '@/lib/passwordPolicy';
 
 const ASSIGNABLE_ROLES: AppRole[] = ['admin', 'executive', 'branch_manager', 'assessor', 'branch_employee', 'support_agent'];
 const COMPANY_LEVEL_ROLES: AppRole[] = ['admin', 'executive'];
@@ -210,8 +211,9 @@ function UserActions({ member, companyId, onEdit }: { member: any; companyId: st
       toast.error(isRTL ? 'كلمات المرور غير متطابقة' : 'Passwords do not match');
       return;
     }
-    if (manualPassword.length < 8 || !/[A-Za-z]/.test(manualPassword) || !/[0-9]/.test(manualPassword)) {
-      toast.error(isRTL ? 'كلمة المرور 8+ أحرف وتحتوي على حرف ورقم' : 'Password must be 8+ chars incl. letter & number');
+    const policyError = getPasswordPolicyError(manualPassword, language);
+    if (policyError) {
+      toast.error(policyError);
       return;
     }
     try {
@@ -220,8 +222,16 @@ function UserActions({ member, companyId, onEdit }: { member: any; companyId: st
       setResetMode('done');
       toast.success(isRTL ? 'تم تعيين كلمة المرور بنجاح' : 'Password set successfully');
     } catch (e: any) {
-      toast.error(e.message || (isRTL ? 'فشل تعيين كلمة المرور' : 'Failed to set password'));
+      toast.error(e?.code === 'weak_password' ? getWeakPasswordServerMessage(language) : (e.message || (isRTL ? 'فشل تعيين كلمة المرور' : 'Failed to set password')));
     }
+  };
+
+  const generateManualPassword = () => {
+    const password = generateStrongPassword();
+    setManualPassword(password);
+    setConfirmPasswordText(password);
+    setShowManualPassword(true);
+    toast.success(isRTL ? 'تم توليد كلمة مرور قوية' : 'Strong password generated');
   };
 
   const doToggle = async () => {
@@ -312,13 +322,19 @@ function UserActions({ member, companyId, onEdit }: { member: any; companyId: st
             {resetMode === 'manual' && (
               <div className="space-y-3">
                 <div className="space-y-2">
-                  <Label>{isRTL ? 'كلمة المرور الجديدة' : 'New Password'}</Label>
+                  <div className="flex items-center justify-between gap-2">
+                    <Label>{isRTL ? 'كلمة المرور الجديدة' : 'New Password'}</Label>
+                    <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5" onClick={generateManualPassword}>
+                      <Wand2 className="w-3.5 h-3.5" />
+                      {isRTL ? 'توليد قوية' : 'Generate strong'}
+                    </Button>
+                  </div>
                   <div className="relative">
                     <Input
                       type={showManualPassword ? 'text' : 'password'}
                       value={manualPassword}
                       onChange={(e) => setManualPassword(e.target.value)}
-                      placeholder={isRTL ? '8+ أحرف مع حرف ورقم' : '8+ chars incl. letter & number'}
+                      placeholder={isRTL ? '12+ مع حروف كبيرة وصغيرة وأرقام ورموز' : '12+ with upper/lowercase, number & symbol'}
                     />
                     <Button type="button" variant="ghost" size="icon" className="absolute end-0 top-0 h-full px-3" onClick={() => setShowManualPassword(!showManualPassword)}>
                       {showManualPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -336,6 +352,9 @@ function UserActions({ member, companyId, onEdit }: { member: any; companyId: st
                 </div>
                 {manualPassword && confirmPasswordText && manualPassword !== confirmPasswordText && (
                   <p className="text-xs text-destructive">{isRTL ? 'كلمات المرور غير متطابقة' : 'Passwords do not match'}</p>
+                )}
+                {manualPassword && manualPassword === confirmPasswordText && getPasswordPolicyError(manualPassword, language) && (
+                  <p className="text-xs text-destructive">{getPasswordPolicyError(manualPassword, language)}</p>
                 )}
               </div>
             )}
@@ -384,7 +403,7 @@ function UserActions({ member, companyId, onEdit }: { member: any; companyId: st
                   </Button>
                 )}
                 {resetMode === 'manual' && (
-                  <Button onClick={handleResetManual} disabled={resetPassword.isPending || !manualPassword || manualPassword !== confirmPasswordText}>
+                  <Button onClick={handleResetManual} disabled={resetPassword.isPending || !manualPassword || manualPassword !== confirmPasswordText || !!getPasswordPolicyError(manualPassword, language)}>
                     {resetPassword.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
                     <Key className="w-4 h-4 me-2" />
                     {isRTL ? 'تعيين كلمة المرور' : 'Set Password'}
