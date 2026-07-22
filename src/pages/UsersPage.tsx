@@ -171,6 +171,7 @@ export default function UsersPage() {
     phone: '',
     jobTitle: '',
   });
+  const [supervisedBranchIds, setSupervisedBranchIds] = useState<string[]>([]);
 
   const filteredUsers = (users || []).filter((user) => {
     const matchesSearch =
