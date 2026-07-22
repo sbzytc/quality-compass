@@ -21,8 +21,8 @@ function isWeakPasswordError(error: { message?: string } | null): boolean {
 function weakPasswordResponse(corsHeaders: Record<string, string>): Response {
   return new Response(
     JSON.stringify({
-      error: "كلمة المرور ضعيفة أو مستخدمة سابقاً في تسريبات. اختر كلمة مرور عشوائية من 12 حرفاً أو أكثر وتحتوي على حروف كبيرة وصغيرة وأرقام ورموز.",
-      error_en: "This password is weak or has appeared in known breaches. Use a random 12+ character password with uppercase, lowercase, numbers, and symbols.",
+      error: "تم رفض كلمة المرور من إعدادات المصادقة. استخدم كلمة مرور من 6 خانات أو أكثر.",
+      error_en: "The password was rejected by auth settings. Use a password with 6 or more characters.",
       code: "weak_password",
     }),
     { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
