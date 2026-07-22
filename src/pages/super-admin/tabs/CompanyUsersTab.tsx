@@ -19,6 +19,7 @@ import { Users, Loader2, MoreHorizontal, KeyRound, Pencil, UserX, UserCheck, Plu
 import { DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { generateStrongPassword, getPasswordPolicyError, getWeakPasswordServerMessage } from '@/lib/passwordPolicy';
+import { useAuditLog } from '@/hooks/useAuditLog';
 
 const ASSIGNABLE_ROLES: AppRole[] = ['admin', 'executive', 'branch_manager', 'assessor', 'branch_employee', 'support_agent'];
 const COMPANY_LEVEL_ROLES: AppRole[] = ['admin', 'executive'];
@@ -168,6 +169,7 @@ function UserActions({ member, companyId, onEdit }: { member: any; companyId: st
   const resetPassword = useResetPassword();
   const updateStatus = useUpdateUserStatus();
   const { isAdmin, roles } = useAuth();
+  const audit = useAuditLog();
   const isSuperAdmin = roles.includes('super_admin');
   const canChangeEmail = isSuperAdmin || isAdmin;
   const [confirmReset, setConfirmReset] = useState(false);
@@ -196,6 +198,7 @@ function UserActions({ member, companyId, onEdit }: { member: any; companyId: st
       const result: any = await resetPassword.mutateAsync({ userId: member.user_id, email: member.profile?.email });
       setResetResult(result);
       setResetMode('done');
+      await audit({ action: 'user.password_reset_email', entityType: 'user', entityId: member.user_id, companyId, details: { email: member.profile?.email } });
       toast.success(
         isRTL
           ? (result?.emailSent ? `تم إرسال كلمة المرور إلى ${member.profile?.email}` : 'تم إعادة تعيين كلمة المرور')
@@ -220,6 +223,7 @@ function UserActions({ member, companyId, onEdit }: { member: any; companyId: st
       await resetPassword.mutateAsync({ userId: member.user_id, email: member.profile?.email, customPassword: manualPassword });
       setResetResult({});
       setResetMode('done');
+      await audit({ action: 'user.password_reset_manual', entityType: 'user', entityId: member.user_id, companyId, details: { email: member.profile?.email } });
       toast.success(isRTL ? 'تم تعيين كلمة المرور بنجاح' : 'Password set successfully');
     } catch (e: any) {
       toast.error(e?.code === 'weak_password' ? getWeakPasswordServerMessage(language) : (e.message || (isRTL ? 'فشل تعيين كلمة المرور' : 'Failed to set password')));
@@ -237,6 +241,13 @@ function UserActions({ member, companyId, onEdit }: { member: any; companyId: st
   const doToggle = async () => {
     try {
       await updateStatus.mutateAsync({ userId: member.user_id, isActive: !active });
+      await audit({
+        action: active ? 'user.deactivated' : 'user.activated',
+        entityType: 'user',
+        entityId: member.user_id,
+        companyId,
+        details: { email: member.profile?.email, from: active, to: !active },
+      });
       qc.invalidateQueries({ queryKey: ['super-admin-company-users', companyId] });
       toast.success(isRTL ? 'تم التحديث' : 'Updated');
     } catch (e: any) {
@@ -457,6 +468,13 @@ function UserActions({ member, companyId, onEdit }: { member: any; companyId: st
                   });
                   if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message);
                   toast.success(isRTL ? 'تم تحديث البريد' : 'Email updated');
+                  await audit({
+                    action: 'user.email_changed',
+                    entityType: 'user',
+                    entityId: member.user_id,
+                    companyId,
+                    details: { from: member.profile?.email, to: newEmail.trim() },
+                  });
                   qc.invalidateQueries({ queryKey: ['super-admin-company-users', companyId] });
                   setEmailOpen(false);
                 } catch (e: any) {
@@ -480,12 +498,16 @@ function EditUserDialog({ member, companyId, onClose }: { member: any; companyId
   const isRTL = language === 'ar';
   const qc = useQueryClient();
   const updateRole = useUpdateUserRole();
+  const audit = useAuditLog();
   const [fullName, setFullName] = useState(member.profile?.full_name || '');
   const [phone, setPhone] = useState(member.profile?.phone || '');
+  const [jobTitle, setJobTitle] = useState(member.profile?.job_title || '');
+  const [directManagerId, setDirectManagerId] = useState<string>(member.profile?.direct_manager_id || '');
   const initialRole = (member.appRoles?.[0] as AppRole) || 'assessor';
   const [role, setRole] = useState<AppRole>(initialRole);
   const [branchId, setBranchId] = useState<string>(member.profile?.branch_id || '');
   const { data: branches = [] } = useCompanyBranches(companyId);
+  const { data: employees = [] } = useCompanyEmployees(companyId);
   const isCompanyLevel = COMPANY_LEVEL_ROLES.includes(role);
   const canSupervise = SUPERVISOR_ELIGIBLE_ROLES.includes(role);
   const { data: initialSupervised = [] } = useSupervisedBranches(member.user_id, companyId, canSupervise);
@@ -497,13 +519,23 @@ function EditUserDialog({ member, companyId, onClose }: { member: any; companyId
       if (!isCompanyLevel && !branchId) {
         throw new Error(isRTL ? 'يجب اختيار فرع لهذا الدور' : 'Branch required for this role');
       }
+      const changes: Record<string, { from: any; to: any }> = {};
+      const cmp = (k: string, a: any, b: any) => { const x = a ?? null; const y = b ?? null; if (x !== y) changes[k] = { from: x, to: y }; };
+      cmp('full_name', member.profile?.full_name, fullName);
+      cmp('phone', member.profile?.phone, phone || null);
+      cmp('job_title', member.profile?.job_title, jobTitle || null);
+      cmp('direct_manager_id', member.profile?.direct_manager_id, directManagerId || null);
+      cmp('branch_id', member.profile?.branch_id, isCompanyLevel ? null : branchId);
+      cmp('role', initialRole, role);
       const { error: pErr } = await supabase
         .from('profiles')
         .update({
           full_name: fullName,
           phone: phone || null,
+          job_title: jobTitle || null,
+          direct_manager_id: directManagerId || null,
           branch_id: isCompanyLevel ? null : branchId,
-        })
+        } as any)
         .eq('user_id', member.user_id);
       if (pErr) throw pErr;
       if (role !== initialRole) {
@@ -523,12 +555,14 @@ function EditUserDialog({ member, companyId, onClose }: { member: any; companyId
             .eq('company_id', companyId)
             .in('branch_id', toRemove);
           if (error) throw error;
+          changes['supervised_removed'] = { from: [...current], to: [...desired] };
         }
         if (toAdd.length) {
           const { error } = await supabase
             .from('branch_supervisors')
             .insert(toAdd.map(bid => ({ user_id: member.user_id, company_id: companyId, branch_id: bid })));
           if (error) throw error;
+          changes['supervised_added'] = { from: [...current], to: [...desired] };
         }
       } else if (initialSupervised.length) {
         // Role changed to a non-supervisor role: clear extras
@@ -537,6 +571,16 @@ function EditUserDialog({ member, companyId, onClose }: { member: any; companyId
           .delete()
           .eq('user_id', member.user_id)
           .eq('company_id', companyId);
+        changes['supervised_cleared'] = { from: initialSupervised, to: [] };
+      }
+      if (Object.keys(changes).length > 0) {
+        await audit({
+          action: 'user.updated',
+          entityType: 'user',
+          entityId: member.user_id,
+          companyId,
+          details: { email: member.profile?.email, changes },
+        });
       }
     },
     onSuccess: () => {
@@ -559,6 +603,22 @@ function EditUserDialog({ member, companyId, onClose }: { member: any; companyId
           <div><Label>{isRTL ? 'البريد الإلكتروني' : 'Email'}</Label><Input value={member.profile?.email || ''} disabled className="mt-1" /></div>
           <div><Label>{isRTL ? 'الاسم الكامل' : 'Full name'}</Label><Input value={fullName} onChange={e => setFullName(e.target.value)} className="mt-1" /></div>
           <div><Label>{isRTL ? 'الجوال' : 'Phone'}</Label><Input value={phone} onChange={e => setPhone(e.target.value)} className="mt-1" /></div>
+          <div><Label>{isRTL ? 'المنصب' : 'Job title'}</Label><Input value={jobTitle} onChange={e => setJobTitle(e.target.value)} className="mt-1" /></div>
+          <div>
+            <Label>{isRTL ? 'المدير المباشر' : 'Direct manager'}</Label>
+            <Select value={directManagerId || 'none'} onValueChange={(v) => setDirectManagerId(v === 'none' ? '' : v)}>
+              <SelectTrigger className="mt-1"><SelectValue placeholder={isRTL ? 'اختر مدير' : 'Select manager'} /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">{isRTL ? 'بدون' : 'None'}</SelectItem>
+                {(employees as any[]).filter(e => e.user_id !== member.user_id).map((e: any) => (
+                  <SelectItem key={e.user_id} value={e.user_id}>{e.full_name || e.email}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              {isRTL ? 'من موظفي نفس الشركة فقط.' : 'From the same company only.'}
+            </p>
+          </div>
           <div>
             <Label>{isRTL ? 'الدور' : 'Role'}</Label>
             <Select value={role} onValueChange={(v) => { const nr = v as AppRole; setRole(nr); if (COMPANY_LEVEL_ROLES.includes(nr)) setBranchId(''); }}>
