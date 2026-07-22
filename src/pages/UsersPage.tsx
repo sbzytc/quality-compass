@@ -85,6 +85,8 @@ import { useCurrentCompany } from '@/contexts/CurrentCompanyContext';
 import { generateStrongPassword, getPasswordPolicyError, getWeakPasswordServerMessage } from '@/lib/passwordPolicy';
 import UserEditDialog from '@/components/UserEditDialog';
 import { useAuditLog } from '@/hooks/useAuditLog';
+import { supabase } from '@/integrations/supabase/client';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const roleLabels: Record<AppRole, { en: string; ar: string }> = {
   super_admin: { en: 'Platform Super Admin', ar: 'مدير المنصة' },
@@ -169,6 +171,7 @@ export default function UsersPage() {
     phone: '',
     jobTitle: '',
   });
+  const [supervisedBranchIds, setSupervisedBranchIds] = useState<string[]>([]);
 
   const filteredUsers = (users || []).filter((user) => {
     const matchesSearch =
@@ -220,7 +223,7 @@ export default function UsersPage() {
       return;
     }
     try {
-      await createUser.mutateAsync({
+      const created = await createUser.mutateAsync({
         email: createForm.email,
         fullName: createForm.fullName,
         password: createForm.password,
@@ -231,6 +234,17 @@ export default function UsersPage() {
         phone: createForm.phone || undefined,
         jobTitle: createForm.jobTitle || undefined,
       });
+      const newUserId: string | undefined = (created as any)?.user?.id;
+      const supportsSupervision = createForm.role === 'branch_manager' || createForm.role === 'assessor';
+      if (newUserId && currentCompany?.id && supportsSupervision) {
+        const extras = supervisedBranchIds.filter((id) => id && id !== createForm.branchId);
+        if (extras.length > 0) {
+          const { error: supErr } = await supabase
+            .from('branch_supervisors')
+            .insert(extras.map((bid) => ({ user_id: newUserId, company_id: currentCompany.id, branch_id: bid })));
+          if (supErr) console.error('branch_supervisors insert failed', supErr);
+        }
+      }
       toast.success(
         language === 'ar'
           ? `تم إنشاء المستخدم ${createForm.fullName} بنجاح`
@@ -239,6 +253,7 @@ export default function UsersPage() {
       setIsAddUserDialogOpen(false);
       setAddUserMode('choose');
       setCreateForm({ email: '', fullName: '', password: '', confirmPassword: '', role: 'assessor', forcePasswordChange: true, branchId: '', phone: '', jobTitle: '' });
+      setSupervisedBranchIds([]);
     } catch (error: any) {
       if (error?.code === 'email_exists' || /already.*registered|مسجّل/i.test(error?.message || '')) {
         const companies = error?.companies || [];
@@ -788,6 +803,34 @@ export default function UsersPage() {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+              )}
+              {(createForm.role === 'branch_manager' || createForm.role === 'assessor') && (
+                <div className="space-y-2">
+                  <Label>{language === 'ar' ? 'فروع إضافية (اختياري)' : 'Additional supervised branches (optional)'}</Label>
+                  <div className="max-h-40 overflow-y-auto rounded-md border p-2 space-y-1">
+                    {(branches || []).filter((b) => b.id !== createForm.branchId).map((branch) => {
+                      const checked = supervisedBranchIds.includes(branch.id);
+                      return (
+                        <label key={branch.id} className="flex items-center gap-2 text-sm cursor-pointer py-1">
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={(v) => {
+                              setSupervisedBranchIds((prev) =>
+                                v ? [...prev, branch.id] : prev.filter((id) => id !== branch.id)
+                              );
+                            }}
+                          />
+                          <span>{language === 'ar' && branch.nameAr ? branch.nameAr : branch.name}</span>
+                        </label>
+                      );
+                    })}
+                    {(branches || []).filter((b) => b.id !== createForm.branchId).length === 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        {language === 'ar' ? 'لا توجد فروع أخرى' : 'No other branches available'}
+                      </p>
+                    )}
+                  </div>
                 </div>
               )}
               <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
