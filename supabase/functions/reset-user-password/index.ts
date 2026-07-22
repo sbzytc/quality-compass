@@ -82,10 +82,20 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const { userId, email, customPassword }: ResetPasswordRequest = await req.json();
+    const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
+    const normalizedCustomPassword = typeof customPassword === "string" ? customPassword.trim() : undefined;
+    const isManualReset = Boolean(normalizedCustomPassword);
 
-    if (!userId || !email) {
+    if (!userId || !normalizedEmail) {
       return new Response(
         JSON.stringify({ error: "Missing required fields: userId, email" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (isManualReset && normalizedCustomPassword!.length < 6) {
+      return new Response(
+        JSON.stringify({ error: "Password must be at least 6 characters" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -114,10 +124,10 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    let newPassword = customPassword || generateTempPassword();
+    let newPassword = normalizedCustomPassword || generateTempPassword();
     let updateError: { message?: string } | null = null;
 
-    if (customPassword) {
+    if (isManualReset) {
       const result = await supabaseAdmin.auth.admin.updateUserById(userId, {
         password: newPassword,
       });
@@ -143,9 +153,28 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    const authVerifier = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { error: verifyError } = await authVerifier.auth.signInWithPassword({
+      email: normalizedEmail,
+      password: newPassword,
+    });
+
+    if (verifyError) {
+      console.error("Password verification failed after reset:", verifyError.message);
+      return new Response(
+        JSON.stringify({
+          error: "Password reset could not be verified. Please try again.",
+          code: "password_verification_failed",
+        }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { error: forceChangeError } = await supabaseAdmin
       .from("profiles")
-      .update({ force_password_change: !customPassword })
+      .update({ force_password_change: !isManualReset })
       .eq("user_id", userId);
 
     if (forceChangeError) {
@@ -158,7 +187,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send password reset email if Resend is configured
     let emailSent = false;
-    const shouldSendEmail = !customPassword; // Only send email for auto-generated passwords
+    const shouldSendEmail = !isManualReset; // Only send email for auto-generated passwords
     if (resendApiKey && shouldSendEmail) {
       try {
         const resend = new Resend(resendApiKey);
@@ -166,7 +195,7 @@ const handler = async (req: Request): Promise<Response> => {
         
         await resend.emails.send({
           from: "SQCS <noreply@yourdomain.com>",
-          to: [email],
+          to: [normalizedEmail],
           subject: "SQCS - Your Password Has Been Reset",
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -188,7 +217,7 @@ const handler = async (req: Request): Promise<Response> => {
       JSON.stringify({
         success: true,
         emailSent,
-        tempPassword: customPassword ? undefined : (emailSent ? undefined : newPassword),
+        tempPassword: isManualReset ? undefined : (emailSent ? undefined : newPassword),
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
