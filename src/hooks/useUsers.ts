@@ -28,6 +28,8 @@ export interface UserWithRole {
   can_view_customer_feedback: boolean;
   can_view_complaints: boolean;
   can_view_suggestions: boolean;
+  job_title?: string | null;
+  direct_manager_id?: string | null;
   created_at: string;
   roles: AppRole[];
 }
@@ -94,6 +96,8 @@ export function useUsers(opts?: { companyId?: string | null; isSuperAdmin?: bool
         can_view_customer_feedback: (p as any).can_view_customer_feedback ?? false,
         can_view_complaints: (p as any).can_view_complaints ?? false,
         can_view_suggestions: (p as any).can_view_suggestions ?? false,
+        job_title: (p as any).job_title ?? null,
+        direct_manager_id: (p as any).direct_manager_id ?? null,
         created_at: p.created_at,
         roles: rolesByUser.get(p.user_id) || [],
       })) as UserWithRole[];
