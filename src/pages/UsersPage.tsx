@@ -223,7 +223,7 @@ export default function UsersPage() {
       return;
     }
     try {
-      await createUser.mutateAsync({
+      const created = await createUser.mutateAsync({
         email: createForm.email,
         fullName: createForm.fullName,
         password: createForm.password,
@@ -234,6 +234,17 @@ export default function UsersPage() {
         phone: createForm.phone || undefined,
         jobTitle: createForm.jobTitle || undefined,
       });
+      const newUserId: string | undefined = (created as any)?.user?.id;
+      const supportsSupervision = createForm.role === 'branch_manager' || createForm.role === 'assessor';
+      if (newUserId && currentCompany?.id && supportsSupervision) {
+        const extras = supervisedBranchIds.filter((id) => id && id !== createForm.branchId);
+        if (extras.length > 0) {
+          const { error: supErr } = await supabase
+            .from('branch_supervisors')
+            .insert(extras.map((bid) => ({ user_id: newUserId, company_id: currentCompany.id, branch_id: bid })));
+          if (supErr) console.error('branch_supervisors insert failed', supErr);
+        }
+      }
       toast.success(
         language === 'ar'
           ? `تم إنشاء المستخدم ${createForm.fullName} بنجاح`
@@ -242,6 +253,7 @@ export default function UsersPage() {
       setIsAddUserDialogOpen(false);
       setAddUserMode('choose');
       setCreateForm({ email: '', fullName: '', password: '', confirmPassword: '', role: 'assessor', forcePasswordChange: true, branchId: '', phone: '', jobTitle: '' });
+      setSupervisedBranchIds([]);
     } catch (error: any) {
       if (error?.code === 'email_exists' || /already.*registered|مسجّل/i.test(error?.message || '')) {
         const companies = error?.companies || [];
