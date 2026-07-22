@@ -83,6 +83,8 @@ import { AppRole, useAuth } from '@/contexts/AuthContext';
 import { useBranches } from '@/hooks/useBranches';
 import { useCurrentCompany } from '@/contexts/CurrentCompanyContext';
 import { generateStrongPassword, getPasswordPolicyError, getWeakPasswordServerMessage } from '@/lib/passwordPolicy';
+import UserEditDialog from '@/components/UserEditDialog';
+import { useAuditLog } from '@/hooks/useAuditLog';
 
 const roleLabels: Record<AppRole, { en: string; ar: string }> = {
   super_admin: { en: 'Platform Super Admin', ar: 'مدير المنصة' },
@@ -142,6 +144,8 @@ export default function UsersPage() {
   const [isChangeRoleDialogOpen, setIsChangeRoleDialogOpen] = useState(false);
   const [changeRoleUser, setChangeRoleUser] = useState<UserWithRole | null>(null);
   const [newRole, setNewRole] = useState<AppRole>('assessor');
+  const [editUser, setEditUser] = useState<UserWithRole | null>(null);
+  const audit = useAuditLog();
   const [duplicateEmailDialog, setDuplicateEmailDialog] = useState<{
     open: boolean;
     email: string;
@@ -316,6 +320,13 @@ export default function UsersPage() {
   const handleToggleActive = async (user: UserWithRole) => {
     try {
       await updateStatus.mutateAsync({ userId: user.user_id, isActive: !user.is_active });
+      await audit({
+        action: user.is_active ? 'user.deactivated' : 'user.activated',
+        entityType: 'user',
+        entityId: user.user_id,
+        companyId: currentCompany?.id ?? null,
+        details: { email: user.email, from: user.is_active, to: !user.is_active },
+      });
       toast.success(
         language === 'ar'
           ? user.is_active ? 'تم تعطيل المستخدم' : 'تم تفعيل المستخدم'
@@ -532,6 +543,15 @@ export default function UsersPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            {isAdmin && (
+                              <>
+                                <DropdownMenuItem onClick={() => setEditUser(user)}>
+                                  <Shield className="w-4 h-4 me-2" />
+                                  {language === 'ar' ? 'تعديل المستخدم' : 'Edit user'}
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                              </>
+                            )}
                             <DropdownMenuItem
                               onClick={() => {
                                 setSelectedUser(user);
@@ -545,106 +565,6 @@ export default function UsersPage() {
                               <Send className="w-4 h-4 me-2" />
                               {language === 'ar' ? 'إعادة إرسال الدعوة' : 'Resend Invitation'}
                             </DropdownMenuItem>
-                            {(user.roles.includes('branch_manager') || primaryRole === 'branch_manager') && (isAdmin || isSuperAdmin) && (
-                              <>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    setAssignBranchUser(user);
-                                    setSelectedBranchId(user.branch_id || '');
-                                    setIsAssignBranchDialogOpen(true);
-                                  }}
-                                >
-                                  <Building className="w-4 h-4 me-2" />
-                                  {language === 'ar' ? 'تعيين / تغيير الفرع' : 'Assign / Change Branch'}
-                                </DropdownMenuItem>
-                              </>
-                            )}
-                            {isAdmin && (
-                              <>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    setChangeRoleUser(user);
-                                    setNewRole(primaryRole);
-                                    setIsChangeRoleDialogOpen(true);
-                                  }}
-                                >
-                                  <Shield className="w-4 h-4 me-2" />
-                                  {language === 'ar' ? 'تغيير الدور' : 'Change Role'}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={async () => {
-                                    try {
-                                      await toggleAIAssistant.mutateAsync({ userId: user.user_id, enabled: !user.ai_assistant_enabled });
-                                      if (user.user_id === authUser?.id) {
-                                        await refreshProfile();
-                                      }
-                                      toast.success(
-                                        language === 'ar'
-                                          ? user.ai_assistant_enabled ? 'تم تعطيل المساعد الذكي' : 'تم تفعيل المساعد الذكي'
-                                          : user.ai_assistant_enabled ? 'AI Assistant disabled' : 'AI Assistant enabled'
-                                      );
-                                    } catch {
-                                      toast.error(language === 'ar' ? 'فشل تحديث الإعداد' : 'Failed to update setting');
-                                    }
-                                  }}
-                                >
-                                  <Bot className="w-4 h-4 me-2" />
-                                  {user.ai_assistant_enabled
-                                    ? (language === 'ar' ? 'تعطيل المساعد الذكي' : 'Disable AI Assistant')
-                                    : (language === 'ar' ? 'تفعيل المساعد الذكي' : 'Enable AI Assistant')
-                                  }
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                {/* Feature access toggles */}
-                                <DropdownMenuItem
-                                  onClick={async () => {
-                                    try {
-                                      await toggleFeatureAccess.mutateAsync({ userId: user.user_id, feature: 'can_view_customer_feedback', enabled: !user.can_view_customer_feedback });
-                                      if (user.user_id === authUser?.id) await refreshProfile();
-                                      toast.success(language === 'ar' ? 'تم التحديث' : 'Updated');
-                                    } catch { toast.error(language === 'ar' ? 'فشل التحديث' : 'Failed'); }
-                                  }}
-                                >
-                                  <Star className="w-4 h-4 me-2" />
-                                  {user.can_view_customer_feedback
-                                    ? (language === 'ar' ? 'إلغاء صلاحية التقييمات' : 'Revoke Feedback Access')
-                                    : (language === 'ar' ? 'منح صلاحية التقييمات' : 'Grant Feedback Access')
-                                  }
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={async () => {
-                                    try {
-                                      await toggleFeatureAccess.mutateAsync({ userId: user.user_id, feature: 'can_view_complaints', enabled: !user.can_view_complaints });
-                                      if (user.user_id === authUser?.id) await refreshProfile();
-                                      toast.success(language === 'ar' ? 'تم التحديث' : 'Updated');
-                                    } catch { toast.error(language === 'ar' ? 'فشل التحديث' : 'Failed'); }
-                                  }}
-                                >
-                                  <AlertTriangle className="w-4 h-4 me-2" />
-                                  {user.can_view_complaints
-                                    ? (language === 'ar' ? 'إلغاء صلاحية الشكاوى' : 'Revoke Complaints Access')
-                                    : (language === 'ar' ? 'منح صلاحية الشكاوى' : 'Grant Complaints Access')
-                                  }
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={async () => {
-                                    try {
-                                      await toggleFeatureAccess.mutateAsync({ userId: user.user_id, feature: 'can_view_suggestions', enabled: !user.can_view_suggestions });
-                                      if (user.user_id === authUser?.id) await refreshProfile();
-                                      toast.success(language === 'ar' ? 'تم التحديث' : 'Updated');
-                                    } catch { toast.error(language === 'ar' ? 'فشل التحديث' : 'Failed'); }
-                                  }}
-                                >
-                                  <Lightbulb className="w-4 h-4 me-2" />
-                                  {user.can_view_suggestions
-                                    ? (language === 'ar' ? 'إلغاء صلاحية الاقتراحات' : 'Revoke Suggestions Access')
-                                    : (language === 'ar' ? 'منح صلاحية الاقتراحات' : 'Grant Suggestions Access')
-                                  }
-                                </DropdownMenuItem>
-                              </>
-                            )}
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                               onClick={() => handleToggleActive(user)}
@@ -1284,6 +1204,14 @@ export default function UsersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {editUser && currentCompany?.id && (
+        <UserEditDialog
+          user={editUser}
+          companyId={currentCompany.id}
+          onClose={() => setEditUser(null)}
+        />
+      )}
     </div>
   );
 }
