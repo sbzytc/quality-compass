@@ -68,6 +68,9 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const { email, fullName, password, role, forcePasswordChange, branchId, companyId, superAdminScope, phone, jobTitle, directManagerId }: CreateUserRequest = await req.json();
+    const emailNormalized = typeof email === "string" ? email.trim().toLowerCase() : "";
+    const fullNameNormalized = typeof fullName === "string" ? fullName.trim() : "";
+    const passwordNormalized = typeof password === "string" ? password.trim() : "";
 
     // Only super admins can create other super admins
     if (role === "super_admin" && !isSuperAdmin) {
@@ -94,14 +97,14 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    if (!email || !fullName || !password || !role) {
+    if (!emailNormalized || !fullNameNormalized || !passwordNormalized || !role) {
       return new Response(
         JSON.stringify({ error: "Missing required fields" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    if (typeof password !== "string" || password.length < 6) {
+    if (passwordNormalized.length < 6) {
       return new Response(
         JSON.stringify({ error: "Password must be at least 6 characters" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -109,7 +112,6 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Pre-check: is this email already registered anywhere in the system?
-    const emailNormalized = email.trim().toLowerCase();
     {
       const { data: existingProfile } = await supabaseAdmin
         .from("profiles")
@@ -162,10 +164,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Create user
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
+      email: emailNormalized,
+      password: passwordNormalized,
       email_confirm: true,
-      user_metadata: { full_name: fullName },
+      user_metadata: { full_name: fullNameNormalized },
     });
 
     if (createError) {
@@ -181,7 +183,7 @@ const handler = async (req: Request): Promise<Response> => {
         let existingUserId: string | null = null;
         try {
           const { data: list } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 200 });
-          const found = list?.users?.find((u: any) => (u.email || "").toLowerCase() === email.toLowerCase());
+          const found = list?.users?.find((u: any) => (u.email || "").toLowerCase() === emailNormalized);
           existingUserId = found?.id ?? null;
         } catch (_) {}
 
@@ -225,8 +227,8 @@ const handler = async (req: Request): Promise<Response> => {
     // Create profile
     const profileData: Record<string, unknown> = {
       user_id: newUser.user.id,
-      email,
-      full_name: fullName,
+      email: emailNormalized,
+      full_name: fullNameNormalized,
       force_password_change: forcePasswordChange ?? false,
     };
     if ((role === "branch_manager" || role === "branch_employee") && branchId) {
