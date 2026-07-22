@@ -604,7 +604,7 @@ export default function UsersPage() {
         if (!open) {
           setAddUserMode('choose');
           setInviteForm({ email: '', fullName: '', role: 'assessor' });
-          setCreateForm({ email: '', fullName: '', password: '', confirmPassword: '', role: 'assessor', forcePasswordChange: true, branchId: '' });
+          setCreateForm({ email: '', fullName: '', password: '', confirmPassword: '', role: 'assessor', forcePasswordChange: true, branchId: '', phone: '', jobTitle: '' });
           setShowPassword(false);
         }
       }}>
