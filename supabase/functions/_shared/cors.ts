@@ -8,6 +8,8 @@ const STATIC_ALLOWED = new Set<string>([
   "http://localhost:5173",
   "http://127.0.0.1:8080",
   "https://monitor-shine-suite.lovable.app",
+  "https://rasdah.com",
+  "https://www.rasdah.com",
 ]);
 
 // Regex allow-list for preview/published Lovable domains.
