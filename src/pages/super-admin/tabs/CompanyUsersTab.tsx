@@ -23,7 +23,7 @@ import { useAuditLog } from '@/hooks/useAuditLog';
 
 const ASSIGNABLE_ROLES: AppRole[] = ['admin', 'executive', 'branch_manager', 'assessor', 'branch_employee', 'support_agent'];
 const COMPANY_LEVEL_ROLES: AppRole[] = ['admin', 'executive'];
-const SUPERVISOR_ELIGIBLE_ROLES: AppRole[] = ['branch_manager', 'executive'];
+const SUPERVISOR_ELIGIBLE_ROLES: AppRole[] = ['branch_manager', 'executive', 'assessor'];
 
 function useSupervisedBranches(userId: string, companyId: string, enabled: boolean) {
   return useQuery({
