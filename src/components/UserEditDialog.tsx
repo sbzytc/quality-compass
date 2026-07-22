@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 
 const ASSIGNABLE_ROLES: AppRole[] = ['admin', 'executive', 'branch_manager', 'assessor', 'branch_employee', 'support_agent'];
 const COMPANY_LEVEL_ROLES: AppRole[] = ['admin', 'executive'];
-const SUPERVISOR_ELIGIBLE_ROLES: AppRole[] = ['branch_manager', 'executive'];
+const SUPERVISOR_ELIGIBLE_ROLES: AppRole[] = ['branch_manager', 'executive', 'assessor'];
 
 const roleLabel: Record<AppRole, { en: string; ar: string }> = {
   super_admin: { en: 'Super Admin', ar: 'مدير المنصة' },
