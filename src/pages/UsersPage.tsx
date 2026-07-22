@@ -701,6 +701,24 @@ export default function UsersPage() {
                 />
               </div>
               <div className="space-y-2">
+                <Label>{language === 'ar' ? 'رقم الجوال' : 'Phone Number'}</Label>
+                <Input
+                  type="tel"
+                  dir="ltr"
+                  placeholder={language === 'ar' ? 'أدخل رقم الجوال' : 'Enter phone number'}
+                  value={createForm.phone}
+                  onChange={(e) => setCreateForm((prev) => ({ ...prev, phone: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{language === 'ar' ? 'المنصب' : 'Job Title'}</Label>
+                <Input
+                  placeholder={language === 'ar' ? 'أدخل المنصب الوظيفي' : 'Enter job title'}
+                  value={createForm.jobTitle}
+                  onChange={(e) => setCreateForm((prev) => ({ ...prev, jobTitle: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
                 <Label>{language === 'ar' ? 'كلمة المرور' : 'Password'}</Label>
                 <div className="relative">
                   <Input
