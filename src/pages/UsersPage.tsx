@@ -166,6 +166,8 @@ export default function UsersPage() {
     role: 'assessor' as AppRole,
     forcePasswordChange: true,
     branchId: '',
+    phone: '',
+    jobTitle: '',
   });
 
   const filteredUsers = (users || []).filter((user) => {
@@ -226,6 +228,8 @@ export default function UsersPage() {
         forcePasswordChange: createForm.forcePasswordChange,
         branchId: (createForm.role === 'branch_manager' || createForm.role === 'branch_employee') ? createForm.branchId : undefined,
         companyId: currentCompany?.id,
+        phone: createForm.phone || undefined,
+        jobTitle: createForm.jobTitle || undefined,
       });
       toast.success(
         language === 'ar'
@@ -234,7 +238,7 @@ export default function UsersPage() {
       );
       setIsAddUserDialogOpen(false);
       setAddUserMode('choose');
-      setCreateForm({ email: '', fullName: '', password: '', confirmPassword: '', role: 'assessor', forcePasswordChange: true, branchId: '' });
+      setCreateForm({ email: '', fullName: '', password: '', confirmPassword: '', role: 'assessor', forcePasswordChange: true, branchId: '', phone: '', jobTitle: '' });
     } catch (error: any) {
       if (error?.code === 'email_exists' || /already.*registered|مسجّل/i.test(error?.message || '')) {
         const companies = error?.companies || [];
@@ -600,7 +604,7 @@ export default function UsersPage() {
         if (!open) {
           setAddUserMode('choose');
           setInviteForm({ email: '', fullName: '', role: 'assessor' });
-          setCreateForm({ email: '', fullName: '', password: '', confirmPassword: '', role: 'assessor', forcePasswordChange: true, branchId: '' });
+          setCreateForm({ email: '', fullName: '', password: '', confirmPassword: '', role: 'assessor', forcePasswordChange: true, branchId: '', phone: '', jobTitle: '' });
           setShowPassword(false);
         }
       }}>
@@ -694,6 +698,24 @@ export default function UsersPage() {
                   placeholder={language === 'ar' ? 'أدخل البريد الإلكتروني' : 'Enter email address'}
                   value={createForm.email}
                   onChange={(e) => setCreateForm((prev) => ({ ...prev, email: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{language === 'ar' ? 'رقم الجوال' : 'Phone Number'}</Label>
+                <Input
+                  type="tel"
+                  dir="ltr"
+                  placeholder={language === 'ar' ? 'أدخل رقم الجوال' : 'Enter phone number'}
+                  value={createForm.phone}
+                  onChange={(e) => setCreateForm((prev) => ({ ...prev, phone: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{language === 'ar' ? 'المنصب' : 'Job Title'}</Label>
+                <Input
+                  placeholder={language === 'ar' ? 'أدخل المنصب الوظيفي' : 'Enter job title'}
+                  value={createForm.jobTitle}
+                  onChange={(e) => setCreateForm((prev) => ({ ...prev, jobTitle: e.target.value }))}
                 />
               </div>
               <div className="space-y-2">
