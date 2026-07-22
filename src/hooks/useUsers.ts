@@ -2,6 +2,18 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AppRole, useAuth } from '@/contexts/AuthContext';
 
+export class PasswordResetError extends Error {
+  code?: string;
+  errorEn?: string;
+
+  constructor(message: string, code?: string, errorEn?: string) {
+    super(message);
+    this.name = 'PasswordResetError';
+    this.code = code;
+    this.errorEn = errorEn;
+  }
+}
+
 export interface UserWithRole {
   id: string;
   user_id: string;
@@ -191,7 +203,7 @@ export function useResetPassword() {
       let body: any = null;
       try { body = await res.json(); } catch { /* ignore */ }
       if (!res.ok) {
-        throw new Error(body?.error || `Request failed (${res.status})`);
+        throw new PasswordResetError(body?.error || `Request failed (${res.status})`, body?.code, body?.error_en);
       }
       return body;
     },

@@ -11,6 +11,24 @@ interface ResetPasswordRequest {
   customPassword?: string;
 }
 
+const MAX_GENERATED_PASSWORD_ATTEMPTS = 5;
+
+function isWeakPasswordError(error: { message?: string } | null): boolean {
+  const message = (error?.message || "").toLowerCase();
+  return message.includes("known to be weak") || message.includes("easy to guess") || message.includes("password") && message.includes("weak");
+}
+
+function weakPasswordResponse(corsHeaders: Record<string, string>): Response {
+  return new Response(
+    JSON.stringify({
+      error: "كلمة المرور ضعيفة أو مستخدمة سابقاً في تسريبات. اختر كلمة مرور عشوائية من 12 حرفاً أو أكثر وتحتوي على حروف كبيرة وصغيرة وأرقام ورموز.",
+      error_en: "This password is weak or has appeared in known breaches. Use a random 12+ character password with uppercase, lowercase, numbers, and symbols.",
+      code: "weak_password",
+    }),
+    { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+  );
+}
+
 const handler = async (req: Request): Promise<Response> => {
   const corsHeaders = buildCorsHeaders(req);
   if (req.method === "OPTIONS") {
@@ -96,16 +114,29 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Use custom password if provided, otherwise generate a strong one.
-    const newPassword = customPassword || generateTempPassword();
+    let newPassword = customPassword || generateTempPassword();
+    let updateError: { message?: string } | null = null;
 
-    // Update user password
-    const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
-      password: newPassword,
-    });
+    if (customPassword) {
+      const result = await supabaseAdmin.auth.admin.updateUserById(userId, {
+        password: newPassword,
+      });
+      updateError = result.error;
+    } else {
+      for (let attempt = 1; attempt <= MAX_GENERATED_PASSWORD_ATTEMPTS; attempt++) {
+        newPassword = generateTempPassword();
+        const result = await supabaseAdmin.auth.admin.updateUserById(userId, {
+          password: newPassword,
+        });
+        updateError = result.error;
+        if (!updateError) break;
+        if (!isWeakPasswordError(updateError)) break;
+      }
+    }
 
     if (updateError) {
       console.error("Error updating password:", updateError);
+      if (isWeakPasswordError(updateError)) return weakPasswordResponse(corsHeaders);
       return new Response(
         JSON.stringify({ error: updateError.message }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
