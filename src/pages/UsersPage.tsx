@@ -85,6 +85,8 @@ import { useCurrentCompany } from '@/contexts/CurrentCompanyContext';
 import { generateStrongPassword, getPasswordPolicyError, getWeakPasswordServerMessage } from '@/lib/passwordPolicy';
 import UserEditDialog from '@/components/UserEditDialog';
 import { useAuditLog } from '@/hooks/useAuditLog';
+import { supabase } from '@/integrations/supabase/client';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const roleLabels: Record<AppRole, { en: string; ar: string }> = {
   super_admin: { en: 'Platform Super Admin', ar: 'مدير المنصة' },
