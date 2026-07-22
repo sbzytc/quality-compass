@@ -226,7 +226,7 @@ export default function UsersPage() {
         password: createForm.password,
         role: createForm.role,
         forcePasswordChange: createForm.forcePasswordChange,
-        branchId: (createForm.role === 'branch_manager' || createForm.role === 'branch_employee') ? createForm.branchId : undefined,
+        branchId: (createForm.role === 'branch_manager' || createForm.role === 'branch_employee' || createForm.role === 'assessor') ? createForm.branchId : undefined,
         companyId: currentCompany?.id,
         phone: createForm.phone || undefined,
         jobTitle: createForm.jobTitle || undefined,
@@ -770,7 +770,7 @@ export default function UsersPage() {
                   </SelectContent>
                 </Select>
               </div>
-              {(createForm.role === 'branch_manager' || createForm.role === 'branch_employee') && (
+              {(createForm.role === 'branch_manager' || createForm.role === 'branch_employee' || createForm.role === 'assessor') && (
                 <div className="space-y-2">
                   <Label>{language === 'ar' ? 'الفرع' : 'Assign to Branch'}</Label>
                   <Select
@@ -827,7 +827,7 @@ export default function UsersPage() {
                 {addUserMode === 'create' && (
                   <Button
                     onClick={handleCreateUser}
-                    disabled={!createForm.email || !createForm.fullName || !createForm.password || createForm.password !== createForm.confirmPassword || ((createForm.role === 'branch_manager' || createForm.role === 'branch_employee') && !createForm.branchId) || createUser.isPending}
+                    disabled={!createForm.email || !createForm.fullName || !createForm.password || createForm.password !== createForm.confirmPassword || ((createForm.role === 'branch_manager' || createForm.role === 'branch_employee' || createForm.role === 'assessor') && !createForm.branchId) || createUser.isPending}
                   >
                     {createUser.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
                     <UserPlus className="w-4 h-4 me-2" />
