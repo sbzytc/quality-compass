@@ -145,7 +145,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { error: forceChangeError } = await supabaseAdmin
       .from("profiles")
-      .update({ force_password_change: true })
+      .update({ force_password_change: !customPassword })
       .eq("user_id", userId);
 
     if (forceChangeError) {
