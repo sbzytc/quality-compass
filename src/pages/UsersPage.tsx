@@ -805,6 +805,34 @@ export default function UsersPage() {
                   </Select>
                 </div>
               )}
+              {(createForm.role === 'branch_manager' || createForm.role === 'assessor') && (
+                <div className="space-y-2">
+                  <Label>{language === 'ar' ? 'فروع إضافية (اختياري)' : 'Additional supervised branches (optional)'}</Label>
+                  <div className="max-h-40 overflow-y-auto rounded-md border p-2 space-y-1">
+                    {(branches || []).filter((b) => b.id !== createForm.branchId).map((branch) => {
+                      const checked = supervisedBranchIds.includes(branch.id);
+                      return (
+                        <label key={branch.id} className="flex items-center gap-2 text-sm cursor-pointer py-1">
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={(v) => {
+                              setSupervisedBranchIds((prev) =>
+                                v ? [...prev, branch.id] : prev.filter((id) => id !== branch.id)
+                              );
+                            }}
+                          />
+                          <span>{language === 'ar' && branch.nameAr ? branch.nameAr : branch.name}</span>
+                        </label>
+                      );
+                    })}
+                    {(branches || []).filter((b) => b.id !== createForm.branchId).length === 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        {language === 'ar' ? 'لا توجد فروع أخرى' : 'No other branches available'}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
               <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                 <div className="flex-1 min-w-0 me-3">
                   <p className="text-sm font-medium">{language === 'ar' ? 'تغيير كلمة المرور عند أول تسجيل دخول' : 'Force password change on first login'}</p>
