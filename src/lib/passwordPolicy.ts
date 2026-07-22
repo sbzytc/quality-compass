@@ -1,9 +1,9 @@
 export type PasswordPolicyLanguage = 'ar' | 'en';
 
-// Toggle to re-enable the strict 12+ char / complexity / weak-pattern policy in the future.
-// Keep as `false` to only enforce a minimal 8-character length.
+// Toggle to re-enable strict complexity / weak-pattern checks in the future.
+// Keep as `false` to only enforce the backend's minimal 6-character length.
 export const STRICT_PASSWORD_POLICY = false;
-export const MIN_PASSWORD_LENGTH = 8;
+export const MIN_PASSWORD_LENGTH = 6;
 
 const LOWER = 'abcdefghijkmnpqrstuvwxyz';
 const UPPER = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
@@ -88,6 +88,6 @@ export function getPasswordPolicyError(password: string, language: PasswordPolic
 
 export function getWeakPasswordServerMessage(language: PasswordPolicyLanguage): string {
   return language === 'ar'
-    ? 'كلمة المرور مرفوضة لأنها ضعيفة أو مستخدمة سابقاً في تسريبات. استخدم زر توليد كلمة مرور قوية أو اكتب كلمة عشوائية أطول.'
-    : 'This password was rejected as weak or breached. Use Generate strong password or enter a longer random password.';
+    ? 'تم رفض كلمة المرور من إعدادات المصادقة. استخدم كلمة مرور من 6 خانات أو أكثر.'
+    : 'The password was rejected by auth settings. Use a password with 6 or more characters.';
 }

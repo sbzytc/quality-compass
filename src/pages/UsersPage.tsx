@@ -293,7 +293,7 @@ export default function UsersPage() {
     setManualPassword(password);
     setConfirmPassword(password);
     setShowPassword(true);
-    toast.success(language === 'ar' ? 'تم توليد كلمة مرور قوية' : 'Strong password generated');
+    toast.success(language === 'ar' ? 'تم توليد كلمة مرور' : 'Password generated');
   };
 
   const handleResendInvitation = async (user: UserWithRole) => {
@@ -973,14 +973,14 @@ export default function UsersPage() {
                       <Label>{language === 'ar' ? 'كلمة المرور الجديدة' : 'New Password'}</Label>
                       <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5" onClick={generateManualResetPassword}>
                         <Wand2 className="w-3.5 h-3.5" />
-                        {language === 'ar' ? 'توليد قوية' : 'Generate strong'}
+                        {language === 'ar' ? 'توليد' : 'Generate'}
                       </Button>
                     </div>
                     <Input
                       type={showPassword ? 'text' : 'password'}
                       value={manualPassword}
                       onChange={(e) => setManualPassword(e.target.value)}
-                      placeholder={language === 'ar' ? '12+ مع حروف كبيرة وصغيرة وأرقام ورموز' : '12+ with upper/lowercase, number & symbol'}
+                      placeholder={language === 'ar' ? '6 خانات أو أكثر' : '6+ characters'}
                     />
                   </div>
                   <div className="space-y-2">

@@ -231,7 +231,7 @@ function UserActions({ member, companyId, onEdit }: { member: any; companyId: st
     setManualPassword(password);
     setConfirmPasswordText(password);
     setShowManualPassword(true);
-    toast.success(isRTL ? 'تم توليد كلمة مرور قوية' : 'Strong password generated');
+    toast.success(isRTL ? 'تم توليد كلمة مرور' : 'Password generated');
   };
 
   const doToggle = async () => {
@@ -326,7 +326,7 @@ function UserActions({ member, companyId, onEdit }: { member: any; companyId: st
                     <Label>{isRTL ? 'كلمة المرور الجديدة' : 'New Password'}</Label>
                     <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5" onClick={generateManualPassword}>
                       <Wand2 className="w-3.5 h-3.5" />
-                      {isRTL ? 'توليد قوية' : 'Generate strong'}
+                      {isRTL ? 'توليد' : 'Generate'}
                     </Button>
                   </div>
                   <div className="relative">
@@ -334,7 +334,7 @@ function UserActions({ member, companyId, onEdit }: { member: any; companyId: st
                       type={showManualPassword ? 'text' : 'password'}
                       value={manualPassword}
                       onChange={(e) => setManualPassword(e.target.value)}
-                      placeholder={isRTL ? '12+ مع حروف كبيرة وصغيرة وأرقام ورموز' : '12+ with upper/lowercase, number & symbol'}
+                      placeholder={isRTL ? '6 خانات أو أكثر' : '6+ characters'}
                     />
                     <Button type="button" variant="ghost" size="icon" className="absolute end-0 top-0 h-full px-3" onClick={() => setShowManualPassword(!showManualPassword)}>
                       {showManualPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}

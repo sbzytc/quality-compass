@@ -91,10 +91,10 @@ export default function LoginPage() {
       toast.error(direction === 'rtl' ? 'كلمات المرور غير متطابقة' : 'Passwords do not match');
       return;
     }
-    if (newPassword.length < 8 || !/[A-Za-z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+    if (newPassword.length < 6) {
       toast.error(direction === 'rtl'
-        ? 'كلمة المرور يجب ألا تقل عن 8 أحرف وتحتوي على حرف ورقم'
-        : 'Password must be at least 8 characters and include a letter and a number');
+        ? 'كلمة المرور يجب ألا تقل عن 6 أحرف'
+        : 'Password must be at least 6 characters');
       return;
     }
 
