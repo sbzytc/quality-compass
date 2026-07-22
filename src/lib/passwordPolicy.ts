@@ -1,5 +1,10 @@
 export type PasswordPolicyLanguage = 'ar' | 'en';
 
+// Toggle to re-enable the strict 12+ char / complexity / weak-pattern policy in the future.
+// Keep as `false` to only enforce a minimal 8-character length.
+export const STRICT_PASSWORD_POLICY = false;
+export const MIN_PASSWORD_LENGTH = 8;
+
 const LOWER = 'abcdefghijkmnpqrstuvwxyz';
 const UPPER = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
 const DIGITS = '23456789';
@@ -59,8 +64,13 @@ export function generateStrongPassword(length = 18): string {
 export function getPasswordPolicyError(password: string, language: PasswordPolicyLanguage): string | null {
   const isRTL = language === 'ar';
   const value = password.trim();
-  if (value.length < 12) {
-    return isRTL ? 'كلمة المرور يجب أن تكون 12 خانة على الأقل' : 'Password must be at least 12 characters';
+  if (value.length < MIN_PASSWORD_LENGTH) {
+    return isRTL
+      ? `كلمة المرور يجب أن تكون ${MIN_PASSWORD_LENGTH} خانات على الأقل`
+      : `Password must be at least ${MIN_PASSWORD_LENGTH} characters`;
+  }
+  if (!STRICT_PASSWORD_POLICY) {
+    return null;
   }
   if (!/[a-z]/.test(value) || !/[A-Z]/.test(value) || !/[0-9]/.test(value) || !/[^A-Za-z0-9]/.test(value)) {
     return isRTL
