@@ -143,6 +143,19 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    const { error: forceChangeError } = await supabaseAdmin
+      .from("profiles")
+      .update({ force_password_change: true })
+      .eq("user_id", userId);
+
+    if (forceChangeError) {
+      console.error("Error marking password change as required:", forceChangeError);
+      return new Response(
+        JSON.stringify({ error: forceChangeError.message }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Send password reset email if Resend is configured
     let emailSent = false;
     const shouldSendEmail = !customPassword; // Only send email for auto-generated passwords
