@@ -175,12 +175,25 @@ export function useResendInvitation() {
 export function useResetPassword() {
   return useMutation({
     mutationFn: async ({ userId, email, customPassword }: { userId: string; email: string; customPassword?: string }) => {
-      const response = await supabase.functions.invoke('reset-user-password', {
-        body: { userId, email, customPassword },
+      // Use direct fetch to avoid supabase-js logging non-2xx responses to the
+      // runtime error overlay, and to surface the real server error message.
+      const { data: { session } } = await supabase.auth.getSession();
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/reset-user-password`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          Authorization: `Bearer ${session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ userId, email, customPassword }),
       });
-
-      if (response.error) throw response.error;
-      return response.data;
+      let body: any = null;
+      try { body = await res.json(); } catch { /* ignore */ }
+      if (!res.ok) {
+        throw new Error(body?.error || `Request failed (${res.status})`);
+      }
+      return body;
     },
   });
 }
