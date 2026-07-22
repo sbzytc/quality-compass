@@ -166,6 +166,8 @@ export default function UsersPage() {
     role: 'assessor' as AppRole,
     forcePasswordChange: true,
     branchId: '',
+    phone: '',
+    jobTitle: '',
   });
 
   const filteredUsers = (users || []).filter((user) => {
@@ -226,6 +228,8 @@ export default function UsersPage() {
         forcePasswordChange: createForm.forcePasswordChange,
         branchId: (createForm.role === 'branch_manager' || createForm.role === 'branch_employee') ? createForm.branchId : undefined,
         companyId: currentCompany?.id,
+        phone: createForm.phone || undefined,
+        jobTitle: createForm.jobTitle || undefined,
       });
       toast.success(
         language === 'ar'
@@ -234,7 +238,7 @@ export default function UsersPage() {
       );
       setIsAddUserDialogOpen(false);
       setAddUserMode('choose');
-      setCreateForm({ email: '', fullName: '', password: '', confirmPassword: '', role: 'assessor', forcePasswordChange: true, branchId: '' });
+      setCreateForm({ email: '', fullName: '', password: '', confirmPassword: '', role: 'assessor', forcePasswordChange: true, branchId: '', phone: '', jobTitle: '' });
     } catch (error: any) {
       if (error?.code === 'email_exists' || /already.*registered|مسجّل/i.test(error?.message || '')) {
         const companies = error?.companies || [];
