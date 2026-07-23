@@ -23,6 +23,8 @@ import { useUsers } from '@/hooks/useUsers';
 
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useGoBack } from '@/hooks/useGoBack';
+import { useBranchScope } from '@/contexts/BranchScopeContext';
+import { BranchScopeSwitcher } from '@/components/BranchScopeSwitcher';
 import { format, differenceInDays } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -65,6 +67,7 @@ export default function FindingsPage() {
   const [isManagerReview, setIsManagerReview] = useState(false);
 
   const { user, roles } = useAuth();
+  const { selectedBranchId } = useBranchScope();
   const statusFilter = activeTab !== 'all' ? activeTab : undefined;
   const { data: findings, isLoading: findingsLoading } = useCriticalFindings(
     statusFilter ? { status: statusFilter } : undefined
@@ -101,8 +104,11 @@ export default function FindingsPage() {
   // Group findings by branch
   const branchGroups = useMemo(() => {
     if (!findings) return [];
+    const scoped = selectedBranchId
+      ? findings.filter(f => f.branchId === selectedBranchId)
+      : findings;
     const groups = new Map<string, { branchId: string; branchName: string; findings: Finding[]; earliestDate: string }>();
-    findings.forEach(f => {
+    scoped.forEach(f => {
       const name = isAr ? (f.branchNameAr || f.branchName) : f.branchName;
       if (!groups.has(f.branchId)) {
         groups.set(f.branchId, { branchId: f.branchId, branchName: name, findings: [], earliestDate: f.evaluationDate || f.createdAt });
@@ -115,7 +121,7 @@ export default function FindingsPage() {
       }
     });
     return Array.from(groups.values()).sort((a, b) => b.findings.length - a.findings.length);
-  }, [findings, isAr]);
+  }, [findings, isAr, selectedBranchId]);
 
   const toggleBranch = (branchId: string) => {
     setExpandedBranches(prev => {
@@ -395,6 +401,7 @@ export default function FindingsPage() {
             {isAr ? 'معايير التقييم التي حصلت على درجات منخفضة (0-3 من 5) وتحتاج إلى إجراءات تصحيحية' : 'Evaluation criteria that scored low (0-3 out of 5) and need corrective action'}
           </p>
         </div>
+        <BranchScopeSwitcher />
       </div>
 
       {/* KPI Cards */}
