@@ -68,6 +68,7 @@ import OAuthConsent from "@/pages/OAuthConsent";
 import SandboxDiffPage from "@/pages/SandboxDiffPage";
 import CompanyThemeTab from "@/pages/super-admin/tabs/CompanyThemeTab";
 import { CompanyThemeProvider } from "@/contexts/CompanyThemeProvider";
+import { BranchScopeProvider } from "@/contexts/BranchScopeContext";
 
 const queryClient = new QueryClient();
 
@@ -344,9 +345,11 @@ const App = () => (
           <BrowserRouter>
             <CurrentCompanyProvider>
               <CompanyThemeProvider>
-                <AIAssistantProvider>
-                  <AppRoutes />
-                </AIAssistantProvider>
+                <BranchScopeProvider>
+                  <AIAssistantProvider>
+                    <AppRoutes />
+                  </AIAssistantProvider>
+                </BranchScopeProvider>
               </CompanyThemeProvider>
             </CurrentCompanyProvider>
           </BrowserRouter>
