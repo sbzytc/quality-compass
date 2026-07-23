@@ -2,14 +2,12 @@ import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { useBranches } from '@/hooks/useBranches';
-import { useAccessibleBranchIds } from '@/hooks/useAccessibleBranchIds';
+import { useBranchScope } from '@/contexts/BranchScopeContext';
+import { BranchScopeSwitcher } from '@/components/BranchScopeSwitcher';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TrendingUp, TrendingDown, ChevronDown, ChevronRight, CheckCircle2, AlertCircle, BarChart3, Building2 } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks, subMonths } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -22,29 +20,12 @@ type PeriodTab = 'weekly' | 'monthly' | 'yearly';
 export default function BranchPerformanceReport() {
   const { language } = useLanguage();
   const isAr = language === 'ar';
-  const { profile, isAdmin, isExecutive } = useAuth();
-  const { data: branches } = useBranches();
-  const { branchIds: accessibleBranchIds } = useAccessibleBranchIds();
-  const hasMultipleAccessible = (accessibleBranchIds?.length ?? 0) > 1;
-  const canSelectBranch = isAdmin || isExecutive || hasMultipleAccessible;
-  const selectableBranches = (branches ?? []).filter(b => {
-    if (!b.isActive) return false;
-    if (isAdmin || isExecutive) return true;
-    return accessibleBranchIds ? accessibleBranchIds.includes(b.id) : true;
-  });
-  
-  const [selectedBranchId, setSelectedBranchId] = useState<string>('');
+  const { selectedBranchId, isEmpty } = useBranchScope();
   const [activeTab, setActiveTab] = useState<PeriodTab>('monthly');
   const [expandedPeriod, setExpandedPeriod] = useState<number | null>(0);
   const dateLocale = isAr ? { locale: ar } : {};
 
-  // Determine the effective branch ID
-  const branchId = canSelectBranch
-    ? (selectedBranchId || (!isAdmin && !isExecutive ? profile?.branch_id ?? '' : ''))
-    : profile?.branch_id;
-
-  // Auto-select first branch for admin/exec if none selected
-  const effectiveBranchId = branchId || '';
+  const effectiveBranchId = selectedBranchId || '';
 
   // Fetch branch info
   const { data: branch } = useQuery({
@@ -176,38 +157,8 @@ export default function BranchPerformanceReport() {
 
   const branchName = isAr ? (branch?.name_ar || branch?.name) : branch?.name;
 
-  // Show branch selector prompt for admin/exec with no branch selected
-  if (canSelectBranch && !effectiveBranchId) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">{isAr ? 'تقرير أداء الفرع' : 'Branch Performance Report'}</h1>
-          <p className="text-muted-foreground mt-1">{isAr ? 'اختر فرعاً لعرض تقرير الأداء' : 'Select a branch to view the performance report'}</p>
-        </div>
-        <Card className="p-8">
-          <div className="flex flex-col items-center gap-4">
-            <Building2 className="w-12 h-12 text-muted-foreground/50" />
-            <h3 className="text-lg font-medium">{isAr ? 'اختر الفرع' : 'Select Branch'}</h3>
-            <Select value={selectedBranchId} onValueChange={setSelectedBranchId}>
-              <SelectTrigger className="w-[300px]">
-                <SelectValue placeholder={isAr ? 'اختر فرعاً...' : 'Choose a branch...'} />
-              </SelectTrigger>
-              <SelectContent>
-                {selectableBranches.map(b => (
-                  <SelectItem key={b.id} value={b.id}>
-                    {isAr ? (b.nameAr || b.name) : b.name} • {b.city || 'N/A'}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </Card>
-      </div>
-    );
-  }
-
-  // Show message for branch managers with no branch assigned
-  if (!canSelectBranch && !effectiveBranchId) {
+  // No accessible branches at all
+  if (isEmpty || !effectiveBranchId) {
     return (
       <div className="space-y-6">
         <div>
@@ -229,20 +180,7 @@ export default function BranchPerformanceReport() {
           <h1 className="text-3xl font-bold text-foreground">{isAr ? 'تقرير أداء الفرع' : 'Branch Performance Report'}</h1>
           <p className="text-muted-foreground mt-1">{branchName || '...'} — {isAr ? 'مقارنة الأداء بين الفترات' : 'Period-to-period performance comparison'}</p>
         </div>
-        {canSelectBranch && (
-          <Select value={branchId || ''} onValueChange={setSelectedBranchId}>
-            <SelectTrigger className="w-[250px]">
-              <SelectValue placeholder={isAr ? 'تغيير الفرع...' : 'Change branch...'} />
-            </SelectTrigger>
-            <SelectContent>
-              {selectableBranches.map(b => (
-                <SelectItem key={b.id} value={b.id}>
-                  {isAr ? (b.nameAr || b.name) : b.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
+        <BranchScopeSwitcher />
       </div>
 
       <Tabs value={activeTab} onValueChange={v => { setActiveTab(v as PeriodTab); setExpandedPeriod(0); }}>
