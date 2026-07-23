@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useCurrentCompany } from '@/contexts/CurrentCompanyContext';
 
 export type TicketStatus = 'open' | 'in_progress' | 'resolved' | 'pending_closure' | 'closed';
 export type TicketPriority = 'low' | 'medium' | 'high' | 'critical';
@@ -28,9 +29,12 @@ export interface SupportTicket {
 
 export const useSupportTickets = () => {
   const queryClient = useQueryClient();
+  const { currentCompany } = useCurrentCompany();
+  const companyId = currentCompany?.id ?? null;
 
   const { data: tickets, isLoading } = useQuery({
-    queryKey: ['support-tickets'],
+    queryKey: ['support-tickets', companyId],
+    enabled: !!companyId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('support_tickets')
@@ -40,6 +44,7 @@ export const useSupportTickets = () => {
           assignee:profiles!support_tickets_assigned_to_fkey(full_name, email),
           resolver:profiles!support_tickets_resolved_by_fkey(full_name, email)
         `)
+        .eq('company_id', companyId as string)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -52,14 +57,14 @@ export const useSupportTickets = () => {
       const { data: { user } } = await supabase.auth.getUser();
       const { data, error } = await supabase
         .from('support_tickets')
-        .insert({ ...newTicket, created_by: user?.id } as any)
+        .insert({ ...newTicket, created_by: user?.id, company_id: companyId } as any)
         .select()
         .single();
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['support-tickets'] });
+      queryClient.invalidateQueries({ queryKey: ['support-tickets', companyId] });
     },
   });
 
@@ -84,7 +89,7 @@ export const useSupportTickets = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['support-tickets'] });
+      queryClient.invalidateQueries({ queryKey: ['support-tickets', companyId] });
     },
   });
 
