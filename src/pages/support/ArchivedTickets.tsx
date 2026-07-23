@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Archive, Search, Clock } from 'lucide-react';
 import { TicketDetailsDialog } from '@/components/TicketDetailsDialog';
 import { useAuth } from '@/contexts/AuthContext';
+import { useScopedBranchId } from '@/contexts/BranchScopeContext';
+import { BranchScopeSwitcher } from '@/components/BranchScopeSwitcher';
 import { formatDistanceToNow } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 
@@ -14,6 +16,7 @@ export default function ArchivedTickets() {
   const { t, direction } = useLanguage();
   const { tickets, isLoading } = useSupportTickets();
   const { isSupportAgent, isAdmin } = useAuth();
+  const scopedBranchId = useScopedBranchId();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
 
@@ -24,7 +27,8 @@ export default function ArchivedTickets() {
     const isClosed = ticket.status === 'closed';
     const closedDate = ticket.resolved_at || ticket.updated_at;
     const isOldEnough = new Date(closedDate) < oneWeekAgo;
-    return isClosed && isOldEnough;
+    const inBranch = !scopedBranchId || ticket.branch_id === scopedBranchId;
+    return isClosed && isOldEnough && inBranch;
   }) || [];
 
   // Apply search filter
@@ -60,7 +64,9 @@ export default function ArchivedTickets() {
             </p>
           </div>
         </div>
-        <div className="relative w-full sm:w-64">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <BranchScopeSwitcher />
+          <div className="relative w-full sm:w-64">
           <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder={direction === 'rtl' ? 'بحث...' : 'Search...'}
@@ -68,6 +74,7 @@ export default function ArchivedTickets() {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="ps-9"
           />
+          </div>
         </div>
       </div>
 
