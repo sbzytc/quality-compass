@@ -11,6 +11,8 @@ import { useGoBack } from '@/hooks/useGoBack';
 import { useCriticalFindings } from '@/hooks/useFindings';
 import { useBranches } from '@/hooks/useBranches';
 import { useAccessibleBranchIds } from '@/hooks/useAccessibleBranchIds';
+import { useScopedBranchId } from '@/contexts/BranchScopeContext';
+import { BranchScopeSwitcher } from '@/components/BranchScopeSwitcher';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 export default function RecurringProblemsPage() {
@@ -21,13 +23,8 @@ export default function RecurringProblemsPage() {
   const { profile, isAdmin, isExecutive } = useAuth();
   const { data: branches } = useBranches();
   const { branchIds: accessibleBranchIds } = useAccessibleBranchIds();
-
-  // For branch managers with only one accessible branch, filter client-side.
-  // Supervisors of multiple branches: rely on RLS to scope to accessible branches.
-  const branchId = (!isAdmin && !isExecutive && accessibleBranchIds && accessibleBranchIds.length === 1)
-    ? accessibleBranchIds[0]
-    : undefined;
-  const { data: findings, isLoading } = useCriticalFindings({ branchId });
+  const scopedBranchId = useScopedBranchId();
+  const { data: findings, isLoading } = useCriticalFindings({ branchId: scopedBranchId ?? undefined });
 
   // Group findings by criterion to find recurring problems
   const recurringProblems = useMemo(() => {
@@ -102,7 +99,7 @@ export default function RecurringProblemsPage() {
         <Button variant="ghost" size="icon" onClick={goBack}>
           <ArrowLeft className="w-5 h-5" />
         </Button>
-        <div>
+        <div className="flex-1">
           <h1 className="text-2xl font-bold text-foreground">
             {isAr ? 'المشاكل المتكررة' : 'Recurring Problems'}
           </h1>
@@ -110,6 +107,7 @@ export default function RecurringProblemsPage() {
             {isAr ? 'المعايير التي تتكرر فيها الملاحظات أكثر من مرة' : 'Criteria with findings that occur more than once'}
           </p>
         </div>
+        <BranchScopeSwitcher />
       </div>
 
       {isLoading ? (
