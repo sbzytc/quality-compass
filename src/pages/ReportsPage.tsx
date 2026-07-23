@@ -5,6 +5,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBranches } from '@/hooks/useBranches';
 import { useAccessibleBranchIds } from '@/hooks/useAccessibleBranchIds';
+import { useScopedBranchId } from '@/contexts/BranchScopeContext';
+import { BranchScopeSwitcher } from '@/components/BranchScopeSwitcher';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -34,6 +36,7 @@ export default function ReportsPage() {
   const { profile, isAdmin, isExecutive, isBranchManager } = useAuth();
   const { branchIds: accessibleBranchIds } = useAccessibleBranchIds();
   const { data: branches } = useBranches();
+  const scopedBranchId = useScopedBranchId();
   const [activeTab, setActiveTab] = useState<PeriodTab>('monthly');
   const [periodsToShow, setPeriodsToShow] = useState(4);
   const dateLocale = isAr ? { locale: ar } : {};
@@ -83,6 +86,7 @@ export default function ReportsPage() {
 
     const result: PeriodData[] = (branches || []).filter(b => {
       if (!b.isActive) return false;
+      if (scopedBranchId) return b.id === scopedBranchId;
       // Branch managers can only see their own branch
       if (isBranchManager && !isAdmin && !isExecutive && accessibleBranchIds) {
         return accessibleBranchIds.includes(b.id);
@@ -113,7 +117,7 @@ export default function ReportsPage() {
     });
 
     return result;
-  }, [branches, evaluations, activeTab, periodsToShow, isAr, isBranchManager, isAdmin, isExecutive, accessibleBranchIds]);
+  }, [branches, evaluations, activeTab, periodsToShow, isAr, isBranchManager, isAdmin, isExecutive, accessibleBranchIds, scopedBranchId]);
 
   const getTrend = (periods: { score: number | null }[]) => {
     const current = periods[0]?.score;
@@ -153,6 +157,7 @@ export default function ReportsPage() {
           <p className="text-muted-foreground mt-1">{isAr ? 'مقارنة أداء الفروع عبر الفترات' : 'Compare branch performance across periods'}</p>
         </div>
         <div className="flex items-center gap-2">
+          <BranchScopeSwitcher />
           <Button variant="outline" size="sm" onClick={handleExportReport}>
             <Download className="w-4 h-4 me-1" />
             {isAr ? 'تصدير Excel' : 'Export Excel'}

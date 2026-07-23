@@ -16,6 +16,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { supabase } from '@/integrations/supabase/client';
 import { TicketDetailsDialog } from '@/components/TicketDetailsDialog';
 import { SupportTicket } from '@/hooks/useSupportTickets';
+import { useScopedBranchId } from '@/contexts/BranchScopeContext';
+import { BranchScopeSwitcher } from '@/components/BranchScopeSwitcher';
 
 // Define all screens/pages in the system with their allowed roles
 interface ScreenOption {
@@ -87,6 +89,7 @@ export default function MyTickets() {
   const { t, direction } = useLanguage();
   const { roles, isSupportAgent } = useAuth();
   const { tickets, isLoading, createTicket } = useSupportTickets();
+  const scopedBranchId = useScopedBranchId();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
   const [title, setTitle] = useState('');
@@ -104,6 +107,12 @@ export default function MyTickets() {
       screen.allowedRoles.some(role => roles.includes(role as any))
     );
   }, [roles]);
+
+  const visibleTickets = useMemo(() => {
+    if (!tickets) return [];
+    if (!scopedBranchId) return tickets;
+    return tickets.filter(t => t.branch_id === scopedBranchId);
+  }, [tickets, scopedBranchId]);
 
   const handleTeamToggle = (teamId: string) => {
     setSelectedTeams(prev => 
@@ -161,7 +170,8 @@ export default function MyTickets() {
         description: finalDescription, 
         priority: priority as any,
         screen_name: finalScreenName,
-        attachments
+        attachments,
+        branch_id: scopedBranchId ?? undefined,
       });
       toast.success(direction === 'rtl' ? 'تم إنشاء التذكرة بنجاح' : 'Ticket created successfully');
       setIsOpen(false);
@@ -201,7 +211,9 @@ export default function MyTickets() {
           <h1 className="text-2xl font-bold">{t('nav.support.myTickets')}</h1>
           <p className="text-muted-foreground mt-1 text-sm">{direction === 'rtl' ? 'تتبع طلبات الدعم الفني الخاصة بك وارفع بلاغات عن المشاكل' : 'Track your support requests and report issues'}</p>
         </div>
-        <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) resetForm(); }}>
+        <div className="flex items-center gap-3">
+          <BranchScopeSwitcher />
+          <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) resetForm(); }}>
           <DialogTrigger asChild>
             <Button><PlusCircle className="w-4 h-4 mr-2" /> {direction === 'rtl' ? 'تذكرة جديدة' : 'New Ticket'}</Button>
           </DialogTrigger>
@@ -311,11 +323,12 @@ export default function MyTickets() {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {isLoading ? (
         <div className="flex justify-center p-8"><p className="text-muted-foreground">{t('common.loading')}</p></div>
-      ) : tickets?.length === 0 ? (
+      ) : visibleTickets.length === 0 ? (
         <div className="text-center p-12 glass-card border-dashed">
           <Info className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
           <h3 className="text-lg font-medium">{direction === 'rtl' ? 'لا توجد تذاكر حالياً' : 'No tickets found'}</h3>
@@ -323,7 +336,7 @@ export default function MyTickets() {
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {tickets?.map(ticket => (
+          {visibleTickets.map(ticket => (
             <Card key={ticket.id} className="flex flex-col cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setSelectedTicket(ticket)}>
               <CardHeader className="pb-2">
                 <div className="flex justify-between items-start">

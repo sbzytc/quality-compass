@@ -4,6 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCompanyScope } from '@/hooks/useCompanyScope';
 import { useAccessibleBranchIds } from '@/hooks/useAccessibleBranchIds';
+import { useScopedBranchId } from '@/contexts/BranchScopeContext';
+import { BranchScopeSwitcher } from '@/components/BranchScopeSwitcher';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -44,6 +46,7 @@ export default function LicensesExpiryPage() {
   const { profile, isBranchManager, isAdmin, isExecutive } = useAuth();
   const { companyId, scopeKey } = useCompanyScope();
   const { branchIds: accessibleBranchIds } = useAccessibleBranchIds();
+  const scopedBranchId = useScopedBranchId();
 
   const { data: branches = [], isLoading } = useQuery({
       queryKey: ['branches-expiry', scopeKey, (accessibleBranchIds || []).join(',')],
@@ -66,7 +69,10 @@ export default function LicensesExpiryPage() {
 
   const items: Item[] = useMemo(() => {
     const out: Item[] = [];
-    for (const br of branches as any[]) {
+    const filtered = scopedBranchId
+      ? (branches as any[]).filter(b => b.id === scopedBranchId)
+      : (branches as any[]);
+    for (const br of filtered) {
       const docs = br.documents || {};
       for (const [key, meta] of Object.entries(DOC_META)) {
         const d = docs[key];
@@ -88,7 +94,7 @@ export default function LicensesExpiryPage() {
       }
     }
     return out.sort((a, b) => a.daysLeft - b.daysLeft);
-  }, [branches, isRTL]);
+  }, [branches, isRTL, scopedBranchId]);
 
   const expired = items.filter(i => i.daysLeft < 0);
   const soon = items.filter(i => i.daysLeft >= 0 && i.daysLeft <= 30);
@@ -103,14 +109,17 @@ export default function LicensesExpiryPage() {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto p-4" dir={isRTL ? 'rtl' : 'ltr'}>
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <CalendarClock className="w-6 h-6 text-primary" />
-          {isRTL ? 'الرخص و العقود - متابعة انتهاء الصلاحية' : 'Licenses & Contracts - Expiry Tracker'}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {isRTL ? 'تنبيه تلقائي قبل انتهاء الرخصة أو العقد بشهر' : 'Automatic warning one month before any license or contract expires'}
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <CalendarClock className="w-6 h-6 text-primary" />
+            {isRTL ? 'الرخص و العقود - متابعة انتهاء الصلاحية' : 'Licenses & Contracts - Expiry Tracker'}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {isRTL ? 'تنبيه تلقائي قبل انتهاء الرخصة أو العقد بشهر' : 'Automatic warning one month before any license or contract expires'}
+          </p>
+        </div>
+        <BranchScopeSwitcher />
       </div>
 
       {(expired.length > 0 || soon.length > 0) && (

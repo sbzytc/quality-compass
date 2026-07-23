@@ -22,6 +22,8 @@ import {
   Calendar
 } from 'lucide-react';
 import { TicketDetailsDialog } from '@/components/TicketDetailsDialog';
+import { useScopedBranchId } from '@/contexts/BranchScopeContext';
+import { BranchScopeSwitcher } from '@/components/BranchScopeSwitcher';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatDistanceToNow, differenceInHours, differenceInDays } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
@@ -37,7 +39,13 @@ const KANBAN_COLUMNS: { status: TicketStatus; labelAr: string; labelEn: string; 
 
 export default function SupportDashboard() {
   const { t, direction } = useLanguage();
-  const { tickets, isLoading, updateTicket } = useSupportTickets();
+  const { tickets: allTickets, isLoading, updateTicket } = useSupportTickets();
+  const scopedBranchId = useScopedBranchId();
+  const tickets = useMemo(() => {
+    if (!allTickets) return allTickets;
+    if (!scopedBranchId) return allTickets;
+    return allTickets.filter(t => t.branch_id === scopedBranchId);
+  }, [allTickets, scopedBranchId]);
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
 
   // Calculate statistics
@@ -156,6 +164,7 @@ export default function SupportDashboard() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <BranchScopeSwitcher />
           <div className="flex items-center gap-2 px-3 py-1.5 bg-score-excellent/10 text-score-excellent rounded-full">
             <Activity className="w-4 h-4" />
             <span className="text-sm font-medium">{direction === 'rtl' ? 'النظام مستقر' : 'System Stable'}</span>
