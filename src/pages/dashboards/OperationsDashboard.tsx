@@ -20,6 +20,8 @@ import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBranchScope } from '@/contexts/BranchScopeContext';
+import { BranchScopeSwitcher } from '@/components/BranchScopeSwitcher';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getScoreLevel } from '@/types';
@@ -31,9 +33,10 @@ import { toast } from 'sonner';
 export default function OperationsDashboard() {
   const { t, direction, language } = useLanguage();
   const { profile, isAdmin, isExecutive } = useAuth();
+  const { selectedBranchId } = useBranchScope();
   const isAr = language === 'ar';
   const canSelectBranch = isAdmin || isExecutive;
-  const branchId = profile?.branch_id;
+  const branchId = selectedBranchId ?? profile?.branch_id ?? null;
 
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -229,10 +232,13 @@ export default function OperationsDashboard() {
           <h1 className="text-3xl font-bold text-foreground">{t('dashboard.operations.title')}</h1>
           <p className="text-muted-foreground mt-1">{t('dashboard.operations.subtitle')}</p>
         </div>
-        <Button onClick={() => setAddDialogOpen(true)} className="gap-2">
-          <Plus className="w-4 h-4" />
-          {isAr ? 'إضافة مهمة' : 'Add Task'}
-        </Button>
+        <div className="flex items-center gap-3">
+          <BranchScopeSwitcher />
+          <Button onClick={() => setAddDialogOpen(true)} className="gap-2">
+            <Plus className="w-4 h-4" />
+            {isAr ? 'إضافة مهمة' : 'Add Task'}
+          </Button>
+        </div>
       </div>
 
       {/* Stats KPI Cards */}
