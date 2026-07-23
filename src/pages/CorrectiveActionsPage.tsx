@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useGoBack } from '@/hooks/useGoBack';
+import { useBranchScope } from '@/contexts/BranchScopeContext';
+import { BranchScopeSwitcher } from '@/components/BranchScopeSwitcher';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useUsers } from '@/hooks/useUsers';
@@ -122,13 +124,17 @@ export default function CorrectiveActionsPage() {
   const navigate = useNavigate();
   const goBack = useGoBack('/dashboard/ceo');
   const { language, direction } = useLanguage();
+  const { selectedBranchId } = useBranchScope();
   const [activeTab, setActiveTab] = useState<string>('all');
   const [selectedAction, setSelectedAction] = useState<CorrectiveActionRow | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
 
-  const { data: actions, isLoading: actionsLoading } = useAllCorrectiveActions(
+  const { data: rawActions, isLoading: actionsLoading } = useAllCorrectiveActions(
     activeTab !== 'all' ? activeTab : undefined
   );
+  const actions = selectedBranchId
+    ? (rawActions || []).filter(a => a.non_conformities?.branch_id === selectedBranchId)
+    : rawActions;
   const { data: stats, isLoading: statsLoading } = useCorrectiveActionStats();
   const { data: users } = useUsers();
 
@@ -244,7 +250,7 @@ export default function CorrectiveActionsPage() {
         <Button variant="ghost" size="icon" onClick={goBack} className="shrink-0">
           <ArrowLeft className="w-5 h-5" />
         </Button>
-        <div>
+        <div className="flex-1">
           <h1 className="text-3xl font-bold text-foreground">
             {language === 'ar' ? 'الإجراءات التصحيحية' : 'Corrective Actions'}
           </h1>
@@ -252,6 +258,7 @@ export default function CorrectiveActionsPage() {
             {language === 'ar' ? 'متابعة وإدارة جميع الإجراءات التصحيحية' : 'Track and manage all corrective actions'}
           </p>
         </div>
+        <BranchScopeSwitcher />
       </div>
 
       {/* Stats Summary */}
