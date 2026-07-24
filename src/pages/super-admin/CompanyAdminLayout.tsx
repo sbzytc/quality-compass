@@ -41,16 +41,16 @@ export default function CompanyAdminLayout() {
 
   return (
     <div className="min-h-screen flex sa-warm-bg" dir={direction}>
-      <aside className="w-64 m-4 rounded-3xl sa-card p-4 flex flex-col gap-2 self-start sticky top-4 max-h-[calc(100vh-2rem)]">
-        <div className="mb-2">
+      <aside className="w-64 m-4 rounded-3xl sa-card sa-card-hover p-4 flex flex-col gap-2 self-start sticky top-4 max-h-[calc(100vh-2rem)]">
+        <div className="relative z-10 mb-2">
           <SuperAdminHeader />
         </div>
-        <Button variant="ghost" size="sm" onClick={() => navigate(sectorRoute)} className="justify-start gap-2 mb-2 sa-ink hover:bg-white/70">
+        <Button variant="ghost" size="sm" onClick={() => navigate(sectorRoute)} className="relative z-10 justify-start gap-2 mb-2 sa-ink hover:bg-white/70">
           <ArrowLeft className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
           {isRTL ? 'قائمة الشركات' : 'Companies list'}
         </Button>
 
-        <div className="px-2 py-3 mb-2 border-b border-[#e8dbc9]">
+        <div className="relative z-10 px-2 py-3 mb-2 border-b border-[#e8dbc9]/70">
           <div className="flex items-center gap-2 mb-1">
             <Building2 className="w-4 h-4 sa-accent" />
             <div className="text-sm font-bold sa-ink truncate">
@@ -83,10 +83,10 @@ export default function CompanyAdminLayout() {
             to={it.to}
             end={it.end}
             className={({ isActive }) => cn(
-              'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all',
+              'relative z-10 flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all overflow-hidden',
               isActive
-                ? 'bg-[#1a1410] text-white font-medium shadow-[0_8px_20px_-10px_rgba(26,20,16,0.5)]'
-                : 'sa-ink-soft hover:bg-white/70 hover:sa-ink'
+                ? 'bg-[#1a1410]/90 text-white font-medium shadow-[0_8px_20px_-10px_rgba(26,20,16,0.5)] border border-white/10'
+                : 'sa-ink-soft hover:bg-white/60 hover:sa-ink'
             )}
           >
             <it.icon className="w-4 h-4" />
