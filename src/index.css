@@ -1011,3 +1011,60 @@
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   background-color: hsl(var(--popover) / 0.85) !important;
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Super Admin: auto-apply glass + rounded panels to any shadcn
+   Card rendered inside the warm workspace. Keeps colors intact,
+   only upgrades the surface material so every tab matches the
+   Overview aesthetic without touching each component.
+   ───────────────────────────────────────────────────────────── */
+.sa-warm-bg main .bg-card {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.60) 0%,
+    rgba(255, 255, 255, 0.32) 60%,
+    rgba(255, 240, 225, 0.24) 100%
+  ) !important;
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.55) !important;
+  border-radius: 24px !important;
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.9) inset,
+    0 -1px 0 0 rgba(194, 107, 58, 0.08) inset,
+    0 20px 40px -20px rgba(120, 70, 40, 0.28),
+    0 8px 24px -12px rgba(120, 70, 40, 0.18) !important;
+  color: #1a1410;
+}
+.sa-warm-bg main .bg-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.28) 45%,
+    rgba(255, 255, 255, 0.42) 50%,
+    rgba(255, 255, 255, 0.28) 55%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: translateX(-100%);
+  transition: transform 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  pointer-events: none;
+  z-index: 0;
+}
+.sa-warm-bg main .bg-card:hover::after {
+  transform: translateX(100%);
+}
+.sa-warm-bg main .bg-card > * {
+  position: relative;
+  z-index: 1;
+}
+/* Popovers/dropdowns/dialogs inside super admin get frosted glass too */
+.sa-warm-bg .bg-popover,
+[data-radix-popper-content-wrapper]:has(.sa-warm-bg) > * {
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+}
