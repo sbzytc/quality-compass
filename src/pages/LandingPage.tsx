@@ -235,7 +235,10 @@ export default function LandingPage() {
 
       {/* About */}
       <section id="about" className="py-20 lg:py-28">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className="max-w-5xl mx-auto px-4 sm:px-6 text-center">
           <div className="text-xs font-semibold tracking-wider uppercase text-primary mb-3">
             {isRTL ? 'عن رصدة' : 'About'}
           </div>
@@ -247,7 +250,7 @@ export default function LandingPage() {
               ? 'مع تعدد الفروع، قد تختلف طرق التقييم والمتابعة، وتتوزع الملاحظات بين عدة جهات وأدوات. صُممت رصدة لتوحيد هذه العمليات ضمن منصة واحدة تربط الفروع بالمعايير والملاحظات والإجراءات والمسؤوليات — لترفع مستوى المواءمة، وتتابع جودة التنفيذ، وتعالج الفجوات ضمن مسار واضح وقابل للقياس.'
               : 'When branches multiply, methods diverge and findings scatter. Rasdah unifies those processes on one platform — linking branches to standards, findings, actions, and owners — so alignment rises, quality is tracked, and gaps close on a clear, measurable path.'}
           </p>
-        </div>
+        </motion.div>
       </section>
 
       {/* Features */}
@@ -312,8 +315,11 @@ export default function LandingPage() {
 
       {/* Vision 2030 */}
       <section id="vision" className="py-20 lg:py-28">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="rounded-3xl p-10 lg:p-16 bg-gradient-to-br from-primary to-accent text-primary-foreground relative overflow-hidden">
+        <motion.div
+          initial={{ opacity: 0, y: 32 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="rounded-3xl p-10 lg:p-16 bg-gradient-to-br from-primary to-accent text-primary-foreground relative overflow-hidden shadow-xl hover:shadow-2xl transition-shadow duration-500">
             <div className="absolute -top-20 -end-20 w-80 h-80 rounded-full bg-white/10 blur-3xl" />
             <div className="absolute -bottom-20 -start-20 w-80 h-80 rounded-full bg-white/10 blur-3xl" />
             <div className="relative max-w-3xl">
@@ -333,13 +339,16 @@ export default function LandingPage() {
               </p>
             </div>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* Value + Industries */}
       <section className="py-20 lg:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 grid lg:grid-cols-2 gap-10">
-          <div className="rounded-3xl p-8 lg:p-10 bg-white/70 backdrop-blur-xl border border-white/70 shadow-sm">
+          <motion.div
+            initial={{ opacity: 0, x: isRTL ? 24 : -24 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            className="rounded-3xl p-8 lg:p-10 bg-white/70 backdrop-blur-xl border border-white/70 shadow-sm hover:shadow-xl hover:-translate-y-1 hover:bg-white/85 transition-all duration-500 ease-out">
             <div className="text-xs font-semibold tracking-wider uppercase text-primary mb-3">
               {isRTL ? 'القيمة التي تقدمها رصدة' : 'The value Rasdah brings'}
             </div>
@@ -354,8 +363,11 @@ export default function LandingPage() {
                 </li>
               ))}
             </ul>
-          </div>
-          <div className="rounded-3xl p-8 lg:p-10 bg-white/70 backdrop-blur-xl border border-white/70 shadow-sm">
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: isRTL ? -24 : 24 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            className="rounded-3xl p-8 lg:p-10 bg-white/70 backdrop-blur-xl border border-white/70 shadow-sm hover:shadow-xl hover:-translate-y-1 hover:bg-white/85 transition-all duration-500 ease-out">
             <div className="text-xs font-semibold tracking-wider uppercase text-primary mb-3">
               {isRTL ? 'لمن صُممت رصدة' : 'Who Rasdah is for'}
             </div>
@@ -366,8 +378,8 @@ export default function LandingPage() {
               {industries.map((it, i) => {
                 const Icon = it.icon;
                 return (
-                  <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/60 border border-white/70">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                  <div key={i} className="group flex items-center gap-3 p-3 rounded-xl bg-white/60 border border-white/70 hover:bg-white hover:border-primary/40 hover:-translate-y-0.5 hover:shadow-md transition-all duration-300 ease-out cursor-default">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-110 transition-all duration-300 ease-out">
                       <Icon className="w-5 h-5" />
                     </div>
                     <span className="text-sm font-medium text-[color:var(--text-primary)]">{it.label}</span>
@@ -375,14 +387,17 @@ export default function LandingPage() {
                 );
               })}
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Contact */}
       <section id="contact" ref={contactRef} className="py-20 lg:py-28">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6">
-          <div className="rounded-3xl p-8 sm:p-12 bg-white/75 backdrop-blur-xl border border-white/70 shadow-xl">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className="max-w-4xl mx-auto px-4 sm:px-6">
+          <div className="rounded-3xl p-8 sm:p-12 bg-white/75 backdrop-blur-xl border border-white/70 shadow-xl hover:shadow-2xl transition-shadow duration-500">
             <div className="text-center mb-8">
               <div className="text-xs font-semibold tracking-wider uppercase text-primary mb-3">
                 {isRTL ? 'تواصل معنا' : 'Contact us'}
