@@ -125,7 +125,7 @@ export default function LoginPage() {
   return (
     <>
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-white">
-      <Card className="w-full max-w-md login-glass-card border-0 shadow-none">
+      <Card className="w-full max-w-md login-glass-card">
         <CardHeader className="text-center space-y-1 relative z-10">
           <div className="absolute top-2 end-2">
             <Button
