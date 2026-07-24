@@ -239,7 +239,7 @@ export default function CompanyAuditLogsTab() {
         })}
 
         {!isLoading && items.length === 0 && (
-          <div className="text-sm text-muted-foreground text-center py-8">
+          <div className="text-base text-muted-foreground text-center py-8">
             {isRTL ? 'لا توجد سجلات بعد.' : 'No logs yet.'}
           </div>
         )}
