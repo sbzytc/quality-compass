@@ -41,7 +41,7 @@ export default function CompanyAdminLayout() {
 
   return (
     <div className="min-h-screen flex sa-warm-bg" dir={direction}>
-      <aside className="w-64 m-4 rounded-3xl sa-card sa-card-hover p-4 flex flex-col gap-2 self-start sticky top-4 max-h-[calc(100vh-2rem)]">
+      <aside className="w-64 m-4 rounded-3xl p-4 flex flex-col gap-2 self-start sticky top-4 max-h-[calc(100vh-2rem)] bg-transparent">
         <div className="relative z-10 mb-2">
           <SuperAdminHeader />
         </div>
@@ -50,7 +50,7 @@ export default function CompanyAdminLayout() {
           {isRTL ? 'قائمة الشركات' : 'Companies list'}
         </Button>
 
-        <div className="relative z-10 px-2 py-3 mb-2 border-b border-[#e8dbc9]/70">
+        <div className="relative z-10 px-2 py-3 mb-2 border-b border-white/40">
           <div className="flex items-center gap-2 mb-1">
             <Building2 className="w-4 h-4 sa-accent" />
             <div className="text-sm font-bold sa-ink truncate">
@@ -85,8 +85,8 @@ export default function CompanyAdminLayout() {
             className={({ isActive }) => cn(
               'relative z-10 flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all overflow-hidden',
               isActive
-                ? 'bg-[#1a1410]/90 text-white font-medium shadow-[0_8px_20px_-10px_rgba(26,20,16,0.5)] border border-white/10'
-                : 'sa-ink-soft hover:bg-white/60 hover:sa-ink'
+                ? 'bg-white text-[#1a1410] font-semibold shadow-[0_10px_24px_-12px_rgba(26,20,16,0.35)]'
+                : 'sa-ink-soft hover:bg-white/50 hover:sa-ink'
             )}
           >
             <it.icon className="w-4 h-4" />
