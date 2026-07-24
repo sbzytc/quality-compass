@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Utensils, Stethoscope, CreditCard, ShieldCheck, ArrowRight, Loader2 } from 'lucide-react';
+import { Utensils, Stethoscope, CreditCard, ShieldCheck, ArrowRight, Loader2, Palette } from 'lucide-react';
 import { useCurrentCompany } from '@/contexts/CurrentCompanyContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -72,6 +72,17 @@ export default function SuperAdminLanding() {
       iconColor: 'text-slate-700',
       onClick: () => navigate('/super-admin/accounts'),
       badge: isRTL ? 'إدارة' : 'Management',
+    },
+    {
+      key: 'site-theme',
+      sector: 'admin' as const,
+      title: isRTL ? 'ثيم الموقع التعريفي' : 'Landing Site Theme',
+      desc: isRTL ? 'تحكم بألوان وهوية موقع رصدة التعريفي rasdah.com' : 'Control the colors and identity of the public rasdah.com site',
+      icon: Palette,
+      color: 'from-blue-500/20 to-cyan-500/20',
+      iconColor: 'text-blue-600',
+      onClick: () => navigate('/super-admin/site-theme'),
+      badge: isRTL ? 'الموقع العام' : 'Public site',
     },
   ];
 
