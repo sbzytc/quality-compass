@@ -1718,6 +1718,27 @@ export type Database = {
         }
         Relationships: []
       }
+      site_settings: {
+        Row: {
+          key: string
+          theme: Json
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          key: string
+          theme?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          key?: string
+          theme?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           billing_cycle: string
