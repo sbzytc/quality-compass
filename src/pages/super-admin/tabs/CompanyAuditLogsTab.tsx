@@ -160,7 +160,7 @@ export default function CompanyAuditLogsTab() {
           <Activity className="w-6 h-6 text-primary" />
           {isRTL ? 'سجلات التدقيق' : 'Audit Logs'}
         </h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-base text-muted-foreground">
           {isRTL ? 'آخر 200 حدث خاص بهذه الشركة' : 'Last 200 events scoped to this company'}
         </p>
       </div>
@@ -182,49 +182,49 @@ export default function CompanyAuditLogsTab() {
           const targetEmail: string | undefined = details.email;
 
           return (
-            <Card key={l.id} className="p-4">
-              <div className="flex items-start gap-3">
-                <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${meta.tone}`}>
-                  <Icon className="w-5 h-5" />
+            <Card key={l.id} className="p-5">
+              <div className="flex items-start gap-4">
+                <div className={`shrink-0 w-11 h-11 rounded-xl flex items-center justify-center ${meta.tone}`}>
+                  <Icon className="w-6 h-6" />
                 </div>
-                <div className="flex-1 min-w-0 space-y-2">
+                <div className="flex-1 min-w-0 space-y-2.5">
                   <div className="flex items-start justify-between gap-3 flex-wrap">
                     <div className="min-w-0">
-                      <div className="font-semibold text-foreground">
+                      <div className="text-lg font-semibold text-foreground">
                         {isRTL ? meta.title.ar : meta.title.en}
                       </div>
                       {targetEmail && (
-                        <div className="text-xs text-muted-foreground mt-0.5">
+                        <div className="text-base text-muted-foreground mt-1">
                           {isRTL ? 'المستخدم المعني: ' : 'Target: '}
                           <span className="font-medium text-foreground/80">{targetEmail}</span>
                         </div>
                       )}
                     </div>
-                    <div className="text-xs text-muted-foreground text-end whitespace-nowrap">
+                    <div className="text-base text-muted-foreground text-end whitespace-nowrap">
                       <div>{time.relative}</div>
-                      <div className="text-[11px] opacity-70">{time.absolute}</div>
+                      <div className="text-sm opacity-70">{time.absolute}</div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 text-xs">
-                    <Avatar className="w-6 h-6">
-                      <AvatarFallback className="text-[10px]">{getInitials(actorName)}</AvatarFallback>
+                  <div className="flex items-center gap-2 text-base">
+                    <Avatar className="w-7 h-7">
+                      <AvatarFallback className="text-xs">{getInitials(actorName)}</AvatarFallback>
                     </Avatar>
                     <span className="text-muted-foreground">{isRTL ? 'قام بالتعديل:' : 'By:'}</span>
                     <span className="font-medium text-foreground">{actorName}</span>
                   </div>
 
                   {changes && Object.keys(changes).length > 0 && (
-                    <div className="mt-2 rounded-lg border border-border/60 bg-muted/30 divide-y divide-border/60 overflow-hidden">
+                    <div className="mt-3 rounded-lg border border-border/60 bg-muted/30 divide-y divide-border/60 overflow-hidden">
                       {Object.entries(changes).map(([field, val]) => (
-                        <div key={field} className="grid grid-cols-[minmax(120px,auto)_1fr] gap-3 px-3 py-2 text-xs items-center">
+                        <div key={field} className="grid grid-cols-[minmax(140px,auto)_1fr] gap-3 px-4 py-3 text-base items-center">
                           <div className="font-medium text-foreground/80">{fieldLabel(field, isRTL)}</div>
                           <div className="flex items-center gap-2 flex-wrap min-w-0">
-                            <Badge variant="outline" className="font-normal max-w-full truncate">
+                            <Badge variant="outline" className="font-normal text-sm max-w-full truncate">
                               {formatValue(val?.from, isRTL, lookup)}
                             </Badge>
-                            <ArrowLeftRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                            <Badge className="bg-primary/10 text-primary hover:bg-primary/10 font-normal max-w-full truncate">
+                            <ArrowLeftRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                            <Badge className="bg-primary/10 text-primary hover:bg-primary/10 font-normal text-sm max-w-full truncate">
                               {formatValue(val?.to, isRTL, lookup)}
                             </Badge>
                           </div>
@@ -239,7 +239,7 @@ export default function CompanyAuditLogsTab() {
         })}
 
         {!isLoading && items.length === 0 && (
-          <div className="text-sm text-muted-foreground text-center py-8">
+          <div className="text-base text-muted-foreground text-center py-8">
             {isRTL ? 'لا توجد سجلات بعد.' : 'No logs yet.'}
           </div>
         )}
