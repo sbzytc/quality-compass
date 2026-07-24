@@ -74,6 +74,11 @@ export default {
           DEFAULT: "hsl(var(--info))",
           foreground: "hsl(var(--info-foreground))",
         },
+        "brand-deep": {
+          DEFAULT: "hsl(var(--brand-deep))",
+          foreground: "hsl(var(--brand-deep-foreground))",
+          soft: "hsl(var(--brand-deep-soft))",
+        },
         // Quality Score Colors
         score: {
           excellent: "hsl(var(--score-excellent))",

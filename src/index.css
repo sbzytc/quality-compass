@@ -54,6 +54,11 @@
     --accent: 190 56% 40%;
     --accent-foreground: 0 0% 100%;
 
+    /* Deep brand accent — dark forest green for visual contrast */
+    --brand-deep: 158 55% 18%;
+    --brand-deep-foreground: 0 0% 100%;
+    --brand-deep-soft: 158 40% 32%;
+
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
 
