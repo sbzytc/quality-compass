@@ -131,7 +131,7 @@ export default function LoginPage() {
             <Button
               variant="outline"
               size="sm"
-              className="h-8 px-3 gap-1.5 text-[13px] font-medium bg-white/30 border-white/40 hover:bg-white/45 backdrop-blur-md"
+              className="h-8 px-3 gap-1.5 text-[13px] font-medium bg-slate-100/80 border-slate-200/80 hover:bg-slate-200/80"
               onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
             >
               <Languages className="h-3.5 w-3.5" />
