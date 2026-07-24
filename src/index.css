@@ -777,3 +777,30 @@
     50% { transform: translateY(-10px); }
   }
 }
+
+/* Super Admin — warm HR-dashboard skin */
+.sa-warm-bg {
+  background:
+    radial-gradient(1200px 600px at 10% -10%, #fbe4cf 0%, transparent 55%),
+    radial-gradient(900px 500px at 100% 0%, #f6d3b4 0%, transparent 55%),
+    linear-gradient(135deg, #fdf4ed 0%, #f7e6d3 55%, #f2d9c0 100%);
+}
+.sa-card {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 24px;
+  box-shadow: 0 12px 32px -18px rgba(120, 80, 50, 0.28);
+}
+.sa-card-dark {
+  background: linear-gradient(160deg, #1a1410 0%, #2a1e16 100%);
+  border: 1px solid #2a2018;
+  border-radius: 24px;
+  color: #fff;
+  box-shadow: 0 24px 48px -24px rgba(26, 20, 16, 0.55);
+}
+.sa-ink { color: #1a1410; }
+.sa-ink-soft { color: #6b5b4f; }
+.sa-ink-muted { color: #8a7565; }
+.sa-accent { color: #c26b3a; }

@@ -98,27 +98,27 @@ export default function SectorCompaniesPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#edf3ff] to-[#e8eff9] p-6" dir={direction}>
+    <div className="min-h-screen sa-warm-bg p-6" dir={direction}>
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between gap-3 mb-6">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/super-admin')} className="gap-2">
+          <Button variant="ghost" size="sm" onClick={() => navigate('/super-admin')} className="gap-2 sa-ink hover:bg-white/60">
             <ArrowLeft className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
             {isRTL ? 'الرجوع' : 'Back'}
           </Button>
           <SuperAdminHeader />
         </div>
 
-        <div className="flex items-center gap-4 mb-8">
-          <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${meta.gradient} flex items-center justify-center`}>
-            <SectorIcon className="w-7 h-7 text-foreground" />
+        <div className="flex items-center gap-4 mb-8 sa-card p-5">
+          <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${meta.gradient} flex items-center justify-center shadow-inner`}>
+            <SectorIcon className="w-7 h-7 sa-ink" />
           </div>
           <div className="flex-1">
-            <h1 className="text-3xl font-bold text-foreground">{isRTL ? meta.titleAr : meta.titleEn}</h1>
-            <p className="text-sm text-muted-foreground">
+            <h1 className="text-3xl font-bold sa-ink tracking-tight">{isRTL ? meta.titleAr : meta.titleEn}</h1>
+            <p className="text-sm sa-ink-soft">
               {isRTL ? 'اختر شركة للدخول على لوحة السوبر ادمن الخاصة بها' : 'Pick a company to open its Super Admin panel'}
             </p>
           </div>
-          <Button onClick={() => setAddOpen(true)} className="gap-2">
+          <Button onClick={() => setAddOpen(true)} className="gap-2 bg-[#1a1410] hover:bg-[#2a1e16] text-white rounded-full px-5">
             <Plus className="w-4 h-4" />
             {isRTL ? 'إضافة شركة' : 'Add company'}
           </Button>
@@ -126,13 +126,13 @@ export default function SectorCompaniesPage() {
 
         {isLoading && (
           <div className="flex justify-center py-16">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <Loader2 className="w-8 h-8 animate-spin sa-accent" />
           </div>
         )}
 
         {sandbox.length > 0 && (
           <div className="mb-8">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3 flex items-center gap-2">
+            <h2 className="text-xs font-semibold uppercase tracking-widest sa-ink-muted mb-3 flex items-center gap-2">
               <FlaskConical className="w-4 h-4" />
               {isRTL ? 'الشركة التجريبية' : 'Sandbox company'}
             </h2>
@@ -146,7 +146,7 @@ export default function SectorCompaniesPage() {
 
         {orphanSandbox.length > 0 && (
           <div className="mb-8">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3 flex items-center gap-2">
+            <h2 className="text-xs font-semibold uppercase tracking-widest sa-ink-muted mb-3 flex items-center gap-2">
               <FlaskConical className="w-4 h-4 opacity-60" />
               {isRTL ? 'شركات تجريبية قديمة (غير مرتبطة بشركة أصل)' : 'Legacy sandboxes (no parent company)'}
             </h2>
@@ -159,12 +159,12 @@ export default function SectorCompaniesPage() {
         )}
 
         <div>
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3 flex items-center gap-2">
+          <h2 className="text-xs font-semibold uppercase tracking-widest sa-ink-muted mb-3 flex items-center gap-2">
             <Building2 className="w-4 h-4" />
             {isRTL ? 'الشركات الحية' : 'Live companies'}
           </h2>
           {live.length === 0 && !isLoading && (
-            <div className="text-sm text-muted-foreground bg-white/40 rounded-xl p-6 text-center">
+            <div className="text-sm sa-ink-soft sa-card p-6 text-center">
               {isRTL ? 'لا توجد شركات في هذا القطاع بعد.' : 'No companies in this sector yet.'}
             </div>
           )}
@@ -177,7 +177,7 @@ export default function SectorCompaniesPage() {
 
         {deleted.length > 0 && (
           <div className="mt-10">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3 flex items-center gap-2">
+            <h2 className="text-xs font-semibold uppercase tracking-widest sa-ink-muted mb-3 flex items-center gap-2">
               <Trash2 className="w-4 h-4" />
               {isRTL ? 'سلة المحذوفات (قابلة للاسترجاع 15 يوم)' : 'Recycle bin (recoverable for 15 days)'}
             </h2>
@@ -281,25 +281,25 @@ function CompanyCard({ company, onClick, onDelete, index, isRTL, highlight = fal
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.04 }}
       whileHover={{ y: -3 }}
-      className={`group relative overflow-hidden rounded-2xl backdrop-blur-xl border shadow-md hover:shadow-lg transition-all ${
+      className={`group relative overflow-hidden rounded-3xl backdrop-blur-xl border transition-all ${
         legacy
-          ? 'bg-slate-100/60 border-slate-300/60 border-dashed'
+          ? 'bg-white/40 border-[#d9c9b8] border-dashed shadow-[0_8px_20px_-14px_rgba(120,80,50,0.2)]'
           : highlight
-            ? 'bg-amber-50/60 border-amber-300/60'
-            : 'bg-white/60 border-white/60'
+            ? 'bg-[#fef3e2]/80 border-[#f4a261]/50 shadow-[0_12px_28px_-16px_rgba(244,162,97,0.35)]'
+            : 'bg-white/75 border-white/90 shadow-[0_10px_28px_-16px_rgba(120,80,50,0.25)] hover:shadow-[0_18px_36px_-16px_rgba(120,80,50,0.35)]'
       }`}
     >
       <button onClick={onClick} className="w-full text-start p-5 flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <div className="font-semibold text-foreground truncate">
+          <div className="font-semibold sa-ink truncate">
             {isRTL ? (company.name_ar || company.name) : company.name}
           </div>
-          <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-2 flex-wrap">
+          <div className="text-xs sa-ink-soft mt-0.5 flex items-center gap-2 flex-wrap">
             <span>/{company.slug}</span>
             {company.code && (
               <button
                 onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(company.code); }}
-                className="font-mono font-semibold text-[10px] tracking-wider bg-primary/10 text-primary px-1.5 py-0.5 rounded border border-primary/20 hover:bg-primary/20 transition-colors"
+                className="font-mono font-semibold text-[10px] tracking-wider bg-[#c26b3a]/10 text-[#c26b3a] px-1.5 py-0.5 rounded border border-[#c26b3a]/20 hover:bg-[#c26b3a]/20 transition-colors"
                 title={isRTL ? 'كود الشركة (اضغط للنسخ)' : 'Company code (click to copy)'}
               >
                 {company.code}
@@ -311,7 +311,7 @@ function CompanyCard({ company, onClick, onDelete, index, isRTL, highlight = fal
               {company.status}
             </Badge>
             {highlight && (
-              <Badge className="text-[10px] bg-amber-500 hover:bg-amber-500 text-white">
+              <Badge className="text-[10px] bg-[#f4a261] hover:bg-[#f4a261] text-white">
                 {isRTL ? 'تجريبية' : 'Sandbox'}
               </Badge>
             )}
@@ -322,7 +322,7 @@ function CompanyCard({ company, onClick, onDelete, index, isRTL, highlight = fal
             )}
           </div>
         </div>
-        <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 ${isRTL ? 'rotate-180 group-hover:-translate-x-0.5 group-hover:translate-x-0' : ''}`} />
+        <ChevronRight className={`w-4 h-4 sa-ink-muted transition-transform group-hover:translate-x-0.5 ${isRTL ? 'rotate-180 group-hover:-translate-x-0.5 group-hover:translate-x-0' : ''}`} />
       </button>
       {onDelete && (
         <button
