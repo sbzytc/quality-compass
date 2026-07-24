@@ -160,7 +160,7 @@ export default function CompanyAuditLogsTab() {
           <Activity className="w-6 h-6 text-primary" />
           {isRTL ? 'سجلات التدقيق' : 'Audit Logs'}
         </h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-base text-muted-foreground">
           {isRTL ? 'آخر 200 حدث خاص بهذه الشركة' : 'Last 200 events scoped to this company'}
         </p>
       </div>
