@@ -68,13 +68,13 @@ export default function CompanyOverviewTab() {
       {/* Stat cards row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {items.map((it, i) => (
-          <div key={it.label} className="sa-card p-5 flex items-center gap-4">
-            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
-              i === 0 ? 'bg-[#f4a261]/15 text-[#c26b3a]' : i === 1 ? 'bg-[#e9c46a]/20 text-[#a67c1a]' : 'bg-[#2a9d8f]/15 text-[#2a7a70]'
-            }`}>
-              <it.icon className="w-5 h-5" />
+          <div key={it.label} className="sa-card sa-card-hover p-5 flex items-center gap-4">
+            <div className="relative z-10 w-12 h-12 rounded-2xl flex items-center justify-center bg-white/60 shadow-inner border border-white/60">
+              <it.icon className={`w-5 h-5 ${
+                i === 0 ? 'text-[#c26b3a]' : i === 1 ? 'text-[#a67c1a]' : 'text-[#2a7a70]'
+              }`} />
             </div>
-            <div>
+            <div className="relative z-10">
               <div className="text-xs sa-ink-muted uppercase tracking-wider">{it.label}</div>
               <div className="text-3xl font-bold sa-ink tracking-tight">{it.value}</div>
             </div>
@@ -83,9 +83,9 @@ export default function CompanyOverviewTab() {
       </div>
 
       {/* Workspace access — dark accent card matching HR reference */}
-      <div className="sa-card-dark p-6 relative overflow-hidden">
+      <div className="sa-card-dark sa-card-hover p-6">
         <div className="absolute -top-24 -end-24 w-56 h-56 rounded-full bg-gradient-to-br from-[#f4a261]/30 to-transparent blur-3xl" />
-        <div className="relative flex items-start justify-between gap-4 flex-wrap">
+        <div className="relative z-10 flex items-start justify-between gap-4 flex-wrap">
           <div className="min-w-0">
             <div className="flex items-center gap-2 mb-2">
               <ExternalLink className="w-4 h-4 text-[#f4a261]" />
@@ -114,43 +114,45 @@ export default function CompanyOverviewTab() {
       </div>
 
       {/* Details card */}
-      <div className="sa-card p-6">
-        <h3 className="text-sm font-semibold uppercase tracking-widest sa-ink-muted mb-4">
-          {isRTL ? 'تفاصيل الشركة' : 'Company details'}
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-8 text-sm">
-          <Row label={isRTL ? 'الاسم' : 'Name'} value={company.name} />
-          <Row label={isRTL ? 'الاسم بالعربية' : 'Arabic name'} value={company.name_ar || '—'} />
-          <Row
-            label={isRTL ? 'كود الشركة' : 'Company code'}
-            value={
-              company.code ? (
-                <button
-                  onClick={() => { navigator.clipboard.writeText(company.code); toast({ title: isRTL ? 'تم نسخ الكود' : 'Code copied' }); }}
-                  className="font-mono font-bold tracking-wider bg-[#c26b3a]/10 text-[#c26b3a] px-2 py-0.5 rounded border border-[#c26b3a]/20 hover:bg-[#c26b3a]/20 transition-colors"
-                  title={isRTL ? 'اضغط للنسخ' : 'Click to copy'}
-                >
-                  {company.code}
-                </button>
-              ) : '—'
-            }
-          />
-          <Row label={isRTL ? 'المعرف' : 'Slug'} value={`/${company.slug}`} />
-          <Row label={isRTL ? 'نوع مساحة العمل' : 'Workspace type'} value={company.workspace_type} />
-          <Row
-            label={isRTL ? 'الحالة' : 'Status'}
-            value={<Badge variant={company.status === 'active' ? 'default' : 'secondary'}>{company.status}</Badge>}
-          />
-          <Row
-            label={isRTL ? 'النوع' : 'Type'}
-            value={
-              company.is_sandbox && company.sandbox_of_company_id
-                ? <Badge className="bg-[#f4a261] hover:bg-[#f4a261] text-white gap-1"><FlaskConical className="w-3 h-3" />{isRTL ? 'تجريبية' : 'Sandbox'}</Badge>
-                : company.is_sandbox && !company.sandbox_of_company_id
-                  ? <Badge variant="outline" className="border-[#c9b8a3] text-[#6b5b4f] bg-white/60 gap-1"><FlaskConical className="w-3 h-3" />{isRTL ? 'تجريبي قديم — غير مرتبط' : 'Legacy — Unlinked'}</Badge>
-                  : <Badge variant="outline">{isRTL ? 'حية' : 'Live'}</Badge>
-            }
-          />
+      <div className="sa-card sa-card-hover p-6">
+        <div className="relative z-10">
+          <h3 className="text-sm font-semibold uppercase tracking-widest sa-ink-muted mb-4">
+            {isRTL ? 'تفاصيل الشركة' : 'Company details'}
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-8 text-sm">
+            <Row label={isRTL ? 'الاسم' : 'Name'} value={company.name} />
+            <Row label={isRTL ? 'الاسم بالعربية' : 'Arabic name'} value={company.name_ar || '—'} />
+            <Row
+              label={isRTL ? 'كود الشركة' : 'Company code'}
+              value={
+                company.code ? (
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(company.code); toast({ title: isRTL ? 'تم نسخ الكود' : 'Code copied' }); }}
+                    className="font-mono font-bold tracking-wider bg-white/50 text-[#c26b3a] px-2 py-0.5 rounded border border-white/60 hover:bg-white/70 transition-colors"
+                    title={isRTL ? 'اضغط للنسخ' : 'Click to copy'}
+                  >
+                    {company.code}
+                  </button>
+                ) : '—'
+              }
+            />
+            <Row label={isRTL ? 'المعرف' : 'Slug'} value={`/${company.slug}`} />
+            <Row label={isRTL ? 'نوع مساحة العمل' : 'Workspace type'} value={company.workspace_type} />
+            <Row
+              label={isRTL ? 'الحالة' : 'Status'}
+              value={<Badge variant={company.status === 'active' ? 'default' : 'secondary'}>{company.status}</Badge>}
+            />
+            <Row
+              label={isRTL ? 'النوع' : 'Type'}
+              value={
+                company.is_sandbox && company.sandbox_of_company_id
+                  ? <Badge className="bg-[#f4a261] hover:bg-[#f4a261] text-white gap-1"><FlaskConical className="w-3 h-3" />{isRTL ? 'تجريبية' : 'Sandbox'}</Badge>
+                  : company.is_sandbox && !company.sandbox_of_company_id
+                    ? <Badge variant="outline" className="border-[#c9b8a3] text-[#6b5b4f] bg-white/60 gap-1"><FlaskConical className="w-3 h-3" />{isRTL ? 'تجريبي قديم — غير مرتبط' : 'Legacy — Unlinked'}</Badge>
+                    : <Badge variant="outline">{isRTL ? 'حية' : 'Live'}</Badge>
+              }
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -159,7 +161,7 @@ export default function CompanyOverviewTab() {
 
 function Row({ label, value }: { label: string; value: any }) {
   return (
-    <div className="flex items-center justify-between gap-4 py-1.5 border-b border-[#f0e4d2] last:border-0">
+    <div className="flex items-center justify-between gap-4 py-1.5 border-b border-[#f0e4d2]/70 last:border-0">
       <span className="sa-ink-muted text-xs uppercase tracking-wider">{label}</span>
       <span className="font-medium sa-ink">{value}</span>
     </div>
