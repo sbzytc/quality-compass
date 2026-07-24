@@ -185,7 +185,7 @@ export default function CompanyAuditLogsTab() {
             <Card key={l.id} className="p-5">
               <div className="flex items-start gap-4">
                 <div className={`shrink-0 w-11 h-11 rounded-xl flex items-center justify-center ${meta.tone}`}>
-                  <Icon className="w-5.5 h-5.5" />
+                  <Icon className="w-6 h-6" />
                 </div>
                 <div className="flex-1 min-w-0 space-y-2.5">
                   <div className="flex items-start justify-between gap-3 flex-wrap">
