@@ -581,6 +581,32 @@ export default function CompanyThemeTab() {
             );
           })}
         </div>
+
+        {/* Persistent Glass surface toggle — layered on top of any preset */}
+        <div className="mt-2 flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-white/50 p-4">
+          <div className="min-w-0">
+            <div className="text-sm font-semibold flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-primary" />
+              {t('التأثير الزجاجي (Glassmorphism)', 'Glassmorphism effect')}
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">
+              {t('يضيف تأثيراً زجاجياً شفافاً على البطاقات والقوائم مع الحفاظ على ألوان الثيم الحالي. متاح مع أي ثيم.',
+                 'Adds a frosted glass surface to cards and menus while preserving the current palette. Available with any preset.')}
+            </div>
+          </div>
+          <label className="inline-flex items-center gap-2 cursor-pointer select-none shrink-0">
+            <input
+              type="checkbox"
+              className="sr-only peer"
+              checked={!!draft.glass}
+              onChange={(e) => setDraft((d) => ({ ...d, glass: e.target.checked }))}
+            />
+            <span className="relative w-11 h-6 rounded-full bg-muted border border-border overflow-hidden transition peer-checked:bg-primary peer-checked:border-primary">
+              <span className="absolute top-1/2 -translate-y-1/2 start-0.5 w-5 h-5 rounded-full bg-white shadow transition-all peer-checked:start-[calc(100%-1.375rem)]" />
+            </span>
+            <span className="text-sm font-medium">{draft.glass ? t('مُفعّل', 'On') : t('مُعطّل', 'Off')}</span>
+          </label>
+        </div>
       </Card>
 
       {/* Generate from logo */}
