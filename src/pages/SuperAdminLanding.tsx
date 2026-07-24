@@ -93,50 +93,66 @@ export default function SuperAdminLanding() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#edf3ff] to-[#e8eff9] flex items-center justify-center p-6" dir={direction}>
-      <div className="w-full max-w-5xl">
+    <div className="min-h-screen sa-warm-bg flex items-center justify-center p-6" dir={direction}>
+      <div className="w-full max-w-6xl">
         <div className="absolute top-4 end-4 sm:top-6 sm:end-6">
           <SuperAdminHeader />
         </div>
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-10"
+          className="text-center mb-12"
         >
-          <h1 className="text-4xl font-bold text-foreground mb-2">
+          <h1 className="text-4xl md:text-5xl font-bold text-[#1a1410] mb-3 tracking-tight">
             {isRTL ? 'مرحباً بك يا مدير النظام' : 'Welcome, System Admin'}
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-[#6b5b4f] text-base">
             {isRTL ? 'اختر الوجهة التي تريد الدخول إليها' : 'Choose where you want to go'}
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           {cards.map((card, i) => {
             const Icon = card.icon;
+            const isDark = i === 0;
             return (
               <motion.button
                 key={card.key}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.08 }}
-                whileHover={{ y: -4 }}
+                whileHover={{ y: -5 }}
                 onClick={card.onClick}
-                className={`group relative overflow-hidden rounded-2xl p-6 text-start backdrop-blur-xl bg-white/60 border border-white/60 shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`group relative overflow-hidden rounded-3xl p-6 text-start backdrop-blur-xl border transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                  isDark
+                    ? 'bg-[#1a1410] border-[#2a2018] text-white shadow-[0_20px_40px_-20px_rgba(26,20,16,0.6)] hover:shadow-[0_30px_50px_-20px_rgba(26,20,16,0.7)]'
+                    : 'bg-white/70 border-white/80 shadow-[0_10px_30px_-15px_rgba(120,80,50,0.25)] hover:shadow-[0_20px_40px_-15px_rgba(120,80,50,0.35)]'
+                }`}
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${card.color} opacity-50 group-hover:opacity-80 transition-opacity`} />
+                {!isDark && (
+                  <div className={`absolute inset-0 bg-gradient-to-br ${card.color} opacity-40 group-hover:opacity-70 transition-opacity`} />
+                )}
+                {isDark && (
+                  <div className="absolute -top-16 -end-16 w-48 h-48 rounded-full bg-gradient-to-br from-[#f4a261]/30 to-transparent blur-2xl" />
+                )}
                 <div className="relative space-y-4">
-                  <div className={`w-14 h-14 rounded-2xl bg-white/80 flex items-center justify-center ${card.iconColor}`}>
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
+                    isDark ? 'bg-white/10 text-[#f4a261]' : `bg-white/90 ${card.iconColor}`
+                  }`}>
                     <Icon className="w-7 h-7" />
                   </div>
                   <div>
-                    <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
+                    <div className={`text-[11px] font-medium uppercase tracking-wider mb-1.5 ${
+                      isDark ? 'text-white/50' : 'text-[#8a7565]'
+                    }`}>
                       {card.badge}
                     </div>
-                    <h2 className="text-xl font-bold text-foreground mb-1">{card.title}</h2>
-                    <p className="text-sm text-muted-foreground">{card.desc}</p>
+                    <h2 className={`text-lg font-bold mb-1.5 leading-snug ${isDark ? 'text-white' : 'text-[#1a1410]'}`}>{card.title}</h2>
+                    <p className={`text-sm leading-relaxed ${isDark ? 'text-white/60' : 'text-[#6b5b4f]'}`}>{card.desc}</p>
                   </div>
-                  <div className="flex items-center gap-2 text-primary font-medium pt-2">
+                  <div className={`flex items-center gap-2 font-medium pt-2 text-sm ${
+                    isDark ? 'text-[#f4a261]' : 'text-[#c26b3a]'
+                  }`}>
                     <span>{isRTL ? 'دخول' : 'Enter'}</span>
                     <ArrowRight className={`w-4 h-4 transition-transform group-hover:translate-x-1 ${isRTL ? 'rotate-180 group-hover:-translate-x-1 group-hover:translate-x-0' : ''}`} />
                   </div>
@@ -146,7 +162,7 @@ export default function SuperAdminLanding() {
           })}
         </div>
 
-        <div className="text-center mt-8 text-xs text-muted-foreground">
+        <div className="text-center mt-10 text-xs text-[#8a7565]">
           {isRTL ? 'اختر قطاعاً لعرض شركاته أو ادخل على الخطط لإدارة الاشتراكات' : 'Choose a sector to view its companies or manage subscription plans'}
         </div>
       </div>
