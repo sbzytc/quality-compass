@@ -47,25 +47,19 @@ function applyTheme(theme: CompanyTheme | null) {
 export function CompanyThemeProvider({ children }: { children: React.ReactNode }) {
   const { currentCompany } = useCurrentCompany();
   const companyId = currentCompany?.id ?? null;
-  const parentId =
-    currentCompany?.is_sandbox && currentCompany?.sandbox_of_company_id
-      ? currentCompany.sandbox_of_company_id
-      : null;
 
   const { data } = useQuery({
-    queryKey: ['company-theme', companyId, parentId],
+    queryKey: ['company-theme', companyId],
     enabled: !!companyId,
     queryFn: async () => {
-      const ids = [companyId!, parentId].filter(Boolean) as string[];
       const { data, error } = await supabase
         .from('companies')
         .select('id, theme')
-        .in('id', ids);
+        .eq('id', companyId!)
+        .maybeSingle();
       if (error) throw error;
-      const self = data?.find((r) => r.id === companyId);
-      const parent = parentId ? data?.find((r) => r.id === parentId) : null;
-      const effective = (self?.theme as CompanyTheme | null) ?? (parent?.theme as CompanyTheme | null) ?? null;
-      return effective;
+      // Each company (including sandboxes) has its own theme — no parent inheritance.
+      return (data?.theme as CompanyTheme | null) ?? null;
     },
   });
 
