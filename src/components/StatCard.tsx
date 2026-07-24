@@ -66,7 +66,7 @@ export function StatCard({
       transition={{ duration: 0.3 }}
       onClick={onClick}
       className={cn(
-        'glass-card p-6 transition-all',
+        'glass-card stat-card p-6 transition-all',
         styles.border,
         onClick && 'cursor-pointer',
         className
@@ -90,7 +90,7 @@ export function StatCard({
             </p>
           )}
         </div>
-        <div className={cn('p-3 rounded-xl', styles.icon)}>
+        <div className={cn('p-3.5 rounded-2xl backdrop-blur-md', styles.icon)}>
           <Icon className="w-6 h-6" />
         </div>
       </div>
