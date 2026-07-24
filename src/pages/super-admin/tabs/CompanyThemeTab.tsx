@@ -594,18 +594,22 @@ export default function CompanyThemeTab() {
                  'Adds a frosted glass surface to cards and menus while preserving the current palette. Available with any preset.')}
             </div>
           </div>
-          <label className="inline-flex items-center gap-2 cursor-pointer select-none shrink-0">
-            <input
-              type="checkbox"
-              className="sr-only peer"
-              checked={!!draft.glass}
-              onChange={(e) => setDraft((d) => ({ ...d, glass: e.target.checked }))}
-            />
-            <span className="relative w-11 h-6 rounded-full bg-muted border border-border overflow-hidden transition peer-checked:bg-primary peer-checked:border-primary">
-              <span className="absolute top-1/2 -translate-y-1/2 start-0.5 w-5 h-5 rounded-full bg-white shadow transition-all peer-checked:start-[calc(100%-1.375rem)]" />
+          <button
+            type="button"
+            role="switch"
+            aria-checked={!!draft.glass}
+            onClick={() => setDraft((d) => ({ ...d, glass: !d.glass }))}
+            className="inline-flex items-center gap-2 shrink-0 cursor-pointer select-none"
+          >
+            <span
+              className={`relative flex items-center w-11 h-6 rounded-full border overflow-hidden transition-colors ${
+                draft.glass ? 'bg-primary border-primary justify-end' : 'bg-muted border-border justify-start'
+              }`}
+            >
+              <span className="w-5 h-5 mx-0.5 rounded-full bg-white shadow transition-transform" />
             </span>
             <span className="text-sm font-medium">{draft.glass ? t('مُفعّل', 'On') : t('مُعطّل', 'Off')}</span>
-          </label>
+          </button>
         </div>
       </Card>
 
