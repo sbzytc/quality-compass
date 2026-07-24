@@ -18,6 +18,8 @@ export interface CompanyTheme {
     soft?: string;
     medium?: string;
   };
+  /** When true, applies the glassmorphism surface effect on top of the color palette. */
+  glass?: boolean;
 }
 
 const VAR_MAP: Record<string, (t: CompanyTheme) => string | undefined> = {
@@ -37,11 +39,13 @@ function applyTheme(theme: CompanyTheme | null) {
   const root = document.documentElement;
   // Clear previously-set inline overrides so we don't leak between companies.
   Object.keys(VAR_MAP).forEach((v) => root.style.removeProperty(v));
+  root.classList.remove('theme-glass');
   if (!theme) return;
   for (const [cssVar, get] of Object.entries(VAR_MAP)) {
     const val = get(theme);
     if (val) root.style.setProperty(cssVar, val);
   }
+  if (theme.glass) root.classList.add('theme-glass');
 }
 
 export function CompanyThemeProvider({ children }: { children: React.ReactNode }) {

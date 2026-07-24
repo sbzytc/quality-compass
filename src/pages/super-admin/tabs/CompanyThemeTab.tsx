@@ -561,7 +561,11 @@ export default function CompanyThemeTab() {
               <button
                 key={p.id}
                 type="button"
-                onClick={() => { setDraft(p.theme); toast({ title: t('تم تحميل الثيم — احفظ للتطبيق', 'Preset loaded — Save to apply') }); }}
+                onClick={() => {
+                  // Preserve the persistent glass toggle across preset swaps.
+                  setDraft((d) => ({ ...p.theme, glass: d.glass }));
+                  toast({ title: t('تم تحميل الثيم — احفظ للتطبيق', 'Preset loaded — Save to apply') });
+                }}
                 className="group text-start rounded-xl border border-border/60 bg-white/60 hover:bg-white transition p-3 space-y-2 hover:shadow-md"
                 style={{ borderRadius: p.theme.radius }}
               >
@@ -580,6 +584,36 @@ export default function CompanyThemeTab() {
               </button>
             );
           })}
+        </div>
+
+        {/* Persistent Glass surface toggle — layered on top of any preset */}
+        <div className="mt-2 flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-white/50 p-4">
+          <div className="min-w-0">
+            <div className="text-sm font-semibold flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-primary" />
+              {t('التأثير الزجاجي (Glassmorphism)', 'Glassmorphism effect')}
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">
+              {t('يضيف تأثيراً زجاجياً شفافاً على البطاقات والقوائم مع الحفاظ على ألوان الثيم الحالي. متاح مع أي ثيم.',
+                 'Adds a frosted glass surface to cards and menus while preserving the current palette. Available with any preset.')}
+            </div>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={!!draft.glass}
+            onClick={() => setDraft((d) => ({ ...d, glass: !d.glass }))}
+            className="inline-flex items-center gap-2 shrink-0 cursor-pointer select-none"
+          >
+            <span
+              className={`relative flex items-center w-11 h-6 rounded-full border overflow-hidden transition-colors ${
+                draft.glass ? 'bg-primary border-primary justify-end' : 'bg-muted border-border justify-start'
+              }`}
+            >
+              <span className="w-5 h-5 mx-0.5 rounded-full bg-white shadow transition-transform" />
+            </span>
+            <span className="text-sm font-medium">{draft.glass ? t('مُفعّل', 'On') : t('مُعطّل', 'Off')}</span>
+          </button>
         </div>
       </Card>
 
