@@ -5,14 +5,16 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import {
   Activity, Loader2, KeyRound, Mail, UserPlus, UserCog, UserMinus,
   Building2, ClipboardList, FileText, ShieldCheck, LogIn, Pencil, Trash2, ArrowLeftRight,
+  ChevronDown, Archive,
 } from 'lucide-react';
-import { format, formatDistanceToNow, isToday, isYesterday } from 'date-fns';
+import { format, formatDistanceToNow, isToday, isYesterday, subDays, isAfter } from 'date-fns';
 import { ar as arLocale } from 'date-fns/locale';
 import { getInitials } from '@/lib/getInitials';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 type ActionMeta = {
   title: { ar: string; en: string };
