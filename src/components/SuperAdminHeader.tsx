@@ -16,21 +16,25 @@ export function SuperAdminHeader() {
   };
 
   return (
-    <div className="flex items-center justify-end gap-3">
+    <div className="flex flex-col gap-2 min-w-0">
       {profile && (
-        <div className="hidden sm:flex flex-col items-end text-sm">
-          <span className="font-medium leading-none">{profile.full_name}</span>
-          <span className="text-[11px] text-muted-foreground">{profile.email}</span>
+        <div className={`flex flex-col text-sm min-w-0 ${isRTL ? 'items-end text-end' : 'items-start text-start'}`}>
+          <span className="font-semibold leading-tight sa-ink truncate max-w-full">
+            {profile.full_name}
+          </span>
+          <span className="text-[11px] sa-ink-muted truncate max-w-full" dir="ltr">
+            {profile.email}
+          </span>
         </div>
       )}
       <Button
         variant="outline"
         size="sm"
         onClick={handleSignOut}
-        className="gap-1.5 h-9 glass-btn"
+        className="gap-1.5 h-9 w-full justify-center whitespace-nowrap bg-white/70 hover:bg-white border-[#e8dbc9] sa-ink"
       >
-        <LogOut className="w-4 h-4" />
-        <span>{isRTL ? 'تسجيل الخروج' : 'Sign Out'}</span>
+        <LogOut className="w-4 h-4 shrink-0" />
+        <span className="truncate">{isRTL ? 'تسجيل الخروج' : 'Sign Out'}</span>
       </Button>
     </div>
   );
