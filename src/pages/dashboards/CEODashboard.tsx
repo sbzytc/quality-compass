@@ -262,8 +262,8 @@ export default function CEODashboard() {
     <div className="space-y-8">
       {/* Header Title */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">{t('dashboard.ceo.title')}</h1>
+        <div className="border-s-4 border-brand-deep ps-4">
+          <h1 className="text-3xl font-bold text-brand-deep">{t('dashboard.ceo.title')}</h1>
           <p className="text-muted-foreground mt-1">
             {t('dashboard.ceo.subtitle')}
           </p>
@@ -278,8 +278,8 @@ export default function CEODashboard() {
       {!isLoading && (
         <div className="flex flex-row flex-wrap justify-center gap-8 items-stretch">
           {/* Evaluation Pie */}
-          <div className="glass-card p-6 flex flex-col items-center cursor-pointer" onClick={() => navigate('/score-analysis')}>
-            <span className="text-lg font-bold text-foreground mb-0">{language === 'ar' ? 'التقييم' : 'Evaluation'}</span>
+          <div className="glass-card p-6 flex flex-col items-center cursor-pointer border-t-2 border-brand-deep/60" onClick={() => navigate('/score-analysis')}>
+            <span className="text-lg font-bold text-brand-deep mb-0">{language === 'ar' ? 'التقييم' : 'Evaluation'}</span>
             <div className="w-[280px] h-[280px] relative">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -336,8 +336,8 @@ export default function CEODashboard() {
             </div>
           </div>
           {/* Resolution Pie */}
-          <div className="glass-card p-6 flex flex-col items-center cursor-pointer" onClick={() => navigate('/findings')}>
-            <span className="text-lg font-bold text-foreground mb-0">{language === 'ar' ? 'نسبة الحل' : 'Resolution'}</span>
+          <div className="glass-card p-6 flex flex-col items-center cursor-pointer border-t-2 border-brand-deep/60" onClick={() => navigate('/findings')}>
+            <span className="text-lg font-bold text-brand-deep mb-0">{language === 'ar' ? 'نسبة الحل' : 'Resolution'}</span>
             <div className="w-[280px] h-[280px] relative">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
