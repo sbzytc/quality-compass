@@ -834,3 +834,37 @@
 .sa-ink-soft { color: #6b5b4f; }
 .sa-ink-muted { color: #8a7565; }
 .sa-accent { color: #c26b3a; }
+
+.sa-card-hover {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+.sa-card-hover:hover {
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.95) inset,
+    0 28px 56px -22px rgba(120, 70, 40, 0.38),
+    0 12px 32px -14px rgba(194, 107, 58, 0.28);
+}
+.sa-card-sandbox {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 220, 180, 0.55) 0%,
+    rgba(255, 200, 150, 0.35) 60%,
+    rgba(244, 162, 97, 0.22) 100%
+  );
+  border-color: rgba(244, 162, 97, 0.55);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.85) inset,
+    0 20px 44px -20px rgba(244, 162, 97, 0.45),
+    0 8px 24px -12px rgba(194, 107, 58, 0.25);
+}
+.sa-card-legacy {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.35) 0%,
+    rgba(245, 235, 220, 0.22) 100%
+  );
+  border: 1px dashed rgba(140, 110, 85, 0.45);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.7) inset,
+    0 10px 24px -16px rgba(120, 80, 50, 0.25);
+}
