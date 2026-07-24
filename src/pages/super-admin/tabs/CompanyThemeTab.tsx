@@ -529,8 +529,8 @@ export default function CompanyThemeTab() {
           <h1 className="text-2xl font-bold">{t('ثيم الشركة', 'Company Theme')}</h1>
           <p className="text-sm text-muted-foreground">
             {t(
-              'خصّص ألوان وشكل هذه الشركة. الشركة التجريبية ترث الثيم تلقائياً حتى تُعدَّل.',
-              'Customize this company\'s look. Sandboxes inherit until you override.'
+              'خصّص ألوان وشكل هذه الشركة. كل شركة (بما فيها التجريبية) لها ثيم مستقل تماماً.',
+              'Customize this company\'s look. Every company (including sandboxes) has a fully independent theme.'
             )}
           </p>
         </div>
@@ -539,13 +539,80 @@ export default function CompanyThemeTab() {
       {company.is_sandbox && (
         <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-800 text-sm">
           <FlaskConical className="w-4 h-4" />
-          {inherited
-            ? t('هذه شركة تجريبية — تعرض ثيم الشركة الأصلية. أي تعديل سيصبح خاصاً بها.',
-                'This is a sandbox — currently inheriting from parent. Editing detaches it.')
-            : t('هذه شركة تجريبية بثيم مستقل عن الأصلية.',
-                'This sandbox has its own theme, independent from parent.')}
+          {t('هذه شركة تجريبية بثيم مستقل تماماً عن الشركة الأصلية.',
+             'This sandbox has its own theme, fully independent from parent.')}
         </div>
       )}
+
+      {/* Presets gallery */}
+      <Card className="p-6 space-y-4">
+        <div className="flex items-center gap-2">
+          <Wand2 className="w-5 h-5 text-primary" />
+          <h2 className="text-lg font-semibold">{t('ثيمات جاهزة', 'Ready-made presets')}</h2>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          {t('اختر ثيماً جاهزاً بضغطة — يتحمّل في المعاينة، ثم احفظ من الأسفل.',
+             'Click a preset to load it into the editor below, then Save to apply.')}
+        </p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {PRESETS.map((p) => {
+            const c = p.theme.colors!;
+            return (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => { setDraft(p.theme); toast({ title: t('تم تحميل الثيم — احفظ للتطبيق', 'Preset loaded — Save to apply') }); }}
+                className="group text-start rounded-xl border border-border/60 bg-white/60 hover:bg-white transition p-3 space-y-2 hover:shadow-md"
+                style={{ borderRadius: p.theme.radius }}
+              >
+                <div className="flex items-center gap-1.5">
+                  {[c.primary, c.accent, c.background, c.foreground].map((col, i) => (
+                    <span key={i} className="w-6 h-6 rounded-md border border-border/50" style={{ background: `hsl(${col})` }} />
+                  ))}
+                </div>
+                <div className="text-sm font-medium">{isRTL ? p.ar : p.en}</div>
+                <div
+                  className="text-[11px] px-2 py-1 rounded-md inline-block"
+                  style={{ background: `hsl(${c.primary})`, color: `hsl(${c.primaryForeground})` }}
+                >
+                  {t('عيّنة', 'Sample')}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </Card>
+
+      {/* Generate from logo */}
+      <Card className="p-6 space-y-4">
+        <div className="flex items-center gap-2">
+          <ImageIcon className="w-5 h-5 text-primary" />
+          <h2 className="text-lg font-semibold">{t('توليد ثيم من الشعار', 'Generate theme from logo')}</h2>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          {t('يقوم النظام باستخراج الألوان المهيمنة من شعار الشركة ويولّد ثيماً مقترحاً. راجع في المحرر ثم احفظ.',
+             'The system extracts dominant colors from the company logo and builds a suggested theme. Review in the editor then Save.')}
+        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button onClick={generateFromLogo} disabled={extracting || !company.logo_url} className="gap-2">
+            <Wand2 className="w-4 h-4" />
+            {extracting ? t('جارٍ التحليل…', 'Analyzing…') : t('توليد من الشعار', 'Generate from logo')}
+          </Button>
+          {!company.logo_url && (
+            <span className="text-xs text-muted-foreground">
+              {t('لا يوجد شعار مرفوع لهذه الشركة.', 'No logo uploaded for this company.')}
+            </span>
+          )}
+          {logoPalette && (
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-muted-foreground">{t('اللوحة:', 'Palette:')}</span>
+              {logoPalette.map((c, i) => (
+                <span key={i} className="w-6 h-6 rounded-md border border-border/50" style={{ background: `hsl(${c})` }} />
+              ))}
+            </div>
+          )}
+        </div>
+      </Card>
 
       {/* Editor */}
       <Card className="p-6 space-y-5">
