@@ -266,10 +266,10 @@ export default function LandingPage() {
               const Icon = f.icon;
               return (
                 <motion.div key={i}
-                  initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: i * 0.04 }}
-                  className="group rounded-2xl p-6 bg-white/70 backdrop-blur-xl border border-white/70 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-4 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                  initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-80px' }}
+                  transition={{ duration: 0.6, delay: i * 0.06, ease: [0.22, 1, 0.36, 1] }}
+                  className="group rounded-2xl p-6 bg-white/70 backdrop-blur-xl border border-white/70 shadow-sm hover:shadow-xl hover:-translate-y-1 hover:bg-white/85 hover:border-primary/30 transition-all duration-500 ease-out">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-4 group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-110 transition-all duration-500 ease-out">
                     <Icon className="w-6 h-6" />
                   </div>
                   <h3 className="font-display text-lg font-bold text-[color:var(--text-primary)] mb-1.5">{f.title}</h3>
@@ -295,9 +295,9 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
             {steps.map((s, i) => (
               <motion.div key={i}
-                initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.05 }}
-                className="relative rounded-2xl p-6 bg-gradient-to-br from-white/80 to-white/50 backdrop-blur-xl border border-white/70 shadow-sm">
+                initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-80px' }}
+                transition={{ duration: 0.6, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
+                className="group relative rounded-2xl p-6 bg-gradient-to-br from-white/80 to-white/50 backdrop-blur-xl border border-white/70 shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-primary/30 transition-all duration-500 ease-out">
                 <div className="absolute top-4 end-4 font-display text-5xl font-bold text-primary/15 leading-none">{s.n}</div>
                 <div className="relative">
                   <div className="w-9 h-9 rounded-lg bg-primary text-primary-foreground font-bold flex items-center justify-center mb-4 text-sm">{s.n}</div>
