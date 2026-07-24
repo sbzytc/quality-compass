@@ -124,14 +124,22 @@ export default function LoginPage() {
 
   return (
     <>
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center space-y-1 relative">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
+      style={{
+        background:
+          'radial-gradient(circle at 12% 88%, rgba(92, 189, 185, 0.28), transparent 28%), ' +
+          'radial-gradient(circle at 88% 15%, rgba(45, 138, 158, 0.22), transparent 26%), ' +
+          'radial-gradient(circle at 60% 50%, rgba(26, 74, 110, 0.08), transparent 40%), ' +
+          'linear-gradient(180deg, #e8f2f6 0%, #dbeaf0 100%)'
+      }}
+    >
+      <Card className="w-full max-w-md login-glass-card border-0 shadow-none">
+        <CardHeader className="text-center space-y-1 relative z-10">
           <div className="absolute top-2 end-2">
             <Button
               variant="outline"
               size="sm"
-              className="h-8 px-3 gap-1.5 text-[13px] font-medium"
+              className="h-8 px-3 gap-1.5 text-[13px] font-medium bg-white/30 border-white/40 hover:bg-white/45 backdrop-blur-md"
               onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
             >
               <Languages className="h-3.5 w-3.5" />
@@ -145,7 +153,7 @@ export default function LoginPage() {
             </CardDescription>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="relative z-10">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">
