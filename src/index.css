@@ -951,3 +951,28 @@
     0 1px 0 0 rgba(255, 255, 255, 0.7) inset,
     0 10px 24px -16px rgba(120, 80, 50, 0.25);
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Glassmorphism theme modifier
+   Applied when `.theme-glass` is set on <html> via CompanyThemeProvider.
+   Preserves the active color palette — only changes surface material.
+   Targets shadcn `<Card>` (uses `bg-card`) and common surfaces.
+   ───────────────────────────────────────────────────────────── */
+.theme-glass .bg-card {
+  position: relative;
+  background-color: hsl(var(--card) / 0.55) !important;
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-color: hsl(var(--border) / 0.6);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.55) inset,
+    0 18px 40px -20px hsl(var(--foreground) / 0.18),
+    0 8px 24px -12px hsl(var(--foreground) / 0.10);
+}
+.theme-glass .bg-popover,
+.theme-glass [role="dialog"] > .bg-background,
+.theme-glass [data-radix-popper-content-wrapper] > * {
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  background-color: hsl(var(--popover) / 0.85) !important;
+}
