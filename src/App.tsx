@@ -4,10 +4,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
-import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { CurrentCompanyProvider } from "@/contexts/CurrentCompanyContext";
 import { AIAssistantProvider } from "@/contexts/AIAssistantContext";
-import { ProtectedRoute, getDefaultDashboard } from "@/components/ProtectedRoute";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { SuperAdminRoute } from "@/components/SuperAdminRoute";
 import AdminLayout from "@/pages/admin/AdminLayout";
 import CompaniesPage from "@/pages/admin/CompaniesPage";
@@ -16,6 +16,7 @@ import PlansPage from "@/pages/admin/PlansPage";
 import AuditLogsPage from "@/pages/admin/AuditLogsPage";
 import { MainLayout } from "@/layouts/MainLayout";
 import LoginPage from "@/pages/LoginPage";
+import LandingPage from "@/pages/LandingPage";
 import CEODashboard from "@/pages/dashboards/CEODashboard";
 import BranchManagerDashboard from "@/pages/dashboards/BranchManagerDashboard";
 import OperationsDashboard from "@/pages/dashboards/OperationsDashboard";
@@ -72,20 +73,10 @@ import { BranchScopeProvider } from "@/contexts/BranchScopeContext";
 
 const queryClient = new QueryClient();
 
-// Component to handle default redirect based on role
-function DefaultRedirect() {
-  const { roles, loading } = useAuth();
-  
-  if (loading) {
-    return null;
-  }
-  
-  return <Navigate to={getDefaultDashboard(roles)} replace />;
-}
-
 const AppRoutes = () => (
   <Routes>
     {/* Public routes */}
+    <Route path="/" element={<LandingPage />} />
     <Route path="/login" element={<LoginPage />} />
     <Route path="/feedback/:branchId" element={<CustomerFeedbackPage />} />
 
@@ -129,8 +120,6 @@ const AppRoutes = () => (
         <MainLayout />
       </ProtectedRoute>
     }>
-      <Route path="/" element={<DefaultRedirect />} />
-      
       {/* CEO/Executive Dashboard - Admin and Executive only */}
       <Route path="/dashboard/ceo" element={
         <ProtectedRoute allowedRoles={['admin', 'executive']}>
