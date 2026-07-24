@@ -276,9 +276,9 @@ export default function CEODashboard() {
 
       {/* Score Circles */}
       {!isLoading && (
-        <div className="flex flex-row flex-wrap justify-center gap-8 items-start">
+        <div className="flex flex-row flex-wrap justify-center gap-8 items-stretch">
           {/* Evaluation Pie */}
-          <div className="flex flex-col items-center cursor-pointer" onClick={() => navigate('/score-analysis')}>
+          <div className="glass-card p-6 flex flex-col items-center cursor-pointer" onClick={() => navigate('/score-analysis')}>
             <span className="text-lg font-bold text-foreground mb-0">{language === 'ar' ? 'التقييم' : 'Evaluation'}</span>
             <div className="w-[280px] h-[280px] relative">
               <ResponsiveContainer width="100%" height="100%">
@@ -336,7 +336,7 @@ export default function CEODashboard() {
             </div>
           </div>
           {/* Resolution Pie */}
-          <div className="flex flex-col items-center cursor-pointer" onClick={() => navigate('/findings')}>
+          <div className="glass-card p-6 flex flex-col items-center cursor-pointer" onClick={() => navigate('/findings')}>
             <span className="text-lg font-bold text-foreground mb-0">{language === 'ar' ? 'نسبة الحل' : 'Resolution'}</span>
             <div className="w-[280px] h-[280px] relative">
               <ResponsiveContainer width="100%" height="100%">
