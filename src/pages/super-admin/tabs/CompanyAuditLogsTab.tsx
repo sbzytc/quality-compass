@@ -5,14 +5,16 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import {
   Activity, Loader2, KeyRound, Mail, UserPlus, UserCog, UserMinus,
   Building2, ClipboardList, FileText, ShieldCheck, LogIn, Pencil, Trash2, ArrowLeftRight,
+  ChevronDown, Archive,
 } from 'lucide-react';
-import { format, formatDistanceToNow, isToday, isYesterday } from 'date-fns';
+import { format, formatDistanceToNow, isToday, isYesterday, subDays, isAfter } from 'date-fns';
 import { ar as arLocale } from 'date-fns/locale';
 import { getInitials } from '@/lib/getInitials';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 type ActionMeta = {
   title: { ar: string; en: string };
@@ -153,6 +155,77 @@ export default function CompanyAuditLogsTab() {
   const items = data?.logs || [];
   const lookup = useMemo(() => data?.lookup || new Map<string, string>(), [data]);
 
+  const cutoff = useMemo(() => subDays(new Date(), 7), []);
+  const recentLogs = useMemo(() => items.filter(l => isAfter(new Date(l.created_at as string), cutoff)), [items, cutoff]);
+  const archiveLogs = useMemo(() => items.filter(l => !isAfter(new Date(l.created_at as string), cutoff)), [items, cutoff]);
+  const [archiveOpen, setArchiveOpen] = useState(false);
+
+  const renderLogCard = (l: any) => {
+    const meta = actionMeta(l.action);
+    const Icon = meta.icon;
+    const time = friendlyTime(l.created_at as string, isRTL);
+    const actorName = lookup.get(l.actor_user_id as string) || (isRTL ? 'مستخدم غير معروف' : 'Unknown user');
+    const details = (l.details || {}) as any;
+    const changes = details.changes as Record<string, { from: any; to: any }> | undefined;
+    const targetEmail: string | undefined = details.email;
+
+    return (
+      <Card key={l.id} className="p-5">
+        <div className="flex items-start gap-4">
+          <div className={`shrink-0 w-11 h-11 rounded-xl flex items-center justify-center ${meta.tone}`}>
+            <Icon className="w-6 h-6" />
+          </div>
+          <div className="flex-1 min-w-0 space-y-2.5">
+            <div className="flex items-start justify-between gap-3 flex-wrap">
+              <div className="min-w-0">
+                <div className="text-lg font-semibold text-foreground">
+                  {isRTL ? meta.title.ar : meta.title.en}
+                </div>
+                {targetEmail && (
+                  <div className="text-base text-muted-foreground mt-1">
+                    {isRTL ? 'المستخدم المعني: ' : 'Target: '}
+                    <span className="font-medium text-foreground/80">{targetEmail}</span>
+                  </div>
+                )}
+              </div>
+              <div className="text-base text-muted-foreground text-end whitespace-nowrap">
+                <div>{time.relative}</div>
+                <div className="text-sm opacity-70">{time.absolute}</div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 text-base">
+              <Avatar className="w-7 h-7">
+                <AvatarFallback className="text-xs">{getInitials(actorName)}</AvatarFallback>
+              </Avatar>
+              <span className="text-muted-foreground">{isRTL ? 'قام بالتعديل:' : 'By:'}</span>
+              <span className="font-medium text-foreground">{actorName}</span>
+            </div>
+
+            {changes && Object.keys(changes).length > 0 && (
+              <div className="mt-3 rounded-lg border border-border/60 bg-muted/30 divide-y divide-border/60 overflow-hidden">
+                {Object.entries(changes).map(([field, val]) => (
+                  <div key={field} className="grid grid-cols-[minmax(140px,auto)_1fr] gap-3 px-4 py-3 text-base items-center">
+                    <div className="font-medium text-foreground/80">{fieldLabel(field, isRTL)}</div>
+                    <div className="flex items-center gap-2 flex-wrap min-w-0">
+                      <Badge variant="outline" className="font-normal text-sm max-w-full truncate">
+                        {formatValue(val?.from, isRTL, lookup)}
+                      </Badge>
+                      <ArrowLeftRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                      <Badge className="bg-primary/10 text-primary hover:bg-primary/10 font-normal text-sm max-w-full truncate">
+                        {formatValue(val?.to, isRTL, lookup)}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </Card>
+    );
+  };
+
   return (
     <div className="space-y-6 max-w-5xl">
       <div>
@@ -171,72 +244,43 @@ export default function CompanyAuditLogsTab() {
         </div>
       )}
 
-      <div className="space-y-3">
-        {items.map(l => {
-          const meta = actionMeta(l.action);
-          const Icon = meta.icon;
-          const time = friendlyTime(l.created_at as string, isRTL);
-          const actorName = lookup.get(l.actor_user_id as string) || (isRTL ? 'مستخدم غير معروف' : 'Unknown user');
-          const details = (l.details || {}) as any;
-          const changes = details.changes as Record<string, { from: any; to: any }> | undefined;
-          const targetEmail: string | undefined = details.email;
+      <div className="space-y-6">
+        {/* Recent logs (last 7 days) */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold">{isRTL ? 'سجلات الأسبوع' : 'This week'}</h2>
+            <Badge variant="secondary">{recentLogs.length}</Badge>
+          </div>
+          {recentLogs.map(renderLogCard)}
+          {!isLoading && recentLogs.length === 0 && (
+            <div className="text-base text-muted-foreground text-center py-6 bg-muted/20 rounded-lg border border-dashed border-border">
+              {isRTL ? 'لا توجد سجلات خلال آخر 7 أيام.' : 'No logs in the last 7 days.'}
+            </div>
+          )}
+        </div>
 
-          return (
-            <Card key={l.id} className="p-5">
-              <div className="flex items-start gap-4">
-                <div className={`shrink-0 w-11 h-11 rounded-xl flex items-center justify-center ${meta.tone}`}>
-                  <Icon className="w-6 h-6" />
-                </div>
-                <div className="flex-1 min-w-0 space-y-2.5">
-                  <div className="flex items-start justify-between gap-3 flex-wrap">
-                    <div className="min-w-0">
-                      <div className="text-lg font-semibold text-foreground">
-                        {isRTL ? meta.title.ar : meta.title.en}
-                      </div>
-                      {targetEmail && (
-                        <div className="text-base text-muted-foreground mt-1">
-                          {isRTL ? 'المستخدم المعني: ' : 'Target: '}
-                          <span className="font-medium text-foreground/80">{targetEmail}</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="text-base text-muted-foreground text-end whitespace-nowrap">
-                      <div>{time.relative}</div>
-                      <div className="text-sm opacity-70">{time.absolute}</div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 text-base">
-                    <Avatar className="w-7 h-7">
-                      <AvatarFallback className="text-xs">{getInitials(actorName)}</AvatarFallback>
-                    </Avatar>
-                    <span className="text-muted-foreground">{isRTL ? 'قام بالتعديل:' : 'By:'}</span>
-                    <span className="font-medium text-foreground">{actorName}</span>
-                  </div>
-
-                  {changes && Object.keys(changes).length > 0 && (
-                    <div className="mt-3 rounded-lg border border-border/60 bg-muted/30 divide-y divide-border/60 overflow-hidden">
-                      {Object.entries(changes).map(([field, val]) => (
-                        <div key={field} className="grid grid-cols-[minmax(140px,auto)_1fr] gap-3 px-4 py-3 text-base items-center">
-                          <div className="font-medium text-foreground/80">{fieldLabel(field, isRTL)}</div>
-                          <div className="flex items-center gap-2 flex-wrap min-w-0">
-                            <Badge variant="outline" className="font-normal text-sm max-w-full truncate">
-                              {formatValue(val?.from, isRTL, lookup)}
-                            </Badge>
-                            <ArrowLeftRight className="w-4 h-4 text-muted-foreground shrink-0" />
-                            <Badge className="bg-primary/10 text-primary hover:bg-primary/10 font-normal text-sm max-w-full truncate">
-                              {formatValue(val?.to, isRTL, lookup)}
-                            </Badge>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+        {/* Archive logs */}
+        {!isLoading && archiveLogs.length > 0 && (
+          <div className="space-y-3">
+            <Button
+              variant="outline"
+              className="w-full justify-between h-12 text-base"
+              onClick={() => setArchiveOpen(o => !o)}
+            >
+              <span className="flex items-center gap-2">
+                <Archive className="w-5 h-5 text-muted-foreground" />
+                {isRTL ? 'أرشيف السجلات' : 'Archive logs'}
+                <Badge variant="secondary" className="ms-2">{archiveLogs.length}</Badge>
+              </span>
+              <ChevronDown className={`w-5 h-5 transition-transform ${archiveOpen ? 'rotate-180' : ''}`} />
+            </Button>
+            {archiveOpen && (
+              <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                {archiveLogs.map(renderLogCard)}
               </div>
-            </Card>
-          );
-        })}
+            )}
+          </div>
+        )}
 
         {!isLoading && items.length === 0 && (
           <div className="text-base text-muted-foreground text-center py-8">
