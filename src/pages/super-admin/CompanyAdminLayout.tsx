@@ -85,7 +85,7 @@ export default function CompanyAdminLayout() {
             className={({ isActive }) => cn(
               'relative z-10 flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all overflow-hidden',
               isActive
-                ? 'bg-white text-[#1a1410] font-semibold shadow-[0_10px_24px_-12px_rgba(26,20,16,0.35)]'
+                ? 'bg-white/85 backdrop-blur-xl backdrop-saturate-150 text-[#1a1410] font-semibold border border-white/70 ring-1 ring-white/40 shadow-[0_10px_30px_-10px_rgba(26,20,16,0.35),inset_0_1px_0_rgba(255,255,255,0.9)]'
                 : 'sa-ink-soft hover:bg-white/50 hover:sa-ink'
             )}
           >
