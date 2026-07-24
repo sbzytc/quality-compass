@@ -561,7 +561,11 @@ export default function CompanyThemeTab() {
               <button
                 key={p.id}
                 type="button"
-                onClick={() => { setDraft(p.theme); toast({ title: t('تم تحميل الثيم — احفظ للتطبيق', 'Preset loaded — Save to apply') }); }}
+                onClick={() => {
+                  // Preserve the persistent glass toggle across preset swaps.
+                  setDraft((d) => ({ ...p.theme, glass: d.glass }));
+                  toast({ title: t('تم تحميل الثيم — احفظ للتطبيق', 'Preset loaded — Save to apply') });
+                }}
                 className="group text-start rounded-xl border border-border/60 bg-white/60 hover:bg-white transition p-3 space-y-2 hover:shadow-md"
                 style={{ borderRadius: p.theme.radius }}
               >
