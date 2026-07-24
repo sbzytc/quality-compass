@@ -217,7 +217,7 @@
   .glass-menu-item:hover {
     background: rgba(255, 255, 255, 0.10);
     backdrop-filter: blur(10px);
-    color: #2d3d57;
+    color: #0c2340;
     border-bottom-color: transparent;
   }
 
@@ -234,23 +234,23 @@
     );
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1.5px solid rgba(255, 255, 255, 0.52);
-    color: #2d67b2;
+    border: 1.5px solid rgba(255, 255, 255, 0.55);
+    color: #1a4a6e;
     font-weight: 600;
     border-radius: 22px;
     overflow: visible;
     isolation: isolate;
     box-shadow:
-      0 10px 28px rgba(90, 110, 140, 0.13),
-      0 2px 8px rgba(45, 103, 178, 0.05),
+      0 10px 28px rgba(12, 35, 64, 0.14),
+      0 2px 8px rgba(45, 138, 158, 0.10),
       inset 0 1.5px 0 rgba(255, 255, 255, 0.65),
       inset 0 -1px 0 rgba(255, 255, 255, 0.12),
-      0 12px 18px -12px hsl(196 100% 78% / 0.9);
+      0 12px 18px -12px hsl(190 56% 55% / 0.9);
   }
 
   .glass-menu-item.active .icon {
     opacity: 1;
-    color: #2d67b2;
+    color: #1a4a6e;
   }
 
   /* ===== ACTIVE EDGE HIGHLIGHT (light rim on top/sides) ===== */
@@ -303,8 +303,8 @@
     opacity: 0.38;
     background: radial-gradient(
       circle,
-      rgba(100, 180, 255, 0.30) 0%,
-      rgba(100, 180, 255, 0.10) 50%,
+      rgba(92, 189, 185, 0.35) 0%,
+      rgba(92, 189, 185, 0.12) 50%,
       transparent 80%
     );
     bottom: -20px;
@@ -325,11 +325,11 @@
     border-radius: 50%;
     pointer-events: none;
     filter: blur(18px);
-    opacity: 0.28;
+    opacity: 0.30;
     background: radial-gradient(
       circle,
-      rgba(255, 160, 200, 0.28) 0%,
-      rgba(255, 160, 200, 0.08) 50%,
+      rgba(45, 138, 158, 0.30) 0%,
+      rgba(45, 138, 158, 0.08) 50%,
       transparent 80%
     );
     bottom: -18px;
@@ -354,9 +354,9 @@
     filter: blur(8px);
     background: linear-gradient(
       90deg,
-      hsl(211 100% 73% / 0.28) 0%,
-      hsl(191 100% 82% / 0.88) 50%,
-      hsl(334 100% 82% / 0.34) 100%
+      hsl(205 62% 55% / 0.30) 0%,
+      hsl(178 55% 65% / 0.90) 50%,
+      hsl(190 56% 55% / 0.38) 100%
     );
     opacity: 1;
     z-index: 6;
@@ -401,7 +401,7 @@
   }
 
   .glass-submenu .glass-menu-item.active {
-    color: #2d67b2;
+    color: #1a4a6e;
   }
 
   .glass-submenu .glass-menu-item.active .glass-bottom-light {
@@ -594,8 +594,8 @@
   }
   .glass-input:focus {
     background: rgba(255, 255, 255, 0.25);
-    border-color: rgba(45, 103, 178, 0.4);
-    box-shadow: 0 0 0 3px rgba(45, 103, 178, 0.08), var(--shadow-inset);
+    border-color: rgba(26, 74, 110, 0.45);
+    box-shadow: 0 0 0 3px rgba(26, 74, 110, 0.10), var(--shadow-inset);
     outline: none;
   }
 
