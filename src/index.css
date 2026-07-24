@@ -780,25 +780,55 @@
 
 /* Super Admin — warm HR-dashboard skin */
 .sa-warm-bg {
+  position: relative;
   background:
-    radial-gradient(1200px 600px at 10% -10%, #fbe4cf 0%, transparent 55%),
-    radial-gradient(900px 500px at 100% 0%, #f6d3b4 0%, transparent 55%),
-    linear-gradient(135deg, #fdf4ed 0%, #f7e6d3 55%, #f2d9c0 100%);
+    radial-gradient(900px 520px at 8% -10%, #ffd9b8 0%, transparent 60%),
+    radial-gradient(820px 480px at 100% 10%, #f7b892 0%, transparent 55%),
+    radial-gradient(700px 500px at 50% 110%, #e8a679 0%, transparent 60%),
+    linear-gradient(135deg, #fdf4ed 0%, #f7e0c6 55%, #eec9a4 100%);
 }
+.sa-warm-bg::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(600px 600px at 85% 85%, rgba(194,107,58,0.18) 0%, transparent 60%),
+    radial-gradient(500px 500px at 15% 60%, rgba(255,255,255,0.35) 0%, transparent 65%);
+  z-index: 0;
+}
+.sa-warm-bg > * { position: relative; z-index: 1; }
+
 .sa-card {
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.9);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.55) 0%,
+    rgba(255, 255, 255, 0.28) 60%,
+    rgba(255, 240, 225, 0.22) 100%
+  );
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.55);
   border-radius: 24px;
-  box-shadow: 0 12px 32px -18px rgba(120, 80, 50, 0.28);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.9) inset,
+    0 -1px 0 0 rgba(194, 107, 58, 0.08) inset,
+    0 20px 40px -20px rgba(120, 70, 40, 0.28),
+    0 8px 24px -12px rgba(120, 70, 40, 0.18);
 }
 .sa-card-dark {
-  background: linear-gradient(160deg, #1a1410 0%, #2a1e16 100%);
-  border: 1px solid #2a2018;
+  background:
+    radial-gradient(600px 300px at 100% 0%, rgba(194,107,58,0.35) 0%, transparent 55%),
+    linear-gradient(160deg, rgba(26,20,16,0.92) 0%, rgba(42,30,22,0.88) 100%);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 24px;
   color: #fff;
-  box-shadow: 0 24px 48px -24px rgba(26, 20, 16, 0.55);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.08) inset,
+    0 30px 60px -30px rgba(26, 20, 16, 0.7),
+    0 12px 32px -12px rgba(26, 20, 16, 0.5);
 }
 .sa-ink { color: #1a1410; }
 .sa-ink-soft { color: #6b5b4f; }
