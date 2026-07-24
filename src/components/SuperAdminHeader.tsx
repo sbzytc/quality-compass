@@ -31,7 +31,7 @@ export function SuperAdminHeader() {
         variant="outline"
         size="sm"
         onClick={handleSignOut}
-        className="gap-1.5 h-9 w-full justify-center whitespace-nowrap bg-white/70 hover:bg-white border-[#e8dbc9] sa-ink"
+        className="sa-logout-button gap-1.5 h-9 w-full justify-center whitespace-nowrap"
       >
         <LogOut className="w-4 h-4 shrink-0" />
         <span className="truncate">{isRTL ? 'تسجيل الخروج' : 'Sign Out'}</span>
