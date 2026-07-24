@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
-import { Palette, Save, RotateCcw, Download, Upload, Key, Trash2, Copy, Plus, FlaskConical, History, Undo2, Eye, CheckCircle2, XCircle } from 'lucide-react';
+import { Palette, Save, RotateCcw, Download, Upload, Key, Trash2, Copy, Plus, FlaskConical, History, Undo2, Eye, CheckCircle2, XCircle, Wand2, Image as ImageIcon } from 'lucide-react';
 import type { CompanyTheme } from '@/contexts/CompanyThemeProvider';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Bot, Sparkles } from 'lucide-react';
@@ -72,6 +72,134 @@ const DEFAULT_THEME: CompanyTheme = {
   },
 };
 
+// ── Preset themes (click-to-apply) ─────────────────
+const PRESETS: Array<{ id: string; en: string; ar: string; theme: CompanyTheme }> = [
+  {
+    id: 'ocean',
+    en: 'Ocean Deep', ar: 'محيط عميق',
+    theme: { colors: { primary: '199 89% 38%', primaryForeground: '0 0% 100%', accent: '43 90% 55%', accentForeground: '220 30% 18%', background: '210 40% 96%', foreground: '215 35% 18%' }, radius: '0.875rem', shadows: { soft: '0 8px 30px rgba(20,80,120,0.12)', medium: '0 14px 40px rgba(20,80,120,0.20)' } },
+  },
+  {
+    id: 'sunset',
+    en: 'Sunset', ar: 'غروب',
+    theme: { colors: { primary: '20 90% 55%', primaryForeground: '0 0% 100%', accent: '330 75% 55%', accentForeground: '0 0% 100%', background: '30 40% 97%', foreground: '20 30% 20%' }, radius: '1rem', shadows: { soft: '0 8px 30px rgba(180,80,40,0.12)', medium: '0 14px 40px rgba(180,80,40,0.20)' } },
+  },
+  {
+    id: 'forest',
+    en: 'Forest', ar: 'غابة',
+    theme: { colors: { primary: '150 55% 32%', primaryForeground: '0 0% 100%', accent: '35 70% 50%', accentForeground: '0 0% 100%', background: '120 20% 96%', foreground: '150 30% 15%' }, radius: '0.75rem', shadows: { soft: '0 8px 30px rgba(40,90,60,0.12)', medium: '0 14px 40px rgba(40,90,60,0.20)' } },
+  },
+  {
+    id: 'royal',
+    en: 'Royal', ar: 'ملكي',
+    theme: { colors: { primary: '265 60% 45%', primaryForeground: '0 0% 100%', accent: '43 90% 55%', accentForeground: '260 30% 18%', background: '260 25% 96%', foreground: '260 30% 18%' }, radius: '1rem', shadows: { soft: '0 8px 30px rgba(90,60,150,0.14)', medium: '0 14px 40px rgba(90,60,150,0.22)' } },
+  },
+  {
+    id: 'rose',
+    en: 'Rose', ar: 'وردي',
+    theme: { colors: { primary: '340 75% 50%', primaryForeground: '0 0% 100%', accent: '10 75% 55%', accentForeground: '0 0% 100%', background: '340 30% 97%', foreground: '340 30% 20%' }, radius: '1rem', shadows: { soft: '0 8px 30px rgba(180,40,90,0.12)', medium: '0 14px 40px rgba(180,40,90,0.22)' } },
+  },
+  {
+    id: 'slate',
+    en: 'Slate', ar: 'رمادي احترافي',
+    theme: { colors: { primary: '215 35% 30%', primaryForeground: '0 0% 100%', accent: '200 80% 50%', accentForeground: '0 0% 100%', background: '210 20% 95%', foreground: '215 30% 18%' }, radius: '0.625rem', shadows: { soft: '0 8px 30px rgba(60,80,110,0.12)', medium: '0 14px 40px rgba(60,80,110,0.20)' } },
+  },
+  {
+    id: 'emerald',
+    en: 'Emerald', ar: 'زمرد',
+    theme: { colors: { primary: '160 75% 35%', primaryForeground: '0 0% 100%', accent: '190 70% 45%', accentForeground: '0 0% 100%', background: '160 25% 96%', foreground: '175 30% 15%' }, radius: '0.875rem', shadows: { soft: '0 8px 30px rgba(20,110,90,0.12)', medium: '0 14px 40px rgba(20,110,90,0.20)' } },
+  },
+  {
+    id: 'crimson',
+    en: 'Crimson', ar: 'قرمزي',
+    theme: { colors: { primary: '355 70% 45%', primaryForeground: '0 0% 100%', accent: '30 80% 50%', accentForeground: '0 0% 100%', background: '15 25% 96%', foreground: '355 30% 18%' }, radius: '0.75rem', shadows: { soft: '0 8px 30px rgba(170,40,50,0.12)', medium: '0 14px 40px rgba(170,40,50,0.22)' } },
+  },
+];
+
+// ── Extract dominant palette from an image URL ─────
+async function extractPaletteFromImage(url: string): Promise<string[]> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const size = 72;
+        const canvas = document.createElement('canvas');
+        canvas.width = size; canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return reject(new Error('no ctx'));
+        ctx.drawImage(img, 0, 0, size, size);
+        const { data } = ctx.getImageData(0, 0, size, size);
+        const buckets = new Map<string, { count: number; h: number; s: number; l: number }>();
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+          if (a < 200) continue;
+          // Skip near-white / near-black
+          const max = Math.max(r, g, b) / 255, min = Math.min(r, g, b) / 255;
+          const l = (max + min) / 2;
+          if (l > 0.94 || l < 0.06) continue;
+          const s = max === min ? 0 : (l > 0.5 ? (max - min) / (2 - max - min) : (max - min) / (max + min));
+          if (s < 0.15) continue; // too gray
+          let h = 0;
+          if (max !== min) {
+            const d = max - min;
+            const rr = r / 255, gg = g / 255, bb = b / 255;
+            switch (max) {
+              case rr: h = (gg - bb) / d + (gg < bb ? 6 : 0); break;
+              case gg: h = (bb - rr) / d + 2; break;
+              case bb: h = (rr - gg) / d + 4; break;
+            }
+            h *= 60;
+          }
+          const bucket = Math.round(h / 15) * 15; // 15° buckets
+          const key = `${bucket}`;
+          const prev = buckets.get(key);
+          if (prev) {
+            prev.count++;
+            prev.h += h; prev.s += s; prev.l += l;
+          } else {
+            buckets.set(key, { count: 1, h, s, l });
+          }
+        }
+        const sorted = [...buckets.values()].sort((a, b) => b.count - a.count);
+        if (!sorted.length) return reject(new Error('no colors'));
+        const palette = sorted.slice(0, 4).map((b) => {
+          const h = Math.round(b.h / b.count);
+          const s = Math.round((b.s / b.count) * 100);
+          const l = Math.round((b.l / b.count) * 100);
+          return `${h} ${s}% ${l}%`;
+        });
+        resolve(palette);
+      } catch (err) { reject(err); }
+    };
+    img.onerror = () => reject(new Error('image load failed'));
+    img.src = url;
+  });
+}
+
+function themeFromPalette(palette: string[]): CompanyTheme {
+  const primary = palette[0] || '217 72% 42%';
+  const accent = palette[1] || palette[0] || '43 90% 55%';
+  // Derive light background from primary hue
+  const m = primary.match(/^(-?\d+)\s+(-?\d+)%\s+(-?\d+)%$/);
+  const h = m ? m[1] : '217';
+  return {
+    colors: {
+      primary,
+      primaryForeground: '0 0% 100%',
+      accent,
+      accentForeground: '0 0% 100%',
+      background: `${h} 25% 96%`,
+      foreground: `${h} 30% 18%`,
+    },
+    radius: '0.875rem',
+    shadows: {
+      soft: '0 8px 30px rgba(40,60,90,0.12)',
+      medium: '0 14px 40px rgba(40,60,90,0.20)',
+    },
+  };
+}
+
 const COLOR_FIELDS: Array<{ key: keyof NonNullable<CompanyTheme['colors']>; en: string; ar: string }> = [
   { key: 'primary',            en: 'Primary',            ar: 'اللون الأساسي' },
   { key: 'primaryForeground',  en: 'Primary text',       ar: 'نص فوق الأساسي' },
@@ -120,9 +248,10 @@ export default function CompanyThemeTab() {
     },
   });
 
-  const inherited = !themeRow?.theme && !!themeRow?.parentTheme;
+  // Each company (including sandbox) has its own theme; no inheritance from parent.
+  const inherited = false;
   const baseTheme: CompanyTheme = useMemo(
-    () => themeRow?.theme || themeRow?.parentTheme || DEFAULT_THEME,
+    () => themeRow?.theme || DEFAULT_THEME,
     [themeRow]
   );
   const [draft, setDraft] = useState<CompanyTheme>(baseTheme);
@@ -149,6 +278,35 @@ export default function CompanyThemeTab() {
   });
 
   const resetToInherit = () => save.mutate(null);
+
+  // ── Logo palette extraction ────────────────────────
+  const [extracting, setExtracting] = useState(false);
+  const [logoPalette, setLogoPalette] = useState<string[] | null>(null);
+  const generateFromLogo = async () => {
+    try {
+      const path = company.logo_url;
+      if (!path) {
+        toast({ title: t('لا يوجد شعار', 'No logo uploaded'), description: t('ارفع شعار الشركة أولاً من صفحة الشركة.', 'Upload a logo on the company page first.'), variant: 'destructive' });
+        return;
+      }
+      setExtracting(true);
+      let url = path;
+      if (!/^https?:\/\//i.test(path)) {
+        const { data, error } = await supabase.storage.from('company-documents').createSignedUrl(path, 300);
+        if (error || !data?.signedUrl) throw error || new Error('sign failed');
+        url = data.signedUrl;
+      }
+      const palette = await extractPaletteFromImage(url);
+      setLogoPalette(palette);
+      setDraft(themeFromPalette(palette));
+      toast({ title: t('تم توليد ثيم من الشعار — راجع ثم احفظ', 'Theme generated from logo — review then save') });
+    } catch (e: any) {
+      toast({ title: t('تعذّر قراءة الشعار', 'Could not read logo'), description: e?.message, variant: 'destructive' });
+    } finally {
+      setExtracting(false);
+    }
+  };
+
   const exportJson = () => {
     const blob = new Blob([JSON.stringify(draft, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
