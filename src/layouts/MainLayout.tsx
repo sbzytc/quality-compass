@@ -59,7 +59,7 @@ export function MainLayout() {
           </div>
         )}
         {/* Header */}
-        <header className="h-14 border-b glass-surface flex items-center justify-end px-5 gap-2">
+        <header className="rasdah-topbar glass-surface flex items-center justify-end px-4 sm:px-5 gap-2">
           {/* Super Admin: back to destination picker */}
           {isSuperAdmin && (
             <Button
@@ -123,7 +123,7 @@ export function MainLayout() {
 
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
-          <div className="p-6 lg:p-8">
+          <div className="rasdah-main-content">
             <Outlet />
           </div>
         </main>
