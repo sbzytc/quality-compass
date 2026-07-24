@@ -255,6 +255,98 @@
           ]
         },
         "outputSchema": null
+      },
+      {
+        "name": "get_site_theme",
+        "title": "Get landing site theme",
+        "description": "Return the theme applied to Rasdah's public landing site (rasdah.com). Independent from any company theme.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "apply_site_theme",
+        "title": "Apply landing site theme",
+        "description": "Overwrite the theme of Rasdah's public landing site (rasdah.com). Requires a signed-in super admin. Colors must be HSL triples like '217 72% 42%'.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "theme": {
+              "type": "object",
+              "properties": {
+                "colors": {
+                  "type": "object",
+                  "properties": {
+                    "primary": {
+                      "type": "string",
+                      "pattern": "^\\d{1,3}\\s+\\d{1,3}%\\s+\\d{1,3}%$"
+                    },
+                    "primaryForeground": {
+                      "type": "string",
+                      "pattern": "^\\d{1,3}\\s+\\d{1,3}%\\s+\\d{1,3}%$"
+                    },
+                    "accent": {
+                      "type": "string",
+                      "pattern": "^\\d{1,3}\\s+\\d{1,3}%\\s+\\d{1,3}%$"
+                    },
+                    "accentForeground": {
+                      "type": "string",
+                      "pattern": "^\\d{1,3}\\s+\\d{1,3}%\\s+\\d{1,3}%$"
+                    },
+                    "background": {
+                      "type": "string",
+                      "pattern": "^\\d{1,3}\\s+\\d{1,3}%\\s+\\d{1,3}%$"
+                    },
+                    "foreground": {
+                      "type": "string",
+                      "pattern": "^\\d{1,3}\\s+\\d{1,3}%\\s+\\d{1,3}%$"
+                    },
+                    "ring": {
+                      "type": "string",
+                      "pattern": "^\\d{1,3}\\s+\\d{1,3}%\\s+\\d{1,3}%$"
+                    }
+                  }
+                },
+                "radius": {
+                  "type": "string",
+                  "pattern": "^\\d+(\\.\\d+)?(rem|px)$"
+                },
+                "shadows": {
+                  "type": "object",
+                  "properties": {
+                    "soft": {
+                      "type": "string"
+                    },
+                    "medium": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "additionalProperties": false,
+              "description": "Theme object with optional colors, radius, and shadows."
+            }
+          },
+          "required": [
+            "theme"
+          ]
+        },
+        "outputSchema": null
       }
     ]
   }

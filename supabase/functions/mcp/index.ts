@@ -271,13 +271,101 @@ var apply_company_theme_default = defineTool7({
   }
 });
 
+// src/lib/mcp/tools/get-site-theme.ts
+import { createClient as createClient8 } from "npm:@supabase/supabase-js@^2.110.7";
+import { defineTool as defineTool8 } from "npm:@lovable.dev/mcp-js@0.23.0";
+function client8(ctx) {
+  return createClient8(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
+    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+}
+var get_site_theme_default = defineTool8({
+  name: "get_site_theme",
+  title: "Get landing site theme",
+  description: "Return the theme applied to Rasdah's public landing site (rasdah.com). Independent from any company theme.",
+  inputSchema: {},
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: async (_input, ctx) => {
+    const sb = client8(ctx);
+    const { data, error } = await sb.from("site_settings").select("key, theme, updated_at").eq("key", "landing").maybeSingle();
+    if (error) {
+      return { content: [{ type: "text", text: `Failed: ${error.message}` }], isError: true };
+    }
+    return {
+      content: [{ type: "text", text: JSON.stringify(data?.theme ?? {}, null, 2) }],
+      structuredContent: { site: data ?? { key: "landing", theme: {} } }
+    };
+  }
+});
+
+// src/lib/mcp/tools/apply-site-theme.ts
+import { createClient as createClient9 } from "npm:@supabase/supabase-js@^2.110.7";
+import { defineTool as defineTool9 } from "npm:@lovable.dev/mcp-js@0.23.0";
+import { z as z7 } from "npm:zod@^4.4.3";
+function client9(ctx) {
+  return createClient9(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
+    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+}
+var hslTriple2 = z7.string().regex(/^\d{1,3}\s+\d{1,3}%\s+\d{1,3}%$/, "Must be an HSL triple like '217 72% 42%'");
+var themeSchema2 = z7.object({
+  colors: z7.object({
+    primary: hslTriple2.optional(),
+    primaryForeground: hslTriple2.optional(),
+    accent: hslTriple2.optional(),
+    accentForeground: hslTriple2.optional(),
+    background: hslTriple2.optional(),
+    foreground: hslTriple2.optional(),
+    ring: hslTriple2.optional()
+  }).optional(),
+  radius: z7.string().regex(/^\d+(\.\d+)?(rem|px)$/).optional(),
+  shadows: z7.object({
+    soft: z7.string().optional(),
+    medium: z7.string().optional()
+  }).optional()
+}).strict();
+var apply_site_theme_default = defineTool9({
+  name: "apply_site_theme",
+  title: "Apply landing site theme",
+  description: "Overwrite the theme of Rasdah's public landing site (rasdah.com). Requires a signed-in super admin. Colors must be HSL triples like '217 72% 42%'.",
+  inputSchema: {
+    theme: themeSchema2.describe("Theme object with optional colors, radius, and shadows.")
+  },
+  annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
+  handler: async ({ theme }, ctx) => {
+    if (!ctx.isAuthenticated()) {
+      return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
+    }
+    const sb = client9(ctx);
+    const { data, error } = await sb.from("site_settings").upsert(
+      { key: "landing", theme, updated_at: (/* @__PURE__ */ new Date()).toISOString(), updated_by: ctx.getUserId() },
+      { onConflict: "key" }
+    ).select("key, theme, updated_at").maybeSingle();
+    if (error) {
+      return { content: [{ type: "text", text: `Failed: ${error.message}` }], isError: true };
+    }
+    if (!data) {
+      return {
+        content: [{ type: "text", text: "Not permitted. Only super admins can change the landing site theme." }],
+        isError: true
+      };
+    }
+    return {
+      content: [{ type: "text", text: "Applied theme to the Rasdah landing site." }],
+      structuredContent: { site: data }
+    };
+  }
+});
+
 // src/lib/mcp/index.ts
 var projectRef = "jociyyeadabbwoqosvqc";
 var mcp_default = defineMcp({
   name: "rasdah-mcp",
   title: "Rasdah MCP",
   version: "0.1.0",
-  instructions: "Tools for Rasdah, a quality-monitoring platform. All tools act as the signed-in user and respect row-level security. Read: `whoami`, `list_companies`, `list_branches`, `recent_evaluations`, `list_findings`, `get_company_theme`. Write: `apply_company_theme` overwrites a company's theme (super admin or company admin only) \u2014 colors are HSL triples like '217 72% 42%'.",
+  instructions: "Tools for Rasdah, a quality-monitoring platform. All tools act as the signed-in user and respect row-level security. Read: `whoami`, `list_companies`, `list_branches`, `recent_evaluations`, `list_findings`, `get_company_theme`, `get_site_theme`. Write: `apply_company_theme` overwrites a company's theme (super admin or company admin only); `apply_site_theme` overwrites the public landing site theme at rasdah.com (super admin only). Colors are HSL triples like '217 72% 42%'.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated"
@@ -289,7 +377,9 @@ var mcp_default = defineMcp({
     recent_evaluations_default,
     list_findings_default,
     get_company_theme_default,
-    apply_company_theme_default
+    apply_company_theme_default,
+    get_site_theme_default,
+    apply_site_theme_default
   ]
 });
 
