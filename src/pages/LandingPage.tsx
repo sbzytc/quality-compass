@@ -427,7 +427,7 @@ export default function LandingPage() {
               </div>
             </form>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* Footer */}
