@@ -69,6 +69,8 @@ import OAuthConsent from "@/pages/OAuthConsent";
 import SandboxDiffPage from "@/pages/SandboxDiffPage";
 import CompanyThemeTab from "@/pages/super-admin/tabs/CompanyThemeTab";
 import { CompanyThemeProvider } from "@/contexts/CompanyThemeProvider";
+import { LandingThemeProvider } from "@/contexts/LandingThemeProvider";
+import SiteThemePage from "@/pages/super-admin/SiteThemePage";
 import { BranchScopeProvider } from "@/contexts/BranchScopeContext";
 
 const queryClient = new QueryClient();
@@ -76,7 +78,7 @@ const queryClient = new QueryClient();
 const AppRoutes = () => (
   <Routes>
     {/* Public routes */}
-    <Route path="/" element={<LandingPage />} />
+    <Route path="/" element={<LandingThemeProvider><LandingPage /></LandingThemeProvider>} />
     <Route path="/login" element={<LoginPage />} />
     <Route path="/feedback/:branchId" element={<CustomerFeedbackPage />} />
 
@@ -91,6 +93,9 @@ const AppRoutes = () => (
 
     {/* Super Admin: manage super admin accounts */}
     <Route path="/super-admin/accounts" element={<SuperAdminRoute><SuperAdminAccountsPage /></SuperAdminRoute>} />
+
+    {/* Super Admin: landing/marketing site theme */}
+    <Route path="/super-admin/site-theme" element={<SuperAdminRoute><SiteThemePage /></SuperAdminRoute>} />
 
     {/* Super Admin: per-company panel */}
     <Route path="/super-admin/company/:companyId" element={<SuperAdminRoute><CompanyAdminLayout /></SuperAdminRoute>}>
