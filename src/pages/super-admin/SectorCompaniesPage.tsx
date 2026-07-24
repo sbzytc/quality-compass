@@ -281,12 +281,8 @@ function CompanyCard({ company, onClick, onDelete, index, isRTL, highlight = fal
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.04 }}
       whileHover={{ y: -3 }}
-      className={`group relative overflow-hidden rounded-3xl backdrop-blur-xl border transition-all ${
-        legacy
-          ? 'bg-white/40 border-[#d9c9b8] border-dashed shadow-[0_8px_20px_-14px_rgba(120,80,50,0.2)]'
-          : highlight
-            ? 'bg-[#fef3e2]/80 border-[#f4a261]/50 shadow-[0_12px_28px_-16px_rgba(244,162,97,0.35)]'
-            : 'bg-white/75 border-white/90 shadow-[0_10px_28px_-16px_rgba(120,80,50,0.25)] hover:shadow-[0_18px_36px_-16px_rgba(120,80,50,0.35)]'
+      className={`group relative overflow-hidden transition-all ${
+        legacy ? 'sa-card sa-card-legacy' : highlight ? 'sa-card sa-card-sandbox' : 'sa-card sa-card-hover'
       }`}
     >
       <button onClick={onClick} className="w-full text-start p-5 flex items-start justify-between gap-3">
