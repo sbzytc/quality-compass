@@ -124,15 +124,7 @@ export default function LoginPage() {
 
   return (
     <>
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
-      style={{
-        background:
-          'radial-gradient(circle at 12% 88%, rgba(92, 189, 185, 0.28), transparent 28%), ' +
-          'radial-gradient(circle at 88% 15%, rgba(45, 138, 158, 0.22), transparent 26%), ' +
-          'radial-gradient(circle at 60% 50%, rgba(26, 74, 110, 0.08), transparent 40%), ' +
-          'linear-gradient(180deg, #e8f2f6 0%, #dbeaf0 100%)'
-      }}
-    >
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-white">
       <Card className="w-full max-w-md login-glass-card border-0 shadow-none">
         <CardHeader className="text-center space-y-1 relative z-10">
           <div className="absolute top-2 end-2">
